@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "@openzeppelin/contracts": "3.2.0",
+        "ngeohash": "^0.6.3"
+    }
+}
