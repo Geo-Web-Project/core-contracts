@@ -19,4 +19,12 @@ library H3 {
         public
         returns (uint64 destination)
     {}
+
+    function getResolution(uint64 h3Index) public pure returns (uint64) {
+        return (h3Index & (15 << 52)) >> 52;
+    }
+
+    function getBaseCell(uint64 h3Index) public pure returns (uint64) {
+        return (h3Index & (127 << 45)) >> 45;
+    }
 }

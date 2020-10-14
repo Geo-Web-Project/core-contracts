@@ -21,4 +21,32 @@ contract("H3", async accounts => {
             "Next path is not correct"
         )
     });
+
+    it("should parse resolution from index", async () => {
+        let h3 = await H3.deployed();
+
+        let index = new BN('8b0800000000fff', 16)
+
+        let result = await h3.getResolution(index)
+
+        assert.equal(
+            result,
+            11,
+            "Resolution is not correct"
+        )
+    });
+
+    it("should parse base cell from index", async () => {
+        let h3 = await H3.deployed();
+
+        let index = new BN('8b0800000000fff', 16)
+
+        let result = await h3.getBaseCell(index)
+
+        assert.equal(
+            result,
+            4,
+            "Base cell is not correct"
+        )
+    });
 });
