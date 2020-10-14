@@ -49,4 +49,50 @@ contract("H3", async accounts => {
             "Base cell is not correct"
         )
     });
+
+    it("should edit base cell in index", async () => {
+        let h3 = await H3.deployed();
+
+        let index = new BN('8b0800000000fff', 16)
+
+        let newIndex = await h3.withBaseCell(index, 5)
+
+        let result = await h3.getBaseCell(newIndex)
+
+        assert.equal(
+            result,
+            5,
+            "Base cell is not correct"
+        )
+    });
+
+    it("should get index digit", async () => {
+        let h3 = await H3.deployed();
+
+        let index = new BN('8bea00000000fff', 16)
+
+        let result = await h3.getIndexDigit(index, 13)
+
+        assert.equal(
+            result,
+            7,
+            "Index digit is not correct"
+        )
+    });
+
+    it("should edit index digit", async () => {
+        let h3 = await H3.deployed();
+
+        let index = new BN('8bea00000000fff', 16)
+
+        let newIndex = await h3.withIndexDigit(index, 13, 3)
+
+        let result = await h3.getIndexDigit(newIndex, 13)
+
+        assert.equal(
+            result,
+            3,
+            "Index digit is not correct"
+        )
+    });
 });
