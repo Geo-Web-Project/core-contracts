@@ -1,7 +1,11 @@
 pragma solidity ^0.6.0;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 /// @notice GeoWebCoordinate is an unsigned 64-bit integer that contains x and y coordinates in the upper and lower 32 bits, respectively
 library GeoWebCoordinate {
+    using SafeMath for uint256;
+
     /// @notice Represents a direction in a path
     enum Direction {North, South, East, West}
 
@@ -57,6 +61,24 @@ library GeoWebCoordinate {
     function getY(uint64 coord) public pure returns (uint64 coord_y) {
         coord_y = (coord & ((2**32) - 1)); // Take last 32 bits
         require(coord_y <= MAX_Y, "Y coordinate is out of bounds");
+    }
+
+    /// @notice Convert coordinate to word index
+    function toWordIndex(uint64 coord)
+        public
+        pure
+        returns (
+            uint256 i_x,
+            uint256 i_y,
+            uint256 i
+        )
+    {
+        uint256 coord_x = uint256(getX(coord));
+        uint256 coord_y = uint256(getY(coord));
+
+        i_x = coord_x.div(16);
+        i_y = coord_y.div(16);
+        i = (coord_x.mod(16) + 1).mul(coord_y.mod(16) + 1);
     }
 }
 

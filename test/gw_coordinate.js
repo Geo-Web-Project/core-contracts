@@ -131,4 +131,30 @@ contract("GeoWebCoordinate", async accounts => {
             "Destination is not correct"
         )
     });
+
+    it("should convert to a word index", async () => {
+        let gwCoor = await GeoWebCoordinate.deployed();
+
+        let coord = (new BN(4)).shln(32).or(new BN(33))
+
+        let result = await gwCoor.toWordIndex(coord)
+
+        assert.equal(
+            result.i_x.toString(2),
+            new BN(0).toString(2),
+            "X coord is incorrect"
+        )
+
+        assert.equal(
+            result.i_y.toString(2),
+            new BN(2).toString(2),
+            "Y coord is incorrect"
+        )
+
+        assert.equal(
+            result.i.toString(2),
+            new BN(10).toString(2),
+            "Index is incorrect"
+        )
+    });
 });
