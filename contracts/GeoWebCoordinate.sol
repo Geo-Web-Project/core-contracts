@@ -61,12 +61,14 @@ library GeoWebCoordinate {
     }
 
     /// @notice Get the X coordinate
-    function getX(uint64 coord) public pure returns (uint64) {
-        return (coord >> 32); // Take first 32 bits
+    function getX(uint64 coord) public pure returns (uint64 coord_x) {
+        coord_x = (coord >> 32); // Take first 32 bits
+        require(coord_x <= MAX_X, "X coordinate is out of bounds");
     }
 
     /// @notice Get the Y coordinate
-    function getY(uint64 coord) public pure returns (uint64) {
-        return (coord & ((2**32) - 1)); // Take last 32 bits
+    function getY(uint64 coord) public pure returns (uint64 coord_y) {
+        coord_y = (coord & ((2**32) - 1)); // Take last 32 bits
+        require(coord_y <= MAX_Y, "Y coordinate is out of bounds");
     }
 }
