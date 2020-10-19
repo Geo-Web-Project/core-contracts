@@ -1,11 +1,13 @@
 const GeoWebCoordinate = artifacts.require("GeoWebCoordinate");
+const GeoWebCoordinatePath = artifacts.require("GeoWebCoordinatePath");
+
 const BN = require('bn.js');
 
 contract("GeoWebCoordinate", async accounts => {
     it("should parse direction from path", async () => {
-        let gwCoor = await GeoWebCoordinate.deployed();
+        let gwCoor = await GeoWebCoordinatePath.deployed();
 
-        let path = (new BN('10111100', 2)).shln(256-8)
+        let path = (new BN(2)).shln(256-8).or(new BN('1110', 2))
 
         let result = await gwCoor.nextDirection(path)
 
@@ -17,7 +19,7 @@ contract("GeoWebCoordinate", async accounts => {
         
         assert.equal(
             result.nextPath.toString(2),
-            new BN('111100', 2).shln(256-6).toString(2),
+            (new BN(1)).shln(256-8).or(new BN('11', 2)).toString(2),
             "Next path is not correct"
         )
     });

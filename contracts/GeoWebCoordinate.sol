@@ -9,19 +9,6 @@ library GeoWebCoordinate {
     uint64 constant MAX_X = ((2**24) - 1);
     uint64 constant MAX_Y = ((2**23) - 1);
 
-    /// @notice Get next direction from path
-    /// @param path The path to get the direction from
-    /// @return direction The next direction taken from path
-    /// @return nextPath The next path with the direction popped from it
-    function nextDirection(uint256 path)
-        public
-        pure
-        returns (uint256 direction, uint256 nextPath)
-    {
-        direction = (path >> (256 - 2)); // Take first 2 bits of path
-        nextPath = path << 2; // Trim direction from path
-    }
-
     /// @notice Traverse a single direction
     /// @param origin The origin coordinate to start from
     /// @param direction The direction to take
@@ -70,5 +57,27 @@ library GeoWebCoordinate {
     function getY(uint64 coord) public pure returns (uint64 coord_y) {
         coord_y = (coord & ((2**32) - 1)); // Take last 32 bits
         require(coord_y <= MAX_Y, "Y coordinate is out of bounds");
+    }
+}
+
+/// @notice GeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
+library GeoWebCoordinatePath {
+    uint256 constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
+    uint256 constant PATH_SEGMENT_MASK = (2**2) - 1;
+
+    /// @notice Get next direction from path
+    /// @param path The path to get the direction from
+    /// @return direction The next direction taken from path
+    /// @return nextPath The next path with the direction popped from it
+    function nextDirection(uint256 path)
+        public
+        pure
+        returns (uint256 direction, uint256 nextPath)
+    {
+        uint256 length = (path >> (256 - 8)); // Take most significant 8 bits
+        uint256 _path = (path & INNER_PATH_MASK);
+
+        direction = (_path & PATH_SEGMENT_MASK); // Take least significant 2 bits of path
+        nextPath = (_path >> 2) | ((length - 1) << (256 - 8)); // Trim direction from path
     }
 }
