@@ -135,6 +135,7 @@ contract("GeoWebCoordinate", async accounts => {
     it("should convert to a word index", async () => {
         let gwCoor = await GeoWebCoordinate.deployed();
 
+         // Global(4, 33) -> Index(0, 2), Local(4, 1)
         let coord = (new BN(4)).shln(32).or(new BN(33))
 
         let result = await gwCoor.toWordIndex(coord)
@@ -153,7 +154,7 @@ contract("GeoWebCoordinate", async accounts => {
 
         assert.equal(
             result.i.toString(2),
-            new BN(10).toString(2),
+            new BN(20).toString(2),
             "Index is incorrect"
         )
     });

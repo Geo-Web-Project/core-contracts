@@ -78,14 +78,25 @@ library GeoWebCoordinate {
 
         i_x = coord_x.div(16);
         i_y = coord_y.div(16);
-        i = (coord_x.mod(16) + 1).mul(coord_y.mod(16) + 1);
+
+        uint256 l_x = coord_x.mod(16);
+        uint256 l_y = coord_y.mod(16);
+
+        i = l_y.mul(16).add(l_x);
     }
 }
 
 /// @notice GeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
 library GeoWebCoordinatePath {
+    using SafeMath for uint256;
+
     uint256 constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
     uint256 constant PATH_SEGMENT_MASK = (2**2) - 1;
+
+    function hasNext(uint256 path) public pure returns (bool) {
+        uint256 length = (path >> (256 - 8)); // Take most significant 8 bits
+        return (length > 0);
+    }
 
     /// @notice Get next direction from path
     /// @param path The path to get the direction from
@@ -100,6 +111,6 @@ library GeoWebCoordinatePath {
         uint256 _path = (path & INNER_PATH_MASK);
 
         direction = (_path & PATH_SEGMENT_MASK); // Take least significant 2 bits of path
-        nextPath = (_path >> 2) | ((length - 1) << (256 - 8)); // Trim direction from path
+        nextPath = (_path >> 2) | (length.sub(1) << (256 - 8)); // Trim direction from path
     }
 }
