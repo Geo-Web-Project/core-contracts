@@ -30,8 +30,8 @@ library GeoWebCoordinate {
             origin_y += 1;
             require(origin_y <= MAX_Y, "Direction went too far north!");
         } else if (dir == Direction.South) {
+            require(origin_y > 0, "Direction went too far south!");
             origin_y -= 1;
-            require(origin_y >= 0, "Direction went too far south!");
         } else if (dir == Direction.East) {
             if (origin_x >= MAX_X) {
                 // Wrap to west

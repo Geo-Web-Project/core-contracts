@@ -8,6 +8,8 @@ contract GeoWebParcel is AccessControl {
     using GeoWebCoordinate for uint64;
     using GeoWebCoordinatePath for uint256;
 
+    event MintGeoWebParcel(uint256 indexed _id);
+
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     struct LandParcel {
@@ -18,7 +20,7 @@ contract GeoWebParcel is AccessControl {
     /// @notice availabilityIndex stores which coordinates are available to include in a parcel
     mapping(uint256 => mapping(uint256 => uint256)) public availabilityIndex;
 
-    mapping(uint256 => LandParcel) public landParcels;
+    mapping(uint256 => LandParcel) landParcels;
 
     uint256 maxId;
 
@@ -72,6 +74,17 @@ contract GeoWebParcel is AccessControl {
         p.baseCoordinate = baseCoordinate;
         p.path = path;
 
+        emit MintGeoWebParcel(maxId);
+
         maxId += 1;
+    }
+
+    function getLandParcel(uint256 id)
+        public
+        view
+        returns (uint64 baseCoordinate, uint256[] memory path)
+    {
+        LandParcel storage p = landParcels[id];
+        return (p.baseCoordinate, p.path);
     }
 }

@@ -85,11 +85,14 @@ contract("GeoWebCoordinate", async accounts => {
 
         let direction = (new BN('00', 2))
 
+        var err
         try {
             await gwCoor.traverse(new BN((2**23)-1), direction)
         } catch (error) {
-            assert(error, "Expected an error but did not get one");
+            err = error
         }
+
+        assert(err, "Expected an error but did not get one");
     });
 
     it("should not traverse too far south", async () => {
@@ -97,11 +100,14 @@ contract("GeoWebCoordinate", async accounts => {
 
         let direction = (new BN('01', 2))
 
+        var err
         try {
             await gwCoor.traverse(new BN(0), direction)
         } catch (error) {
-            assert(error, "Expected an error but did not get one");
+            err = error
         }
+
+        assert(err, "Expected an error but did not get one");
     });
 
     it("should traverse east -> west", async () => {
