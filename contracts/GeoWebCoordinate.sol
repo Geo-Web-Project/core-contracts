@@ -6,9 +6,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 library GeoWebCoordinate {
     using SafeMath for uint256;
 
-    /// @notice Represents a direction in a path
-    enum Direction {North, South, East, West}
-
     // Fixed grid size is 2^24 longitude by 2^23 latitude, roughly 10 square meters of area at the equator
     uint64 constant MAX_X = ((2**24) - 1);
     uint64 constant MAX_Y = ((2**23) - 1);
@@ -17,34 +14,101 @@ library GeoWebCoordinate {
     /// @param origin The origin coordinate to start from
     /// @param direction The direction to take
     /// @return destination The destination coordinate
-    function traverse(uint64 origin, uint256 direction)
+    function traverse(
+        uint64 origin,
+        uint256 direction,
+        uint256 _i_x,
+        uint256 _i_y,
+        uint256 _i
+    )
         public
         pure
-        returns (uint64 destination)
+        returns (
+            uint64 destination,
+            uint256 i_x,
+            uint256 i_y,
+            uint256 i
+        )
     {
-        uint64 origin_x = getX(origin);
-        uint64 origin_y = getY(origin);
+        return _traverse(origin, direction, _i_x, _i_y, _i);
+    }
 
-        Direction dir = Direction(direction);
-        if (dir == Direction.North) {
+    function _traverse(
+        uint64 origin,
+        uint256 direction,
+        uint256 _i_x,
+        uint256 _i_y,
+        uint256 _i
+    )
+        internal
+        pure
+        returns (
+            uint64 destination,
+            uint256 i_x,
+            uint256 i_y,
+            uint256 i
+        )
+    {
+        uint64 origin_x = _getX(origin);
+        uint64 origin_y = _getY(origin);
+
+        i_x = _i_x;
+        i_y = _i_y;
+        i = _i;
+
+        if (direction == 0) {
+            // North
             origin_y += 1;
             require(origin_y <= MAX_Y, "Direction went too far north!");
-        } else if (dir == Direction.South) {
+
+            if (origin_y % 16 == 0) {
+                i_y += 1;
+                i -= 240;
+            } else {
+                i += 16;
+            }
+        } else if (direction == 1) {
+            // South
             require(origin_y > 0, "Direction went too far south!");
             origin_y -= 1;
-        } else if (dir == Direction.East) {
+
+            if (origin_y % 16 == 15) {
+                i_y -= 1;
+                i += 240;
+            } else {
+                i -= 16;
+            }
+        } else if (direction == 2) {
+            // East
             if (origin_x >= MAX_X) {
                 // Wrap to west
                 origin_x = 0;
+                i_x = 0;
+                i -= 15;
             } else {
                 origin_x += 1;
+                if (origin_x % 16 == 0) {
+                    i_x += 1;
+                    i -= 15;
+                } else {
+                    i += 1;
+                }
             }
-        } else if (dir == Direction.West) {
+        } else if (direction == 3) {
+            // West
             if (origin_x == 0) {
                 // Wrap to east
                 origin_x = MAX_X;
+                i_x = MAX_X / 16;
+                i += 15;
             } else {
                 origin_x -= 1;
+                if (origin_x % 16 == 15) {
+                    i_x -= 1;
+                    i += 15;
+                } else {
+                    i -= 1;
+                }
             }
         }
 
@@ -52,13 +116,13 @@ library GeoWebCoordinate {
     }
 
     /// @notice Get the X coordinate
-    function getX(uint64 coord) public pure returns (uint64 coord_x) {
+    function _getX(uint64 coord) internal pure returns (uint64 coord_x) {
         coord_x = (coord >> 32); // Take first 32 bits
         require(coord_x <= MAX_X, "X coordinate is out of bounds");
     }
 
     /// @notice Get the Y coordinate
-    function getY(uint64 coord) public pure returns (uint64 coord_y) {
+    function _getY(uint64 coord) internal pure returns (uint64 coord_y) {
         coord_y = (coord & ((2**32) - 1)); // Take last 32 bits
         require(coord_y <= MAX_Y, "Y coordinate is out of bounds");
     }
@@ -73,8 +137,20 @@ library GeoWebCoordinate {
             uint256 i
         )
     {
-        uint256 coord_x = uint256(getX(coord));
-        uint256 coord_y = uint256(getY(coord));
+        return _toWordIndex(coord);
+    }
+
+    function _toWordIndex(uint64 coord)
+        internal
+        pure
+        returns (
+            uint256 i_x,
+            uint256 i_y,
+            uint256 i
+        )
+    {
+        uint256 coord_x = uint256(_getX(coord));
+        uint256 coord_y = uint256(_getY(coord));
 
         i_x = coord_x.div(16);
         i_y = coord_y.div(16);
@@ -88,29 +164,43 @@ library GeoWebCoordinate {
 
 /// @notice GeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
 library GeoWebCoordinatePath {
-    using SafeMath for uint256;
-
     uint256 constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
     uint256 constant PATH_SEGMENT_MASK = (2**2) - 1;
 
-    function hasNext(uint256 path) public pure returns (bool) {
-        uint256 length = (path >> (256 - 8)); // Take most significant 8 bits
-        return (length > 0);
-    }
-
     /// @notice Get next direction from path
     /// @param path The path to get the direction from
+    /// @return hasNext If the path has a next direction
     /// @return direction The next direction taken from path
     /// @return nextPath The next path with the direction popped from it
     function nextDirection(uint256 path)
         public
         pure
-        returns (uint256 direction, uint256 nextPath)
+        returns (
+            bool hasNext,
+            uint256 direction,
+            uint256 nextPath
+        )
+    {
+        return _nextDirection(path);
+    }
+
+    function _nextDirection(uint256 path)
+        internal
+        pure
+        returns (
+            bool hasNext,
+            uint256 direction,
+            uint256 nextPath
+        )
     {
         uint256 length = (path >> (256 - 8)); // Take most significant 8 bits
+        hasNext = (length > 0);
+        if (!hasNext) {
+            return (hasNext, 0, 0);
+        }
         uint256 _path = (path & INNER_PATH_MASK);
 
         direction = (_path & PATH_SEGMENT_MASK); // Take least significant 2 bits of path
-        nextPath = (_path >> 2) | (length.sub(1) << (256 - 8)); // Trim direction from path
+        nextPath = (_path >> 2) | ((length - 1) << (256 - 8)); // Trim direction from path
     }
 }

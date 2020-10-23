@@ -40,35 +40,58 @@ contract GeoWebParcel is AccessControl {
 
         uint256 p_i = 0;
         uint256 currentPath = path[p_i];
-        do {
-            (uint256 i_x, uint256 i_y, uint256 i) = currentCoord.toWordIndex();
-            uint256 word = availabilityIndex[i_x][i_y];
 
+        (uint256 i_x, uint256 i_y, uint256 i) = currentCoord._toWordIndex();
+        uint256 word = availabilityIndex[i_x][i_y];
+
+        do {
             // Check if coordinate is available
             require((word & (2**i) == 0), "Coordinate is not available");
 
-            // Mark coordinate as unavailable
-            availabilityIndex[i_x][i_y] = word | (2**i);
+            // Mark coordinate as unavailable in memory
+            word = word | (2**i);
 
-            // Check if any path remains
-            if (!currentPath.hasNext()) {
+            // Get next direction
+            bool hasNext;
+            uint256 direction;
+            (hasNext, direction, currentPath) = currentPath._nextDirection();
+
+            if (!hasNext) {
                 // Try next path
                 p_i += 1;
                 if (p_i >= path.length) {
                     break;
                 }
                 currentPath = path[p_i];
+                (hasNext, direction, currentPath) = currentPath
+                    ._nextDirection();
             }
 
-            // Get next direction
-            (uint256 direction, uint256 nextPath) = currentPath.nextDirection();
-
             // Traverse to next coordinate
-            currentCoord = currentCoord.traverse(direction);
+            uint256 new_i_x;
+            uint256 new_i_y;
+            (currentCoord, new_i_x, new_i_y, i) = currentCoord._traverse(
+                direction,
+                i_x,
+                i_y,
+                i
+            );
 
-            // Set next path
-            currentPath = nextPath;
+            // If new coordinate is in new word
+            if (new_i_x != i_x || new_i_y != i_y) {
+                // Update word in storage
+                availabilityIndex[i_x][i_y] = word;
+
+                // Advance to next word
+                word = availabilityIndex[new_i_x][new_i_y];
+            }
+
+            i_x = new_i_x;
+            i_y = new_i_y;
         } while (true);
+
+        // Update last word in storage
+        availabilityIndex[i_x][i_y] = word;
 
         LandParcel storage p = landParcels[maxId];
         p.baseCoordinate = baseCoordinate;
