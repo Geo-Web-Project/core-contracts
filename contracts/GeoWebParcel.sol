@@ -32,6 +32,7 @@ contract GeoWebParcel is AccessControl {
 
     function mintLandParcel(uint64 baseCoordinate, uint256[] calldata path)
         external
+        returns (uint256 newParcelId)
     {
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
         require(path.length > 0, "Path must have at least component");
@@ -98,6 +99,8 @@ contract GeoWebParcel is AccessControl {
         p.path = path;
 
         emit MintGeoWebParcel(maxId);
+
+        newParcelId = maxId;
 
         maxId += 1;
     }
