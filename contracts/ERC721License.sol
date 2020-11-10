@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "./ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract ERC721License is ERC721, AccessControl {
@@ -17,19 +17,17 @@ contract ERC721License is ERC721, AccessControl {
         _safeMint(to, tokenId);
     }
 
-    function approve(address to, uint256 tokenId) public virtual override {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
-
-        approve(to, tokenId);
-    }
-
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
+    function _isApprovedOrOwner(address spender, uint256 tokenId)
+        internal
         override
+        view
+        returns (bool)
     {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
-
-        setApprovalForAll(operator, approved);
+        require(
+            _exists(tokenId),
+            "ERC721: operator query for nonexistent token"
+        );
+        address owner = ownerOf(tokenId);
+        return (spender == owner || hasRole(ADMIN_ROLE, spender));
     }
 }
