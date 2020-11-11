@@ -9,17 +9,15 @@ function perYearToPerSecondRate(annualRate) {
 }
 
 module.exports = function (deployer, network, accounts) {
-  if (network == "development") {
-    return deployer.deploy(ERC20Mock).then(async (erc20Mock) => {
-      let rate = perYearToPerSecondRate(0.1);
+  return deployer.deploy(ERC20Mock).then(async (erc20Mock) => {
+    let rate = perYearToPerSecondRate(0.1);
 
-      await deployer.deploy(
-        GeoWebAdmin,
-        erc20Mock.address,
-        web3.utils.toWei("10"),
-        rate.numerator,
-        rate.denominator
-      );
-    });
-  }
+    await deployer.deploy(
+      GeoWebAdmin,
+      erc20Mock.address,
+      web3.utils.toWei("10"),
+      rate.numerator,
+      rate.denominator
+    );
+  });
 };
