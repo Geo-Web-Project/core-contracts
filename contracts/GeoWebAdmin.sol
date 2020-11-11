@@ -19,7 +19,7 @@ contract GeoWebAdmin is Ownable {
     uint256 _perSecondFeeDenominator;
 
     /// @notice licenseInfo stores admin information about licenses
-    mapping(uint256 => LicenseInfo) licenseInfo;
+    mapping(uint256 => LicenseInfo) public licenseInfo;
 
     struct LicenseInfo {
         uint256 value;
@@ -32,11 +32,16 @@ contract GeoWebAdmin is Ownable {
         uint256 expirationTimestamp
     );
 
-    constructor(address unitTokenContractAddress, uint256 minInitialValue)
-        public
-    {
+    constructor(
+        address unitTokenContractAddress,
+        uint256 minInitialValue,
+        uint256 perSecondFeeNumerator,
+        uint256 perSecondFeeDenominator
+    ) public {
         unitTokenContract = IERC20(unitTokenContractAddress);
         _minInitialValue = minInitialValue;
+        _perSecondFeeNumerator = perSecondFeeNumerator;
+        _perSecondFeeDenominator = perSecondFeeDenominator;
     }
 
     function setParcelContract(address parcelContractAddress)
@@ -69,7 +74,7 @@ contract GeoWebAdmin is Ownable {
         uint256 perSecondFee = initialValue.mul(_perSecondFeeNumerator).div(
             _perSecondFeeDenominator
         );
-        uint256 expirationTimestamp = initialFeePayment.div(perSecondFee).plus(
+        uint256 expirationTimestamp = initialFeePayment.div(perSecondFee).add(
             now
         );
         require(
