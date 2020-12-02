@@ -140,7 +140,7 @@ contract("GeoWebParcel", async (accounts) => {
     ]);
 
     let result0 = await GW.availabilityIndex(0, 10);
-    let result1 = await GW.availabilityIndex(2 ** 24 / 16 - 1, 10);
+    let result1 = await GW.availabilityIndex(2 ** 19 / 16 - 1, 10);
 
     assert.equal(
       result0.toString(2),
@@ -166,7 +166,7 @@ contract("GeoWebParcel", async (accounts) => {
     let GW = await GeoWebParcel.new(accounts[0]);
 
     // Global(16000, MAX) -> Index(1000, MAX/16), Local(0, 15)
-    let coord = new BN(16000).shln(32).or(new BN(2 ** 23 - 1));
+    let coord = new BN(16000).shln(32).or(new BN(2 ** 18 - 1));
 
     var err;
     try {

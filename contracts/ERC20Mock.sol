@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract ERC20Mock is ERC20 {
-    constructor() public ERC20("Mock DAI", "mockDAI") {}
+    constructor() public ERC20("GEO", "GEO") {}
 
     function mockMint(address _address, uint256 _amount) public {
         _mint(_address, _amount);

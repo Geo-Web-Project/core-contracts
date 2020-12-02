@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 library GeoWebCoordinate {
     using SafeMath for uint256;
 
-    // Fixed grid size is 2^24 longitude by 2^23 latitude, roughly 10 square meters of area at the equator
-    uint64 constant MAX_X = ((2**24) - 1);
-    uint64 constant MAX_Y = ((2**23) - 1);
+    // Fixed grid size is 2^19 longitude by 2^18 latitude, roughly 10 square meters of area at the equator
+    uint64 constant MAX_X = ((2**19) - 1);
+    uint64 constant MAX_Y = ((2**18) - 1);
 
     /// @notice Traverse a single direction
     /// @param origin The origin coordinate to start from
