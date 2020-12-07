@@ -24,12 +24,12 @@ async function claim() {
   let coord = new BN("11662262144156956", 10);
 
   let adminContract = await GeoWebAdmin.deployed();
-  let unitTokenContract = await ERC20Mock.deployed();
+  let paymentTokenContract = await ERC20Mock.deployed();
 
   let accounts = await web3.eth.getAccounts();
   // Mint some tokens
-  await unitTokenContract.mockMint(accounts[0], web3.utils.toWei("10"));
-  await unitTokenContract.approve(
+  await paymentTokenContract.mockMint(accounts[0], web3.utils.toWei("10"));
+  await paymentTokenContract.approve(
     adminContract.address,
     web3.utils.toWei("10"),
     {

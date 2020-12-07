@@ -17,9 +17,9 @@ contract("GeoWebAdmin", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let unitTokenContract = await ERC20Mock.new();
+    let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await GeoWebAdmin.new(
-      unitTokenContract.address,
+      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -46,9 +46,9 @@ contract("GeoWebAdmin", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let unitTokenContract = await ERC20Mock.new();
+    let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await GeoWebAdmin.new(
-      unitTokenContract.address,
+      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -75,9 +75,9 @@ contract("GeoWebAdmin", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let unitTokenContract = await ERC20Mock.new();
+    let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await GeoWebAdmin.new(
-      unitTokenContract.address,
+      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -89,8 +89,8 @@ contract("GeoWebAdmin", async (accounts) => {
     await adminContract.setParcelContract(parcelContract.address);
 
     // Mint and approve tokens
-    await unitTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await unitTokenContract.approve(
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
+    await paymentTokenContract.approve(
       adminContract.address,
       web3.utils.toWei("10"),
       {
@@ -123,11 +123,13 @@ contract("GeoWebAdmin", async (accounts) => {
       "License was not minted correctly"
     );
     assert(
-      (await unitTokenContract.balanceOf(accounts[1])) == web3.utils.toWei("9"),
+      (await paymentTokenContract.balanceOf(accounts[1])) ==
+        web3.utils.toWei("9"),
       "Fee was not withdrawn"
     );
     assert(
-      (await unitTokenContract.balanceOf(accounts[0])) == web3.utils.toWei("1"),
+      (await paymentTokenContract.balanceOf(accounts[0])) ==
+        web3.utils.toWei("1"),
       "Fee was not deposited"
     );
     assert(
@@ -146,9 +148,9 @@ contract("GeoWebAdmin", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let unitTokenContract = await ERC20Mock.new();
+    let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await GeoWebAdmin.new(
-      unitTokenContract.address,
+      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -160,8 +162,8 @@ contract("GeoWebAdmin", async (accounts) => {
     await adminContract.setParcelContract(parcelContract.address);
 
     // Mint and approve tokens
-    await unitTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await unitTokenContract.approve(
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
+    await paymentTokenContract.approve(
       adminContract.address,
       web3.utils.toWei("10"),
       {
@@ -195,9 +197,9 @@ contract("GeoWebAdmin", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let unitTokenContract = await ERC20Mock.new();
+    let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await GeoWebAdmin.new(
-      unitTokenContract.address,
+      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -209,8 +211,8 @@ contract("GeoWebAdmin", async (accounts) => {
     await adminContract.setParcelContract(parcelContract.address);
 
     // Mint and approve tokens
-    await unitTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await unitTokenContract.approve(
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
+    await paymentTokenContract.approve(
       adminContract.address,
       web3.utils.toWei("10"),
       {
@@ -244,9 +246,9 @@ contract("GeoWebAdmin", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let unitTokenContract = await ERC20Mock.new();
+    let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await GeoWebAdmin.new(
-      unitTokenContract.address,
+      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -258,8 +260,8 @@ contract("GeoWebAdmin", async (accounts) => {
     await adminContract.setParcelContract(parcelContract.address);
 
     // Mint and approve tokens
-    await unitTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await unitTokenContract.approve(
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
+    await paymentTokenContract.approve(
       adminContract.address,
       web3.utils.toWei("10"),
       {

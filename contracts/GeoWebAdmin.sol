@@ -10,13 +10,13 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract GeoWebAdmin is Ownable {
     using SafeMath for uint256;
 
-    ERC721License licenseContract;
-    GeoWebParcel parcelContract;
-    IERC20 unitTokenContract;
+    ERC721License public licenseContract;
+    GeoWebParcel public parcelContract;
+    IERC20 public paymentTokenContract;
 
-    uint256 _minInitialValue;
-    uint256 _perSecondFeeNumerator;
-    uint256 _perSecondFeeDenominator;
+    uint256 public minInitialValue;
+    uint256 public perSecondFeeNumerator;
+    uint256 public perSecondFeeDenominator;
 
     /// @notice licenseInfo stores admin information about licenses
     mapping(uint256 => LicenseInfo) public licenseInfo;
@@ -33,15 +33,15 @@ contract GeoWebAdmin is Ownable {
     );
 
     constructor(
-        address unitTokenContractAddress,
-        uint256 minInitialValue,
-        uint256 perSecondFeeNumerator,
-        uint256 perSecondFeeDenominator
+        address paymentTokenContractAddress,
+        uint256 _minInitialValue,
+        uint256 _perSecondFeeNumerator,
+        uint256 _perSecondFeeDenominator
     ) public {
-        unitTokenContract = IERC20(unitTokenContractAddress);
-        _minInitialValue = minInitialValue;
-        _perSecondFeeNumerator = perSecondFeeNumerator;
-        _perSecondFeeDenominator = perSecondFeeDenominator;
+        paymentTokenContract = IERC20(paymentTokenContractAddress);
+        minInitialValue = _minInitialValue;
+        perSecondFeeNumerator = _perSecondFeeNumerator;
+        perSecondFeeDenominator = _perSecondFeeDenominator;
     }
 
     function setParcelContract(address parcelContractAddress)
@@ -66,13 +66,13 @@ contract GeoWebAdmin is Ownable {
         uint256 initialFeePayment
     ) external {
         require(
-            initialValue >= _minInitialValue,
+            initialValue >= minInitialValue,
             "Initial value must be >= the required minimum value"
         );
 
         // Check expiration date
-        uint256 perSecondFee = initialValue.mul(_perSecondFeeNumerator).div(
-            _perSecondFeeDenominator
+        uint256 perSecondFee = initialValue.mul(perSecondFeeNumerator).div(
+            perSecondFeeDenominator
         );
         uint256 expirationTimestamp = initialFeePayment.div(perSecondFee).add(
             now
@@ -87,7 +87,11 @@ contract GeoWebAdmin is Ownable {
         );
 
         // Transfer initial payment
-        unitTokenContract.transferFrom(msg.sender, owner(), initialFeePayment);
+        paymentTokenContract.transferFrom(
+            msg.sender,
+            owner(),
+            initialFeePayment
+        );
 
         // Mint parcel and license
         uint256 newParcelId = parcelContract.mintLandParcel(
