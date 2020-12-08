@@ -82,8 +82,8 @@ contract GeoWebAdmin is Ownable {
             "Resulting expiration date must be at least 365 days"
         );
         require(
-            expirationTimestamp.sub(now) < 730 days,
-            "Resulting expiration date must be less than 730 days"
+            expirationTimestamp.sub(now) <= 730 days,
+            "Resulting expiration date must be less than or equal to 730 days"
         );
 
         // Transfer initial payment
