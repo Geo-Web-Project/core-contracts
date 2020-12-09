@@ -290,4 +290,156 @@ contract("GeoWebAdmin", async (accounts) => {
 
     assert(err, "Expected an error but did not get one");
   });
+
+  it("should only allow license holder to update value", async () => {});
+
+  it("should update to higher value and collect fee", async () => {
+    let rate = perYearToPerSecondRate(0.1);
+    let minInitialValue = web3.utils.toWei("10");
+
+    let paymentTokenContract = await ERC20Mock.new();
+    let adminContract = await GeoWebAdmin.new(
+      paymentTokenContract.address,
+      minInitialValue,
+      rate.numerator,
+      rate.denominator
+    );
+    let licenseContract = await ERC721License.new(adminContract.address);
+    let parcelContract = await GeoWebParcel.new(adminContract.address);
+
+    await adminContract.setLicenseContract(licenseContract.address);
+    await adminContract.setParcelContract(parcelContract.address);
+
+    // Mint and approve tokens
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
+    await paymentTokenContract.approve(
+      adminContract.address,
+      web3.utils.toWei("10"),
+      {
+        from: accounts[1],
+      }
+    );
+
+    // Claim land
+    let coord = new BN(4).shln(32).or(new BN(33));
+    let result = await adminContract.claim(
+      accounts[1],
+      coord,
+      [new BN(0)],
+      web3.utils.toWei("10"),
+      web3.utils.toWei("1"),
+      {
+        from: accounts[1],
+      }
+    );
+
+    // Get parcel and block
+    let parcelId =
+      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
+    let originalExpiration = (await adminContract.licenseInfo(parcelId))
+      .expirationTimestamp;
+
+    // Update value
+    let result1 = await adminContract.updateValue(
+      parcelId,
+      web3.utils.toWei("30"),
+      new BN(0),
+      {
+        from: accounts[1],
+      }
+    );
+
+    let block = await web3.eth.getBlock(result1.receipt.blockNumber);
+
+    assert(
+      (await adminContract.licenseInfo(parcelId)).value ==
+        web3.utils.toWei("30"),
+      "Self-assessed value was not saved correctly"
+    );
+    assert(
+      (await adminContract.licenseInfo(parcelId)).expirationTimestamp -
+        block.timestamp ==
+        (originalExpiration - block.timestamp) / 3,
+      "Expiration was not updated correctly"
+    );
+  });
+
+  it("should update to lower value and collect fee", async () => {
+    let rate = perYearToPerSecondRate(0.1);
+    let minInitialValue = web3.utils.toWei("10");
+
+    let paymentTokenContract = await ERC20Mock.new();
+    let adminContract = await GeoWebAdmin.new(
+      paymentTokenContract.address,
+      minInitialValue,
+      rate.numerator,
+      rate.denominator
+    );
+    let licenseContract = await ERC721License.new(adminContract.address);
+    let parcelContract = await GeoWebParcel.new(adminContract.address);
+
+    await adminContract.setLicenseContract(licenseContract.address);
+    await adminContract.setParcelContract(parcelContract.address);
+
+    // Mint and approve tokens
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("20"));
+    await paymentTokenContract.approve(
+      adminContract.address,
+      web3.utils.toWei("20"),
+      {
+        from: accounts[1],
+      }
+    );
+
+    // Claim land
+    let coord = new BN(4).shln(32).or(new BN(33));
+    let result = await adminContract.claim(
+      accounts[1],
+      coord,
+      [new BN(0)],
+      web3.utils.toWei("20"),
+      web3.utils.toWei("2"),
+      {
+        from: accounts[1],
+      }
+    );
+
+    // Get parcel and block
+    let parcelId =
+      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
+    let originalExpiration = (await adminContract.licenseInfo(parcelId))
+      .expirationTimestamp;
+
+    // Update value
+    let result1 = await adminContract.updateValue(
+      parcelId,
+      web3.utils.toWei("10"),
+      new BN(0),
+      {
+        from: accounts[1],
+      }
+    );
+
+    let block = await web3.eth.getBlock(result1.receipt.blockNumber);
+
+    assert(
+      (await adminContract.licenseInfo(parcelId)).value ==
+        web3.utils.toWei("10"),
+      "Self-assessed value was not saved correctly"
+    );
+    assert(
+      (await adminContract.licenseInfo(parcelId)).expirationTimestamp -
+        block.timestamp ==
+        (originalExpiration - block.timestamp) * 2,
+      "Expiration was not updated correctly"
+    );
+  });
+
+  it("should fail to update value if license does not exist", async () => {});
+
+  it("should fail to update value if below minimum value", async () => {});
+
+  it("should fail to update value if expiration < 2 weeks", async () => {});
+
+  it("should update value even if expiration > 2 years", async () => {});
 });

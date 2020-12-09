@@ -32,6 +32,14 @@ contract GeoWebAdmin is Ownable {
         uint256 expirationTimestamp
     );
 
+    modifier onlyLicenseHolder(uint256 licenseId) {
+        require(
+            msg.sender == licenseContract.ownerOf(licenseId),
+            "Only holder of license can call this function."
+        );
+        _;
+    }
+
     constructor(
         address paymentTokenContractAddress,
         uint256 _minInitialValue,
@@ -77,6 +85,7 @@ contract GeoWebAdmin is Ownable {
         uint256 expirationTimestamp = initialFeePayment.div(perSecondFee).add(
             now
         );
+
         require(
             expirationTimestamp.sub(now) >= 365 days,
             "Resulting expiration date must be at least 365 days"
@@ -106,5 +115,49 @@ contract GeoWebAdmin is Ownable {
         l.expirationTimestamp = expirationTimestamp;
 
         emit LicenseInfoUpdated(newParcelId, initialValue, expirationTimestamp);
+    }
+
+    function updateValue(
+        uint256 licenseId,
+        uint256 newValue,
+        uint256 additionalFeePayment
+    ) external onlyLicenseHolder(licenseId) {
+        require(
+            newValue >= minInitialValue,
+            "New value must be >= the required minimum value"
+        );
+
+        LicenseInfo storage license = licenseInfo[licenseId];
+
+        // Update expiration date
+        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
+        uint256 newTimeBalance = existingTimeBalance.mul(license.value).div(
+            newValue
+        );
+
+        uint256 newExpirationTimestamp = newTimeBalance.add(now);
+
+        require(
+            newExpirationTimestamp.sub(now) >= 14 days,
+            "Resulting expiration date must be at least 14 days"
+        );
+
+        // Max expiration of 2 years
+        if (newExpirationTimestamp.sub(now) > 730 days) {
+            newExpirationTimestamp = now.add(730 days);
+        }
+
+        // Transfer payment
+        paymentTokenContract.transferFrom(
+            msg.sender,
+            owner(),
+            additionalFeePayment
+        );
+
+        // Save license info
+        license.value = newValue;
+        license.expirationTimestamp = newExpirationTimestamp;
+
+        emit LicenseInfoUpdated(licenseId, newValue, newExpirationTimestamp);
     }
 }
