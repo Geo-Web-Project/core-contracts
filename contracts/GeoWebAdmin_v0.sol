@@ -3,11 +3,12 @@ pragma solidity ^0.6.0;
 
 import "./ERC721License.sol";
 import "./GeoWebParcel.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-contract GeoWebAdmin is Ownable {
+contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     using SafeMath for uint256;
 
     ERC721License public licenseContract;
@@ -40,12 +41,14 @@ contract GeoWebAdmin is Ownable {
         _;
     }
 
-    constructor(
+    function initialize(
         address paymentTokenContractAddress,
         uint256 _minInitialValue,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator
-    ) public {
+    ) public initializer {
+        __Ownable_init();
+
         paymentTokenContract = IERC20(paymentTokenContractAddress);
         minInitialValue = _minInitialValue;
         perSecondFeeNumerator = _perSecondFeeNumerator;

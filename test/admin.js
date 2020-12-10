@@ -1,11 +1,13 @@
-const GeoWebAdmin = artifacts.require("GeoWebAdmin");
+const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
+
+const GeoWebAdmin_v0 = artifacts.require("GeoWebAdmin_v0");
 const ERC721License = artifacts.require("ERC721License");
 const GeoWebParcel = artifacts.require("GeoWebParcel");
 const ERC20Mock = artifacts.require("ERC20Mock");
 
 const BN = require("bn.js");
 
-contract("GeoWebAdmin", async (accounts) => {
+contract("GeoWebAdmin_v0", async (accounts) => {
   function perYearToPerSecondRate(annualRate) {
     return {
       numerator: annualRate * 100,
@@ -13,12 +15,39 @@ contract("GeoWebAdmin", async (accounts) => {
     };
   }
 
+  it("should keep state on upgrade", async () => {
+    let rate = perYearToPerSecondRate(0.1);
+    let minInitialValue = web3.utils.toWei("10");
+
+    let paymentTokenContract = await ERC20Mock.new();
+    let adminContract = await deployProxy(
+      GeoWebAdmin_v0,
+      [
+        paymentTokenContract.address,
+        minInitialValue,
+        rate.numerator,
+        rate.denominator,
+      ],
+      { unsafeAllowCustomTypes: true }
+    );
+
+    let adminContract2 = await upgradeProxy(
+      adminContract.address,
+      GeoWebAdmin_v0,
+      { unsafeAllowCustomTypes: true }
+    );
+
+    let _minInitialValue = await adminContract2.minInitialValue();
+    assert.equal(_minInitialValue, minInitialValue);
+  });
+
   it("should only allow owner to set license contract", async () => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -47,7 +76,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -76,7 +106,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -149,7 +180,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -202,7 +234,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -251,7 +284,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -300,7 +334,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -349,7 +384,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -413,7 +449,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -484,7 +521,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -555,7 +593,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -602,7 +641,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -666,7 +706,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
@@ -732,7 +773,8 @@ contract("GeoWebAdmin", async (accounts) => {
     let minInitialValue = web3.utils.toWei("10");
 
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin.new(
+    let adminContract = await GeoWebAdmin_v0.new();
+    await adminContract.initialize(
       paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
