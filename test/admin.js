@@ -144,6 +144,59 @@ contract("GeoWebAdmin", async (accounts) => {
     );
   });
 
+  it("should claim land if expiration == 2 years", async () => {
+    let rate = perYearToPerSecondRate(0.1);
+    let minInitialValue = web3.utils.toWei("10");
+
+    let paymentTokenContract = await ERC20Mock.new();
+    let adminContract = await GeoWebAdmin.new(
+      paymentTokenContract.address,
+      minInitialValue,
+      rate.numerator,
+      rate.denominator
+    );
+    let licenseContract = await ERC721License.new(adminContract.address);
+    let parcelContract = await GeoWebParcel.new(adminContract.address);
+
+    await adminContract.setLicenseContract(licenseContract.address);
+    await adminContract.setParcelContract(parcelContract.address);
+
+    // Mint and approve tokens
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
+    await paymentTokenContract.approve(
+      adminContract.address,
+      web3.utils.toWei("10"),
+      {
+        from: accounts[1],
+      }
+    );
+
+    // Claim land
+    let coord = new BN(4).shln(32).or(new BN(33));
+    let result = await adminContract.claim(
+      accounts[1],
+      coord,
+      [new BN(0)],
+      web3.utils.toWei("10"),
+      web3.utils.toWei("2"),
+      {
+        from: accounts[1],
+      }
+    );
+
+    // Get parcel and block
+    let parcelId =
+      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
+    let parcel = await parcelContract.getLandParcel(parcelId);
+    let block = await web3.eth.getBlock(result.receipt.blockNumber);
+
+    assert(
+      (await adminContract.licenseInfo(parcelId)).expirationTimestamp ==
+        block.timestamp + 60 * 60 * 24 * 365 * 2,
+      "Expiration was not saved correctly"
+    );
+  });
+
   it("should fail to claim land if below minimum value", async () => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
