@@ -3,11 +3,12 @@ pragma solidity ^0.6.0;
 
 import "./ERC721License.sol";
 import "./GeoWebParcel.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-contract GeoWebAdmin is Ownable {
+contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     using SafeMath for uint256;
 
     ERC721License public licenseContract;
@@ -32,12 +33,22 @@ contract GeoWebAdmin is Ownable {
         uint256 expirationTimestamp
     );
 
-    constructor(
+    modifier onlyLicenseHolder(uint256 licenseId) {
+        require(
+            msg.sender == licenseContract.ownerOf(licenseId),
+            "Only holder of license can call this function."
+        );
+        _;
+    }
+
+    function initialize(
         address paymentTokenContractAddress,
         uint256 _minInitialValue,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator
-    ) public {
+    ) public initializer {
+        __Ownable_init();
+
         paymentTokenContract = IERC20(paymentTokenContractAddress);
         minInitialValue = _minInitialValue;
         perSecondFeeNumerator = _perSecondFeeNumerator;
@@ -77,13 +88,14 @@ contract GeoWebAdmin is Ownable {
         uint256 expirationTimestamp = initialFeePayment.div(perSecondFee).add(
             now
         );
+
         require(
             expirationTimestamp.sub(now) >= 365 days,
             "Resulting expiration date must be at least 365 days"
         );
         require(
-            expirationTimestamp.sub(now) < 730 days,
-            "Resulting expiration date must be less than 730 days"
+            expirationTimestamp.sub(now) <= 730 days,
+            "Resulting expiration date must be less than or equal to 730 days"
         );
 
         // Transfer initial payment
@@ -106,5 +118,49 @@ contract GeoWebAdmin is Ownable {
         l.expirationTimestamp = expirationTimestamp;
 
         emit LicenseInfoUpdated(newParcelId, initialValue, expirationTimestamp);
+    }
+
+    function updateValue(
+        uint256 licenseId,
+        uint256 newValue,
+        uint256 additionalFeePayment
+    ) external onlyLicenseHolder(licenseId) {
+        require(
+            newValue >= minInitialValue,
+            "New value must be >= the required minimum value"
+        );
+
+        LicenseInfo storage license = licenseInfo[licenseId];
+
+        // Update expiration date
+        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
+        uint256 newTimeBalance = existingTimeBalance.mul(license.value).div(
+            newValue
+        );
+
+        uint256 newExpirationTimestamp = newTimeBalance.add(now);
+
+        require(
+            newExpirationTimestamp.sub(now) >= 14 days,
+            "Resulting expiration date must be at least 14 days"
+        );
+
+        // Max expiration of 2 years
+        if (newExpirationTimestamp.sub(now) > 730 days) {
+            newExpirationTimestamp = now.add(730 days);
+        }
+
+        // Transfer payment
+        paymentTokenContract.transferFrom(
+            msg.sender,
+            owner(),
+            additionalFeePayment
+        );
+
+        // Save license info
+        license.value = newValue;
+        license.expirationTimestamp = newExpirationTimestamp;
+
+        emit LicenseInfoUpdated(licenseId, newValue, newExpirationTimestamp);
     }
 }
