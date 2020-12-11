@@ -183,8 +183,16 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint256 newTimeBalance = existingTimeBalance.mul(license.value).div(
             newValue
         );
+        uint256 newPerSecondFee = newValue.mul(perSecondFeeNumerator).div(
+            perSecondFeeDenominator
+        );
+        uint256 additionalPaymentTimeBalance = additionalFeePayment.div(
+            newPerSecondFee
+        );
 
-        uint256 newExpirationTimestamp = newTimeBalance.add(now);
+        uint256 newExpirationTimestamp = newTimeBalance
+            .add(additionalPaymentTimeBalance)
+            .add(now);
 
         require(
             newExpirationTimestamp.sub(now) >= 14 days,
