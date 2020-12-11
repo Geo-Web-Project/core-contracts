@@ -125,6 +125,52 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint256 newValue,
         uint256 additionalFeePayment
     ) external onlyLicenseHolder(licenseId) {
+        _updateLicense(licenseId, newValue, additionalFeePayment);
+    }
+
+    function purchaseLicense(
+        uint256 licenseId,
+        uint256 maxPurchasePrice,
+        uint256 newValue,
+        uint256 additionalFeePayment
+    ) external {
+        LicenseInfo storage license = licenseInfo[licenseId];
+
+        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
+        uint256 perSecondFee = license.value.mul(perSecondFeeNumerator).div(
+            perSecondFeeDenominator
+        );
+        uint256 existingFeeBalance = existingTimeBalance.mul(perSecondFee);
+
+        uint256 totalBuyPrice = license.value.add(existingFeeBalance);
+        require(
+            totalBuyPrice <= maxPurchasePrice,
+            "Current license for sale price + current fee balance is above max purchase price"
+        );
+
+        // Transfer payment to seller
+        paymentTokenContract.transferFrom(
+            msg.sender,
+            licenseContract.ownerOf(licenseId),
+            totalBuyPrice
+        );
+
+        // Transfer license to buyer
+        licenseContract.transferFrom(
+            licenseContract.ownerOf(licenseId),
+            msg.sender,
+            licenseId
+        );
+
+        // Update license info
+        _updateLicense(licenseId, newValue, additionalFeePayment);
+    }
+
+    function _updateLicense(
+        uint256 licenseId,
+        uint256 newValue,
+        uint256 additionalFeePayment
+    ) internal {
         require(
             newValue >= minInitialValue,
             "New value must be >= the required minimum value"
