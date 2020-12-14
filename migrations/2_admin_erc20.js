@@ -1,6 +1,6 @@
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
-const GeoWebAdmin_v0 = artifacts.require("GeoWebAdmin_v0");
+const GeoWebAdminERC20_v0 = artifacts.require("GeoWebAdminERC20_v0");
 const ERC20Mock = artifacts.require("ERC20Mock");
 const ERC721License = artifacts.require("ERC721License");
 const GeoWebParcel = artifacts.require("GeoWebParcel");
@@ -17,7 +17,7 @@ module.exports = function (deployer, network, accounts) {
     let rate = perYearToPerSecondRate(0.1);
 
     let adminContract = await deployProxy(
-      GeoWebAdmin_v0,
+      GeoWebAdminERC20_v0,
       [
         erc20Mock.address,
         web3.utils.toWei("10"),
