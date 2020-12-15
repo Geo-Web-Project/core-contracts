@@ -123,24 +123,10 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
 
     function _purchaseLicense(
         uint256 licenseId,
-        uint256 maxPurchasePrice,
+        uint256 totalBuyPrice,
         uint256 newValue,
         uint256 additionalFeePayment
     ) internal {
-        LicenseInfo storage license = licenseInfo[licenseId];
-
-        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
-        uint256 perSecondFee = license.value.mul(perSecondFeeNumerator).div(
-            perSecondFeeDenominator
-        );
-        uint256 existingFeeBalance = existingTimeBalance.mul(perSecondFee);
-
-        uint256 totalBuyPrice = license.value.add(existingFeeBalance);
-        require(
-            totalBuyPrice <= maxPurchasePrice,
-            "Current license for sale price + current fee balance is above max purchase price"
-        );
-
         // Transfer payment to seller
         _transferSellerFeeReimbursement(
             licenseContract.ownerOf(licenseId),
@@ -204,6 +190,24 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         license.expirationTimestamp = newExpirationTimestamp;
 
         emit LicenseInfoUpdated(licenseId, newValue, newExpirationTimestamp);
+    }
+
+    function _calculateTotalBuyPrice(uint256 licenseId)
+        internal
+        view
+        returns (uint256)
+    {
+        LicenseInfo storage license = licenseInfo[licenseId];
+
+        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
+        uint256 perSecondFee = license.value.mul(perSecondFeeNumerator).div(
+            perSecondFeeDenominator
+        );
+        uint256 existingFeeBalance = existingTimeBalance.mul(perSecondFee);
+
+        uint256 totalBuyPrice = license.value.add(existingFeeBalance);
+
+        return totalBuyPrice;
     }
 
     function _transferFeePayment(uint256 amount) internal virtual;

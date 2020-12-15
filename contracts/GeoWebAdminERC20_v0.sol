@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-import "./ERC721License.sol";
-import "./GeoWebParcel.sol";
 import "./GeoWebAdmin_v0.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
 contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
     IERC20 public paymentTokenContract;
@@ -51,9 +46,15 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
         uint256 newValue,
         uint256 additionalFeePayment
     ) external {
+        uint256 totalBuyPrice = _calculateTotalBuyPrice(licenseId);
+        require(
+            totalBuyPrice <= maxPurchasePrice,
+            "Current license for sale price + current fee balance is above max purchase price"
+        );
+
         _purchaseLicense(
             licenseId,
-            maxPurchasePrice,
+            totalBuyPrice,
             newValue,
             additionalFeePayment
         );
