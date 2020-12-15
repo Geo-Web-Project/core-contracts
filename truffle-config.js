@@ -56,6 +56,16 @@ module.exports = {
       network_id: 0x2a,
       gas: 4700000,
     },
+    sokul: {
+      provider: function () {
+        return new HDWalletProvider(
+          process.env.DEV_PRIVATE_KEY,
+          "https://sokol.poa.network"
+        );
+      },
+      network_id: 77,
+      gasPrice: 1000000000,
+    },
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port
