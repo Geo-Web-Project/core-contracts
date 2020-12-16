@@ -52,6 +52,10 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         perSecondFeeDenominator = _perSecondFeeDenominator;
     }
 
+    function setMinInitialValue(uint256 _minInitialValue) external onlyOwner {
+        minInitialValue = _minInitialValue;
+    }
+
     function setParcelContract(address parcelContractAddress)
         external
         onlyOwner
