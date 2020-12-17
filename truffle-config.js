@@ -66,6 +66,16 @@ module.exports = {
       network_id: 77,
       gasPrice: 1000000000,
     },
+    xdai: {
+      provider: function () {
+        return new HDWalletProvider(
+          process.env.DEV_PRIVATE_KEY,
+          "https://xdai.poanetwork.dev"
+        );
+      },
+      network_id: 100,
+      gasPrice: 1000000000,
+    },
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port
