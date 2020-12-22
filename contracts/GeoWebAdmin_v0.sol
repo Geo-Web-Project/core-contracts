@@ -8,12 +8,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
+abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     using SafeMath for uint256;
 
     ERC721License public licenseContract;
     GeoWebParcel public parcelContract;
-    IERC20 public paymentTokenContract;
 
     uint256 public minInitialValue;
     uint256 public perSecondFeeNumerator;
@@ -42,17 +41,19 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     }
 
     function initialize(
-        address paymentTokenContractAddress,
         uint256 _minInitialValue,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator
     ) public initializer {
         __Ownable_init();
 
-        paymentTokenContract = IERC20(paymentTokenContractAddress);
         minInitialValue = _minInitialValue;
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
+    }
+
+    function setMinInitialValue(uint256 _minInitialValue) external onlyOwner {
+        minInitialValue = _minInitialValue;
     }
 
     function setParcelContract(address parcelContractAddress)
@@ -69,13 +70,13 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         licenseContract = ERC721License(licenseContractAddress);
     }
 
-    function claim(
+    function _claim(
         address _to,
         uint64 baseCoordinate,
-        uint256[] calldata path,
+        uint256[] memory path,
         uint256 initialValue,
         uint256 initialFeePayment
-    ) external {
+    ) internal {
         require(
             initialValue >= minInitialValue,
             "Initial value must be >= the required minimum value"
@@ -99,11 +100,7 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         );
 
         // Transfer initial payment
-        paymentTokenContract.transferFrom(
-            msg.sender,
-            owner(),
-            initialFeePayment
-        );
+        _transferFeePayment(initialFeePayment);
 
         // Mint parcel and license
         uint256 newParcelId = parcelContract.mintLandParcel(
@@ -120,37 +117,22 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         emit LicenseInfoUpdated(newParcelId, initialValue, expirationTimestamp);
     }
 
-    function updateValue(
+    function _updateValue(
         uint256 licenseId,
         uint256 newValue,
         uint256 additionalFeePayment
-    ) external onlyLicenseHolder(licenseId) {
+    ) internal {
         _updateLicense(licenseId, newValue, additionalFeePayment);
     }
 
-    function purchaseLicense(
+    function _purchaseLicense(
         uint256 licenseId,
-        uint256 maxPurchasePrice,
+        uint256 totalBuyPrice,
         uint256 newValue,
         uint256 additionalFeePayment
-    ) external {
-        LicenseInfo storage license = licenseInfo[licenseId];
-
-        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
-        uint256 perSecondFee = license.value.mul(perSecondFeeNumerator).div(
-            perSecondFeeDenominator
-        );
-        uint256 existingFeeBalance = existingTimeBalance.mul(perSecondFee);
-
-        uint256 totalBuyPrice = license.value.add(existingFeeBalance);
-        require(
-            totalBuyPrice <= maxPurchasePrice,
-            "Current license for sale price + current fee balance is above max purchase price"
-        );
-
+    ) internal {
         // Transfer payment to seller
-        paymentTokenContract.transferFrom(
-            msg.sender,
+        _transferSellerFeeReimbursement(
             licenseContract.ownerOf(licenseId),
             totalBuyPrice
         );
@@ -204,12 +186,8 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
             newExpirationTimestamp = now.add(730 days);
         }
 
-        // Transfer payment
-        paymentTokenContract.transferFrom(
-            msg.sender,
-            owner(),
-            additionalFeePayment
-        );
+        // Transfer additional payment
+        _transferFeePayment(additionalFeePayment);
 
         // Save license info
         license.value = newValue;
@@ -217,4 +195,28 @@ contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
 
         emit LicenseInfoUpdated(licenseId, newValue, newExpirationTimestamp);
     }
+
+    function _calculateTotalBuyPrice(uint256 licenseId)
+        internal
+        view
+        returns (uint256)
+    {
+        LicenseInfo storage license = licenseInfo[licenseId];
+
+        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
+        uint256 perSecondFee = license.value.mul(perSecondFeeNumerator).div(
+            perSecondFeeDenominator
+        );
+        uint256 existingFeeBalance = existingTimeBalance.mul(perSecondFee);
+
+        uint256 totalBuyPrice = license.value.add(existingFeeBalance);
+
+        return totalBuyPrice;
+    }
+
+    function _transferFeePayment(uint256 amount) internal virtual;
+
+    function _transferSellerFeeReimbursement(address seller, uint256 amount)
+        internal
+        virtual;
 }

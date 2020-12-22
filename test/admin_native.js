@@ -1,13 +1,17 @@
-const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
+const {
+  deployProxy,
+  upgradeProxy,
+  admin,
+} = require("@openzeppelin/truffle-upgrades");
 
-const GeoWebAdmin_v0 = artifacts.require("GeoWebAdmin_v0");
+const GeoWebAdminNative_v0 = artifacts.require("GeoWebAdminNative_v0");
 const ERC721License = artifacts.require("ERC721License");
 const GeoWebParcel = artifacts.require("GeoWebParcel");
 const ERC20Mock = artifacts.require("ERC20Mock");
 
 const BN = require("bn.js");
 
-contract("GeoWebAdmin_v0", async (accounts) => {
+contract("GeoWebAdminNative_v0", async (accounts) => {
   function perYearToPerSecondRate(annualRate) {
     return {
       numerator: annualRate * 100,
@@ -19,21 +23,15 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await deployProxy(
-      GeoWebAdmin_v0,
-      [
-        paymentTokenContract.address,
-        minInitialValue,
-        rate.numerator,
-        rate.denominator,
-      ],
+      GeoWebAdminNative_v0,
+      [minInitialValue, rate.numerator, rate.denominator],
       { unsafeAllowCustomTypes: true }
     );
 
     let adminContract2 = await upgradeProxy(
       adminContract.address,
-      GeoWebAdmin_v0,
+      GeoWebAdminNative_v0,
       { unsafeAllowCustomTypes: true }
     );
 
@@ -45,10 +43,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -75,10 +71,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -105,10 +99,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -119,15 +111,7 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    let originalBalance1 = await web3.eth.getBalance(accounts[1]);
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -136,10 +120,15 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee = new BN(
+      web3.utils.toWei(result.receipt.gasUsed.toString(), "gwei")
     );
 
     // Get parcel and block
@@ -153,15 +142,18 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       (await licenseContract.ownerOf(parcelId)) == accounts[1],
       "License was not minted correctly"
     );
-    assert(
-      (await paymentTokenContract.balanceOf(accounts[1])) ==
-        web3.utils.toWei("9"),
+    assert.equal(
+      (await web3.eth.getBalance(accounts[1])).toString(),
+      new BN(originalBalance1)
+        .sub(gasFee)
+        .sub(new BN(web3.utils.toWei("1")))
+        .toString(),
       "Fee was not withdrawn"
     );
-    assert(
-      (await paymentTokenContract.balanceOf(accounts[0])) ==
-        web3.utils.toWei("1"),
-      "Fee was not deposited"
+    assert.equal(
+      (await adminContract.pendingWithdrawals(accounts[0])).toString(),
+      web3.utils.toWei("1"),
+      "Fee was not deposited into owner's withdrawl account"
     );
     assert(
       (await adminContract.licenseInfo(parcelId)).value ==
@@ -179,10 +171,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -193,16 +183,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -210,9 +190,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("2"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("2"),
       }
     );
 
@@ -233,10 +213,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -246,16 +224,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
 
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -267,9 +235,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
         coord,
         [new BN(0)],
         web3.utils.toWei("9"),
-        web3.utils.toWei("1"),
         {
           from: accounts[1],
+          value: web3.utils.toWei("1"),
         }
       );
     } catch (error) {
@@ -283,10 +251,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -296,16 +262,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
 
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -317,9 +273,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
         coord,
         [new BN(0)],
         web3.utils.toWei("10"),
-        web3.utils.toWei("0.9"),
         {
           from: accounts[1],
+          value: web3.utils.toWei("0.9"),
         }
       );
     } catch (error) {
@@ -333,10 +289,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -346,16 +300,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
 
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -367,9 +311,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
         coord,
         [new BN(0)],
         web3.utils.toWei("10"),
-        web3.utils.toWei("2.1"),
         {
           from: accounts[1],
+          value: web3.utils.toWei("2.1"),
         }
       );
     } catch (error) {
@@ -383,10 +327,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -397,16 +339,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -414,9 +346,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
       }
     );
 
@@ -426,14 +358,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
 
     var err;
     try {
-      await adminContract.updateValue(
-        parcelId,
-        web3.utils.toWei("30"),
-        new BN(0),
-        {
-          from: accounts[0],
-        }
-      );
+      await adminContract.updateValue(parcelId, web3.utils.toWei("30"), {
+        from: accounts[0],
+      });
     } catch (error) {
       err = error;
     }
@@ -448,10 +375,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -462,16 +387,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -479,9 +394,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
       }
     );
 
@@ -495,7 +410,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let result1 = await adminContract.updateValue(
       parcelId,
       web3.utils.toWei("30"),
-      new BN(0),
       {
         from: accounts[1],
       }
@@ -508,10 +422,10 @@ contract("GeoWebAdmin_v0", async (accounts) => {
         web3.utils.toWei("30"),
       "Self-assessed value was not saved correctly"
     );
-    assert(
+    assert.equal(
       (await adminContract.licenseInfo(parcelId)).expirationTimestamp -
-        block.timestamp ==
-        (originalExpiration - block.timestamp) / 3,
+        block.timestamp,
+      Math.floor((originalExpiration - block.timestamp) / 3),
       "Expiration was not updated correctly"
     );
   });
@@ -520,10 +434,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -534,16 +446,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("20"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("20"),
-      {
-        from: accounts[1],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -551,9 +453,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("20"),
-      web3.utils.toWei("2"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("2"),
       }
     );
 
@@ -567,7 +469,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let result1 = await adminContract.updateValue(
       parcelId,
       web3.utils.toWei("10"),
-      new BN(0),
       {
         from: accounts[1],
       }
@@ -592,10 +493,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -606,15 +505,7 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    let originalBalance1 = await web3.eth.getBalance(accounts[1]);
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -623,10 +514,15 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee1 = new BN(
+      web3.utils.toWei(result.receipt.gasUsed.toString(), "gwei")
     );
 
     // Get parcel and block
@@ -636,13 +532,18 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       .expirationTimestamp;
 
     // Update value
-    await adminContract.updateValue(
+    let result2 = await adminContract.updateValue(
       parcelId,
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee2 = new BN(
+      web3.utils.toWei(result2.receipt.gasUsed.toString(), "gwei")
     );
 
     let perSecondFee = new BN(web3.utils.toWei("10"))
@@ -653,16 +554,19 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     );
 
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      web3.utils.toWei("8"),
+      (await web3.eth.getBalance(accounts[1])).toString(),
+      new BN(originalBalance1)
+        .sub(gasFee1)
+        .sub(gasFee2)
+        .sub(new BN(web3.utils.toWei("2")))
+        .toString(),
       "Fee was not withdrawn"
     );
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[0])).toString(),
+      (await adminContract.pendingWithdrawals(accounts[0])).toString(),
       web3.utils.toWei("2"),
-      "Fee was not deposited"
+      "Fee was not deposited into owner's withdrawl account"
     );
-
     assert.equal(
       (await adminContract.licenseInfo(parcelId)).value.toString(),
       web3.utils.toWei("10"),
@@ -681,10 +585,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -695,15 +597,7 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    let originalBalance1 = await web3.eth.getBalance(accounts[1]);
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -712,10 +606,15 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee1 = new BN(
+      web3.utils.toWei(result.receipt.gasUsed.toString(), "gwei")
     );
 
     // Get parcel and block
@@ -728,10 +627,15 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let result1 = await adminContract.updateValue(
       parcelId,
       web3.utils.toWei("20"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee2 = new BN(
+      web3.utils.toWei(result1.receipt.gasUsed.toString(), "gwei")
     );
 
     let block = await web3.eth.getBlock(result1.receipt.blockNumber);
@@ -744,16 +648,19 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     );
 
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      web3.utils.toWei("8"),
+      (await web3.eth.getBalance(accounts[1])).toString(),
+      new BN(originalBalance1)
+        .sub(gasFee1)
+        .sub(gasFee2)
+        .sub(new BN(web3.utils.toWei("2")))
+        .toString(),
       "Fee was not withdrawn"
     );
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[0])).toString(),
+      (await adminContract.pendingWithdrawals(accounts[0])).toString(),
       web3.utils.toWei("2"),
-      "Fee was not deposited"
+      "Fee was not deposited into owner's withdrawl account"
     );
-
     assert.equal(
       (await adminContract.licenseInfo(parcelId)).value.toString(),
       web3.utils.toWei("20"),
@@ -777,10 +684,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -791,15 +696,7 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    let originalBalance1 = await web3.eth.getBalance(accounts[1]);
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -808,10 +705,15 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee1 = new BN(
+      web3.utils.toWei(result.receipt.gasUsed.toString(), "gwei")
     );
 
     // Get parcel and block
@@ -823,10 +725,15 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let result1 = await adminContract.updateValue(
       parcelId,
       web3.utils.toWei("10"),
-      web3.utils.toWei("5"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("5"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee2 = new BN(
+      web3.utils.toWei(result1.receipt.gasUsed.toString(), "gwei")
     );
 
     let block = await web3.eth.getBlock(result1.receipt.blockNumber);
@@ -839,14 +746,18 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     );
 
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      web3.utils.toWei("4"),
+      (await web3.eth.getBalance(accounts[1])).toString(),
+      new BN(originalBalance1)
+        .sub(gasFee1)
+        .sub(gasFee2)
+        .sub(new BN(web3.utils.toWei("6")))
+        .toString(),
       "Fee was not withdrawn"
     );
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[0])).toString(),
+      (await adminContract.pendingWithdrawals(accounts[0])).toString(),
       web3.utils.toWei("6"),
-      "Fee was not deposited"
+      "Fee was not deposited into owner's withdrawl account"
     );
 
     assert.equal(
@@ -865,10 +776,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -879,26 +788,11 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
     var err;
     try {
-      await adminContract.updateValue(
-        new BN(0),
-        web3.utils.toWei("30"),
-        new BN(0),
-        {
-          from: accounts[1],
-        }
-      );
+      await adminContract.updateValue(new BN(0), web3.utils.toWei("30"), {
+        from: accounts[1],
+      });
     } catch (error) {
       err = error;
     }
@@ -913,10 +807,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -927,16 +819,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -944,9 +826,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
       }
     );
 
@@ -956,14 +838,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
 
     var err;
     try {
-      await adminContract.updateValue(
-        parcelId,
-        web3.utils.toWei("5"),
-        new BN(0),
-        {
-          from: accounts[1],
-        }
-      );
+      await adminContract.updateValue(parcelId, web3.utils.toWei("5"), {
+        from: accounts[1],
+      });
     } catch (error) {
       err = error;
     }
@@ -978,10 +855,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -992,16 +867,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -1009,9 +874,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
       }
     );
 
@@ -1021,14 +886,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
 
     var err;
     try {
-      await adminContract.updateValue(
-        parcelId,
-        web3.utils.toWei("1000"),
-        new BN(0),
-        {
-          from: accounts[1],
-        }
-      );
+      await adminContract.updateValue(parcelId, web3.utils.toWei("1000"), {
+        from: accounts[1],
+      });
     } catch (error) {
       err = error;
     }
@@ -1045,10 +905,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -1059,16 +917,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[1],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -1076,9 +924,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("100"),
-      web3.utils.toWei("10"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("10"),
       }
     );
 
@@ -1090,7 +938,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let result1 = await adminContract.updateValue(
       parcelId,
       web3.utils.toWei("10"),
-      new BN(0),
       {
         from: accounts[1],
       }
@@ -1115,10 +962,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -1129,23 +974,7 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("100"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[1],
-      }
-    );
-    await paymentTokenContract.mockMint(accounts[2], web3.utils.toWei("100"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[2],
-      }
-    );
+    let originalBalance2 = await web3.eth.getBalance(accounts[2]);
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -1154,9 +983,10 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
     );
 
@@ -1167,15 +997,20 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       .expirationTimestamp;
 
     // Purchase license
-    let maxPurchasePrice = web3.utils.toWei("20");
+    let maxPurchasePrice = web3.utils.toWei("11");
     let result1 = await adminContract.purchaseLicense(
       parcelId,
       maxPurchasePrice,
       web3.utils.toWei("30"),
-      new BN(0),
       {
         from: accounts[2],
+        value: maxPurchasePrice,
+        gasPrice: web3.utils.toWei("1", "gwei"),
       }
+    );
+
+    let gasFee2 = new BN(
+      web3.utils.toWei(result1.receipt.gasUsed.toString(), "gwei")
     );
 
     let block = await web3.eth.getBlock(result1.receipt.blockNumber);
@@ -1183,6 +1018,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       .mul(await adminContract.perSecondFeeNumerator())
       .div(await adminContract.perSecondFeeDenominator());
     let feeBalance = perSecondFee.muln(originalExpiration - block.timestamp);
+    let additionlPaymentTimeBalance = new BN(web3.utils.toWei("1"))
+      .sub(feeBalance)
+      .div(perSecondFee);
 
     assert.equal(
       await licenseContract.ownerOf(parcelId),
@@ -1190,24 +1028,33 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       "License did not transfer ownership"
     );
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      new BN(web3.utils.toWei("109")).add(feeBalance).toString(),
-      "Payment was not sent to seller"
+      (await web3.eth.getBalance(accounts[2])).toString(),
+      new BN(originalBalance2)
+        .sub(gasFee2)
+        .sub(new BN(web3.utils.toWei("11")))
+        .toString(),
+      "Payment was not taken from buyer"
     );
     assert.equal(
-      (await paymentTokenContract.balanceOf(accounts[2])).toString(),
-      new BN(web3.utils.toWei("90")).sub(feeBalance).toString(),
-      "Payment was not taken from buyer"
+      (await adminContract.pendingWithdrawals(accounts[1])).toString(),
+      new BN(web3.utils.toWei("10")).add(feeBalance),
+      "Payment was not sent to seller"
     );
     assert.equal(
       (await adminContract.licenseInfo(parcelId)).value.toString(),
       web3.utils.toWei("30"),
       "Self-assessed value was not saved correctly"
     );
+
+    let expectedDuration = (originalExpiration - block.timestamp) / 3;
     assert.equal(
-      (await adminContract.licenseInfo(parcelId)).expirationTimestamp -
-        block.timestamp,
-      (originalExpiration - block.timestamp) / 3,
+      (
+        await adminContract.licenseInfo(parcelId)
+      ).expirationTimestamp.toString(),
+      additionlPaymentTimeBalance
+        .addn(expectedDuration)
+        .add(new BN(block.timestamp))
+        .toString(),
       "Expiration was not updated correctly"
     );
   });
@@ -1216,10 +1063,8 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
 
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdmin_v0.new();
+    let adminContract = await GeoWebAdminNative_v0.new();
     await adminContract.initialize(
-      paymentTokenContract.address,
       minInitialValue,
       rate.numerator,
       rate.denominator
@@ -1230,24 +1075,6 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     await adminContract.setLicenseContract(licenseContract.address);
     await adminContract.setParcelContract(parcelContract.address);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("100"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[1],
-      }
-    );
-    await paymentTokenContract.mockMint(accounts[2], web3.utils.toWei("100"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[2],
-      }
-    );
-
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
     let result = await adminContract.claim(
@@ -1255,9 +1082,9 @@ contract("GeoWebAdmin_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
       {
         from: accounts[1],
+        value: web3.utils.toWei("1"),
       }
     );
 
@@ -1276,9 +1103,10 @@ contract("GeoWebAdmin_v0", async (accounts) => {
         parcelId,
         maxPurchasePrice,
         web3.utils.toWei("30"),
-        new BN(0),
         {
           from: accounts[2],
+          value: maxPurchasePrice,
+          gasPrice: web3.utils.toWei("1", "gwei"),
         }
       );
     } catch (error) {
@@ -1288,6 +1116,68 @@ contract("GeoWebAdmin_v0", async (accounts) => {
     assert(
       err.message.includes(
         "Current license for sale price + current fee balance is above max purchase price"
+      ),
+      "Expected an error but did not get one"
+    );
+  });
+
+  it("should fail to purchase license from owner if sent value is too low", async () => {
+    let rate = perYearToPerSecondRate(0.1);
+    let minInitialValue = web3.utils.toWei("10");
+
+    let adminContract = await GeoWebAdminNative_v0.new();
+    await adminContract.initialize(
+      minInitialValue,
+      rate.numerator,
+      rate.denominator
+    );
+    let licenseContract = await ERC721License.new(adminContract.address);
+    let parcelContract = await GeoWebParcel.new(adminContract.address);
+
+    await adminContract.setLicenseContract(licenseContract.address);
+    await adminContract.setParcelContract(parcelContract.address);
+
+    // Claim land
+    let coord = new BN(4).shln(32).or(new BN(33));
+    let result = await adminContract.claim(
+      accounts[1],
+      coord,
+      [new BN(0)],
+      web3.utils.toWei("10"),
+      {
+        from: accounts[1],
+        value: web3.utils.toWei("1"),
+      }
+    );
+
+    // Get parcel and block
+    let parcelId =
+      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
+    let originalExpiration = (await adminContract.licenseInfo(parcelId))
+      .expirationTimestamp;
+
+    // Purchase license
+    let maxPurchasePrice = web3.utils.toWei("11");
+
+    var err;
+    try {
+      await adminContract.purchaseLicense(
+        parcelId,
+        maxPurchasePrice,
+        web3.utils.toWei("30"),
+        {
+          from: accounts[2],
+          value: web3.utils.toWei("10"),
+          gasPrice: web3.utils.toWei("1", "gwei"),
+        }
+      );
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes(
+        "Message value must be greater than or equal to the total buy price"
       ),
       "Expected an error but did not get one"
     );

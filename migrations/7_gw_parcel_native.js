@@ -1,7 +1,7 @@
 const GeoWebCoordinate = artifacts.require("GeoWebCoordinate");
 const GeoWebCoordinatePath = artifacts.require("GeoWebCoordinatePath");
 const GeoWebParcel = artifacts.require("GeoWebParcel");
-const GeoWebAdmin_v0 = artifacts.require("GeoWebAdmin_v0");
+const GeoWebAdminNative_v0 = artifacts.require("GeoWebAdminNative_v0");
 
 module.exports = function (deployer, network, accounts) {
   deployer.deploy(GeoWebCoordinate);
@@ -10,7 +10,7 @@ module.exports = function (deployer, network, accounts) {
   deployer.link(GeoWebCoordinate, GeoWebParcel);
   deployer.link(GeoWebCoordinatePath, GeoWebParcel);
 
-  return GeoWebAdmin_v0.deployed().then(async (adminContract) => {
+  return GeoWebAdminNative_v0.deployed().then(async (adminContract) => {
     let parcelContract = await deployer.deploy(
       GeoWebParcel,
       adminContract.address
