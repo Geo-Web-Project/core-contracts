@@ -15,6 +15,7 @@ function perYearToPerSecondRate(annualRate) {
 module.exports = function (deployer, network, accounts) {
   return deployer.deploy(ERC20Mock).then(async (erc20Mock) => {
     let rate = perYearToPerSecondRate(0.1);
+    let ductionAuctionLength = 60 * 60 * 24 * 7;
 
     let adminContract = await deployProxy(
       GeoWebAdminERC20_v0,
@@ -23,6 +24,7 @@ module.exports = function (deployer, network, accounts) {
         web3.utils.toWei("10"),
         rate.numerator,
         rate.denominator,
+        ductionAuctionLength,
       ],
       { deployer, unsafeAllowCustomTypes: true }
     );

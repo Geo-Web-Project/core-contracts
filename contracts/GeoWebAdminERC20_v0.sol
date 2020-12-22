@@ -11,12 +11,14 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
         address paymentTokenContractAddress,
         uint256 _minInitialValue,
         uint256 _perSecondFeeNumerator,
-        uint256 _perSecondFeeDenominator
+        uint256 _perSecondFeeDenominator,
+        uint256 _ductionAuctionLengthInSeconds
     ) public initializer {
         GeoWebAdmin_v0.initialize(
             _minInitialValue,
             _perSecondFeeNumerator,
-            _perSecondFeeDenominator
+            _perSecondFeeDenominator,
+            _ductionAuctionLengthInSeconds
         );
 
         paymentTokenContract = IERC20(paymentTokenContractAddress);
@@ -46,7 +48,7 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
         uint256 newValue,
         uint256 additionalFeePayment
     ) external {
-        uint256 totalBuyPrice = _calculateTotalBuyPrice(licenseId);
+        uint256 totalBuyPrice = calculateTotalBuyPrice(licenseId);
         require(
             totalBuyPrice <= maxPurchasePrice,
             "Current license for sale price + current fee balance is above max purchase price"

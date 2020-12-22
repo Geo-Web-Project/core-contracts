@@ -15,9 +15,27 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
     };
   }
 
+  async function makeAdminContract(paymentTokenContract) {
+    let rate = perYearToPerSecondRate(0.1);
+    let minInitialValue = web3.utils.toWei("10");
+    let ductionAuctionLength = new BN(60 * 60 * 24 * 7);
+
+    let adminContract = await GeoWebAdminERC20_v0.new();
+    await adminContract.initialize(
+      paymentTokenContract.address,
+      minInitialValue,
+      rate.numerator,
+      rate.denominator,
+      ductionAuctionLength
+    );
+
+    return adminContract;
+  }
+
   it("should keep state on upgrade", async () => {
     let rate = perYearToPerSecondRate(0.1);
     let minInitialValue = web3.utils.toWei("10");
+    let ductionAuctionLength = 60 * 60 * 24 * 7;
 
     let paymentTokenContract = await ERC20Mock.new();
     let adminContract = await deployProxy(
@@ -27,6 +45,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         minInitialValue,
         rate.numerator,
         rate.denominator,
+        ductionAuctionLength,
       ],
       { unsafeAllowCustomTypes: true }
     );
@@ -42,17 +61,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should only allow owner to set license contract", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let license = await ERC721License.new(adminContract.address);
 
     var err;
@@ -72,17 +82,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should only allow owner to set parcel contract", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let parcel = await GeoWebParcel.new(adminContract.address);
 
     var err;
@@ -102,17 +103,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should claim land and collect initial fee", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -176,17 +168,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should claim land if expiration == 2 years", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -230,17 +213,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to claim land if below minimum value", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -280,17 +254,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to claim land if expiration < 1 year", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -330,17 +295,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to claim land if expiration > 2 years", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -380,17 +336,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should only allow license holder to update value", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -445,17 +392,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should update to higher value and collect fee", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -517,17 +455,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should update to lower value and collect fee", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -589,17 +518,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should accept additional payment without value change", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -678,17 +598,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should accept additional payment with value change", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -774,17 +685,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should cap additional payment at 2 years", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -862,17 +764,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to update value if license does not exist", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -910,17 +803,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to update value if below minimum value", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -975,17 +859,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to update value if expiration < 2 weeks", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -1042,17 +917,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should update value even if expiration > 2 years", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -1112,17 +978,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should purchase license from owner", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -1213,17 +1070,8 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to purchase license from owner if max purchase price is too low", async () => {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-
     let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator
-    );
+    let adminContract = await makeAdminContract(paymentTokenContract);
     let licenseContract = await ERC721License.new(adminContract.address);
     let parcelContract = await GeoWebParcel.new(adminContract.address);
 
@@ -1290,6 +1138,38 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         "Current license for sale price + current fee balance is above max purchase price"
       ),
       "Expected an error but did not get one"
+    );
+  });
+
+  it("should calculate buy price during auction", async () => {
+    let paymentTokenContract = await ERC20Mock.new();
+    let adminContract = await makeAdminContract(paymentTokenContract);
+
+    let buyPrice = await adminContract._calculateTotalBuyPrice(
+      10000,
+      100,
+      312400
+    );
+    assert.equal(
+      buyPrice.toString(),
+      new BN(50).toString(),
+      "Buy price is not correct"
+    );
+  });
+
+  it("should calculate buy price after auction ends", async () => {
+    let paymentTokenContract = await ERC20Mock.new();
+    let adminContract = await makeAdminContract(paymentTokenContract);
+
+    let buyPrice = await adminContract._calculateTotalBuyPrice(
+      10000,
+      100,
+      700000
+    );
+    assert.equal(
+      buyPrice.toString(),
+      new BN(0).toString(),
+      "Buy price is not correct"
     );
   });
 });

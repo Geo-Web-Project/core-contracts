@@ -17,6 +17,7 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     uint256 public minInitialValue;
     uint256 public perSecondFeeNumerator;
     uint256 public perSecondFeeDenominator;
+    uint256 public ductionAuctionLengthInSeconds;
 
     /// @notice licenseInfo stores admin information about licenses
     mapping(uint256 => LicenseInfo) public licenseInfo;
@@ -43,13 +44,15 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     function initialize(
         uint256 _minInitialValue,
         uint256 _perSecondFeeNumerator,
-        uint256 _perSecondFeeDenominator
+        uint256 _perSecondFeeDenominator,
+        uint256 _ductionAuctionLengthInSeconds
     ) public initializer {
         __Ownable_init();
 
         minInitialValue = _minInitialValue;
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
+        ductionAuctionLengthInSeconds = _ductionAuctionLengthInSeconds;
     }
 
     function setMinInitialValue(uint256 _minInitialValue) external onlyOwner {
@@ -70,6 +73,13 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         licenseContract = ERC721License(licenseContractAddress);
     }
 
+    function setDuctionAuctionLength(uint256 _ductionAuctionLengthInSeconds)
+        external
+        onlyOwner
+    {
+        ductionAuctionLengthInSeconds = _ductionAuctionLengthInSeconds;
+    }
+
     function _claim(
         address _to,
         uint64 baseCoordinate,
@@ -83,12 +93,12 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         );
 
         // Check expiration date
-        uint256 perSecondFee = initialValue.mul(perSecondFeeNumerator).div(
-            perSecondFeeDenominator
-        );
-        uint256 expirationTimestamp = initialFeePayment.div(perSecondFee).add(
-            now
-        );
+        uint256 perSecondFee =
+            initialValue.mul(perSecondFeeNumerator).div(
+                perSecondFeeDenominator
+            );
+        uint256 expirationTimestamp =
+            initialFeePayment.div(perSecondFee).add(now);
 
         require(
             expirationTimestamp.sub(now) >= 365 days,
@@ -103,10 +113,8 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         _transferFeePayment(initialFeePayment);
 
         // Mint parcel and license
-        uint256 newParcelId = parcelContract.mintLandParcel(
-            baseCoordinate,
-            path
-        );
+        uint256 newParcelId =
+            parcelContract.mintLandParcel(baseCoordinate, path);
         licenseContract.mintLicense(_to, newParcelId);
 
         // Save license info
@@ -162,19 +170,15 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
 
         // Update expiration date
         uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
-        uint256 newTimeBalance = existingTimeBalance.mul(license.value).div(
-            newValue
-        );
-        uint256 newPerSecondFee = newValue.mul(perSecondFeeNumerator).div(
-            perSecondFeeDenominator
-        );
-        uint256 additionalPaymentTimeBalance = additionalFeePayment.div(
-            newPerSecondFee
-        );
+        uint256 newTimeBalance =
+            existingTimeBalance.mul(license.value).div(newValue);
+        uint256 newPerSecondFee =
+            newValue.mul(perSecondFeeNumerator).div(perSecondFeeDenominator);
+        uint256 additionalPaymentTimeBalance =
+            additionalFeePayment.div(newPerSecondFee);
 
-        uint256 newExpirationTimestamp = newTimeBalance
-            .add(additionalPaymentTimeBalance)
-            .add(now);
+        uint256 newExpirationTimestamp =
+            newTimeBalance.add(additionalPaymentTimeBalance).add(now);
 
         require(
             newExpirationTimestamp.sub(now) >= 14 days,
@@ -196,22 +200,48 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         emit LicenseInfoUpdated(licenseId, newValue, newExpirationTimestamp);
     }
 
-    function _calculateTotalBuyPrice(uint256 licenseId)
-        internal
+    function calculateTotalBuyPrice(uint256 licenseId)
+        public
         view
         returns (uint256)
     {
         LicenseInfo storage license = licenseInfo[licenseId];
+        return
+            _calculateTotalBuyPrice(
+                license.expirationTimestamp,
+                license.value,
+                now
+            );
+    }
 
-        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
-        uint256 perSecondFee = license.value.mul(perSecondFeeNumerator).div(
-            perSecondFeeDenominator
-        );
-        uint256 existingFeeBalance = existingTimeBalance.mul(perSecondFee);
+    function _calculateTotalBuyPrice(
+        uint256 expirationTimestamp,
+        uint256 value,
+        uint256 currentTime
+    ) public view returns (uint256) {
+        if (expirationTimestamp < currentTime) {
+            //  Duction auction price
+            uint256 auctionTime = currentTime.sub(expirationTimestamp);
 
-        uint256 totalBuyPrice = license.value.add(existingFeeBalance);
+            if (auctionTime > ductionAuctionLengthInSeconds) {
+                // Auction is over, parcel is free
+                return 0;
+            } else {
+                uint256 dutchAuctionDecrease =
+                    value.mul(auctionTime).div(ductionAuctionLengthInSeconds);
+                return value.sub(dutchAuctionDecrease);
+            }
+        } else {
+            // Normal buy price
+            uint256 existingTimeBalance = expirationTimestamp.sub(currentTime);
+            uint256 perSecondFee =
+                value.mul(perSecondFeeNumerator).div(perSecondFeeDenominator);
+            uint256 existingFeeBalance = existingTimeBalance.mul(perSecondFee);
 
-        return totalBuyPrice;
+            uint256 totalBuyPrice = value.add(existingFeeBalance);
+
+            return totalBuyPrice;
+        }
     }
 
     function _transferFeePayment(uint256 amount) internal virtual;
