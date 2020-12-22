@@ -30,7 +30,7 @@ contract GeoWebAdminNative_v0 is GeoWebAdmin_v0 {
         uint256 maxPurchasePrice,
         uint256 newValue
     ) external payable {
-        uint256 totalBuyPrice = _calculateTotalBuyPrice(licenseId);
+        uint256 totalBuyPrice = calculateTotalBuyPrice(licenseId);
         require(
             totalBuyPrice <= maxPurchasePrice,
             "Current license for sale price + current fee balance is above max purchase price"

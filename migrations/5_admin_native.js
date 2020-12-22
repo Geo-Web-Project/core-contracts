@@ -11,14 +11,20 @@ function perYearToPerSecondRate(annualRate) {
 
 module.exports = async function (deployer, network, accounts) {
   let rate = perYearToPerSecondRate(0.1);
+  let ductionAuctionLength = 60 * 60 * 24 * 7;
 
-  await deployer.deploy(GeoWebAdminNative_v0);
+  // await deployer.deploy(GeoWebAdminNative_v0);
 
-  let admin = await GeoWebAdminNative_v0.deployed();
-  admin.initialize(web3.utils.toWei("10"), rate.numerator, rate.denominator);
-  // deployProxy(
-  //   GeoWebAdminNative_v0,
-  //   [web3.utils.toWei("10"), rate.numerator, rate.denominator],
-  //   { deployer, unsafeAllowCustomTypes: true }
-  // );
+  // let admin = await GeoWebAdminNative_v0.deployed();
+  // admin.initialize(web3.utils.toWei("10"), rate.numerator, rate.denominator);
+  deployProxy(
+    GeoWebAdminNative_v0,
+    [
+      web3.utils.toWei("10"),
+      rate.numerator,
+      rate.denominator,
+      ductionAuctionLength,
+    ],
+    { deployer, unsafeAllowCustomTypes: true }
+  );
 };
