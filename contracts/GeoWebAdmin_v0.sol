@@ -180,9 +180,10 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint256 newExpirationTimestamp =
             newTimeBalance.add(additionalPaymentTimeBalance).add(now);
 
+        // TODO: Increase minimum expiration
         require(
-            newExpirationTimestamp.sub(now) >= 14 days,
-            "Resulting expiration date must be at least 14 days"
+            newExpirationTimestamp.sub(now) >= 1 days,
+            "Resulting expiration date must be at least 1 day"
         );
 
         // Max expiration of 2 years
