@@ -17,7 +17,7 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     uint256 public minInitialValue;
     uint256 public perSecondFeeNumerator;
     uint256 public perSecondFeeDenominator;
-    uint256 public ductionAuctionLengthInSeconds;
+    uint256 public dutchAuctionLengthInSeconds;
 
     /// @notice licenseInfo stores admin information about licenses
     mapping(uint256 => LicenseInfo) public licenseInfo;
@@ -45,14 +45,14 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint256 _minInitialValue,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator,
-        uint256 _ductionAuctionLengthInSeconds
+        uint256 _dutchAuctionLengthInSeconds
     ) public initializer {
         __Ownable_init();
 
         minInitialValue = _minInitialValue;
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
-        ductionAuctionLengthInSeconds = _ductionAuctionLengthInSeconds;
+        dutchAuctionLengthInSeconds = _dutchAuctionLengthInSeconds;
     }
 
     function setMinInitialValue(uint256 _minInitialValue) external onlyOwner {
@@ -73,11 +73,11 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         licenseContract = ERC721License(licenseContractAddress);
     }
 
-    function setDuctionAuctionLength(uint256 _ductionAuctionLengthInSeconds)
+    function setDutchAuctionLength(uint256 _dutchAuctionLengthInSeconds)
         external
         onlyOwner
     {
-        ductionAuctionLengthInSeconds = _ductionAuctionLengthInSeconds;
+        dutchAuctionLengthInSeconds = _dutchAuctionLengthInSeconds;
     }
 
     function _claim(
@@ -224,12 +224,12 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
             //  Duction auction price
             uint256 auctionTime = currentTime.sub(expirationTimestamp);
 
-            if (auctionTime > ductionAuctionLengthInSeconds) {
+            if (auctionTime > dutchAuctionLengthInSeconds) {
                 // Auction is over, parcel is free
                 return 0;
             } else {
                 uint256 dutchAuctionDecrease =
-                    value.mul(auctionTime).div(ductionAuctionLengthInSeconds);
+                    value.mul(auctionTime).div(dutchAuctionLengthInSeconds);
                 return value.sub(dutchAuctionDecrease);
             }
         } else {

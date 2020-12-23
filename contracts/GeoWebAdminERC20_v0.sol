@@ -12,13 +12,13 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
         uint256 _minInitialValue,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator,
-        uint256 _ductionAuctionLengthInSeconds
+        uint256 _dutchAuctionLengthInSeconds
     ) public initializer {
         GeoWebAdmin_v0.initialize(
             _minInitialValue,
             _perSecondFeeNumerator,
             _perSecondFeeDenominator,
-            _ductionAuctionLengthInSeconds
+            _dutchAuctionLengthInSeconds
         );
 
         paymentTokenContract = IERC20(paymentTokenContractAddress);
