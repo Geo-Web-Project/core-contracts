@@ -169,7 +169,13 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         LicenseInfo storage license = licenseInfo[licenseId];
 
         // Update expiration date
-        uint256 existingTimeBalance = license.expirationTimestamp.sub(now);
+        uint256 existingTimeBalance;
+        if (license.expirationTimestamp > now) {
+            existingTimeBalance = license.expirationTimestamp.sub(now);
+        } else {
+            existingTimeBalance = 0;
+        }
+
         uint256 newTimeBalance =
             existingTimeBalance.mul(license.value).div(newValue);
         uint256 newPerSecondFee =

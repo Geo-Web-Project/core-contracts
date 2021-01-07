@@ -1,4 +1,4 @@
 node_modules/
 build/
 .envrc
-.openzeppelin
+.openzeppelin/unknown-*.json
