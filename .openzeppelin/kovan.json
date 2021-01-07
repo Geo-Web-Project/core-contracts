@@ -1,0 +1,124 @@
+{
+  "manifestVersion": "3.1",
+  "impls": {
+    "7c472c388d2167420e7b3064fba0a4d658fec28fdc5621f8caef4a701eee37b9": {
+      "address": "0xE0a6Df5da9fA94E0EBad8da58b6E2B6889C4547F",
+      "txHash": "0x290f7fcc03d34e87b1d5468b2f4ed8ac804169eb9623498e2f9f6bd3abafe737",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:24"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:29"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:20"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "licenseContract",
+            "type": "t_contract(ERC721License)1050",
+            "src": "GeoWebAdmin_v0.sol:14"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "parcelContract",
+            "type": "t_contract(GeoWebParcel)2718",
+            "src": "GeoWebAdmin_v0.sol:15"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "minInitialValue",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:17"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "perSecondFeeNumerator",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:18"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "perSecondFeeDenominator",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:19"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "dutchAuctionLengthInSeconds",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:20"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "licenseInfo",
+            "type": "t_mapping(t_uint256,t_struct(LicenseInfo)1385_storage)",
+            "src": "GeoWebAdmin_v0.sol:23"
+          },
+          {
+            "contract": "GeoWebAdminERC20_v0",
+            "label": "paymentTokenContract",
+            "type": "t_contract(IERC20)4086",
+            "src": "GeoWebAdminERC20_v0.sol:8"
+          }
+        ],
+        "types": {
+          "t_contract(IERC20)4086": {
+            "label": "contract IERC20"
+          },
+          "t_contract(ERC721License)1050": {
+            "label": "contract ERC721License"
+          },
+          "t_contract(GeoWebParcel)2718": {
+            "label": "contract GeoWebParcel"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_struct(LicenseInfo)1385_storage)": {
+            "label": "mapping(uint256 => struct GeoWebAdmin_v0.LicenseInfo)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    }
+  },
+  "admin": {
+    "address": "0x50FaA96375C143556D79130C1757C9905EBb2724",
+    "txHash": "0x6802ffe70ba9dfb2b7c069115362f90ac1dba6f95dbdf802350634532597f6f8"
+  }
+}

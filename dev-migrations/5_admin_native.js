@@ -17,7 +17,7 @@ module.exports = async function (deployer, network, accounts) {
 
   // let admin = await GeoWebAdminNative_v0.deployed();
   // admin.initialize(web3.utils.toWei("10"), rate.numerator, rate.denominator);
-  deployProxy(
+  await deployProxy(
     GeoWebAdminNative_v0,
     [
       web3.utils.toWei("10"),
