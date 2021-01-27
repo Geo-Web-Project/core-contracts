@@ -12,9 +12,17 @@ contract GeoWebAdminNative_v0 is GeoWebAdmin_v0 {
         address _to,
         uint64 baseCoordinate,
         uint256[] calldata path,
-        uint256 initialValue
+        uint256 initialValue,
+        string calldata ceramicDocId
     ) external payable {
-        _claim(_to, baseCoordinate, path, initialValue, msg.value);
+        _claim(
+            _to,
+            baseCoordinate,
+            path,
+            initialValue,
+            msg.value,
+            ceramicDocId
+        );
     }
 
     function updateValue(uint256 licenseId, uint256 newValue)

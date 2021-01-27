@@ -129,6 +129,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -194,6 +195,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("2"),
+      "",
       {
         from: accounts[1],
       }
@@ -242,6 +244,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         [new BN(0)],
         web3.utils.toWei("9"),
         web3.utils.toWei("1"),
+        "",
         {
           from: accounts[1],
         }
@@ -283,6 +286,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         [new BN(0)],
         web3.utils.toWei("10"),
         web3.utils.toWei("0.9"),
+        "",
         {
           from: accounts[1],
         }
@@ -324,6 +328,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         [new BN(0)],
         web3.utils.toWei("10"),
         web3.utils.toWei("2.1"),
+        "",
         {
           from: accounts[1],
         }
@@ -362,6 +367,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -418,6 +424,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -481,6 +488,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("20"),
       web3.utils.toWei("2"),
+      "",
       {
         from: accounts[1],
       }
@@ -544,6 +552,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -624,6 +633,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -711,6 +721,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -829,6 +840,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -885,6 +897,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -943,6 +956,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("100"),
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
       }
@@ -1012,6 +1026,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -1104,6 +1119,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }

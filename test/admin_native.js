@@ -113,6 +113,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -175,6 +176,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("2"),
@@ -212,6 +214,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
         coord,
         [new BN(0)],
         web3.utils.toWei("9"),
+        "",
         {
           from: accounts[1],
           value: web3.utils.toWei("1"),
@@ -242,6 +245,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
         coord,
         [new BN(0)],
         web3.utils.toWei("10"),
+        "",
         {
           from: accounts[1],
           value: web3.utils.toWei("0.9"),
@@ -272,6 +276,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
         coord,
         [new BN(0)],
         web3.utils.toWei("10"),
+        "",
         {
           from: accounts[1],
           value: web3.utils.toWei("2.1"),
@@ -299,6 +304,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -339,6 +345,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -390,6 +397,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("20"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("2"),
@@ -443,6 +451,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -527,6 +536,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -618,6 +628,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -723,6 +734,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -763,6 +775,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -805,6 +818,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("100"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("10"),
@@ -856,6 +870,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -949,6 +964,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),
@@ -1003,6 +1019,7 @@ contract("GeoWebAdminNative_v0", async (accounts) => {
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
         value: web3.utils.toWei("1"),

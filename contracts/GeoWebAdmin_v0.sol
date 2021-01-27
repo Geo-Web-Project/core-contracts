@@ -85,7 +85,8 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint64 baseCoordinate,
         uint256[] memory path,
         uint256 initialValue,
-        uint256 initialFeePayment
+        uint256 initialFeePayment,
+        string memory ceramicDocId
     ) internal {
         require(
             initialValue >= minInitialValue,
@@ -115,7 +116,7 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         // Mint parcel and license
         uint256 newParcelId =
             parcelContract.mintLandParcel(baseCoordinate, path);
-        licenseContract.mintLicense(_to, newParcelId);
+        licenseContract.mintLicense(_to, newParcelId, ceramicDocId);
 
         // Save license info
         LicenseInfo storage l = licenseInfo[newParcelId];
