@@ -7,7 +7,7 @@ contract("ERC721License", async (accounts) => {
 
     var err;
     try {
-      await license.mintLicense(accounts[1], new BN(1), "", {
+      await license.mintLicense(accounts[1], new BN(1), "test-cid", {
         from: accounts[1],
       });
     } catch (error) {
@@ -16,9 +16,13 @@ contract("ERC721License", async (accounts) => {
 
     assert(err, "Expected an error but did not get one");
 
-    await license.mintLicense(accounts[1], new BN(1), "", {
+    await license.mintLicense(accounts[1], new BN(1), "test-cid", {
       from: accounts[0],
     });
+
+    const cid = await license.rootContent(new BN(1));
+
+    assert.equal(cid, "test-cid", "Root CID is incorrect");
   });
 
   it("should allow owner to transfer", async () => {
@@ -62,5 +66,63 @@ contract("ERC721License", async (accounts) => {
     }
 
     assert(err, "Expected an error but did not get one");
+  });
+
+  it("should only allow owner to set content", async () => {
+    let license = await ERC721License.new(accounts[0]);
+
+    await license.mintLicense(accounts[1], new BN(2), "test-cid", {
+      from: accounts[0],
+    });
+
+    var err;
+    try {
+      await license.setContent(new BN(2), "test-cid-1", {
+        from: accounts[0],
+      });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(err, "Expected an error but did not get one");
+
+    await license.setContent(new BN(2), "test-cid-1", {
+      from: accounts[1],
+    });
+
+    const cid = await license.rootContent(new BN(2));
+
+    assert.equal(cid, "test-cid-1", "Root CID is incorrect");
+  });
+
+  it("should only allow owner to remove content", async () => {
+    let license = await ERC721License.new(accounts[0]);
+
+    await license.mintLicense(accounts[1], new BN(2), "test-cid", {
+      from: accounts[0],
+    });
+
+    await license.setContent(new BN(2), "test-cid-1", {
+      from: accounts[1],
+    });
+
+    var err;
+    try {
+      await license.removeContent(new BN(2), {
+        from: accounts[0],
+      });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(err, "Expected an error but did not get one");
+
+    await license.removeContent(new BN(2), {
+      from: accounts[1],
+    });
+
+    const cid = await license.rootContent(new BN(2));
+
+    assert.equal(cid, "", "Root CID is incorrect");
   });
 });
