@@ -526,6 +526,121 @@
           }
         }
       }
+    },
+    "db4c0afc16721b3a4f290f5fbcc22bbf360426e876e58bc4d358c7bb8c1b46a9": {
+      "address": "0x86301665ad5C602f547D2C8e310d6E5f173fba71",
+      "txHash": "0x40d26dd51c2eb1532ac1796b80d6644df503b6e716ce72438787fbca13bd2f88",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:24"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:29"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:20"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "licenseContract",
+            "type": "t_contract(ERC721License)246",
+            "src": "GeoWebAdmin_v0.sol:14"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "parcelContract",
+            "type": "t_contract(GeoWebParcel)2869",
+            "src": "GeoWebAdmin_v0.sol:15"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "minInitialValue",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:17"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "perSecondFeeNumerator",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:18"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "perSecondFeeDenominator",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:19"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "dutchAuctionLengthInSeconds",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:20"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "licenseInfo",
+            "type": "t_mapping(t_uint256,t_struct(LicenseInfo)1524_storage)",
+            "src": "GeoWebAdmin_v0.sol:23"
+          },
+          {
+            "contract": "GeoWebAdminERC20_v0",
+            "label": "paymentTokenContract",
+            "type": "t_contract(IERC20)6125",
+            "src": "GeoWebAdminERC20_v0.sol:8"
+          }
+        ],
+        "types": {
+          "t_contract(IERC20)6125": {
+            "label": "contract IERC20"
+          },
+          "t_contract(ERC721License)246": {
+            "label": "contract ERC721License"
+          },
+          "t_contract(GeoWebParcel)2869": {
+            "label": "contract GeoWebParcel"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_struct(LicenseInfo)1524_storage)": {
+            "label": "mapping(uint256 => struct GeoWebAdmin_v0.LicenseInfo)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
     }
   },
   "admin": {
