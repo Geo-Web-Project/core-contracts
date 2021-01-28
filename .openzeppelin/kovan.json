@@ -115,6 +115,269 @@
           }
         }
       }
+    },
+    "d1067c5c1b6e9bd24ab0e758c029c64752df8a55797a85774782462143959667": {
+      "address": "0x97F0B9E917b302003519A311f26dcFc58a6006c9",
+      "txHash": "0x5faa3ea14d2db567d5ad94e8b35153e1867b7d344b4c8a02ce255b94e96abc7b",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:24"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:29"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:20"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "licenseContract",
+            "type": "t_contract(ERC721License)250",
+            "src": "GeoWebAdmin_v0.sol:14"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "parcelContract",
+            "type": "t_contract(GeoWebParcel)2858",
+            "src": "GeoWebAdmin_v0.sol:15"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "minInitialValue",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:17"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "perSecondFeeNumerator",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:18"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "perSecondFeeDenominator",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:19"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "dutchAuctionLengthInSeconds",
+            "type": "t_uint256",
+            "src": "GeoWebAdmin_v0.sol:20"
+          },
+          {
+            "contract": "GeoWebAdmin_v0",
+            "label": "licenseInfo",
+            "type": "t_mapping(t_uint256,t_struct(LicenseInfo)1522_storage)",
+            "src": "GeoWebAdmin_v0.sol:23"
+          },
+          {
+            "contract": "GeoWebAdminERC20_v0",
+            "label": "paymentTokenContract",
+            "type": "t_contract(IERC20)6114",
+            "src": "GeoWebAdminERC20_v0.sol:8"
+          }
+        ],
+        "types": {
+          "t_contract(IERC20)6114": {
+            "label": "contract IERC20"
+          },
+          "t_contract(ERC721License)250": {
+            "label": "contract ERC721License"
+          },
+          "t_contract(GeoWebParcel)2858": {
+            "label": "contract GeoWebParcel"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_struct(LicenseInfo)1522_storage)": {
+            "label": "mapping(uint256 => struct GeoWebAdmin_v0.LicenseInfo)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "5d43af3cde3a356a00e8dffd82ee358e7cb384d6489ac77183eae6151a43a9dd": {
+      "address": "0x7361315C7650C1E8Cdcd9DAB37b2d0346ec82a46",
+      "txHash": "0x13b86adc570e1732058d0a7bab6ae483462d05a948910579aa24302c93d9bcbe",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:24"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:29"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "_supportedInterfaces",
+            "type": "t_mapping(t_bytes4,t_bool)",
+            "src": "../@openzeppelin/contracts-upgradeable/introspection/ERC165Upgradeable.sol:23"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/introspection/ERC165Upgradeable.sol:59"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_holderTokens",
+            "type": "t_mapping(t_address,t_struct(UintSet)4902_storage)",
+            "src": "ERC721Upgradeable.sol:41"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_tokenOwners",
+            "type": "t_struct(UintToAddressMap)4365_storage",
+            "src": "ERC721Upgradeable.sol:44"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_tokenApprovals",
+            "type": "t_mapping(t_uint256,t_address)",
+            "src": "ERC721Upgradeable.sol:47"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_operatorApprovals",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "ERC721Upgradeable.sol:50"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_name",
+            "type": "t_string_storage",
+            "src": "ERC721Upgradeable.sol:53"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_symbol",
+            "type": "t_string_storage",
+            "src": "ERC721Upgradeable.sol:56"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_tokenURIs",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "src": "ERC721Upgradeable.sol:59"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "_baseURI",
+            "type": "t_string_storage",
+            "src": "ERC721Upgradeable.sol:62"
+          },
+          {
+            "contract": "ERC721Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)41_storage",
+            "src": "ERC721Upgradeable.sol:605"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)2975_storage)",
+            "src": "../@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:225"
+          },
+          {
+            "contract": "ERC721License",
+            "label": "rootContent",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "src": "ERC721License.sol:11"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)2975_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_mapping(t_address,t_struct(UintSet)4902_storage)": {
+            "label": "mapping(address => struct EnumerableSetUpgradeable.UintSet)"
+          },
+          "t_struct(UintToAddressMap)4365_storage": {
+            "label": "struct EnumerableMapUpgradeable.UintToAddressMap"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)41_storage": {
+            "label": "uint256[41]"
+          },
+          "t_mapping(t_bytes4,t_bool)": {
+            "label": "mapping(bytes4 => bool)"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
     }
   },
   "admin": {
