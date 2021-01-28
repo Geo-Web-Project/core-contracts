@@ -864,6 +864,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       maxPurchasePrice,
       web3.utils.toWei("30"),
       new BN(0),
+      "test-cid-101",
       {
         from: accounts[2],
       }
@@ -874,6 +875,10 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       .mul(await adminContract.perSecondFeeNumerator())
       .div(await adminContract.perSecondFeeDenominator());
     let feeBalance = perSecondFee.muln(originalExpiration - block.timestamp);
+
+    const cid = await licenseContract.rootContent(parcelId);
+
+    assert.equal(cid, "test-cid-101", "Root CID is incorrect");
 
     assert.equal(
       await licenseContract.ownerOf(parcelId),
@@ -947,6 +952,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         maxPurchasePrice,
         web3.utils.toWei("30"),
         new BN(0),
+        "",
         {
           from: accounts[2],
         }

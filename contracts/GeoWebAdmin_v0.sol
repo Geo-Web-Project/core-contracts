@@ -138,7 +138,8 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint256 licenseId,
         uint256 totalBuyPrice,
         uint256 newValue,
-        uint256 additionalFeePayment
+        uint256 additionalFeePayment,
+        string memory ceramicDocId
     ) internal {
         // Transfer payment to seller
         _transferSellerFeeReimbursement(
@@ -155,6 +156,9 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
 
         // Update license info
         _updateLicense(licenseId, newValue, additionalFeePayment);
+
+        // Update docID
+        licenseContract.setContent(licenseId, ceramicDocId);
     }
 
     function _updateLicense(

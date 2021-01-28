@@ -137,7 +137,7 @@ contract("ERC721License", async (accounts) => {
     assert(err, "Expected an error but did not get one");
   });
 
-  it("should only allow owner to set content", async () => {
+  it("should allow owner to set content", async () => {
     const {
       adminContract,
       paymentTokenContract,
@@ -152,7 +152,7 @@ contract("ERC721License", async (accounts) => {
     var err;
     try {
       await licenseContract.setContent(new BN(2), "test-cid-1", {
-        from: accounts[0],
+        from: accounts[2],
       });
     } catch (error) {
       err = error;
@@ -169,7 +169,39 @@ contract("ERC721License", async (accounts) => {
     assert.equal(cid, "test-cid-1", "Root CID is incorrect");
   });
 
-  it("should only allow owner to remove content", async () => {
+  it("should allow admin to set content", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
+
+    await licenseContract.mintLicense(accounts[1], new BN(2), "test-cid", {
+      from: accounts[0],
+    });
+
+    var err;
+    try {
+      await licenseContract.setContent(new BN(2), "test-cid-1", {
+        from: accounts[2],
+      });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(err, "Expected an error but did not get one");
+
+    await licenseContract.setContent(new BN(2), "test-cid-1", {
+      from: accounts[0],
+    });
+
+    const cid = await licenseContract.rootContent(new BN(2));
+
+    assert.equal(cid, "test-cid-1", "Root CID is incorrect");
+  });
+
+  it("should allow owner to remove content", async () => {
     const {
       adminContract,
       paymentTokenContract,
@@ -188,7 +220,7 @@ contract("ERC721License", async (accounts) => {
     var err;
     try {
       await licenseContract.removeContent(new BN(2), {
-        from: accounts[0],
+        from: accounts[2],
       });
     } catch (error) {
       err = error;
@@ -198,6 +230,42 @@ contract("ERC721License", async (accounts) => {
 
     await licenseContract.removeContent(new BN(2), {
       from: accounts[1],
+    });
+
+    const cid = await licenseContract.rootContent(new BN(2));
+
+    assert.equal(cid, "", "Root CID is incorrect");
+  });
+
+  it("should allow owner to remove content", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
+
+    await licenseContract.mintLicense(accounts[1], new BN(2), "test-cid", {
+      from: accounts[0],
+    });
+
+    await licenseContract.setContent(new BN(2), "test-cid-1", {
+      from: accounts[1],
+    });
+
+    var err;
+    try {
+      await licenseContract.removeContent(new BN(2), {
+        from: accounts[2],
+      });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(err, "Expected an error but did not get one");
+
+    await licenseContract.removeContent(new BN(2), {
+      from: accounts[0],
     });
 
     const cid = await licenseContract.rootContent(new BN(2));

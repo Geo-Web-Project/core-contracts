@@ -36,7 +36,8 @@ contract GeoWebAdminNative_v0 is GeoWebAdmin_v0 {
     function purchaseLicense(
         uint256 licenseId,
         uint256 maxPurchasePrice,
-        uint256 newValue
+        uint256 newValue,
+        string calldata ceramicDocId
     ) external payable {
         uint256 totalBuyPrice = calculateTotalBuyPrice(licenseId);
         require(
@@ -53,7 +54,8 @@ contract GeoWebAdminNative_v0 is GeoWebAdmin_v0 {
             licenseId,
             totalBuyPrice,
             newValue,
-            msg.value.sub(totalBuyPrice)
+            msg.value.sub(totalBuyPrice),
+            ceramicDocId
         );
     }
 

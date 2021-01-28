@@ -54,7 +54,8 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
         uint256 licenseId,
         uint256 maxPurchasePrice,
         uint256 newValue,
-        uint256 additionalFeePayment
+        uint256 additionalFeePayment,
+        string calldata ceramicDocId
     ) external {
         uint256 totalBuyPrice = calculateTotalBuyPrice(licenseId);
         require(
@@ -66,7 +67,8 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
             licenseId,
             totalBuyPrice,
             newValue,
-            additionalFeePayment
+            additionalFeePayment,
+            ceramicDocId
         );
     }
 

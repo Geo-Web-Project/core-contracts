@@ -13,14 +13,6 @@ contract ERC721License is ERC721Upgradeable, AccessControlUpgradeable {
     event RootContentCIDUpdated(uint256 indexed tokenId, string rootContent);
     event RootContentCIDRemoved(uint256 indexed tokenId);
 
-    modifier onlyTokenOwner(uint256 licenseId) {
-        require(
-            msg.sender == ownerOf(licenseId),
-            "Only holder of license can call this function."
-        );
-        _;
-    }
-
     function initialize(address admin) public {
         __ERC721_init("GeoWebLicense", "GEO");
 
@@ -40,12 +32,20 @@ contract ERC721License is ERC721Upgradeable, AccessControlUpgradeable {
 
     function setContent(uint256 tokenId, string calldata ceramicDocId)
         external
-        onlyTokenOwner(tokenId)
     {
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721License: caller is not owner nor approved"
+        );
         _setContent(tokenId, ceramicDocId);
     }
 
-    function removeContent(uint256 tokenId) external onlyTokenOwner(tokenId) {
+    function removeContent(uint256 tokenId) external {
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721License: caller is not owner nor approved"
+        );
+
         _removeContent(tokenId);
     }
 
