@@ -15,21 +15,24 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
     };
   }
 
-  async function makeAdminContract(paymentTokenContract) {
-    let rate = perYearToPerSecondRate(0.1);
-    let minInitialValue = web3.utils.toWei("10");
-    let ductionAuctionLength = new BN(60 * 60 * 24 * 7);
+  async function getContracts() {
+    let adminContract = await GeoWebAdminERC20_v0.deployed();
 
-    let adminContract = await GeoWebAdminERC20_v0.new();
-    await adminContract.initialize(
-      paymentTokenContract.address,
-      minInitialValue,
-      rate.numerator,
-      rate.denominator,
-      ductionAuctionLength
-    );
+    let paymentTokenContractAddress = await adminContract.paymentTokenContract();
+    let paymentTokenContract = await ERC20Mock.at(paymentTokenContractAddress);
 
-    return adminContract;
+    let parcelContractAddress = await adminContract.parcelContract();
+    let parcelContract = await GeoWebParcel.at(parcelContractAddress);
+
+    let licenseContractAddress = await adminContract.licenseContract();
+    let licenseContract = await ERC721License.at(licenseContractAddress);
+
+    return {
+      adminContract: adminContract,
+      paymentTokenContract: paymentTokenContract,
+      parcelContract: parcelContract,
+      licenseContract: licenseContract,
+    };
   }
 
   it("should keep state on upgrade", async () => {
@@ -61,13 +64,16 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should only allow owner to set license contract", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let license = await ERC721License.new(adminContract.address);
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     var err;
     try {
-      await adminContract.setLicenseContract(license.address, {
+      await adminContract.setLicenseContract(licenseContract.address, {
         from: accounts[1],
       });
     } catch (error) {
@@ -76,19 +82,22 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
 
     assert(err, "Expected an error but did not get one");
 
-    await adminContract.setLicenseContract(license.address, {
+    await adminContract.setLicenseContract(licenseContract.address, {
       from: accounts[0],
     });
   });
 
   it("should only allow owner to set parcel contract", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let parcel = await GeoWebParcel.new(adminContract.address);
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     var err;
     try {
-      await adminContract.setParcelContract(parcel.address, {
+      await adminContract.setParcelContract(parcelContract.address, {
         from: accounts[1],
       });
     } catch (error) {
@@ -97,29 +106,31 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
 
     assert(err, "Expected an error but did not get one");
 
-    await adminContract.setParcelContract(parcel.address, {
+    await adminContract.setParcelContract(parcelContract.address, {
       from: accounts[0],
     });
   });
 
   it("should claim land and collect initial fee", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
+    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("1000"));
     await paymentTokenContract.approve(
       adminContract.address,
-      web3.utils.toWei("10"),
+      web3.utils.toWei("1000"),
       {
         from: accounts[1],
       }
     );
+
+    let startingBalance0 = await paymentTokenContract.balanceOf(accounts[0]);
+    let startingBalance1 = await paymentTokenContract.balanceOf(accounts[1]);
 
     // Claim land
     let coord = new BN(4).shln(32).or(new BN(33));
@@ -129,6 +140,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -147,12 +159,12 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
     );
     assert(
       (await paymentTokenContract.balanceOf(accounts[1])) ==
-        web3.utils.toWei("9"),
+        startingBalance1.sub(new BN(web3.utils.toWei("1"))).toString(),
       "Fee was not withdrawn"
     );
     assert(
       (await paymentTokenContract.balanceOf(accounts[0])) ==
-        web3.utils.toWei("1"),
+        startingBalance0.add(new BN(web3.utils.toWei("1"))).toString(),
       "Fee was not deposited"
     );
     assert(
@@ -168,32 +180,24 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should claim land if expiration == 2 years", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
     await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(5).shln(32).or(new BN(33));
     let result = await adminContract.claim(
       accounts[1],
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("2"),
+      "",
       {
         from: accounts[1],
       }
@@ -213,26 +217,15 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to claim land if below minimum value", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(6).shln(32).or(new BN(33));
 
     var err;
     try {
@@ -242,6 +235,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         [new BN(0)],
         web3.utils.toWei("9"),
         web3.utils.toWei("1"),
+        "",
         {
           from: accounts[1],
         }
@@ -250,30 +244,22 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       err = error;
     }
 
-    assert(err, "Expected an error but did not get one");
+    assert(
+      err.message.includes("Initial value must be"),
+      "Expected an error but did not get one"
+    );
   });
 
   it("should fail to claim land if expiration < 1 year", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(7).shln(32).or(new BN(33));
 
     var err;
     try {
@@ -283,6 +269,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         [new BN(0)],
         web3.utils.toWei("10"),
         web3.utils.toWei("0.9"),
+        "",
         {
           from: accounts[1],
         }
@@ -291,30 +278,22 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       err = error;
     }
 
-    assert(err, "Expected an error but did not get one");
+    assert(
+      err.message.includes("Resulting expiration date must be"),
+      "Expected an error but did not get one"
+    );
   });
 
   it("should fail to claim land if expiration > 2 years", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(8).shln(32).or(new BN(33));
 
     var err;
     try {
@@ -324,6 +303,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         [new BN(0)],
         web3.utils.toWei("10"),
         web3.utils.toWei("2.1"),
+        "",
         {
           from: accounts[1],
         }
@@ -332,44 +312,22 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       err = error;
     }
 
-    assert(err, "Expected an error but did not get one");
+    assert(
+      err.message.includes("Resulting expiration date must be"),
+      "Expected an error but did not get one"
+    );
   });
 
   it("should only allow license holder to update value", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
-    // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
-    let result = await adminContract.claim(
-      accounts[1],
-      coord,
-      [new BN(0)],
-      web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Get parcel and block
-    let parcelId =
-      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
+    let parcelId = new BN(1);
 
     var err;
     try {
@@ -392,40 +350,15 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should update to higher value and collect fee", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
-    // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
-    let result = await adminContract.claim(
-      accounts[1],
-      coord,
-      [new BN(0)],
-      web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Get parcel and block
-    let parcelId =
-      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
+    let parcelId = new BN(1);
     let originalExpiration = (await adminContract.licenseInfo(parcelId))
       .expirationTimestamp;
 
@@ -455,44 +388,28 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should update to lower value and collect fee", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
+    let parcelId = new BN(1);
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("20"));
-    await paymentTokenContract.approve(
-      adminContract.address,
+    // Update value
+    await adminContract.updateValue(
+      parcelId,
       web3.utils.toWei("20"),
+      new BN(0),
       {
         from: accounts[1],
       }
     );
 
-    // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
-    let result = await adminContract.claim(
-      accounts[1],
-      coord,
-      [new BN(0)],
-      web3.utils.toWei("20"),
-      web3.utils.toWei("2"),
-      {
-        from: accounts[1],
-      }
-    );
-
-    // Get parcel and block
-    let parcelId =
-      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
     let originalExpiration = (await adminContract.licenseInfo(parcelId))
       .expirationTimestamp;
 
-    // Update value
     let result1 = await adminContract.updateValue(
       parcelId,
       web3.utils.toWei("10"),
@@ -504,46 +421,36 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
 
     let block = await web3.eth.getBlock(result1.receipt.blockNumber);
 
-    assert(
-      (await adminContract.licenseInfo(parcelId)).value ==
-        web3.utils.toWei("10"),
+    assert.equal(
+      (await adminContract.licenseInfo(parcelId)).value,
+      web3.utils.toWei("10"),
       "Self-assessed value was not saved correctly"
     );
-    assert(
+    assert.equal(
       (await adminContract.licenseInfo(parcelId)).expirationTimestamp -
-        block.timestamp ==
-        (originalExpiration - block.timestamp) * 2,
+        block.timestamp,
+      (originalExpiration - block.timestamp) * 2,
       "Expiration was not updated correctly"
     );
   });
 
   it("should accept additional payment without value change", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(12).shln(32).or(new BN(33));
     let result = await adminContract.claim(
       accounts[1],
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -554,6 +461,9 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
     let originalExpiration = (await adminContract.licenseInfo(parcelId))
       .expirationTimestamp;
+
+    let startingBalance0 = await paymentTokenContract.balanceOf(accounts[0]);
+    let startingBalance1 = await paymentTokenContract.balanceOf(accounts[1]);
 
     // Update value
     await adminContract.updateValue(
@@ -574,12 +484,12 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
 
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      web3.utils.toWei("8"),
+      startingBalance1.sub(new BN(web3.utils.toWei("1"))).toString(),
       "Fee was not withdrawn"
     );
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[0])).toString(),
-      web3.utils.toWei("2"),
+      startingBalance0.add(new BN(web3.utils.toWei("1"))).toString(),
       "Fee was not deposited"
     );
 
@@ -598,32 +508,22 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should accept additional payment with value change", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(13).shln(32).or(new BN(33));
     let result = await adminContract.claim(
       accounts[1],
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -634,6 +534,9 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
     let originalExpiration = (await adminContract.licenseInfo(parcelId))
       .expirationTimestamp;
+
+    let startingBalance0 = await paymentTokenContract.balanceOf(accounts[0]);
+    let startingBalance1 = await paymentTokenContract.balanceOf(accounts[1]);
 
     // Update value
     let result1 = await adminContract.updateValue(
@@ -656,12 +559,12 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
 
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      web3.utils.toWei("8"),
+      startingBalance1.sub(new BN(web3.utils.toWei("1"))).toString(),
       "Fee was not withdrawn"
     );
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[0])).toString(),
-      web3.utils.toWei("2"),
+      startingBalance0.add(new BN(web3.utils.toWei("1"))).toString(),
       "Fee was not deposited"
     );
 
@@ -685,32 +588,22 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should cap additional payment at 2 years", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(11).shln(32).or(new BN(33));
     let result = await adminContract.claim(
       accounts[1],
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -721,6 +614,9 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
     let originalExpiration = (await adminContract.licenseInfo(parcelId))
       .expirationTimestamp;
+
+    let startingBalance0 = await paymentTokenContract.balanceOf(accounts[0]);
+    let startingBalance1 = await paymentTokenContract.balanceOf(accounts[1]);
 
     let result1 = await adminContract.updateValue(
       parcelId,
@@ -742,12 +638,12 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
 
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      web3.utils.toWei("4"),
+      startingBalance1.sub(new BN(web3.utils.toWei("5"))).toString(),
       "Fee was not withdrawn"
     );
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[0])).toString(),
-      web3.utils.toWei("6"),
+      startingBalance0.add(new BN(web3.utils.toWei("5"))).toString(),
       "Fee was not deposited"
     );
 
@@ -764,28 +660,17 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to update value if license does not exist", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     var err;
     try {
       await adminContract.updateValue(
-        new BN(0),
+        new BN(1000),
         web3.utils.toWei("30"),
         new BN(0),
         {
@@ -803,40 +688,15 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to update value if below minimum value", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
-
-    // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
-    let result = await adminContract.claim(
-      accounts[1],
-      coord,
-      [new BN(0)],
-      web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Get parcel and block
-    let parcelId =
-      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
+    let parcelId = new BN(1);
 
     var err;
     try {
@@ -858,91 +718,71 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
     );
   });
 
-  it("should fail to update value if expiration < 2 weeks", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
+  // it("should fail to update value if expiration < 2 weeks", async () => {
+  //   const {
+  //     adminContract,
+  //     paymentTokenContract,
+  //     licenseContract,
+  //     parcelContract,
+  //   } = await getContracts();
 
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
+  //   // Claim land
+  //   let coord = new BN(15).shln(32).or(new BN(33));
+  //   let result = await adminContract.claim(
+  //     accounts[1],
+  //     coord,
+  //     [new BN(0)],
+  //     web3.utils.toWei("10"),
+  //     web3.utils.toWei("1"),
+  //     "",
+  //     {
+  //       from: accounts[1],
+  //     }
+  //   );
 
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("10"),
-      {
-        from: accounts[1],
-      }
-    );
+  //   // Get parcel and block
+  //   let parcelId =
+  //     result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
 
-    // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
-    let result = await adminContract.claim(
-      accounts[1],
-      coord,
-      [new BN(0)],
-      web3.utils.toWei("10"),
-      web3.utils.toWei("1"),
-      {
-        from: accounts[1],
-      }
-    );
+  //   var err;
+  //   try {
+  //     await adminContract.updateValue(
+  //       parcelId,
+  //       web3.utils.toWei("1000"),
+  //       new BN(0),
+  //       {
+  //         from: accounts[1],
+  //       }
+  //     );
+  //   } catch (error) {
+  //     err = error;
+  //   }
 
-    // Get parcel and block
-    let parcelId =
-      result.receipt.rawLogs[result.receipt.rawLogs.length - 2].topics[1];
-
-    var err;
-    try {
-      await adminContract.updateValue(
-        parcelId,
-        web3.utils.toWei("1000"),
-        new BN(0),
-        {
-          from: accounts[1],
-        }
-      );
-    } catch (error) {
-      err = error;
-    }
-
-    assert(
-      err.message.includes(
-        "Resulting expiration date must be at least 14 days"
-      ),
-      "Expected an error but did not get one"
-    );
-  });
+  //   assert(
+  //     err.message.includes(
+  //       "Resulting expiration date must be at least 14 days"
+  //     ),
+  //     "Expected an error but did not get one"
+  //   );
+  // });
 
   it("should update value even if expiration > 2 years", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("10"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[1],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(16).shln(32).or(new BN(33));
     let result = await adminContract.claim(
       accounts[1],
       coord,
       [new BN(0)],
       web3.utils.toWei("100"),
       web3.utils.toWei("10"),
+      "",
       {
         from: accounts[1],
       }
@@ -978,23 +818,13 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should purchase license from owner", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("100"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[1],
-      }
-    );
     await paymentTokenContract.mockMint(accounts[2], web3.utils.toWei("100"));
     await paymentTokenContract.approve(
       adminContract.address,
@@ -1005,13 +835,14 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
     );
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(17).shln(32).or(new BN(33));
     let result = await adminContract.claim(
       accounts[1],
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -1023,6 +854,9 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
     let originalExpiration = (await adminContract.licenseInfo(parcelId))
       .expirationTimestamp;
 
+    let startingBalance1 = await paymentTokenContract.balanceOf(accounts[1]);
+    let startingBalance2 = await paymentTokenContract.balanceOf(accounts[2]);
+
     // Purchase license
     let maxPurchasePrice = web3.utils.toWei("20");
     let result1 = await adminContract.purchaseLicense(
@@ -1030,6 +864,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       maxPurchasePrice,
       web3.utils.toWei("30"),
       new BN(0),
+      "test-cid-101",
       {
         from: accounts[2],
       }
@@ -1041,6 +876,10 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
       .div(await adminContract.perSecondFeeDenominator());
     let feeBalance = perSecondFee.muln(originalExpiration - block.timestamp);
 
+    const cid = await licenseContract.rootContent(parcelId);
+
+    assert.equal(cid, "test-cid-101", "Root CID is incorrect");
+
     assert.equal(
       await licenseContract.ownerOf(parcelId),
       accounts[2],
@@ -1048,12 +887,18 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
     );
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[1])).toString(),
-      new BN(web3.utils.toWei("109")).add(feeBalance).toString(),
+      startingBalance1
+        .add(feeBalance)
+        .add(new BN(web3.utils.toWei("10")))
+        .toString(),
       "Payment was not sent to seller"
     );
     assert.equal(
       (await paymentTokenContract.balanceOf(accounts[2])).toString(),
-      new BN(web3.utils.toWei("90")).sub(feeBalance).toString(),
+      startingBalance2
+        .sub(feeBalance)
+        .sub(new BN(web3.utils.toWei("10")))
+        .toString(),
       "Payment was not taken from buyer"
     );
     assert.equal(
@@ -1070,40 +915,22 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should fail to purchase license from owner if max purchase price is too low", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-    let licenseContract = await ERC721License.new(adminContract.address);
-    let parcelContract = await GeoWebParcel.new(adminContract.address);
-
-    await adminContract.setLicenseContract(licenseContract.address);
-    await adminContract.setParcelContract(parcelContract.address);
-
-    // Mint and approve tokens
-    await paymentTokenContract.mockMint(accounts[1], web3.utils.toWei("100"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[1],
-      }
-    );
-    await paymentTokenContract.mockMint(accounts[2], web3.utils.toWei("100"));
-    await paymentTokenContract.approve(
-      adminContract.address,
-      web3.utils.toWei("100"),
-      {
-        from: accounts[2],
-      }
-    );
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     // Claim land
-    let coord = new BN(4).shln(32).or(new BN(33));
+    let coord = new BN(18).shln(32).or(new BN(33));
     let result = await adminContract.claim(
       accounts[1],
       coord,
       [new BN(0)],
       web3.utils.toWei("10"),
       web3.utils.toWei("1"),
+      "",
       {
         from: accounts[1],
       }
@@ -1125,6 +952,7 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
         maxPurchasePrice,
         web3.utils.toWei("30"),
         new BN(0),
+        "",
         {
           from: accounts[2],
         }
@@ -1142,8 +970,12 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should calculate buy price during auction", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
     let buyPrice = await adminContract._calculateTotalBuyPrice(
       10000,
@@ -1158,9 +990,12 @@ contract("GeoWebAdminERC20_v0", async (accounts) => {
   });
 
   it("should calculate buy price after auction ends", async () => {
-    let paymentTokenContract = await ERC20Mock.new();
-    let adminContract = await makeAdminContract(paymentTokenContract);
-
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
     let buyPrice = await adminContract._calculateTotalBuyPrice(
       10000,
       100,

@@ -85,7 +85,8 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint64 baseCoordinate,
         uint256[] memory path,
         uint256 initialValue,
-        uint256 initialFeePayment
+        uint256 initialFeePayment,
+        string memory ceramicDocId
     ) internal {
         require(
             initialValue >= minInitialValue,
@@ -115,7 +116,7 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         // Mint parcel and license
         uint256 newParcelId =
             parcelContract.mintLandParcel(baseCoordinate, path);
-        licenseContract.mintLicense(_to, newParcelId);
+        licenseContract.mintLicense(_to, newParcelId, ceramicDocId);
 
         // Save license info
         LicenseInfo storage l = licenseInfo[newParcelId];
@@ -137,7 +138,8 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint256 licenseId,
         uint256 totalBuyPrice,
         uint256 newValue,
-        uint256 additionalFeePayment
+        uint256 additionalFeePayment,
+        string memory ceramicDocId
     ) internal {
         // Transfer payment to seller
         _transferSellerFeeReimbursement(
@@ -154,6 +156,9 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
 
         // Update license info
         _updateLicense(licenseId, newValue, additionalFeePayment);
+
+        // Update docID
+        licenseContract.setContent(licenseId, ceramicDocId);
     }
 
     function _updateLicense(

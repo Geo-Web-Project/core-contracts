@@ -29,9 +29,17 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
         uint64 baseCoordinate,
         uint256[] calldata path,
         uint256 initialValue,
-        uint256 initialFeePayment
+        uint256 initialFeePayment,
+        string calldata ceramicDocId
     ) external {
-        _claim(_to, baseCoordinate, path, initialValue, initialFeePayment);
+        _claim(
+            _to,
+            baseCoordinate,
+            path,
+            initialValue,
+            initialFeePayment,
+            ceramicDocId
+        );
     }
 
     function updateValue(
@@ -46,7 +54,8 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
         uint256 licenseId,
         uint256 maxPurchasePrice,
         uint256 newValue,
-        uint256 additionalFeePayment
+        uint256 additionalFeePayment,
+        string calldata ceramicDocId
     ) external {
         uint256 totalBuyPrice = calculateTotalBuyPrice(licenseId);
         require(
@@ -58,7 +67,8 @@ contract GeoWebAdminERC20_v0 is GeoWebAdmin_v0 {
             licenseId,
             totalBuyPrice,
             newValue,
-            additionalFeePayment
+            additionalFeePayment,
+            ceramicDocId
         );
     }
 
