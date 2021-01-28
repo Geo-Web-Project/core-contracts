@@ -1,46 +1,47 @@
 // SPDX-License-Identifier: MIT
-// Open Zepplin implementation https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/token/ERC721
 
-pragma solidity ^0.6.0;
+pragma solidity >=0.6.0 <0.8.0;
 
-import "@openzeppelin/contracts/GSN/Context.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/introspection/ERC165.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/EnumerableMap.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721MetadataUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/EnumerableMapUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
  * @dev see https://eips.ethereum.org/EIPS/eip-721
  */
-contract ERC721 is
-    Context,
-    ERC165,
-    IERC721,
-    IERC721Metadata,
-    IERC721Enumerable
+contract ERC721Upgradeable is
+    Initializable,
+    ContextUpgradeable,
+    ERC165Upgradeable,
+    IERC721Upgradeable,
+    IERC721MetadataUpgradeable,
+    IERC721EnumerableUpgradeable
 {
-    using SafeMath for uint256;
-    using Address for address;
-    using EnumerableSet for EnumerableSet.UintSet;
-    using EnumerableMap for EnumerableMap.UintToAddressMap;
-    using Strings for uint256;
+    using SafeMathUpgradeable for uint256;
+    using AddressUpgradeable for address;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToAddressMap;
+    using StringsUpgradeable for uint256;
 
     // Equals to `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
     // which can be also obtained as `IERC721Receiver(0).onERC721Received.selector`
     bytes4 private constant _ERC721_RECEIVED = 0x150b7a02;
 
     // Mapping from holder address to their (enumerable) set of owned tokens
-    mapping(address => EnumerableSet.UintSet) private _holderTokens;
+    mapping(address => EnumerableSetUpgradeable.UintSet) private _holderTokens;
 
     // Enumerable mapping from token ids to their owners
-    EnumerableMap.UintToAddressMap private _tokenOwners;
+    EnumerableMapUpgradeable.UintToAddressMap private _tokenOwners;
 
     // Mapping from token ID to approved address
     mapping(uint256 => address) private _tokenApprovals;
@@ -97,9 +98,21 @@ contract ERC721 is
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
-    constructor(string memory name, string memory symbol) public {
-        _name = name;
-        _symbol = symbol;
+    function __ERC721_init(string memory name_, string memory symbol_)
+        internal
+        initializer
+    {
+        __Context_init_unchained();
+        __ERC165_init_unchained();
+        __ERC721_init_unchained(name_, symbol_);
+    }
+
+    function __ERC721_init_unchained(string memory name_, string memory symbol_)
+        internal
+        initializer
+    {
+        _name = name_;
+        _symbol = symbol_;
 
         // register the supported interfaces to conform to ERC721 via ERC165
         _registerInterface(_INTERFACE_ID_ERC721);
@@ -110,7 +123,7 @@ contract ERC721 is
     /**
      * @dev See {IERC721-balanceOf}.
      */
-    function balanceOf(address owner) public override view returns (uint256) {
+    function balanceOf(address owner) public view override returns (uint256) {
         require(
             owner != address(0),
             "ERC721: balance query for the zero address"
@@ -122,7 +135,7 @@ contract ERC721 is
     /**
      * @dev See {IERC721-ownerOf}.
      */
-    function ownerOf(uint256 tokenId) public override view returns (address) {
+    function ownerOf(uint256 tokenId) public view override returns (address) {
         return
             _tokenOwners.get(
                 tokenId,
@@ -133,14 +146,14 @@ contract ERC721 is
     /**
      * @dev See {IERC721Metadata-name}.
      */
-    function name() public override view returns (string memory) {
+    function name() public view override returns (string memory) {
         return _name;
     }
 
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
-    function symbol() public override view returns (string memory) {
+    function symbol() public view override returns (string memory) {
         return _symbol;
     }
 
@@ -149,8 +162,8 @@ contract ERC721 is
      */
     function tokenURI(uint256 tokenId)
         public
-        override
         view
+        override
         returns (string memory)
     {
         require(
@@ -186,8 +199,8 @@ contract ERC721 is
      */
     function tokenOfOwnerByIndex(address owner, uint256 index)
         public
-        override
         view
+        override
         returns (uint256)
     {
         return _holderTokens[owner].at(index);
@@ -196,7 +209,7 @@ contract ERC721 is
     /**
      * @dev See {IERC721Enumerable-totalSupply}.
      */
-    function totalSupply() public override view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         // _tokenOwners are indexed by tokenIds, so .length() returns the number of tokenIds
         return _tokenOwners.length();
     }
@@ -206,8 +219,8 @@ contract ERC721 is
      */
     function tokenByIndex(uint256 index)
         public
-        override
         view
+        override
         returns (uint256)
     {
         (uint256 tokenId, ) = _tokenOwners.at(index);
@@ -234,8 +247,8 @@ contract ERC721 is
      */
     function getApproved(uint256 tokenId)
         public
-        override
         view
+        override
         returns (address)
     {
         require(
@@ -265,8 +278,8 @@ contract ERC721 is
      */
     function isApprovedForAll(address owner, address operator)
         public
-        override
         view
+        override
         returns (bool)
     {
         return _operatorApprovals[owner][operator];
@@ -368,8 +381,8 @@ contract ERC721 is
      */
     function _isApprovedOrOwner(address spender, uint256 tokenId)
         internal
-        virtual
         view
+        virtual
         returns (bool)
     {
         require(
@@ -548,16 +561,17 @@ contract ERC721 is
         if (!to.isContract()) {
             return true;
         }
-        bytes memory returndata = to.functionCall(
-            abi.encodeWithSelector(
-                IERC721Receiver(to).onERC721Received.selector,
-                _msgSender(),
-                from,
-                tokenId,
-                _data
-            ),
-            "ERC721: transfer to non ERC721Receiver implementer"
-        );
+        bytes memory returndata =
+            to.functionCall(
+                abi.encodeWithSelector(
+                    IERC721ReceiverUpgradeable(to).onERC721Received.selector,
+                    _msgSender(),
+                    from,
+                    tokenId,
+                    _data
+                ),
+                "ERC721: transfer to non ERC721Receiver implementer"
+            );
         bytes4 retval = abi.decode(returndata, (bytes4));
         return (retval == _ERC721_RECEIVED);
     }
@@ -587,4 +601,6 @@ contract ERC721 is
         address to,
         uint256 tokenId
     ) internal virtual {}
+
+    uint256[41] private __gap;
 }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-import "./ERC721.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-contract ERC721License is ERC721, AccessControl {
+contract ERC721License is ERC721Upgradeable, AccessControlUpgradeable {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     /// @notice rootContent stores cids for each license pointing to root content
@@ -21,7 +21,9 @@ contract ERC721License is ERC721, AccessControl {
         _;
     }
 
-    constructor(address admin) public ERC721("GeoWebLicense", "GEO") {
+    function initialize(address admin) public {
+        __ERC721_init("GeoWebLicense", "GEO");
+
         _setupRole(ADMIN_ROLE, admin);
     }
 
