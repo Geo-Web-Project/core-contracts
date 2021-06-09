@@ -20,7 +20,7 @@ module.exports = async function (deployer, network, accounts) {
   await deployProxy(
     GeoWebAdminNative_v0,
     [
-      web3.utils.toWei("10"),
+      web3.utils.toWei("0.1"),
       rate.numerator,
       rate.denominator,
       ductionAuctionLength,
