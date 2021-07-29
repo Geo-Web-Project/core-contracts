@@ -3,3 +3,4 @@ build/
 .envrc
 .openzeppelin/unknown-*.json
 migrations
+cache/
