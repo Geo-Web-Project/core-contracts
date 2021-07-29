@@ -1,275 +1,295 @@
-// const ERC721License = artifacts.require("ERC721License");
-// const BN = require("bn.js");
-// const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
-// const GeoWebAdminERC20_v0 = artifacts.require("GeoWebAdminERC20_v0");
-// const GeoWebParcel = artifacts.require("GeoWebParcel");
-// const ERC20Mock = artifacts.require("ERC20Mock");
+const { assert } = require("chai");
+const { ethers, upgrades } = require("hardhat");
 
-// contract("ERC721License", async (accounts) => {
-//   async function getContracts() {
-//     const licenseContract = await ERC721License.new();
-//     licenseContract.initialize(accounts[0]);
+const BigNumber = ethers.BigNumber;
 
-//     return {
-//       licenseContract: licenseContract,
-//     };
-//   }
+describe("ERC721License", async () => {
+  let accounts;
 
-//   it("should keep state on upgrade", async () => {
-//     let license = await deployProxy(ERC721License, [accounts[0]], {
-//       unsafeAllowCustomTypes: true,
-//     });
+  async function getContracts() {
+    const ERC721License = await ethers.getContractFactory("ERC721License");
+    const licenseContract = await upgrades.deployProxy(ERC721License, [
+      accounts[0].address,
+    ]);
+    await licenseContract.deployed();
 
-//     await license.mintLicense(accounts[1], new BN(2), "test-cid", {
-//       from: accounts[0],
-//     });
+    return {
+      licenseContract: licenseContract,
+    };
+  }
 
-//     let license2 = await upgradeProxy(license.address, ERC721License, {
-//       unsafeAllowCustomTypes: true,
-//     });
+  before(async () => {
+    accounts = await ethers.getSigners();
+  });
 
-//     const cid = await license2.rootContent(new BN(2));
+  //   it("should keep state on upgrade", async () => {
+  //     let license = await deployProxy(ERC721License, [accounts[0].address], {
+  //       unsafeAllowCustomTypes: true,
+  //     });
 
-//     assert.equal(cid, "test-cid", "Root CID is incorrect");
-//   });
+  //     await license.mintLicense(accounts[1].address, BigNumber.from(2), "test-cid", {
+  //       from: accounts[0].address,
+  //     });
 
-//   it("should only allow admin to mint", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
+  //     let license2 = await upgradeProxy(license.address, ERC721License, {
+  //       unsafeAllowCustomTypes: true,
+  //     });
 
-//     var err;
-//     try {
-//       await licenseContract.mintLicense(accounts[1], new BN(1), "test-cid", {
-//         from: accounts[1],
-//       });
-//     } catch (error) {
-//       err = error;
-//     }
+  //     const cid = await license2.rootContent(BigNumber.from(2));
 
-//     assert(err, "Expected an error but did not get one");
+  //     assert.equal(cid, "test-cid", "Root CID is incorrect");
+  //   });
 
-//     await licenseContract.mintLicense(accounts[1], new BN(1), "test-cid", {
-//       from: accounts[0],
-//     });
+  it("should only allow admin to mint", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-//     const cid = await licenseContract.rootContent(new BN(1));
+    var err;
+    try {
+      await licenseContract.mintLicense(
+        accounts[1].address,
+        BigNumber.from(1),
+        "test-cid",
+        {
+          from: accounts[1].address,
+        }
+      );
+    } catch (error) {
+      err = error;
+    }
 
-//     assert.equal(cid, "test-cid", "Root CID is incorrect");
-//   });
+    assert(err, "Expected an error but did not get one");
 
-//   it("should allow owner to transfer", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(1),
+      "test-cid",
+      {
+        from: accounts[0].address,
+      }
+    );
 
-//     await licenseContract.mintLicense(accounts[1], new BN(2), "", {
-//       from: accounts[0],
-//     });
-//     await licenseContract.safeTransferFrom(
-//       accounts[1],
-//       accounts[2],
-//       new BN(2),
-//       {
-//         from: accounts[1],
-//       }
-//     );
-//   });
+    const cid = await licenseContract.rootContent(BigNumber.from(1));
 
-//   it("should allow admin to transfer", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
-//     await licenseContract.mintLicense(accounts[1], new BN(3), "", {
-//       from: accounts[0],
-//     });
-//     await licenseContract.safeTransferFrom(
-//       accounts[1],
-//       accounts[2],
-//       new BN(3),
-//       {
-//         from: accounts[0],
-//       }
-//     );
-//   });
+    assert.equal(cid, "test-cid", "Root CID is incorrect");
+  });
 
-//   it("should not allow owner to approve another sender", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
+  it("should allow owner to transfer", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-//     await licenseContract.mintLicense(accounts[1], new BN(4), "", {
-//       from: accounts[0],
-//     });
-//     await licenseContract.approve(accounts[3], new BN(4), {
-//       from: accounts[1],
-//     });
-//     await licenseContract.setApprovalForAll(accounts[3], true, {
-//       from: accounts[1],
-//     });
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(2),
+      ""
+    );
+    await licenseContract
+      .connect(accounts[1])
+      .safeTransferFrom(
+        accounts[1].address,
+        accounts[2].address,
+        BigNumber.from(2)
+      );
+  });
 
-//     var err;
-//     try {
-//       await licenseContract.safeTransferFrom(
-//         accounts[1],
-//         accounts[2],
-//         new BN(4),
-//         {
-//           from: accounts[3],
-//         }
-//       );
-//     } catch (error) {
-//       err = error;
-//     }
+  it("should allow admin to transfer", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(3),
+      ""
+    );
+    await licenseContract.safeTransferFrom(
+      accounts[1].address,
+      accounts[2].address,
+      BigNumber.from(3)
+    );
+  });
 
-//     assert(err, "Expected an error but did not get one");
-//   });
+  it("should not allow owner to approve another sender", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-//   it("should allow owner to set content", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(4),
+      ""
+    );
+    await licenseContract
+      .connect(accounts[1])
+      .approve(accounts[3].address, BigNumber.from(4));
+    await licenseContract
+      .connect(accounts[1])
+      .setApprovalForAll(accounts[3].address, true);
 
-//     await licenseContract.mintLicense(accounts[1], new BN(2), "test-cid", {
-//       from: accounts[0],
-//     });
+    var err;
+    try {
+      await licenseContract
+        .connect(accounts[3])
+        .safeTransferFrom(
+          accounts[1].address,
+          accounts[2].address,
+          BigNumber.from(4)
+        );
+    } catch (error) {
+      err = error;
+    }
 
-//     var err;
-//     try {
-//       await licenseContract.setContent(new BN(2), "test-cid-1", {
-//         from: accounts[2],
-//       });
-//     } catch (error) {
-//       err = error;
-//     }
+    assert(err, "Expected an error but did not get one");
+  });
 
-//     assert(err, "Expected an error but did not get one");
+  it("should allow owner to set content", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-//     await licenseContract.setContent(new BN(2), "test-cid-1", {
-//       from: accounts[1],
-//     });
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(2),
+      "test-cid"
+    );
 
-//     const cid = await licenseContract.rootContent(new BN(2));
+    var err;
+    try {
+      await licenseContract
+        .connect(accounts[2])
+        .setContent(BigNumber.from(2), "test-cid-1");
+    } catch (error) {
+      err = error;
+    }
 
-//     assert.equal(cid, "test-cid-1", "Root CID is incorrect");
-//   });
+    assert(err, "Expected an error but did not get one");
 
-//   it("should allow admin to set content", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
+    await licenseContract
+      .connect(accounts[1])
+      .setContent(BigNumber.from(2), "test-cid-1");
 
-//     await licenseContract.mintLicense(accounts[1], new BN(2), "test-cid", {
-//       from: accounts[0],
-//     });
+    const cid = await licenseContract.rootContent(BigNumber.from(2));
 
-//     var err;
-//     try {
-//       await licenseContract.setContent(new BN(2), "test-cid-1", {
-//         from: accounts[2],
-//       });
-//     } catch (error) {
-//       err = error;
-//     }
+    assert.equal(cid, "test-cid-1", "Root CID is incorrect");
+  });
 
-//     assert(err, "Expected an error but did not get one");
+  it("should allow admin to set content", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-//     await licenseContract.setContent(new BN(2), "test-cid-1", {
-//       from: accounts[0],
-//     });
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(2),
+      "test-cid"
+    );
 
-//     const cid = await licenseContract.rootContent(new BN(2));
+    var err;
+    try {
+      await licenseContract
+        .connect(accounts[2])
+        .setContent(BigNumber.from(2), "test-cid-1");
+    } catch (error) {
+      err = error;
+    }
 
-//     assert.equal(cid, "test-cid-1", "Root CID is incorrect");
-//   });
+    assert(err, "Expected an error but did not get one");
 
-//   it("should allow owner to remove content", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
+    await licenseContract.setContent(BigNumber.from(2), "test-cid-1");
 
-//     await licenseContract.mintLicense(accounts[1], new BN(2), "test-cid", {
-//       from: accounts[0],
-//     });
+    const cid = await licenseContract.rootContent(BigNumber.from(2));
 
-//     await licenseContract.setContent(new BN(2), "test-cid-1", {
-//       from: accounts[1],
-//     });
+    assert.equal(cid, "test-cid-1", "Root CID is incorrect");
+  });
 
-//     var err;
-//     try {
-//       await licenseContract.removeContent(new BN(2), {
-//         from: accounts[2],
-//       });
-//     } catch (error) {
-//       err = error;
-//     }
+  it("should allow owner to remove content", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-//     assert(err, "Expected an error but did not get one");
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(2),
+      "test-cid"
+    );
 
-//     await licenseContract.removeContent(new BN(2), {
-//       from: accounts[1],
-//     });
+    await licenseContract
+      .connect(accounts[1])
+      .setContent(BigNumber.from(2), "test-cid-1");
 
-//     const cid = await licenseContract.rootContent(new BN(2));
+    var err;
+    try {
+      await licenseContract
+        .connect(accounts[2])
+        .removeContent(BigNumber.from(2));
+    } catch (error) {
+      err = error;
+    }
 
-//     assert.equal(cid, "", "Root CID is incorrect");
-//   });
+    assert(err, "Expected an error but did not get one");
 
-//   it("should allow owner to remove content", async () => {
-//     const {
-//       adminContract,
-//       paymentTokenContract,
-//       licenseContract,
-//       parcelContract,
-//     } = await getContracts();
+    await licenseContract.connect(accounts[1]).removeContent(BigNumber.from(2));
 
-//     await licenseContract.mintLicense(accounts[1], new BN(2), "test-cid", {
-//       from: accounts[0],
-//     });
+    const cid = await licenseContract.rootContent(BigNumber.from(2));
 
-//     await licenseContract.setContent(new BN(2), "test-cid-1", {
-//       from: accounts[1],
-//     });
+    assert.equal(cid, "", "Root CID is incorrect");
+  });
 
-//     var err;
-//     try {
-//       await licenseContract.removeContent(new BN(2), {
-//         from: accounts[2],
-//       });
-//     } catch (error) {
-//       err = error;
-//     }
+  it("should allow owner to remove content", async () => {
+    const {
+      adminContract,
+      paymentTokenContract,
+      licenseContract,
+      parcelContract,
+    } = await getContracts();
 
-//     assert(err, "Expected an error but did not get one");
+    await licenseContract.mintLicense(
+      accounts[1].address,
+      BigNumber.from(2),
+      "test-cid"
+    );
 
-//     await licenseContract.removeContent(new BN(2), {
-//       from: accounts[0],
-//     });
+    await licenseContract
+      .connect(accounts[1])
+      .setContent(BigNumber.from(2), "test-cid-1");
 
-//     const cid = await licenseContract.rootContent(new BN(2));
+    var err;
+    try {
+      await licenseContract
+        .connect(accounts[2])
+        .removeContent(BigNumber.from(2));
+    } catch (error) {
+      err = error;
+    }
 
-//     assert.equal(cid, "", "Root CID is incorrect");
-//   });
-// });
+    assert(err, "Expected an error but did not get one");
+
+    await licenseContract.removeContent(BigNumber.from(2));
+
+    const cid = await licenseContract.rootContent(BigNumber.from(2));
+
+    assert.equal(cid, "", "Root CID is incorrect");
+  });
+});
