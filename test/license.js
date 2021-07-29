@@ -22,23 +22,29 @@ describe("ERC721License", async () => {
     accounts = await ethers.getSigners();
   });
 
-  //   it("should keep state on upgrade", async () => {
-  //     let license = await deployProxy(ERC721License, [accounts[0].address], {
-  //       unsafeAllowCustomTypes: true,
-  //     });
+  it("should keep state on upgrade", async () => {
+    const ERC721License = await ethers.getContractFactory("ERC721License");
+    let license = await upgrades.deployProxy(ERC721License, [
+      accounts[0].address,
+    ]);
+    await license.deployed();
 
-  //     await license.mintLicense(accounts[1].address, BigNumber.from(2), "test-cid", {
-  //       from: accounts[0].address,
-  //     });
+    await license.mintLicense(
+      accounts[1].address,
+      BigNumber.from(2),
+      "test-cid"
+    );
 
-  //     let license2 = await upgradeProxy(license.address, ERC721License, {
-  //       unsafeAllowCustomTypes: true,
-  //     });
+    const license2 = await upgrades.upgradeProxy(
+      license.address,
+      ERC721License
+    );
+    await license2.deployed();
 
-  //     const cid = await license2.rootContent(BigNumber.from(2));
+    const cid = await license2.rootContent(BigNumber.from(2));
 
-  //     assert.equal(cid, "test-cid", "Root CID is incorrect");
-  //   });
+    assert.equal(cid, "test-cid", "Root CID is incorrect");
+  });
 
   it("should only allow admin to mint", async () => {
     const {
@@ -93,7 +99,7 @@ describe("ERC721License", async () => {
     );
     await licenseContract
       .connect(accounts[1])
-      .safeTransferFrom(
+      .transferFrom(
         accounts[1].address,
         accounts[2].address,
         BigNumber.from(2)
@@ -112,7 +118,7 @@ describe("ERC721License", async () => {
       BigNumber.from(3),
       ""
     );
-    await licenseContract.safeTransferFrom(
+    await licenseContract.transferFrom(
       accounts[1].address,
       accounts[2].address,
       BigNumber.from(3)
