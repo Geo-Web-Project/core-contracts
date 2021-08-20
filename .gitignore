@@ -1,6 +1,11 @@
 node_modules/
-build/
 .envrc
 .openzeppelin/unknown-*.json
 migrations
+
+# hardhat
+artifacts/
 cache/
+build/
+deployments/
+typechain/

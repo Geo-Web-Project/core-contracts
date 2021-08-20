@@ -182,7 +182,7 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
 
         LicenseInfo storage license = licenseInfo[licenseId];
 
-        // Update expiration date
+        // Calculate existing time balance
         uint256 existingTimeBalance;
         if (license.expirationTimestamp > now) {
             existingTimeBalance = license.expirationTimestamp.sub(now);
@@ -190,15 +190,19 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
             existingTimeBalance = 0;
         }
 
-        uint256 newTimeBalance =
-            existingTimeBalance.mul(license.value).div(newValue);
-        uint256 newPerSecondFee =
-            newValue.mul(perSecondFeeNumerator).div(perSecondFeeDenominator);
-        uint256 additionalPaymentTimeBalance =
-            additionalFeePayment.div(newPerSecondFee);
+        // Calculate existing network fee balance
+        uint256 existingNetworkFeeBalance = existingTimeBalance.mul(license.value).mul(perSecondFeeNumerator).div(perSecondFeeDenominator);
 
+        // Calculate new network fee balance
+        uint256 newNetworkFeeBalance = existingNetworkFeeBalance.add(additionalFeePayment);
+
+        // Calculate new time balance
+        uint256 newTimeBalance =
+            newNetworkFeeBalance.div(newValue.mul(perSecondFeeNumerator).div(perSecondFeeDenominator));
+
+        // Calculate new expiration
         uint256 newExpirationTimestamp =
-            newTimeBalance.add(additionalPaymentTimeBalance).add(now);
+            newTimeBalance.add(now);
 
         require(
             newExpirationTimestamp.sub(now) >= minExpiration,
