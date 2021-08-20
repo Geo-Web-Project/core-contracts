@@ -15,6 +15,9 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
     GeoWebParcel public parcelContract;
 
     uint256 public minInitialValue;
+    uint256 public minClaimExpiration;
+    uint256 public minExpiration;
+    uint256 public maxExpiration;
     uint256 public perSecondFeeNumerator;
     uint256 public perSecondFeeDenominator;
     uint256 public dutchAuctionLengthInSeconds;
@@ -43,6 +46,9 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
 
     function initialize(
         uint256 _minInitialValue,
+        uint256 _minClaimExpiration,
+        uint256 _minExpiration,
+        uint256 _maxExpiration,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator,
         uint256 _dutchAuctionLengthInSeconds
@@ -50,6 +56,9 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         __Ownable_init();
 
         minInitialValue = _minInitialValue;
+        minClaimExpiration = _minClaimExpiration;
+        minExpiration = _minExpiration;
+        maxExpiration = _maxExpiration;
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
         dutchAuctionLengthInSeconds = _dutchAuctionLengthInSeconds;
@@ -102,12 +111,12 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
             initialFeePayment.div(perSecondFee).add(now);
 
         require(
-            expirationTimestamp.sub(now) >= 365 days,
-            "Resulting expiration date must be at least 365 days"
+            expirationTimestamp.sub(now) >= minClaimExpiration,
+            "Resulting expiration date must be at least minClaimExpiration"
         );
         require(
-            expirationTimestamp.sub(now) <= 730 days,
-            "Resulting expiration date must be less than or equal to 730 days"
+            expirationTimestamp.sub(now) <= maxExpiration,
+            "Resulting expiration date must be less than or equal to maxExpiration"
         );
 
         // Transfer initial payment
@@ -191,15 +200,14 @@ abstract contract GeoWebAdmin_v0 is Initializable, OwnableUpgradeable {
         uint256 newExpirationTimestamp =
             newTimeBalance.add(additionalPaymentTimeBalance).add(now);
 
-        // TODO: Increase minimum expiration
         require(
-            newExpirationTimestamp.sub(now) >= 1 days,
-            "Resulting expiration date must be at least 1 day"
+            newExpirationTimestamp.sub(now) >= minExpiration,
+            "Resulting expiration date must be at least minExpiration"
         );
 
-        // Max expiration of 2 years
-        if (newExpirationTimestamp.sub(now) > 730 days) {
-            newExpirationTimestamp = now.add(730 days);
+        // Max expiration
+        if (newExpirationTimestamp.sub(now) > maxExpiration) {
+            newExpirationTimestamp = now.add(maxExpiration);
         }
 
         // Transfer additional payment

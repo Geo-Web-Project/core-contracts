@@ -7,6 +7,9 @@ require("@nomiclabs/hardhat-waffle");
 
 module.exports = {
   networks: {
+    hardhat: {
+      gasPrice: 1000000000,
+    },
     kovan: {
       url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
       accounts: [process.env.DEV_PRIVATE_KEY],
