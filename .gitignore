@@ -1,6 +1,7 @@
 node_modules/
 .envrc
-.openzeppelin/unknown-*.json
+.openzeppelin/unknown-1337.json
+.openzeppelin/unknown-31337.json
 migrations
 
 # hardhat

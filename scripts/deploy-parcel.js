@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require("hardhat");
 
-const ADMIN_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const ADMIN_ADDRESS = "0xa194ff1b55f6409C0b1a03235398A3342b3374Ae";
 
 async function main() {
   const adminContract = await ethers.getContractAt(
