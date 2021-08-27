@@ -28,6 +28,11 @@ module.exports = {
       network_id: 100,
       gasPrice: 1000000000,
     },
+    arbitrumRinkeby: {
+      url: "https://rinkeby.arbitrum.io/rpc",
+      accounts: [process.env.DEV_PRIVATE_KEY],
+      gasPrice: 0,
+    },
   },
   solidity: {
     version: "0.6.2",
