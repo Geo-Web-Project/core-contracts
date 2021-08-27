@@ -6,6 +6,7 @@ migrations
 # hardhat
 artifacts/
 cache/
+cache-ovm/
 build/
 deployments/
 typechain/

@@ -4,6 +4,7 @@
 
 require("@openzeppelin/hardhat-upgrades");
 require("@nomiclabs/hardhat-waffle");
+require("@eth-optimism/hardhat-ovm");
 
 module.exports = {
   networks: {
@@ -33,14 +34,23 @@ module.exports = {
       accounts: [process.env.DEV_PRIVATE_KEY],
       gasPrice: 0,
     },
+    optimisticKovan: {
+      url: "https://kovan.optimism.io",
+      accounts: [process.env.DEV_PRIVATE_KEY],
+      gasPrice: 15000000,
+      ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
+    },
   },
   solidity: {
-    version: "0.6.2",
+    version: "0.6.12",
     settings: {
       optimizer: {
         enabled: true,
         runs: 200,
       },
     },
+  },
+  ovm: {
+    solcVersion: "0.6.12",
   },
 };
