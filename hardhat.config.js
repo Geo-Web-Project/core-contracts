@@ -66,12 +66,18 @@ task("deploy", "Deploy the set of contracts").setAction(async () => {
   const geoWebParcel = await GeoWebParcel.deploy(adminContract.address);
 
   console.log("GeoWebParcel deployed to:", geoWebParcel.address);
+
+  await adminContract.setParcelContract(geoWebParcel.address);
 });
 
 module.exports = {
   networks: {
     hardhat: {
       gasPrice: 1000000000,
+    },
+    local: {
+      gasPrice: 1000000000,
+      url: `http://localhost:8545`,
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,

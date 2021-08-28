@@ -27,6 +27,8 @@ async function main() {
   const geoWebParcel = await GeoWebParcel.deploy(adminContract.address);
 
   console.log("GeoWebParcel deployed to:", geoWebParcel.address);
+
+  await adminContract.setParcelContract(geoWebParcel.address);
 }
 
 main()

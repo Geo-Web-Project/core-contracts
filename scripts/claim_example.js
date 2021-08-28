@@ -1,15 +1,10 @@
-const BN = require("bn.js");
-const GeoWebAdmin = artifacts.require("GeoWebAdmin");
-const ERC20Mock = artifacts.require("ERC20Mock");
-// const HDWalletProvider = require("@truffle/hdwallet-provider");
+const { ethers } = require("hardhat");
+const BigNumber = ethers.BigNumber;
 
-// let provider = new HDWalletProvider(
-//   process.env.DEV_PRIVATE_KEY,
-//   `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
-// );
+const ADMIN_CONTRACT_ADDRESS = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
 
 function makePathPrefix(length) {
-  return new BN(length).shln(256 - 8);
+  return BigNumber.from(length).shl(256 - 8);
 }
 
 function perYearToPerSecondRate(annualRate) {
@@ -20,60 +15,32 @@ function perYearToPerSecondRate(annualRate) {
 }
 
 async function claim() {
+  let adminContract = await ethers.getContractAt(
+    "GeoWebAdminNative_v0",
+    ADMIN_CONTRACT_ADDRESS
+  );
+
+  const signer = await ethers.getSigner();
+
   // Sample coordinate near Mount Rainier
-  let coord = new BN("11662262144156956", 10);
+  let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-  let adminContract = await GeoWebAdmin.deployed();
-  let paymentTokenContract = await ERC20Mock.deployed();
-
-  let accounts = await web3.eth.getAccounts();
-  // Mint some tokens
-  await paymentTokenContract.mockMint(accounts[0], web3.utils.toWei("10"));
-  await paymentTokenContract.approve(
-    adminContract.address,
-    web3.utils.toWei("10"),
-    {
-      from: accounts[0],
-    }
-  );
-
-  let count = 100;
-  var paths = [];
-  var path = new BN(0);
-  for (let i = 1; i < count; i++) {
-    var direction;
-    if (i % 16 == 0) {
-      // North
-      direction = new BN("00", 2);
-    } else if (Math.floor(i / 16) % 2 == 0) {
-      // East
-      direction = new BN("10", 2);
-    } else {
-      // West
-      direction = new BN("11", 2);
-    }
-    path = direction.shln(i * 2).or(path.shrn(2));
-
-    if (i % 124 == 0) {
-      paths.push(makePathPrefix(124).or(path));
-      path = new BN(0);
-    }
-  }
-
-  paths.push(makePathPrefix((count % 124) - 1).or(path));
-
-  await adminContract.claim(
-    accounts[0],
+  const res = await adminContract.claim(
+    signer.address,
     coord,
-    paths,
-    web3.utils.toWei("10"),
-    web3.utils.toWei("1"),
-    { from: accounts[0] }
+    [BigNumber.from(0)],
+    ethers.utils.parseEther("0.1"),
+    "",
+    { value: ethers.utils.parseEther("0.01") }
   );
+
+  const receipt = await res.wait();
+  console.log(receipt);
 }
 
-module.exports = function (callback) {
-  claim()
-    .then(() => callback())
-    .catch((error) => callback(error));
-};
+claim()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
