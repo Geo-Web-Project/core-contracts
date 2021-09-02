@@ -100,6 +100,7 @@ module.exports = {
     arbitrumRinkeby: {
       url: "https://rinkeby.arbitrum.io/rpc",
       accounts: [process.env.DEV_PRIVATE_KEY],
+      chainId: 421611,
       gasPrice: 0,
     },
     optimisticKovan: {
