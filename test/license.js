@@ -29,21 +29,13 @@ describe("ERC721License", async () => {
     ]);
     await license.deployed();
 
-    await license.mintLicense(
-      accounts[1].address,
-      BigNumber.from(2),
-      "test-cid"
-    );
+    await license.mintLicense(accounts[1].address, BigNumber.from(2));
 
     const license2 = await upgrades.upgradeProxy(
       license.address,
       ERC721License
     );
     await license2.deployed();
-
-    const cid = await license2.rootContent(BigNumber.from(2));
-
-    assert.equal(cid, "test-cid", "Root CID is incorrect");
   });
 
   it("should only allow admin to mint", async () => {
@@ -59,7 +51,6 @@ describe("ERC721License", async () => {
       await licenseContract.mintLicense(
         accounts[1].address,
         BigNumber.from(1),
-        "test-cid",
         {
           from: accounts[1].address,
         }
@@ -70,18 +61,9 @@ describe("ERC721License", async () => {
 
     assert(err, "Expected an error but did not get one");
 
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(1),
-      "test-cid",
-      {
-        from: accounts[0].address,
-      }
-    );
-
-    const cid = await licenseContract.rootContent(BigNumber.from(1));
-
-    assert.equal(cid, "test-cid", "Root CID is incorrect");
+    await licenseContract.mintLicense(accounts[1].address, BigNumber.from(1), {
+      from: accounts[0].address,
+    });
   });
 
   it("should allow owner to transfer", async () => {
@@ -92,11 +74,7 @@ describe("ERC721License", async () => {
       parcelContract,
     } = await getContracts();
 
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(2),
-      ""
-    );
+    await licenseContract.mintLicense(accounts[1].address, BigNumber.from(2));
     await licenseContract
       .connect(accounts[1])
       .transferFrom(
@@ -113,11 +91,7 @@ describe("ERC721License", async () => {
       licenseContract,
       parcelContract,
     } = await getContracts();
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(3),
-      ""
-    );
+    await licenseContract.mintLicense(accounts[1].address, BigNumber.from(3));
     await licenseContract.transferFrom(
       accounts[1].address,
       accounts[2].address,
@@ -133,11 +107,7 @@ describe("ERC721License", async () => {
       parcelContract,
     } = await getContracts();
 
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(4),
-      ""
-    );
+    await licenseContract.mintLicense(accounts[1].address, BigNumber.from(4));
     await licenseContract
       .connect(accounts[1])
       .approve(accounts[3].address, BigNumber.from(4));
@@ -159,143 +129,5 @@ describe("ERC721License", async () => {
     }
 
     assert(err, "Expected an error but did not get one");
-  });
-
-  it("should allow owner to set content", async () => {
-    const {
-      adminContract,
-      paymentTokenContract,
-      licenseContract,
-      parcelContract,
-    } = await getContracts();
-
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(2),
-      "test-cid"
-    );
-
-    var err;
-    try {
-      await licenseContract
-        .connect(accounts[2])
-        .setContent(BigNumber.from(2), "test-cid-1");
-    } catch (error) {
-      err = error;
-    }
-
-    assert(err, "Expected an error but did not get one");
-
-    await licenseContract
-      .connect(accounts[1])
-      .setContent(BigNumber.from(2), "test-cid-1");
-
-    const cid = await licenseContract.rootContent(BigNumber.from(2));
-
-    assert.equal(cid, "test-cid-1", "Root CID is incorrect");
-  });
-
-  it("should allow admin to set content", async () => {
-    const {
-      adminContract,
-      paymentTokenContract,
-      licenseContract,
-      parcelContract,
-    } = await getContracts();
-
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(2),
-      "test-cid"
-    );
-
-    var err;
-    try {
-      await licenseContract
-        .connect(accounts[2])
-        .setContent(BigNumber.from(2), "test-cid-1");
-    } catch (error) {
-      err = error;
-    }
-
-    assert(err, "Expected an error but did not get one");
-
-    await licenseContract.setContent(BigNumber.from(2), "test-cid-1");
-
-    const cid = await licenseContract.rootContent(BigNumber.from(2));
-
-    assert.equal(cid, "test-cid-1", "Root CID is incorrect");
-  });
-
-  it("should allow owner to remove content", async () => {
-    const {
-      adminContract,
-      paymentTokenContract,
-      licenseContract,
-      parcelContract,
-    } = await getContracts();
-
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(2),
-      "test-cid"
-    );
-
-    await licenseContract
-      .connect(accounts[1])
-      .setContent(BigNumber.from(2), "test-cid-1");
-
-    var err;
-    try {
-      await licenseContract
-        .connect(accounts[2])
-        .removeContent(BigNumber.from(2));
-    } catch (error) {
-      err = error;
-    }
-
-    assert(err, "Expected an error but did not get one");
-
-    await licenseContract.connect(accounts[1]).removeContent(BigNumber.from(2));
-
-    const cid = await licenseContract.rootContent(BigNumber.from(2));
-
-    assert.equal(cid, "", "Root CID is incorrect");
-  });
-
-  it("should allow owner to remove content", async () => {
-    const {
-      adminContract,
-      paymentTokenContract,
-      licenseContract,
-      parcelContract,
-    } = await getContracts();
-
-    await licenseContract.mintLicense(
-      accounts[1].address,
-      BigNumber.from(2),
-      "test-cid"
-    );
-
-    await licenseContract
-      .connect(accounts[1])
-      .setContent(BigNumber.from(2), "test-cid-1");
-
-    var err;
-    try {
-      await licenseContract
-        .connect(accounts[2])
-        .removeContent(BigNumber.from(2));
-    } catch (error) {
-      err = error;
-    }
-
-    assert(err, "Expected an error but did not get one");
-
-    await licenseContract.removeContent(BigNumber.from(2));
-
-    const cid = await licenseContract.rootContent(BigNumber.from(2));
-
-    assert.equal(cid, "", "Root CID is incorrect");
   });
 });

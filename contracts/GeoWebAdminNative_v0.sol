@@ -12,16 +12,14 @@ contract GeoWebAdminNative_v0 is GeoWebAdmin_v0 {
         address _to,
         uint64 baseCoordinate,
         uint256[] calldata path,
-        uint256 initialValue,
-        string calldata ceramicDocId
+        uint256 initialValue
     ) external payable {
         _claim(
             _to,
             baseCoordinate,
             path,
             initialValue,
-            msg.value,
-            ceramicDocId
+            msg.value
         );
     }
 
@@ -36,8 +34,7 @@ contract GeoWebAdminNative_v0 is GeoWebAdmin_v0 {
     function purchaseLicense(
         uint256 licenseId,
         uint256 maxPurchasePrice,
-        uint256 newValue,
-        string calldata ceramicDocId
+        uint256 newValue
     ) external payable {
         uint256 totalBuyPrice = calculateTotalBuyPrice(licenseId);
         require(
@@ -54,8 +51,7 @@ contract GeoWebAdminNative_v0 is GeoWebAdmin_v0 {
             licenseId,
             totalBuyPrice,
             newValue,
-            msg.value.sub(totalBuyPrice),
-            ceramicDocId
+            msg.value.sub(totalBuyPrice)
         );
     }
 
