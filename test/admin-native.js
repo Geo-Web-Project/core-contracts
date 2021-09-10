@@ -136,7 +136,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -194,7 +193,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("2"),
         }
@@ -229,7 +227,6 @@ describe("GeoWebAdminNative_v0", async () => {
           coord,
           [BigNumber.from(0)],
           ethers.utils.parseEther("9"),
-          "",
           {
             value: ethers.utils.parseEther("1"),
           }
@@ -257,7 +254,6 @@ describe("GeoWebAdminNative_v0", async () => {
           coord,
           [BigNumber.from(0)],
           ethers.utils.parseEther("10"),
-          "",
           {
             value: ethers.utils.parseEther("0.9"),
           }
@@ -290,7 +286,6 @@ describe("GeoWebAdminNative_v0", async () => {
           coord,
           [BigNumber.from(0)],
           ethers.utils.parseEther("10"),
-          "",
           {
             value: ethers.utils.parseEther("2.1"),
           }
@@ -320,7 +315,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -359,7 +353,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -406,7 +399,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("20"),
-        "",
         {
           value: ethers.utils.parseEther("2"),
         }
@@ -457,7 +449,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -537,7 +528,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -626,7 +616,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -721,7 +710,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -759,7 +747,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -799,7 +786,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("100"),
-        "",
         {
           value: ethers.utils.parseEther("10"),
         }
@@ -848,7 +834,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -868,7 +853,6 @@ describe("GeoWebAdminNative_v0", async () => {
         parcelId,
         maxPurchasePrice,
         ethers.utils.parseEther("30"),
-        "new-doc-id",
         {
           value: maxPurchasePrice,
         }
@@ -942,7 +926,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -965,7 +948,6 @@ describe("GeoWebAdminNative_v0", async () => {
           parcelId,
           maxPurchasePrice,
           ethers.utils.parseEther("30"),
-          "new-doc-id",
           {
             value: maxPurchasePrice,
           }
@@ -995,7 +977,6 @@ describe("GeoWebAdminNative_v0", async () => {
         coord,
         [BigNumber.from(0)],
         ethers.utils.parseEther("10"),
-        "",
         {
           value: ethers.utils.parseEther("1"),
         }
@@ -1012,17 +993,15 @@ describe("GeoWebAdminNative_v0", async () => {
 
     var err;
     try {
-      await adminContract
-        .connect(accounts[2])
-        .purchaseLicense(
-          parcelId,
-          maxPurchasePrice,
-          ethers.utils.parseEther("30"),
-          "new-doc-id",
-          {
-            value: ethers.utils.parseEther("10"),
-          }
-        );
+      await adminContract.connect(accounts[2]).purchaseLicense(
+        parcelId,
+        maxPurchasePrice,
+        ethers.utils.parseEther("30"),
+
+        {
+          value: ethers.utils.parseEther("10"),
+        }
+      );
     } catch (error) {
       err = error;
     }
