@@ -85,6 +85,11 @@ module.exports = {
       chainId: 0x2a,
       gas: 4700000,
     },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
+      accounts: [process.env.DEV_PRIVATE_KEY],
+      chainId: 4,
+    },
     sokul: {
       url: "https://sokol.poa.network",
       accounts: [process.env.DEV_PRIVATE_KEY],
