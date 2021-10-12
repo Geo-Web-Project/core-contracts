@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 const BigNumber = ethers.BigNumber;
 
-const ADMIN_CONTRACT_ADDRESS = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
+const ADMIN_CONTRACT_ADDRESS = "0x57da7C6E90d0f4617a4498cF338130818C93400b";
 
 function makePathPrefix(length) {
   return BigNumber.from(length).shl(256 - 8);
@@ -30,7 +30,6 @@ async function claim() {
     coord,
     [BigNumber.from(0)],
     ethers.utils.parseEther("0.1"),
-    "",
     { value: ethers.utils.parseEther("0.01") }
   );
 
