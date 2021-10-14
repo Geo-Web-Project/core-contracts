@@ -5,13 +5,6 @@ const BigNumber = ethers.BigNumber;
 describe("Accountant", async () => {
   let accounts;
 
-  function perYearToPerSecondRate(annualRate) {
-    return {
-      numerator: annualRate * 100,
-      denominator: 60 * 60 * 24 * 365 * 100,
-    };
-  }
-
   async function buildAccountant() {
     const Accountant = await ethers.getContractFactory("Accountant");
     const accountant = await Accountant.deploy();

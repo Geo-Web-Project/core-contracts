@@ -26,7 +26,13 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
     Accountant public accountant;
 
     /// @notice Stores the expiration timestamp for each license
-    mapping(uint256 => uint256) licenseExpirationTimestamps;
+    mapping(uint256 => uint256) public licenseExpirationTimestamps;
+
+    /// @notice Emitted when an expiration is updated
+    event LicenseExpirationUpdated(uint256 indexed licenseId, uint256 newExpirationTimestamp);
+
+    /// @notice Emitted when a payment is made
+    event PaymentMade(uint256 indexed licenseId, uint256 paymentAmount);
 
     constructor(uint256 _minContributionRate, uint256 _minExpiration, uint256 _maxExpiration, address licenseAddress, address _receiver, address accountantAddress) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -136,20 +142,22 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
 
         // Transfer payment to receiver
         _asyncTransfer(receiver, msg.value);
+
+        emit PaymentMade(id, msg.value);
     }
 
     /**
-     * @notice Set the contribution rate for a license.
+     * @notice Set the contribution rate for a license and optionally make a payment
      * @param id The license to make a payment for
      * @param newContributionRate The new contribution rate for the license
      * @custom:requires MODIFY_CONTRIBUTION_ROLE or sender is license owner
      */
-    function setContributionRate(uint256 id, uint256 newContributionRate) external whenNotPaused() {
+    function setContributionRate(uint256 id, uint256 newContributionRate) external payable whenNotPaused() {
         require(hasRole(MODIFY_CONTRIBUTION_ROLE, msg.sender) || license.ownerOf(id) == msg.sender, "Caller does not have permission");
         require(newContributionRate >= minContributionRate, "Contribution rate must be greater than minimum");
 
         // Update expiration
-        _updateExpiration(id, newContributionRate, 0);
+        _updateExpiration(id, newContributionRate, msg.value);
 
         // Update contribution rate in Accountant
         accountant.setContributionRate(id, newContributionRate);
@@ -191,6 +199,8 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
         // Calculate new time balance
         uint256 newTimeBalance = newNetworkFeeBalance / newContributionRate;
 
+        require(newTimeBalance > 0, "New time balance must be greater than 0");
+
         // Calculate new expiration
         uint256 newExpirationTimestamp = newTimeBalance + block.timestamp;
 
@@ -205,5 +215,7 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
         }
 
         licenseExpirationTimestamps[id] = newExpirationTimestamp;
+
+        emit LicenseExpirationUpdated(id, newExpirationTimestamp);
     }
 }
