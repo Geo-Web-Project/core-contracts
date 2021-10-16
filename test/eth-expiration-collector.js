@@ -141,6 +141,70 @@ describe("ETHExpirationCollector", async () => {
     assert(value == collector.address, "Value was not updated");
   });
 
+  it("should only allow admin to pause payments and contribution changes", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let collector = await buildContract({
+      license: license.address,
+      accountant: accountant.address,
+    });
+
+    await license.mint(accounts[2].address, 1);
+
+    var err;
+    try {
+      await collector.connect(accounts[1]).pause();
+    } catch (error) {
+      err = error;
+    }
+
+    assert(err, "Expected an error but did not get one");
+
+    await collector.pause();
+
+    var err;
+    try {
+      await collector
+        .connect(accounts[2])
+        .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("paused"),
+      "Expected an error but did not get one"
+    );
+
+    var err;
+    try {
+      await collector.connect(accounts[2]).makePayment(1, { value: 1000 });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("paused"),
+      "Expected an error but did not get one"
+    );
+
+    await collector.unpause();
+
+    await collector
+      .connect(accounts[2])
+      .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
+
+    await collector.connect(accounts[2]).makePayment(1, { value: 1000 });
+  });
+
   it("should not allow setting contribution rate without permission", async () => {
     const MockERC721License = await ethers.getContractFactory(
       "MockERC721License"

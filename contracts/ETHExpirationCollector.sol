@@ -11,6 +11,7 @@ import "./Accountant.sol";
 /// @title A smart contract that collects contributions in ETH and stores expiration timestamps to determine balances.
 contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, PullPayment, Pausable {
     bytes32 public constant MODIFY_CONTRIBUTION_ROLE = keccak256("MODIFY_CONTRIBUTION_ROLE");
+    bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     /// @notice Minimum contribution rate for a license.
     uint256 public minContributionRate;
@@ -36,6 +37,7 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
 
     constructor(uint256 _minContributionRate, uint256 _minExpiration, uint256 _maxExpiration, address licenseAddress, address _receiver, address accountantAddress) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(PAUSE_ROLE, msg.sender);
 
         minContributionRate = _minContributionRate;
         minExpiration = _minExpiration;
@@ -120,14 +122,22 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
     }
 
     /**
-     * @notice Admin can pause the contract.
+     * @notice Pause the contract. Pauses payments and setting contribution rates.
      * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function pause()
         external
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(PAUSE_ROLE)
     {
         _pause();
+    }
+
+    /**
+     * @notice Unpause the contract.
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function unpause() external onlyRole(PAUSE_ROLE) {
+        _unpause();
     }
 
     /**
@@ -168,7 +178,7 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
      * @param id The id of the license
      * @return If the license is valid
      */
-    function isValid(uint256 id) external override view returns (bool) {
+    function isValid(uint256 id) public override view returns (bool) {
         return licenseExpirationTimestamps[id] > block.timestamp;
     }
 
