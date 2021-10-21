@@ -103,69 +103,60 @@ describe("SimpleETHClaimer", async () => {
     assert(value == claimer.address, "Value was not updated");
   });
 
-  // it("should only allow admin to pause claims", async () => {
-  //     const MockERC721License = await ethers.getContractFactory(
-  //       "MockERC721License"
-  //     );
-  //     const license = await MockERC721License.deploy("Mock", "MOCK");
-  //     await license.deployed();
+  it("should only allow admin to pause claims", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
 
-  //     const MockAccountant = await ethers.getContractFactory("MockAccountant");
-  //     const accountant = await MockAccountant.deploy(1, 2);
-  //     await accountant.deployed();
+    const MockParcel = await ethers.getContractFactory("MockParcel");
+    const parcel = await MockParcel.deploy();
+    await parcel.deployed();
 
-  //     let collector = await buildContract({
-  //       license: license.address,
-  //       accountant: accountant.address,
-  //     });
+    const minPayment = 1;
 
-  //     await license.mint(accounts[2].address, 1);
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(1000, minPayment);
+    await collector.deployed();
 
-  //     var err;
-  //     try {
-  //       await collector.connect(accounts[1]).pause();
-  //     } catch (error) {
-  //       err = error;
-  //     }
+    let claimer = await buildContract({
+      parcel: parcel.address,
+      license: license.address,
+      collector: collector.address,
+    });
 
-  //     assert(err, "Expected an error but did not get one");
+    var err;
+    try {
+      await claimer.connect(accounts[1]).pause();
+    } catch (error) {
+      err = error;
+    }
 
-  //     await collector.pause();
+    assert(err, "Expected an error but did not get one");
 
-  //     var err;
-  //     try {
-  //       await collector
-  //         .connect(accounts[2])
-  //         .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
-  //     } catch (error) {
-  //       err = error;
-  //     }
+    await claimer.pause();
 
-  //     assert(
-  //       err.message.includes("paused"),
-  //       "Expected an error but did not get one"
-  //     );
+    var err;
+    try {
+      await claimer.claim(accounts[1].address, 1, [BigNumber.from(0)], 10, {
+        value: minPayment,
+      });
+    } catch (error) {
+      err = error;
+    }
 
-  //     var err;
-  //     try {
-  //       await collector.connect(accounts[2]).makePayment(1, { value: 1000 });
-  //     } catch (error) {
-  //       err = error;
-  //     }
+    assert(
+      err.message.includes("paused"),
+      "Expected an error but did not get one"
+    );
 
-  //     assert(
-  //       err.message.includes("paused"),
-  //       "Expected an error but did not get one"
-  //     );
+    await claimer.unpause();
 
-  //     await collector.unpause();
-
-  //     await collector
-  //       .connect(accounts[2])
-  //       .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
-
-  //     await collector.connect(accounts[2]).makePayment(1, { value: 1000 });
-  //   });
+    await claimer.claim(accounts[1].address, 1, [BigNumber.from(0)], 10, {
+      value: minPayment,
+    });
+  });
 
   it("should claim a parcel", async () => {
     const MockERC721License = await ethers.getContractFactory(
@@ -206,6 +197,47 @@ describe("SimpleETHClaimer", async () => {
     assert(
       (await collector.licenseExpirationTimestamps(newParcelId)) > 0,
       "Collector was not called"
+    );
+  });
+
+  it("should fail to claim a parcel if minClaimExpiration is not reached", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockParcel = await ethers.getContractFactory("MockParcel");
+    const parcel = await MockParcel.deploy();
+    await parcel.deployed();
+
+    const minPayment = 1;
+    const defaultExpiration = 1;
+
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(defaultExpiration, minPayment);
+    await collector.deployed();
+
+    let claimer = await buildContract({
+      parcel: parcel.address,
+      license: license.address,
+      collector: collector.address,
+    });
+
+    var err;
+    try {
+      await claimer.claim(accounts[1].address, 1, [BigNumber.from(0)], 10, {
+        value: minPayment,
+      });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes(
+        "Resulting expiration date must be at least minClaimExpiration"
+      ),
+      "Expected an error but did not get one"
     );
   });
 });
