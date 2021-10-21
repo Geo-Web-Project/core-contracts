@@ -26,11 +26,20 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
     /// @notice Emitted when a parcel is claimed
     event ParcelClaimed(uint256 indexed parcelId, address indexed owner);
 
-    constructor(uint256 _minClaimExpiration) {
+    constructor(
+        uint256 _minClaimExpiration,
+        address licenseAddress,
+        address collectorAddress,
+        address parcelAddress
+    ) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
 
         minClaimExpiration = _minClaimExpiration;
+
+        license = MockERC721License(licenseAddress);
+        parcel = MockParcel(parcelAddress);
+        collector = ETHExpirationCollector(collectorAddress);
     }
 
     /**
@@ -46,6 +55,42 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
     }
 
     /**
+     * @notice Admin can update the license.
+     * @param licenseAddress The new license used to find owners
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setLicense(address licenseAddress)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        license = MockERC721License(licenseAddress);
+    }
+
+    /**
+     * @notice Admin can update the collector.
+     * @param collectorAddress The new collector
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setCollector(address collectorAddress)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        collector = ETHExpirationCollector(collectorAddress);
+    }
+
+    /**
+     * @notice Admin can update the parcel.
+     * @param parcelAddress The new parcel
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setParcel(address parcelAddress)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        parcel = MockParcel(parcelAddress);
+    }
+
+    /**
      * @notice Claim a new parcel with an initial contribution payment.
      * @param to Address of license owner to be
      * @param baseCoordinate Base coordinate of parcel to claim
@@ -57,7 +102,7 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
         uint64 baseCoordinate,
         uint256[] calldata path,
         uint256 initialContributionRate
-    ) external payable {
+    ) external payable whenNotPaused {
         // Build parcel
         uint256 parcelId = parcel.build(baseCoordinate, path);
 

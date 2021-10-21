@@ -9,8 +9,14 @@ import "./interfaces/ILicenseValidator.sol";
 import "./Accountant.sol";
 
 /// @title A smart contract that collects contributions in ETH and stores expiration timestamps to determine balances.
-contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, PullPayment, Pausable {
-    bytes32 public constant MODIFY_CONTRIBUTION_ROLE = keccak256("MODIFY_CONTRIBUTION_ROLE");
+contract ETHExpirationCollector is
+    AccessControlEnumerable,
+    ILicenseValidator,
+    PullPayment,
+    Pausable
+{
+    bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
+        keccak256("MODIFY_CONTRIBUTION_ROLE");
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     /// @notice Minimum contribution rate for a license.
@@ -30,12 +36,22 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
     mapping(uint256 => uint256) public licenseExpirationTimestamps;
 
     /// @notice Emitted when an expiration is updated
-    event LicenseExpirationUpdated(uint256 indexed licenseId, uint256 newExpirationTimestamp);
+    event LicenseExpirationUpdated(
+        uint256 indexed licenseId,
+        uint256 newExpirationTimestamp
+    );
 
     /// @notice Emitted when a payment is made
     event PaymentMade(uint256 indexed licenseId, uint256 paymentAmount);
 
-    constructor(uint256 _minContributionRate, uint256 _minExpiration, uint256 _maxExpiration, address licenseAddress, address _receiver, address accountantAddress) {
+    constructor(
+        uint256 _minContributionRate,
+        uint256 _minExpiration,
+        uint256 _maxExpiration,
+        address licenseAddress,
+        address _receiver,
+        address accountantAddress
+    ) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
 
@@ -83,7 +99,6 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
         maxExpiration = _maxExpiration;
     }
 
-
     /**
      * @notice Admin can update the license.
      * @param licenseAddress The new license used to find owners
@@ -95,7 +110,6 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
     {
         license = IERC721(licenseAddress);
     }
-
 
     /**
      * @notice Admin can update the receiver.
@@ -125,10 +139,7 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
      * @notice Pause the contract. Pauses payments and setting contribution rates.
      * @custom:requires DEFAULT_ADMIN_ROLE
      */
-    function pause()
-        external
-        onlyRole(PAUSE_ROLE)
-    {
+    function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
     }
 
@@ -144,7 +155,7 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
      * @notice Make a contribution payment for a license.
      * @param id The license to make a payment for
      */
-    function makePayment(uint256 id) external payable whenNotPaused() {
+    function makePayment(uint256 id) external payable whenNotPaused {
         uint256 currentContributionRate = accountant.contributionRates(id);
 
         // Update expiration
@@ -162,9 +173,20 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
      * @param newContributionRate The new contribution rate for the license
      * @custom:requires MODIFY_CONTRIBUTION_ROLE or sender is license owner
      */
-    function setContributionRate(uint256 id, uint256 newContributionRate) external payable whenNotPaused() {
-        require(hasRole(MODIFY_CONTRIBUTION_ROLE, msg.sender) || license.ownerOf(id) == msg.sender, "Caller does not have permission");
-        require(newContributionRate >= minContributionRate, "Contribution rate must be greater than minimum");
+    function setContributionRate(uint256 id, uint256 newContributionRate)
+        external
+        payable
+        whenNotPaused
+    {
+        require(
+            hasRole(MODIFY_CONTRIBUTION_ROLE, msg.sender) ||
+                license.ownerOf(id) == msg.sender,
+            "Caller does not have permission"
+        );
+        require(
+            newContributionRate >= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
 
         // Update expiration
         _updateExpiration(id, newContributionRate, msg.value);
@@ -178,7 +200,7 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
      * @param id The id of the license
      * @return If the license is valid
      */
-    function isValid(uint256 id) public override view returns (bool) {
+    function isValid(uint256 id) public view override returns (bool) {
         return licenseExpirationTimestamps[id] > block.timestamp;
     }
 
@@ -188,7 +210,11 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
      * @param newContributionRate The new contribution rate for the license
      * @param additionalContribution The additional contribution amount
      */
-    function _updateExpiration(uint256 id, uint256 newContributionRate, uint256 additionalContribution) internal {
+    function _updateExpiration(
+        uint256 id,
+        uint256 newContributionRate,
+        uint256 additionalContribution
+    ) internal {
         uint256 currentExpirationTimestamp = licenseExpirationTimestamps[id];
         uint256 currentContributionRate = accountant.contributionRates(id);
 
@@ -201,10 +227,12 @@ contract ETHExpirationCollector is AccessControlEnumerable, ILicenseValidator, P
         }
 
         // Calculate existing network fee balance
-        uint256 existingNetworkFeeBalance = existingTimeBalance * currentContributionRate;
+        uint256 existingNetworkFeeBalance = existingTimeBalance *
+            currentContributionRate;
 
         // Calculate new network fee balance
-        uint256 newNetworkFeeBalance = existingNetworkFeeBalance + additionalContribution;
+        uint256 newNetworkFeeBalance = existingNetworkFeeBalance +
+            additionalContribution;
 
         // Calculate new time balance
         uint256 newTimeBalance = newNetworkFeeBalance / newContributionRate;

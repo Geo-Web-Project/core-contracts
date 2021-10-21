@@ -6,8 +6,11 @@ contract MockAccountant {
     uint256 public perSecondFeeDenominator;
 
     mapping(uint256 => uint256) public contributionRates;
-    
-    constructor(uint256 _perSecondFeeNumerator, uint256 _perSecondFeeDenominator) {
+
+    constructor(
+        uint256 _perSecondFeeNumerator,
+        uint256 _perSecondFeeDenominator
+    ) {
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
     }
