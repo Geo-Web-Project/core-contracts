@@ -14,7 +14,8 @@
         "chai": "^4.3.4",
         "ethereum-waffle": "^3.4.0",
         "ethers": "^5.4.2",
-        "hardhat": "^2.5.0"
+        "hardhat": "^2.5.0",
+        "solidity-coverage": "^0.7.17"
     },
     "scripts": {
         "migrate:dev": "rm migrations; ln -sv dev-migrations migrations",

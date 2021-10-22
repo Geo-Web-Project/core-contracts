@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/ETHExpirationCollector.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> ETHExpirationCollector.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">97.62% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>41/42</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">83.33% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>10/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">92.86% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>13/14</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">97.62% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>41/42</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-yes">51×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+&nbsp;
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/security/PullPayment.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "./interfaces/ILicenseValidator.sol";
+import "./Accountant.sol";
+&nbsp;
+/// @title A smart contract that collects contributions in ETH and stores expiration timestamps to determine balances.
+contract ETHExpirationCollector is
+    AccessControlEnumerable,
+    ILicenseValidator,
+    PullPayment,
+    Pausable
+{
+    bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
+        keccak256("MODIFY_CONTRIBUTION_ROLE");
+    bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
+&nbsp;
+    /// @notice Minimum contribution rate for a license.
+    uint256 public minContributionRate;
+    /// @notice Minimum expiration for a license.
+    uint256 public minExpiration;
+    /// @notice Maximum expiration for a license.
+    uint256 public maxExpiration;
+    /// @notice ERC721 License used to find owners.
+    IERC721 public license;
+    /// @notice Receiver of contributions.
+    address public receiver;
+    /// @notice Accountant.
+    Accountant public accountant;
+&nbsp;
+    /// @notice Stores the expiration timestamp for each license
+    mapping(uint256 =&gt; uint256) public licenseExpirationTimestamps;
+&nbsp;
+    /// @notice Emitted when an expiration is updated
+    event LicenseExpirationUpdated(
+        uint256 indexed licenseId,
+        uint256 newExpirationTimestamp
+    );
+&nbsp;
+    /// @notice Emitted when a payment is made
+    event PaymentMade(uint256 indexed licenseId, uint256 paymentAmount);
+&nbsp;
+    constructor(
+        uint256 _minContributionRate,
+        uint256 _minExpiration,
+        uint256 _maxExpiration,
+        address licenseAddress,
+        address _receiver,
+        address accountantAddress
+    ) {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(PAUSE_ROLE, msg.sender);
+&nbsp;
+        minContributionRate = _minContributionRate;
+        minExpiration = _minExpiration;
+        maxExpiration = _maxExpiration;
+        license = IERC721(licenseAddress);
+        receiver = _receiver;
+        accountant = Accountant(accountantAddress);
+    }
+&nbsp;
+    /**
+     * @notice Admin can update the minContributionRate.
+     * @param _minContributionRate The new minimum contribute rate for a license
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setMinContributionRate(uint256 _minContributionRate)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        minContributionRate = _minContributionRate;
+    }
+&nbsp;
+    /**
+     * @notice Admin can update the minExpiration.
+     * @param _minExpiration The new minimum expiration for a license
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setMinExpiration(uint256 _minExpiration)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        minExpiration = _minExpiration;
+    }
+&nbsp;
+    /**
+     * @notice Admin can update the maxExpiration.
+     * @param _maxExpiration The new maximun expiration for a license
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setMaxExpiration(uint256 _maxExpiration)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        maxExpiration = _maxExpiration;
+    }
+&nbsp;
+    /**
+     * @notice Admin can update the license.
+     * @param licenseAddress The new license used to find owners
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setLicense(address licenseAddress)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        license = IERC721(licenseAddress);
+    }
+&nbsp;
+    /**
+     * @notice Admin can update the receiver.
+     * @param _receiver The new receiver of contributions
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setReceiver(address _receiver)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        receiver = _receiver;
+    }
+&nbsp;
+    /**
+     * @notice Admin can update the accountant.
+     * @param accountantAddress The new accountant
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setAccountant(address accountantAddress)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        accountant = Accountant(accountantAddress);
+    }
+&nbsp;
+    /**
+     * @notice Pause the contract. Pauses payments and setting contribution rates.
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function pause() external onlyRole(PAUSE_ROLE) {
+        _pause();
+    }
+&nbsp;
+    /**
+     * @notice Unpause the contract.
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function unpause() external onlyRole(PAUSE_ROLE) {
+        _unpause();
+    }
+&nbsp;
+    /**
+     * @notice Make a contribution payment for a license.
+     * @param id The license to make a payment for
+     */
+    function makePayment(uint256 id) external payable whenNotPaused {
+        uint256 currentContributionRate = accountant.contributionRates(id);
+&nbsp;
+        // Update expiration
+        _updateExpiration(id, currentContributionRate, msg.value);
+&nbsp;
+        // Transfer payment to receiver
+        _asyncTransfer(receiver, msg.value);
+&nbsp;
+        emit PaymentMade(id, msg.value);
+    }
+&nbsp;
+    /**
+     * @notice Set the contribution rate for a license and optionally make a payment
+     * @param id The license to make a payment for
+     * @param newContributionRate The new contribution rate for the license
+     * @custom:requires MODIFY_CONTRIBUTION_ROLE or sender is license owner
+     */
+    function setContributionRate(uint256 id, uint256 newContributionRate)
+        external
+        payable
+        whenNotPaused
+    {
+        require(
+            hasRole(MODIFY_CONTRIBUTION_ROLE, msg.sender) ||
+                license.ownerOf(id) == msg.sender,
+            "Caller does not have permission"
+        );
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            newContributionRate &gt;= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
+&nbsp;
+        // Update expiration
+        _updateExpiration(id, newContributionRate, msg.value);
+&nbsp;
+        // Update contribution rate in Accountant
+        accountant.setContributionRate(id, newContributionRate);
+    }
+&nbsp;
+    /**
+     * @notice Check if a license is valid.
+     * @param id The id of the license
+     * @return If the license is valid
+     */
+<span class="fstat-no" title="function not covered" >    function isValid(uint256 id) public view override returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        return licenseExpirationTimestamps[id] &gt; block.timestamp;</span>
+    }
+&nbsp;
+    /**
+     * @notice Get the date at which the license will become valid
+     * @param id The id of the license
+     * @return Timestamp of when license will begin to be invalid
+     */
+    function invalidStartDate(uint256 id)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return licenseExpirationTimestamps[id];
+    }
+&nbsp;
+    /**
+     * @dev Updates expiration for a license
+     * @param id The id of the license
+     * @param newContributionRate The new contribution rate for the license
+     * @param additionalContribution The additional contribution amount
+     */
+    function _updateExpiration(
+        uint256 id,
+        uint256 newContributionRate,
+        uint256 additionalContribution
+    ) internal {
+        uint256 currentExpirationTimestamp = licenseExpirationTimestamps[id];
+        uint256 currentContributionRate = accountant.contributionRates(id);
+&nbsp;
+        // Calculate existing time balance
+        uint256 existingTimeBalance;
+        if (currentExpirationTimestamp &gt; block.timestamp) {
+            existingTimeBalance = currentExpirationTimestamp - block.timestamp;
+        } else {
+            existingTimeBalance = 0;
+        }
+&nbsp;
+        // Calculate existing network fee balance
+        uint256 existingNetworkFeeBalance = existingTimeBalance *
+            currentContributionRate;
+&nbsp;
+        // Calculate new network fee balance
+        uint256 newNetworkFeeBalance = existingNetworkFeeBalance +
+            additionalContribution;
+&nbsp;
+        // Calculate new time balance
+        uint256 newTimeBalance = newNetworkFeeBalance / newContributionRate;
+&nbsp;
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(newTimeBalance &gt; 0, "New time balance must be greater than 0");
+&nbsp;
+        // Calculate new expiration
+        uint256 newExpirationTimestamp = newTimeBalance + block.timestamp;
+&nbsp;
+        require(
+            (newExpirationTimestamp - block.timestamp) &gt;= minExpiration,
+            "Resulting expiration date must be at least minExpiration"
+        );
+&nbsp;
+        // Max expiration
+        if ((newExpirationTimestamp - block.timestamp) &gt; maxExpiration) {
+            newExpirationTimestamp = block.timestamp + maxExpiration;
+        }
+&nbsp;
+        licenseExpirationTimestamps[id] = newExpirationTimestamp;
+&nbsp;
+        emit LicenseExpirationUpdated(id, newExpirationTimestamp);
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Oct 21 2021 17:31:36 GMT-0700 (Pacific Daylight Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

@@ -6,7 +6,8 @@ import "./interfaces/ILicenseValidator.sol";
 
 /// @title A smart contract that stores accounting information for an always-for-sale license.
 contract Accountant is AccessControlEnumerable {
-    bytes32 public constant MODIFY_CONTRIBUTION_ROLE = keccak256("MODIFY_CONTRIBUTION_ROLE");
+    bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
+        keccak256("MODIFY_CONTRIBUTION_ROLE");
 
     /// @notice The numerator of the network-wide per second contribution fee.
     uint256 public perSecondFeeNumerator;
@@ -29,10 +30,10 @@ contract Accountant is AccessControlEnumerable {
      * @param _perSecondFeeDenominator The denominator of the network-wide per second contribution fee
      * @custom:requires DEFAULT_ADMIN_ROLE
      */
-    function setPerSecondFee(uint256 _perSecondFeeNumerator, uint256 _perSecondFeeDenominator)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPerSecondFee(
+        uint256 _perSecondFeeNumerator,
+        uint256 _perSecondFeeDenominator
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
     }
@@ -55,7 +56,10 @@ contract Accountant is AccessControlEnumerable {
      * @param newRate The new per second contribution rate for the license
      * @custom:requires MODIFY_CONTRIBUTION_ROLE
      */
-    function setContributionRate(uint256 id, uint256 newRate) external onlyRole(MODIFY_CONTRIBUTION_ROLE) {
+    function setContributionRate(uint256 id, uint256 newRate)
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
         contributionRates[id] = newRate;
     }
 
@@ -66,5 +70,14 @@ contract Accountant is AccessControlEnumerable {
      */
     function isValid(uint256 id) external view returns (bool) {
         return validator.isValid(id);
+    }
+
+    /**
+     * @notice Get the date at which the license will become valid
+     * @param id The id of the license
+     * @return Timestamp of when license will begin to be invalid
+     */
+    function invalidStartDate(uint256 id) external view returns (uint256) {
+        return validator.invalidStartDate(id);
     }
 }

@@ -5,6 +5,7 @@
 require("@openzeppelin/hardhat-upgrades");
 require("@nomiclabs/hardhat-waffle");
 require("@eth-optimism/hardhat-ovm");
+require("solidity-coverage");
 
 function perYearToPerSecondRate(annualRate) {
   return {
@@ -81,36 +82,30 @@ module.exports = {
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
-      accounts: [process.env.DEV_PRIVATE_KEY],
       chainId: 0x2a,
       gas: 4700000,
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
-      accounts: [process.env.DEV_PRIVATE_KEY],
       chainId: 4,
     },
     sokul: {
       url: "https://sokol.poa.network",
-      accounts: [process.env.DEV_PRIVATE_KEY],
       chainId: 77,
       gasPrice: 1000000000,
     },
     xdai: {
       url: "https://xdai.poanetwork.dev",
-      accounts: [process.env.DEV_PRIVATE_KEY],
       network_id: 100,
       gasPrice: 1000000000,
     },
     arbitrumRinkeby: {
       url: "https://rinkeby.arbitrum.io/rpc",
-      accounts: [process.env.DEV_PRIVATE_KEY],
       chainId: 421611,
       gasPrice: 0,
     },
     optimisticKovan: {
       url: "https://kovan.optimism.io",
-      accounts: [process.env.DEV_PRIVATE_KEY],
       gasPrice: 15000000,
       ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
     },
