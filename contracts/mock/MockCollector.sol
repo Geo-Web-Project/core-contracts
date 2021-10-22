@@ -12,10 +12,7 @@ contract MockCollector {
         minPayment = _minPayment;
     }
 
-    function setContributionRate(uint256 id, uint256 newContributionRate)
-        external
-        payable
-    {
+    function setContributionRate(uint256 id, uint256) external payable {
         require(
             msg.value >= minPayment,
             "Value must be greater than minPayment"
