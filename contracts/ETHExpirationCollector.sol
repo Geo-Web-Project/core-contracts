@@ -137,7 +137,7 @@ contract ETHExpirationCollector is
 
     /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
-     * @custom:requires DEFAULT_ADMIN_ROLE
+     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -145,7 +145,7 @@ contract ETHExpirationCollector is
 
     /**
      * @notice Unpause the contract.
-     * @custom:requires DEFAULT_ADMIN_ROLE
+     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
