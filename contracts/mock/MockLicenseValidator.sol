@@ -10,7 +10,7 @@ contract MockLicenseValidator is ILicenseValidator {
         truthyValue = _truthyValue;
     }
 
-    function isValid(uint256 id) external override view returns (bool) {
+    function isValid(uint256 id) external view override returns (bool) {
         return id == truthyValue;
     }
 }
