@@ -5,6 +5,7 @@
 require("@openzeppelin/hardhat-upgrades");
 require("@nomiclabs/hardhat-waffle");
 require("@eth-optimism/hardhat-ovm");
+require("solidity-coverage");
 
 function perYearToPerSecondRate(annualRate) {
   return {
