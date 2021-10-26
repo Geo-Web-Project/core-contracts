@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./ETHExpirationCollector.sol";
-import "./mock/MockERC721License.sol";
+import "./ERC721License.sol";
 import "./mock/MockParcel.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
@@ -15,7 +15,7 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
     ETHExpirationCollector public collector;
 
     /// @notice License
-    MockERC721License public license;
+    ERC721License public license;
 
     /// @notice Parcel
     MockParcel public parcel;
@@ -37,7 +37,7 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
 
         minClaimExpiration = _minClaimExpiration;
 
-        license = MockERC721License(licenseAddress);
+        license = ERC721License(licenseAddress);
         parcel = MockParcel(parcelAddress);
         collector = ETHExpirationCollector(collectorAddress);
     }
@@ -63,7 +63,7 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        license = MockERC721License(licenseAddress);
+        license = ERC721License(licenseAddress);
     }
 
     /**
@@ -106,9 +106,6 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
         // Build parcel
         uint256 parcelId = parcel.build(baseCoordinate, path);
 
-        // Mint license
-        license.mint(to, parcelId);
-
         // Collect initial payment and set contribution rate
         collector.setContributionRate{value: msg.value}(
             parcelId,
@@ -125,11 +122,14 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
         );
 
         emit ParcelClaimed(parcelId, to);
+
+        // Mint license last to avoid reentry
+        license.safeMint(to, parcelId);
     }
 
     /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
-     * @custom:requires DEFAULT_ADMIN_ROLE
+     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -137,7 +137,7 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
 
     /**
      * @notice Unpause the contract.
-     * @custom:requires DEFAULT_ADMIN_ROLE
+     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
