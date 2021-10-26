@@ -35,4 +35,13 @@ contract MockERC721License is ERC721 {
     function burn(uint256 tokenId) public {
         _burn(tokenId);
     }
+
+    function isApprovedForAll(address, address)
+        public
+        pure
+        override
+        returns (bool)
+    {
+        return true;
+    }
 }
