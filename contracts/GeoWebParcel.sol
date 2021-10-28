@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./GeoWebCoordinate.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-/// @notice GeoWebParcel manages the formation and representation of land parcels
+/// @title A smart contract that stores what area makes up a parcel and defines the rules for mutating a parcel.
 contract GeoWebParcel is AccessControl {
     using GeoWebCoordinate for uint64;
     using GeoWebCoordinatePath for uint256;
@@ -34,6 +34,12 @@ contract GeoWebParcel is AccessControl {
         maxId = 0;
     }
 
+    /**
+     * @notice Build a new parcel. All coordinates along the path must be available. All coordinates are marked unavailable after creation.
+     * @param baseCoordinate Base coordinate of new parcel
+     * @param path Path of new parcel
+     * @custom:requires BUILD_ROLE
+     */
     function build(uint64 baseCoordinate, uint256[] calldata path)
         external
         onlyRole(BUILD_ROLE)
@@ -109,6 +115,10 @@ contract GeoWebParcel is AccessControl {
         maxId += 1;
     }
 
+    /**
+     * @notice Get a land parcel
+     * @param id ID of land parcel
+     */
     function getLandParcel(uint256 id)
         public
         view
