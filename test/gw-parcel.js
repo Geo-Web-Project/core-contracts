@@ -8,24 +8,32 @@ describe("GeoWebParcel", async () => {
     return BigNumber.from(length).shl(256 - 8);
   }
 
-  let geoWebParcel;
   let accounts;
+
+  async function buildContract() {
+    const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
+    const geoWebParcel = await GeoWebParcel.deploy();
+    await geoWebParcel.deployed();
+
+    return geoWebParcel;
+  }
 
   before(async () => {
     accounts = await ethers.getSigners();
-
-    const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
-    geoWebParcel = await GeoWebParcel.deploy(accounts[0].address);
-    await geoWebParcel.deployed();
   });
 
-  it("should mint parcel of a single coordinate", async () => {
+  it("should build parcel of a single coordinate", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-    let mintTx = await geoWebParcel.mintLandParcel(coord, [BigNumber.from(0)]);
+    let buildTx = await geoWebParcel.build(coord, [BigNumber.from(0)]);
 
-    let mintResult = await mintTx.wait();
+    let buildResult = await buildTx.wait();
 
     let result = await geoWebParcel.availabilityIndex(0, 2);
 
@@ -36,7 +44,7 @@ describe("GeoWebParcel", async () => {
     );
 
     let parcel = await geoWebParcel.getLandParcel(
-      mintResult.events[0].args._id
+      buildResult.events[0].args._id
     );
     assert.equal(
       parcel.baseCoordinate.toString(),
@@ -45,16 +53,21 @@ describe("GeoWebParcel", async () => {
     );
   });
 
-  it("should mint parcel within one word", async () => {
+  it("should build parcel within one word", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
 
     // North, North, West
-    let mintTx = await geoWebParcel.mintLandParcel(coord, [
+    let buildTx = await geoWebParcel.build(coord, [
       makePathPrefix(3).or(BigNumber.from(0b110000)),
     ]);
 
-    let mintResult = await mintTx.wait();
+    let buildResult = await buildTx.wait();
 
     let result = await geoWebParcel.availabilityIndex(0, 1);
 
@@ -70,7 +83,7 @@ describe("GeoWebParcel", async () => {
     );
 
     let parcel = await geoWebParcel.getLandParcel(
-      mintResult.events[0].args._id
+      buildResult.events[0].args._id
     );
     assert.equal(
       parcel.baseCoordinate.toString(),
@@ -79,17 +92,22 @@ describe("GeoWebParcel", async () => {
     );
   });
 
-  it("should mint parcel that spans multiple words", async () => {
+  it("should build parcel that spans multiple words", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
     let coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
 
     // East, North
     // East -> Index(1, 0), Local(0, 1)
-    let mintTx = await geoWebParcel.mintLandParcel(coord, [
+    let buildTx = await geoWebParcel.build(coord, [
       makePathPrefix(2).or(BigNumber.from(0b0010)),
     ]);
 
-    let mintResult = await mintTx.wait();
+    let buildResult = await buildTx.wait();
 
     let result0 = await geoWebParcel.availabilityIndex(0, 0);
     let result1 = await geoWebParcel.availabilityIndex(1, 0);
@@ -107,7 +125,7 @@ describe("GeoWebParcel", async () => {
     );
 
     let parcel = await geoWebParcel.getLandParcel(
-      mintResult.events[0].args._id
+      buildResult.events[0].args._id
     );
     assert.equal(
       parcel.baseCoordinate.toString(),
@@ -116,7 +134,12 @@ describe("GeoWebParcel", async () => {
     );
   });
 
-  it("should mint parcel with a long path", async () => {
+  it("should build parcel with a long path", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(511, 0) -> Index(31, 0), Local(15, 0)
     let coord = BigNumber.from(511).shl(32).or(BigNumber.from(0));
 
@@ -128,8 +151,8 @@ describe("GeoWebParcel", async () => {
     );
     // West 3 times
     let path2 = makePathPrefix(3).or(BigNumber.from(0b111111));
-    let mintTx = await geoWebParcel.mintLandParcel(coord, [path1, path2]);
-    let mintResult = await mintTx.wait();
+    let buildTx = await geoWebParcel.build(coord, [path1, path2]);
+    let buildResult = await buildTx.wait();
 
     for (let i = 0; i < 128 / 16; i++) {
       let result = await geoWebParcel.availabilityIndex(31 - i, 0);
@@ -142,7 +165,7 @@ describe("GeoWebParcel", async () => {
     }
 
     let parcel = await geoWebParcel.getLandParcel(
-      mintResult.events[0].args._id
+      buildResult.events[0].args._id
     );
     assert.equal(
       parcel.baseCoordinate.toString(),
@@ -151,15 +174,20 @@ describe("GeoWebParcel", async () => {
     );
   });
 
-  it("should mint parcel that crosses the meridian", async () => {
+  it("should build parcel that crosses the meridian", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(0, 160) -> Index(0, 10), Local(0, 0)
     let coord = BigNumber.from(0).shl(32).or(BigNumber.from(160));
 
     // West -> Index(MAX/16, 10), Local(15, 0)
-    let mintTx = await geoWebParcel.mintLandParcel(coord, [
+    let buildTx = await geoWebParcel.build(coord, [
       makePathPrefix(1).or(BigNumber.from(0b11)),
     ]);
-    let mintResult = await mintTx.wait();
+    let buildResult = await buildTx.wait();
 
     let result0 = await geoWebParcel.availabilityIndex(0, 10);
     let result1 = await geoWebParcel.availabilityIndex(2 ** 19 / 16 - 1, 10);
@@ -177,7 +205,7 @@ describe("GeoWebParcel", async () => {
     );
 
     let parcel = await geoWebParcel.getLandParcel(
-      mintResult.events[0].args._id
+      buildResult.events[0].args._id
     );
     assert.equal(
       parcel.baseCoordinate.toString(),
@@ -186,7 +214,12 @@ describe("GeoWebParcel", async () => {
     );
   });
 
-  it("should not mint parcel that goes too far north", async () => {
+  it("should not build parcel that goes too far north", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(16000, MAX) -> Index(1000, MAX/16), Local(0, 15)
     let coord = BigNumber.from(16000)
       .shl(32)
@@ -195,7 +228,7 @@ describe("GeoWebParcel", async () => {
     var err;
     try {
       // North
-      await geoWebParcel.mintLandParcel(coord, [
+      await geoWebParcel.build(coord, [
         makePathPrefix(1).or(BigNumber.from(0b00)),
       ]);
     } catch (error) {
@@ -205,14 +238,19 @@ describe("GeoWebParcel", async () => {
     assert(err, "Expected an error but did not get one");
   });
 
-  it("should not mint parcel that goes too far south", async () => {
+  it("should not build parcel that goes too far south", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
     let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
 
     var err;
     try {
       // South
-      await geoWebParcel.mintLandParcel(coord, [
+      await geoWebParcel.build(coord, [
         makePathPrefix(1).or(BigNumber.from(0b01)),
       ]);
     } catch (error) {
@@ -222,14 +260,19 @@ describe("GeoWebParcel", async () => {
     assert(err, "Expected an error but did not get one");
   });
 
-  it("should not mint parcel that repeats coordinates", async () => {
+  it("should not build parcel that repeats coordinates", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
     let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
 
     var err;
     try {
       // West, East
-      await geoWebParcel.mintLandParcel(coord, [
+      await geoWebParcel.build(coord, [
         makePathPrefix(2).or(BigNumber.from(0b1011)),
       ]);
     } catch (error) {
@@ -239,20 +282,21 @@ describe("GeoWebParcel", async () => {
     assert(err, "Expected an error but did not get one");
   });
 
-  it("should not mint parcel if caller is not minter", async () => {
+  it("should not build parcel if caller does not have BUILD_ROLE", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
     let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
 
     var err;
     try {
       // North
-      await geoWebParcel.mintLandParcel(
-        coord,
-        [makePathPrefix(1).or(BigNumber.from(0b00))],
-        {
-          from: accounts[1],
-        }
-      );
+      await geoWebParcel
+        .connect(accounts[1])
+        .build(coord, [makePathPrefix(1).or(BigNumber.from(0b00))]);
     } catch (error) {
       err = error;
     }
