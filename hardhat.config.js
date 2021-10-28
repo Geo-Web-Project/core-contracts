@@ -74,7 +74,7 @@ task("deploy", "Deploy the set of contracts").setAction(async () => {
 module.exports = {
   networks: {
     hardhat: {
-      gasPrice: 1000000000,
+      gasPrice: 0,
     },
     local: {
       gasPrice: 1000000000,

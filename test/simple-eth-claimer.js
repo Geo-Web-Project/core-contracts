@@ -190,7 +190,7 @@ describe("SimpleETHClaimer", async () => {
     );
 
     const receipt = await result.wait();
-    const newParcelId = receipt.events[1].args.parcelId;
+    const newParcelId = receipt.events[0].args.parcelId;
 
     assert(await license.exists(newParcelId), "License was not minted");
     assert((await parcel.nextId()) > 0, "Parcel was not built");
