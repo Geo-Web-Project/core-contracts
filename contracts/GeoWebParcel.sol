@@ -11,6 +11,7 @@ contract GeoWebParcel is AccessControl {
 
     bytes32 public constant BUILD_ROLE = keccak256("BUILD_ROLE");
     bytes32 public constant DESTROY_ROLE = keccak256("DESTROY_ROLE");
+    bytes32 public constant MODIFY_ROLE = keccak256("MODIFY_ROLE");
 
     /// @dev Structure of a land parcel
     struct LandParcel {
@@ -39,6 +40,9 @@ contract GeoWebParcel is AccessControl {
     /// @notice Emitted when a parcel is destroyed
     event ParcelDestroyed(uint256 indexed _id);
 
+    /// @notice Emitted when a parcel is modified
+    event ParcelModified(uint256 indexed _id);
+
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
@@ -58,7 +62,7 @@ contract GeoWebParcel is AccessControl {
     {
         require(path.length > 0, "Path must have at least component");
 
-        _traverseAction(Action.Build, baseCoordinate, path);
+        _updateAvailabilityIndex(Action.Build, baseCoordinate, path);
 
         LandParcel storage p = landParcels[maxId];
         p.baseCoordinate = baseCoordinate;
@@ -79,11 +83,79 @@ contract GeoWebParcel is AccessControl {
     function destroy(uint256 id) external onlyRole(DESTROY_ROLE) {
         LandParcel storage p = landParcels[id];
 
-        _traverseAction(Action.Destroy, p.baseCoordinate, p.path);
+        _updateAvailabilityIndex(Action.Destroy, p.baseCoordinate, p.path);
 
         delete landParcels[id];
 
-        emit ParcelDestroyed(maxId);
+        emit ParcelDestroyed(id);
+    }
+
+    /**
+     * @notice Append new coordinates to the end of an existing parcel's path. New coordinates are marked as unavailable and existing parcel data is updated.
+     * @param id ID of land parcel
+     * @param path Path to follow from end of parcel
+     * @custom:requires MODIFY_ROLE
+     */
+    function append(uint256 id, uint256[] calldata path)
+        external
+        onlyRole(MODIFY_ROLE)
+    {
+        LandParcel storage p = landParcels[id];
+
+        // Follow parcel to end
+        uint64 currentCoord = p.baseCoordinate;
+
+        uint256 p_i = 0;
+        uint256 currentPath = p.path[p_i];
+        (uint256 i_x, uint256 i_y, uint256 i) = currentCoord._toWordIndex();
+        bool hasNext;
+        uint256 direction;
+
+        do {
+            // Get next direction
+            (hasNext, direction, currentPath) = currentPath._nextDirection();
+
+            if (!hasNext) {
+                // Try next path
+                p_i += 1;
+                if (p_i >= p.path.length) {
+                    break;
+                }
+                currentPath = p.path[p_i];
+                (hasNext, direction, currentPath) = currentPath
+                    ._nextDirection();
+            }
+
+            // Traverse to next coordinate
+            (currentCoord, i_x, i_y, i) = currentCoord._traverse(
+                direction,
+                i_x,
+                i_y,
+                i
+            );
+        } while (true);
+
+        // currentCoord is now end of parcel path
+        // Start at first new coordinate
+        (hasNext, direction, currentPath) = path[0]._nextDirection();
+        (currentCoord, i_x, i_y, i) = currentCoord._traverse(
+            direction,
+            i_x,
+            i_y,
+            i
+        );
+
+        uint256[] memory newPath = path;
+        newPath[0] = currentPath;
+
+        _updateAvailabilityIndex(Action.Build, currentCoord, newPath);
+
+        // Append new path to existing path
+        for (uint256 a = 0; a < path.length; a++) {
+            p.path.push(path[a]);
+        }
+
+        emit ParcelModified(id);
     }
 
     /**
@@ -99,7 +171,8 @@ contract GeoWebParcel is AccessControl {
         return (p.baseCoordinate, p.path);
     }
 
-    function _traverseAction(
+    /// @dev Update availability index by traversing a path and marking everything as available or unavailable
+    function _updateAvailabilityIndex(
         Action action,
         uint64 baseCoordinate,
         uint256[] memory path
