@@ -131,8 +131,8 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
 
             return value + feeBalance;
         } else if (
-            (expirationTimestamp + dutchAuctionLengthInSeconds) >
-            block.timestamp
+            block.timestamp >=
+            (expirationTimestamp + dutchAuctionLengthInSeconds)
         ) {
             return 0;
         } else {

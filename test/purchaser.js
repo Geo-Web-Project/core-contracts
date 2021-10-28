@@ -4,16 +4,23 @@ const BigNumber = ethers.BigNumber;
 
 describe("ETHPurchaser", async () => {
   let accounts;
-  let dutchAuctionLengthInSeconds = 60 * 60 * 7;
+  let defaultDutchAuctionLengthInSeconds = 60 * 60 * 7;
 
-  async function buildContract({ license, collector, accountant }) {
+  async function buildContract({
+    license,
+    collector,
+    accountant,
+    dutchAuctionLengthInSeconds,
+  }) {
+    const _dutchAuctionLengthInSeconds =
+      dutchAuctionLengthInSeconds ?? defaultDutchAuctionLengthInSeconds;
     const licenseAddress = license ?? ethers.constants.AddressZero;
     const collectorAddress = collector ?? ethers.constants.AddressZero;
     const accountantAddress = accountant ?? ethers.constants.AddressZero;
 
     const ETHPurchaser = await ethers.getContractFactory("ETHPurchaser");
     const purchaser = await ETHPurchaser.deploy(
-      dutchAuctionLengthInSeconds,
+      _dutchAuctionLengthInSeconds,
       licenseAddress,
       collectorAddress,
       accountantAddress
@@ -212,6 +219,207 @@ describe("ETHPurchaser", async () => {
     );
   });
 
+  it("should calculate purchase price at start of auction", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const minPayment = 1;
+
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(0, minPayment);
+    await collector.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let purchaser = await buildContract({
+      accountant: accountant.address,
+      license: license.address,
+      collector: collector.address,
+    });
+
+    await license.mint(accounts[2].address, 1);
+    await accountant.setContributionRate(1, 10);
+    await collector.setContributionRate(1, 10, {
+      value: ethers.utils.parseEther("1"),
+    });
+
+    let purchasePrice = await purchaser.calculatePurchasePrice(1);
+
+    assert.equal(
+      purchasePrice.toString(),
+      20,
+      "Purchase price was not correct"
+    );
+  });
+
+  it("should calculate purchase price during auction", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const minPayment = 1;
+
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(0, minPayment);
+    await collector.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let purchaser = await buildContract({
+      accountant: accountant.address,
+      license: license.address,
+      collector: collector.address,
+    });
+
+    await license.mint(accounts[2].address, 1);
+    await accountant.setContributionRate(1, 10000);
+    await collector.setContributionRate(1, 10000, {
+      value: ethers.utils.parseEther("1"),
+    });
+
+    // Mine a few blocks
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    let purchasePrice = await purchaser.calculatePurchasePrice(1);
+    let decreaseRate = 20000 / defaultDutchAuctionLengthInSeconds;
+
+    assert.equal(
+      purchasePrice.toString(),
+      Math.ceil(20000 - decreaseRate * 3),
+      "Purchase price was not correct"
+    );
+  });
+
+  it("should calculate purchase price at end of auction", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const minPayment = 1;
+
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(0, minPayment);
+    await collector.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let purchaser = await buildContract({
+      dutchAuctionLengthInSeconds: 3,
+      accountant: accountant.address,
+      license: license.address,
+      collector: collector.address,
+    });
+
+    await license.mint(accounts[2].address, 1);
+    await accountant.setContributionRate(1, 10000);
+    await collector.setContributionRate(1, 10000, {
+      value: ethers.utils.parseEther("1"),
+    });
+
+    // Mine a few blocks
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    // Token ID: 1
+    // Expiration: now
+    // Contribution rate: 10
+    // Time balance: 0
+    // Value: 20
+
+    let purchasePrice = await purchaser.calculatePurchasePrice(1);
+
+    assert.equal(purchasePrice.toString(), 0, "Purchase price was not correct");
+  });
+
+  it("should calculate purchase price after auction", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const minPayment = 1;
+
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(0, minPayment);
+    await collector.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let purchaser = await buildContract({
+      dutchAuctionLengthInSeconds: 2,
+      accountant: accountant.address,
+      license: license.address,
+      collector: collector.address,
+    });
+
+    await license.mint(accounts[2].address, 1);
+    await accountant.setContributionRate(1, 10000);
+    await collector.setContributionRate(1, 10000, {
+      value: ethers.utils.parseEther("1"),
+    });
+
+    // Mine a few blocks
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    await hre.network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+
+    let purchasePrice = await purchaser.calculatePurchasePrice(1);
+
+    assert.equal(purchasePrice.toString(), 0, "Purchase price was not correct");
+  });
+
   it("should purchase a license [ @skip-on-coverage ]", async () => {
     const MockERC721License = await ethers.getContractFactory(
       "MockERC721License"
@@ -291,6 +499,126 @@ describe("ETHPurchaser", async () => {
     assert(
       (await collector.licenseExpirationTimestamps(1)).gt(initialExpiration),
       "Collector was not updated"
+    );
+  });
+
+  it("should fail to purchase license if maxPurchasePrice is too low", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const minPayment = 1;
+
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(1000, minPayment);
+    await collector.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let purchaser = await buildContract({
+      accountant: accountant.address,
+      license: license.address,
+      collector: collector.address,
+    });
+
+    let contributionRate = 10;
+
+    await license.mint(accounts[2].address, 1);
+    await accountant.setContributionRate(1, contributionRate);
+    await collector.setContributionRate(1, contributionRate, {
+      value: ethers.utils.parseEther("1"),
+    });
+
+    // Token ID: 1
+    // Expiration: now + 1000
+    // Contribution rate: 10
+    // Time balance: 1000*10
+    // Value: 20
+
+    const maxPurchasePrice = 20 + 1000 * contributionRate;
+
+    var err;
+    try {
+      await purchaser
+        .connect(accounts[3])
+        .purchase(
+          1,
+          accounts[3].address,
+          maxPurchasePrice - 1000,
+          contributionRate,
+          {
+            value: maxPurchasePrice - 1000,
+          }
+        );
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("above max purchase price"),
+      "Expected an error but did not get one"
+    );
+  });
+
+  it("should fail to purchase license if value is too low", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const minPayment = 1;
+
+    const MockCollector = await ethers.getContractFactory("MockCollector");
+    const collector = await MockCollector.deploy(1000, minPayment);
+    await collector.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let purchaser = await buildContract({
+      accountant: accountant.address,
+      license: license.address,
+      collector: collector.address,
+    });
+
+    let contributionRate = 10;
+
+    await license.mint(accounts[2].address, 1);
+    await accountant.setContributionRate(1, contributionRate);
+    await collector.setContributionRate(1, contributionRate, {
+      value: ethers.utils.parseEther("1"),
+    });
+
+    // Token ID: 1
+    // Expiration: now + 1000
+    // Contribution rate: 10
+    // Time balance: 1000*10
+    // Value: 20
+
+    const maxPurchasePrice = 20 + 1000 * contributionRate;
+
+    var err;
+    try {
+      await purchaser
+        .connect(accounts[3])
+        .purchase(1, accounts[3].address, maxPurchasePrice, contributionRate, {
+          value: maxPurchasePrice - 1000,
+        });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes(
+        "Message value must be greater than or equal to the total buy price"
+      ),
+      "Expected an error but did not get one"
     );
   });
 });
