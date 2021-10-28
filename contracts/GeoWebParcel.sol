@@ -10,6 +10,7 @@ contract GeoWebParcel is AccessControl {
     using GeoWebCoordinatePath for uint256;
 
     bytes32 public constant BUILD_ROLE = keccak256("BUILD_ROLE");
+    bytes32 public constant DESTROY_ROLE = keccak256("DESTROY_ROLE");
 
     struct LandParcel {
         uint64 baseCoordinate;
@@ -27,6 +28,9 @@ contract GeoWebParcel is AccessControl {
 
     /// @notice Emitted when a parcel is built
     event ParcelBuilt(uint256 indexed _id);
+
+    /// @notice Emitted when a parcel is destroyed
+    event ParcelDestroyed(uint256 indexed _id);
 
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -113,6 +117,73 @@ contract GeoWebParcel is AccessControl {
         newParcelId = maxId;
 
         maxId += 1;
+    }
+
+    /**
+     * @notice Destroy an existing parcel. All coordinates along the path are marked as available.
+     * @param id ID of land parcel
+     * @custom:requires DESTROY_ROLE
+     */
+    function destroy(uint256 id) external onlyRole(DESTROY_ROLE) {
+        LandParcel storage p = landParcels[id];
+
+        uint64 currentCoord = p.baseCoordinate;
+
+        uint256 p_i = 0;
+        uint256 currentPath = p.path[p_i];
+
+        (uint256 i_x, uint256 i_y, uint256 i) = currentCoord._toWordIndex();
+        uint256 word = availabilityIndex[i_x][i_y];
+
+        do {
+            // Mark coordinate as available in memory
+            word = word ^ (2**i);
+
+            // Get next direction
+            bool hasNext;
+            uint256 direction;
+            (hasNext, direction, currentPath) = currentPath._nextDirection();
+
+            if (!hasNext) {
+                // Try next path
+                p_i += 1;
+                if (p_i >= p.path.length) {
+                    break;
+                }
+                currentPath = p.path[p_i];
+                (hasNext, direction, currentPath) = currentPath
+                    ._nextDirection();
+            }
+
+            // Traverse to next coordinate
+            uint256 new_i_x;
+            uint256 new_i_y;
+            (currentCoord, new_i_x, new_i_y, i) = currentCoord._traverse(
+                direction,
+                i_x,
+                i_y,
+                i
+            );
+
+            // If new coordinate is in new word
+            if (new_i_x != i_x || new_i_y != i_y) {
+                // Update word in storage
+                availabilityIndex[i_x][i_y] = word;
+
+                // Advance to next word
+                word = availabilityIndex[new_i_x][new_i_y];
+            }
+
+            i_x = new_i_x;
+            i_y = new_i_y;
+        } while (true);
+
+        // Update last word in storage
+        availabilityIndex[i_x][i_y] = word;
+
+        delete landParcels[id];
+
+        emit ParcelDestroyed(maxId);
     }
 
     /**

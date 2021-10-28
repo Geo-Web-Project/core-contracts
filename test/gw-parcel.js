@@ -22,11 +22,13 @@ describe("GeoWebParcel", async () => {
     accounts = await ethers.getSigners();
   });
 
-  it("should build parcel of a single coordinate", async () => {
+  it("should build and destroy a parcel of a single coordinate", async () => {
     let geoWebParcel = await buildContract();
     let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let DESTROY_ROLE = await geoWebParcel.DESTROY_ROLE();
 
     await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(DESTROY_ROLE, accounts[0].address);
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
@@ -51,13 +53,39 @@ describe("GeoWebParcel", async () => {
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
+
+    await geoWebParcel.destroy(buildResult.events[0].args._id);
+
+    let result1 = await geoWebParcel.availabilityIndex(0, 2);
+
+    assert.equal(
+      result1.toString(),
+      BigNumber.from(0).toString(),
+      "Parcel coordinates were not destroyed"
+    );
+
+    let parcel1 = await geoWebParcel.getLandParcel(
+      buildResult.events[0].args._id
+    );
+    assert.equal(
+      parcel1.baseCoordinate.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
+    assert.equal(
+      parcel1.path.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
   });
 
-  it("should build parcel within one word", async () => {
+  it("should build and destroy parcel within one word", async () => {
     let geoWebParcel = await buildContract();
     let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let DESTROY_ROLE = await geoWebParcel.DESTROY_ROLE();
 
     await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(DESTROY_ROLE, accounts[0].address);
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
@@ -90,13 +118,39 @@ describe("GeoWebParcel", async () => {
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
+
+    await geoWebParcel.destroy(buildResult.events[0].args._id);
+
+    let result1 = await geoWebParcel.availabilityIndex(0, 1);
+
+    assert.equal(
+      result1.toString(),
+      BigNumber.from(0).toString(),
+      "Parcel coordinates were not destroyed"
+    );
+
+    let parcel1 = await geoWebParcel.getLandParcel(
+      buildResult.events[0].args._id
+    );
+    assert.equal(
+      parcel1.baseCoordinate.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
+    assert.equal(
+      parcel1.path.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
   });
 
-  it("should build parcel that spans multiple words", async () => {
+  it("should build and destroy parcel that spans multiple words", async () => {
     let geoWebParcel = await buildContract();
     let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let DESTROY_ROLE = await geoWebParcel.DESTROY_ROLE();
 
     await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(DESTROY_ROLE, accounts[0].address);
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
     let coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
@@ -132,13 +186,45 @@ describe("GeoWebParcel", async () => {
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
+
+    await geoWebParcel.destroy(buildResult.events[0].args._id);
+
+    let result0_1 = await geoWebParcel.availabilityIndex(0, 0);
+    let result1_1 = await geoWebParcel.availabilityIndex(1, 0);
+
+    assert.equal(
+      result0_1.toString(),
+      BigNumber.from(0).toString(),
+      "Parcel coordinates were not destroyed"
+    );
+    assert.equal(
+      result1_1.toString(),
+      BigNumber.from(0).toString(),
+      "Parcel coordinates were not destroyed"
+    );
+
+    let parcel1 = await geoWebParcel.getLandParcel(
+      buildResult.events[0].args._id
+    );
+    assert.equal(
+      parcel1.baseCoordinate.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
+    assert.equal(
+      parcel1.path.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
   });
 
-  it("should build parcel with a long path", async () => {
+  it("should build and destroy parcel with a long path", async () => {
     let geoWebParcel = await buildContract();
     let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let DESTROY_ROLE = await geoWebParcel.DESTROY_ROLE();
 
     await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(DESTROY_ROLE, accounts[0].address);
 
     // Global(511, 0) -> Index(31, 0), Local(15, 0)
     let coord = BigNumber.from(511).shl(32).or(BigNumber.from(0));
@@ -172,13 +258,41 @@ describe("GeoWebParcel", async () => {
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
+
+    await geoWebParcel.destroy(buildResult.events[0].args._id);
+
+    for (let i = 0; i < 128 / 16; i++) {
+      let result = await geoWebParcel.availabilityIndex(31 - i, 0);
+
+      assert.equal(
+        result.toString(),
+        BigNumber.from(0).toString(),
+        "Parcel coordinates were not destroyed"
+      );
+    }
+
+    let parcel1 = await geoWebParcel.getLandParcel(
+      buildResult.events[0].args._id
+    );
+    assert.equal(
+      parcel1.baseCoordinate.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
+    assert.equal(
+      parcel1.path.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
   });
 
-  it("should build parcel that crosses the meridian", async () => {
+  it("should build and destroy parcel that crosses the meridian", async () => {
     let geoWebParcel = await buildContract();
     let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let DESTROY_ROLE = await geoWebParcel.DESTROY_ROLE();
 
     await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(DESTROY_ROLE, accounts[0].address);
 
     // Global(0, 160) -> Index(0, 10), Local(0, 0)
     let coord = BigNumber.from(0).shl(32).or(BigNumber.from(160));
@@ -211,6 +325,35 @@ describe("GeoWebParcel", async () => {
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
+    );
+
+    await geoWebParcel.destroy(buildResult.events[0].args._id);
+
+    let result0_1 = await geoWebParcel.availabilityIndex(0, 10);
+    let result1_1 = await geoWebParcel.availabilityIndex(2 ** 19 / 16 - 1, 10);
+    assert.equal(
+      result0_1.toString(),
+      BigNumber.from(0).toString(),
+      "Parcel coordinates were not destroyed"
+    );
+    assert.equal(
+      result1_1.toString(),
+      BigNumber.from(0).toString(),
+      "Parcel coordinates were not destroyed"
+    );
+
+    let parcel1 = await geoWebParcel.getLandParcel(
+      buildResult.events[0].args._id
+    );
+    assert.equal(
+      parcel1.baseCoordinate.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
+    assert.equal(
+      parcel1.path.toString(),
+      0,
+      "Parcel was not marked as destroyed"
     );
   });
 
@@ -297,6 +440,73 @@ describe("GeoWebParcel", async () => {
       await geoWebParcel
         .connect(accounts[1])
         .build(coord, [makePathPrefix(1).or(BigNumber.from(0b00))]);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(err, "Expected an error but did not get one");
+  });
+
+  it("should only destroy one parcel within a word", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let DESTROY_ROLE = await geoWebParcel.DESTROY_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(DESTROY_ROLE, accounts[0].address);
+
+    // Global(4, 33) -> Index(0, 2), Local(4, 1)
+    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+
+    // Global(4, 34) -> Index(0, 2), Local(4, 2)
+    let coord1 = BigNumber.from(4).shl(32).or(BigNumber.from(34));
+
+    await geoWebParcel.build(coord, [BigNumber.from(0)]);
+    let buildTx = await geoWebParcel.build(coord1, [BigNumber.from(0)]);
+    let buildResult = await buildTx.wait();
+
+    await geoWebParcel.destroy(buildResult.events[0].args._id);
+
+    let result1 = await geoWebParcel.availabilityIndex(0, 2);
+
+    assert.equal(
+      result1.toString(),
+      BigNumber.from(1).shl(20).toString(),
+      "Parcel coordinates were not destroyed"
+    );
+
+    let parcel1 = await geoWebParcel.getLandParcel(
+      buildResult.events[0].args._id
+    );
+    assert.equal(
+      parcel1.baseCoordinate.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
+    assert.equal(
+      parcel1.path.toString(),
+      0,
+      "Parcel was not marked as destroyed"
+    );
+  });
+
+  it("should not destroy parcel if caller does not have DESTROY_ROLE", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let DESTROY_ROLE = await geoWebParcel.DESTROY_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(DESTROY_ROLE, accounts[0].address);
+
+    // Global(4, 33) -> Index(0, 2), Local(4, 1)
+    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    await geoWebParcel.build(coord, [BigNumber.from(0)]);
+
+    var err;
+    try {
+      await geoWebParcel
+        .connect(accounts[1])
+        .destroy(buildResult.events[0].args._id);
     } catch (error) {
       err = error;
     }
