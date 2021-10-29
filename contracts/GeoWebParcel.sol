@@ -60,7 +60,7 @@ contract GeoWebParcel is AccessControl {
         onlyRole(BUILD_ROLE)
         returns (uint256 newParcelId)
     {
-        require(path.length > 0, "Path must have at least component");
+        require(path.length > 0, "Path must have at least one component");
 
         _updateAvailabilityIndex(Action.Build, baseCoordinate, path);
 
@@ -100,16 +100,21 @@ contract GeoWebParcel is AccessControl {
         external
         onlyRole(MODIFY_ROLE)
     {
+        require(path.length > 0, "Path must have at least one component");
+
+        (bool hasNext, uint256 direction, uint256 currentPath) = path[0]
+            ._nextDirection();
+
+        require(hasNext, "Path must have at least one direction");
+
         LandParcel storage p = landParcels[id];
 
         // Follow parcel to end
         uint64 currentCoord = p.baseCoordinate;
 
         uint256 p_i = 0;
-        uint256 currentPath = p.path[p_i];
+        currentPath = p.path[p_i];
         (uint256 i_x, uint256 i_y, uint256 i) = currentCoord._toWordIndex();
-        bool hasNext;
-        uint256 direction;
 
         do {
             // Get next direction

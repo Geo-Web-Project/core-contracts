@@ -450,6 +450,29 @@ describe("GeoWebParcel", async () => {
     );
   });
 
+  it("should not build parcel with empty path", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+
+    // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
+    let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
+
+    var err;
+    try {
+      // North
+      await geoWebParcel.build(coord, []);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("Path must have at least one component"),
+      "Expected an error but did not get one"
+    );
+  });
+
   it("should only destroy one parcel within a word", async () => {
     let geoWebParcel = await buildContract();
     let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
@@ -622,6 +645,72 @@ describe("GeoWebParcel", async () => {
       parcel.path[1].toString(),
       newPath[0].toString(),
       "Stored path is incorrect"
+    );
+  });
+
+  it("should not append empty path to parcel", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let MODIFY_ROLE = await geoWebParcel.MODIFY_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(MODIFY_ROLE, accounts[0].address);
+
+    // Global(4, 17) -> Index(0, 1), Local(4, 1)
+    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
+
+    let buildTx = await geoWebParcel.build(coord, [
+      makePathPrefix(3).or(BigNumber.from(0b110000)),
+    ]);
+
+    let buildResult = await buildTx.wait();
+    let parcelId = buildResult.events[0].args._id;
+
+    let newPath = [];
+
+    var err;
+    try {
+      await geoWebParcel.append(parcelId, newPath);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("Path must have at least one component"),
+      "Expected an error but did not get one"
+    );
+  });
+
+  it("should not append empty path component to parcel", async () => {
+    let geoWebParcel = await buildContract();
+    let BUILD_ROLE = await geoWebParcel.BUILD_ROLE();
+    let MODIFY_ROLE = await geoWebParcel.MODIFY_ROLE();
+
+    await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
+    await geoWebParcel.grantRole(MODIFY_ROLE, accounts[0].address);
+
+    // Global(4, 17) -> Index(0, 1), Local(4, 1)
+    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
+
+    let buildTx = await geoWebParcel.build(coord, [
+      makePathPrefix(3).or(BigNumber.from(0b110000)),
+    ]);
+
+    let buildResult = await buildTx.wait();
+    let parcelId = buildResult.events[0].args._id;
+
+    let newPath = [BigNumber.from(0)];
+
+    var err;
+    try {
+      await geoWebParcel.append(parcelId, newPath);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("Path must have at least one direction"),
+      "Expected an error but did not get one"
     );
   });
 
