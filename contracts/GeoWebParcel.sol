@@ -11,7 +11,6 @@ contract GeoWebParcel is AccessControl {
 
     bytes32 public constant BUILD_ROLE = keccak256("BUILD_ROLE");
     bytes32 public constant DESTROY_ROLE = keccak256("DESTROY_ROLE");
-    bytes32 public constant MODIFY_ROLE = keccak256("MODIFY_ROLE");
 
     /// @dev Maxmium uint256 stored as a constant to use for masking
     uint256 constant MAX_INT = 2**256 - 1;
