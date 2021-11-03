@@ -7,20 +7,22 @@ describe("SimpleETHClaimer", async () => {
   let minExpiration = 10;
 
   async function buildContract({ license, collector, parcel }) {
-    const licenseAddress = license ?? ethers.constants.AddressZero;
-    const collectorAddress = collector ?? ethers.constants.AddressZero;
-    const parcelAddress = parcel ?? ethers.constants.AddressZero;
-
     const SimpleETHClaimer = await ethers.getContractFactory(
       "SimpleETHClaimer"
     );
-    const claimer = await SimpleETHClaimer.deploy(
-      minExpiration,
-      licenseAddress,
-      collectorAddress,
-      parcelAddress
-    );
+    const claimer = await SimpleETHClaimer.deploy();
     await claimer.deployed();
+
+    await claimer.setMinClaimExpiration(minExpiration);
+    if (license) {
+      await claimer.setLicense(license);
+    }
+    if (collector) {
+      await claimer.setCollector(collector);
+    }
+    if (parcel) {
+      await claimer.setParcel(parcel);
+    }
 
     return claimer;
   }

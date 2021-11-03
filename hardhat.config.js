@@ -14,40 +14,7 @@ function perYearToPerSecondRate(annualRate) {
   };
 }
 
-task("deploy", "Deploy the set of contracts").setAction(async () => {
-  let rate = perYearToPerSecondRate(0.1);
-  let minInitialValue = ethers.utils.parseEther("0.1");
-  let minClaimExpiration = 60 * 60 * 24 * 365; // 365 days
-  let minExpiration = 60 * 60 * 24; // 1 day
-  let maxExpiration = 60 * 60 * 24 * 730; // 730 days
-  let ductionAuctionLength = 60 * 60 * 24 * 7; // 7 days
-
-  const GeoWebAdminNative_v0 = await ethers.getContractFactory(
-    "GeoWebAdminNative_v0"
-  );
-  const adminContract = await upgrades.deployProxy(GeoWebAdminNative_v0, [
-    minInitialValue,
-    minClaimExpiration,
-    minExpiration,
-    maxExpiration,
-    rate.numerator,
-    rate.denominator,
-    ductionAuctionLength,
-  ]);
-  await adminContract.deployed();
-
-  console.log("GeoWebAdminNative_v0 deployed to:", adminContract.address);
-
-  const ERC721License = await ethers.getContractFactory("ERC721License");
-  const licenseContract = await upgrades.deployProxy(ERC721License, [
-    adminContract.address,
-  ]);
-  await licenseContract.deployed();
-
-  await adminContract.setLicenseContract(licenseContract.address);
-
-  console.log("ERC721License deployed to:", licenseContract.address);
-
+task("deploy-all", "Deploy the set of contracts").setAction(async () => {
   const GeoWebCoordinate = await ethers.getContractFactory("GeoWebCoordinate");
   const geoWebCoordinate = await GeoWebCoordinate.deploy();
 
@@ -64,11 +31,14 @@ task("deploy", "Deploy the set of contracts").setAction(async () => {
   );
 
   const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
-  const geoWebParcel = await GeoWebParcel.deploy(adminContract.address);
+  const geoWebParcel = await GeoWebParcel.deploy();
 
   console.log("GeoWebParcel deployed to:", geoWebParcel.address);
 
-  await adminContract.setParcelContract(geoWebParcel.address);
+  const Accountant = await ethers.getContractFactory("Accountant");
+  const accountant = await Accountant.deploy();
+
+  console.log("Accountant deployed to:", accountant.address);
 });
 
 module.exports = {
@@ -88,6 +58,7 @@ module.exports = {
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 4,
+      accounts: [process.env.DEV_PRIVATE_KEY],
     },
     sokul: {
       url: "https://sokol.poa.network",

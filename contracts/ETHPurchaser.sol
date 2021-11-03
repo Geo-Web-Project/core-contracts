@@ -31,19 +31,9 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
         address indexed to
     );
 
-    constructor(
-        uint256 _dutchAuctionLengthInSeconds,
-        address licenseAddress,
-        address collectorAddress,
-        address accountantAddress
-    ) {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
-
-        dutchAuctionLengthInSeconds = _dutchAuctionLengthInSeconds;
-        license = ERC721License(licenseAddress);
-        collector = ETHExpirationCollector(collectorAddress);
-        accountant = Accountant(accountantAddress);
     }
 
     /**

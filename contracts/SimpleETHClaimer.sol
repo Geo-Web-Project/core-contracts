@@ -26,20 +26,9 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
     /// @notice Emitted when a parcel is claimed
     event ParcelClaimed(uint256 indexed parcelId, address indexed owner);
 
-    constructor(
-        uint256 _minClaimExpiration,
-        address licenseAddress,
-        address collectorAddress,
-        address parcelAddress
-    ) {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
-
-        minClaimExpiration = _minClaimExpiration;
-
-        license = ERC721License(licenseAddress);
-        parcel = MockParcel(parcelAddress);
-        collector = ETHExpirationCollector(collectorAddress);
     }
 
     /**

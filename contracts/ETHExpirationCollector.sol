@@ -44,23 +44,9 @@ contract ETHExpirationCollector is
     /// @notice Emitted when a payment is made
     event PaymentMade(uint256 indexed licenseId, uint256 paymentAmount);
 
-    constructor(
-        uint256 _minContributionRate,
-        uint256 _minExpiration,
-        uint256 _maxExpiration,
-        address licenseAddress,
-        address _receiver,
-        address accountantAddress
-    ) {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
-
-        minContributionRate = _minContributionRate;
-        minExpiration = _minExpiration;
-        maxExpiration = _maxExpiration;
-        license = IERC721(licenseAddress);
-        receiver = _receiver;
-        accountant = Accountant(accountantAddress);
     }
 
     /**

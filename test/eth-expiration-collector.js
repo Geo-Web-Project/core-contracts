@@ -8,22 +8,20 @@ describe("ETHExpirationCollector", async () => {
   let maxExpiration = 60 * 60 * 24 * 730; // 730 days
 
   async function buildContract({ license, accountant }) {
-    const licenseAddress = license ?? ethers.constants.AddressZero;
-    const accountantAddress = accountant ?? ethers.constants.AddressZero;
-
     const ETHExpirationCollector = await ethers.getContractFactory(
       "ETHExpirationCollector"
     );
-    const collector = await ETHExpirationCollector.deploy(
-      BigNumber.from(0),
-      minExpiration,
-      maxExpiration,
-      licenseAddress,
-      accounts[1].address,
-      accountantAddress
-    );
+    const collector = await ETHExpirationCollector.deploy();
     await collector.deployed();
-
+    await collector.setMinExpiration(minExpiration);
+    await collector.setMaxExpiration(maxExpiration);
+    await collector.setReceiver(accounts[1].address);
+    if (license) {
+      await collector.setLicense(license);
+    }
+    if (accountant) {
+      await collector.setAccountant(accountant);
+    }
     return collector;
   }
 

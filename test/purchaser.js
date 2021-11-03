@@ -14,18 +14,22 @@ describe("ETHPurchaser", async () => {
   }) {
     const _dutchAuctionLengthInSeconds =
       dutchAuctionLengthInSeconds ?? defaultDutchAuctionLengthInSeconds;
-    const licenseAddress = license ?? ethers.constants.AddressZero;
-    const collectorAddress = collector ?? ethers.constants.AddressZero;
-    const accountantAddress = accountant ?? ethers.constants.AddressZero;
-
     const ETHPurchaser = await ethers.getContractFactory("ETHPurchaser");
-    const purchaser = await ETHPurchaser.deploy(
-      _dutchAuctionLengthInSeconds,
-      licenseAddress,
-      collectorAddress,
-      accountantAddress
-    );
+    const purchaser = await ETHPurchaser.deploy();
     await purchaser.deployed();
+
+    await purchaser.setDutchAuctionLengthInSeconds(
+      _dutchAuctionLengthInSeconds
+    );
+    if (license) {
+      await purchaser.setLicense(license);
+    }
+    if (collector) {
+      await purchaser.setCollector(collector);
+    }
+    if (accountant) {
+      await purchaser.setAccountant(accountant);
+    }
 
     return purchaser;
   }
