@@ -20,6 +20,9 @@ contract Accountant is AccessControlEnumerable {
     /// @notice Where to find if a license's account is still valid.
     ILicenseValidator public validator;
 
+    /// @notice Emitted when a contribution rate is updated
+    event ContributionRateUpdated(uint256 indexed id, uint256 newRate);
+
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -61,6 +64,8 @@ contract Accountant is AccessControlEnumerable {
         onlyRole(MODIFY_CONTRIBUTION_ROLE)
     {
         contributionRates[id] = newRate;
+
+        emit ContributionRateUpdated(id, newRate);
     }
 
     /**
