@@ -6,6 +6,12 @@ require("@openzeppelin/hardhat-upgrades");
 require("@nomiclabs/hardhat-waffle");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
+require("./tasks/Accountant");
+require("./tasks/GeoWebParcel");
+require("./tasks/ERC721License");
+require("./tasks/ETHExpirationCollector");
+require("./tasks/ETHPurchaser");
+require("./tasks/SimpleETHClaimer");
 
 function perYearToPerSecondRate(annualRate) {
   return {
@@ -14,31 +20,13 @@ function perYearToPerSecondRate(annualRate) {
   };
 }
 
-task("deploy-all", "Deploy the set of contracts").setAction(async () => {
-  const GeoWebCoordinate = await ethers.getContractFactory("GeoWebCoordinate");
-  const geoWebCoordinate = await GeoWebCoordinate.deploy();
-
-  console.log("GeoWebCoordinate deployed to:", geoWebCoordinate.address);
-
-  const GeoWebCoordinatePath = await ethers.getContractFactory(
-    "GeoWebCoordinatePath"
-  );
-  const geoWebCoordinatePath = await GeoWebCoordinatePath.deploy();
-
-  console.log(
-    "GeoWebCoordinatePath deployed to:",
-    geoWebCoordinatePath.address
-  );
-
-  const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
-  const geoWebParcel = await GeoWebParcel.deploy();
-
-  console.log("GeoWebParcel deployed to:", geoWebParcel.address);
-
-  const Accountant = await ethers.getContractFactory("Accountant");
-  const accountant = await Accountant.deploy();
-
-  console.log("Accountant deployed to:", accountant.address);
+task("deploy", "Deploy the set of contracts").setAction(async () => {
+  await hre.run("deploy:parcel");
+  await hre.run("deploy:accountant");
+  await hre.run("deploy:license");
+  await hre.run("deploy:purchaser");
+  await hre.run("deploy:collector");
+  await hre.run("deploy:claimer");
 });
 
 module.exports = {
