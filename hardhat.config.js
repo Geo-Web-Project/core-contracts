@@ -101,10 +101,6 @@ task("roles:set-default", "Set default roles on all deployed contracts")
   .addParam("claimer", "Address of SimpleETHClaimer")
   .setAction(
     async ({ license, accountant, collector, parcel, purchaser, claimer }) => {
-      const accountantContract = await ethers.getContractAt(
-        "Accountant",
-        accountant
-      );
       const licenseContract = await ethers.getContractAt(
         "ERC721License",
         license
@@ -115,12 +111,10 @@ task("roles:set-default", "Set default roles on all deployed contracts")
       );
       const parcelContract = await ethers.getContractAt("GeoWebParcel", parcel);
 
-      // Accountant roles
-      const res1 = await accountantContract.grantRole(
-        await accountantContract.MODIFY_CONTRIBUTION_ROLE(),
-        collector
-      );
-      await res1.wait();
+      await hre.run("roles:accountant", {
+        accountant: accountant,
+        collector: collector,
+      });
 
       // ERC721License roles
       const res2 = await licenseContract.grantRole(

@@ -48,3 +48,24 @@ task("config:accountant")
       console.log("Successfully set Accountant validator.");
     }
   });
+
+task("roles:accountant", "Set default roles for Accountant")
+  .addParam("accountant", "Address of Accountant")
+  .addParam("collector", "Address of ETHExpirationCollector")
+  .setAction(async ({ accountant, collector }) => {
+    const accountantContract = await ethers.getContractAt(
+      "Accountant",
+      accountant
+    );
+
+    // Accountant roles
+    const res1 = await accountantContract.grantRole(
+      await accountantContract.MODIFY_CONTRIBUTION_ROLE(),
+      collector
+    );
+    await res1.wait();
+
+    console.log(
+      "Successfully granted Accountant.MODIFY_CONTRIBUTION_ROLE to ETHExpirationCollector"
+    );
+  });
