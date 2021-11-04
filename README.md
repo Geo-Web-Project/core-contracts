@@ -14,7 +14,9 @@ The `deploy` tasks will deploy all core contracts with default parameters and ro
 
 ## Current Deployments
 
-### Rinkeby - 15b4e3a35f69cb335f32cad39a511104ea330f22
+### Rinkeby
+
+Commit:: 15b4e3a35f69cb335f32cad39a511104ea330f22
 
 ```
 GeoWebCoordinate deployed to: 0x75CD1B88d09b2D8fCF46ec94dc028cF3DB04d96C
