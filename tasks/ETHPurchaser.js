@@ -1,6 +1,7 @@
 task("deploy:purchaser", "Deploy the ETHPurchaser").setAction(async () => {
   const ETHPurchaser = await ethers.getContractFactory("ETHPurchaser");
   const purchaser = await ETHPurchaser.deploy();
+  await purchaser.deployed();
 
   console.log("ETHPurchaser deployed to:", purchaser.address);
 
@@ -34,24 +35,30 @@ task("config:purchaser")
       const purchaser = await ethers.getContractAt("ETHPurchaser", contract);
 
       if (dutchAuctionLength) {
-        await purchaser.setDutchAuctionLengthInSeconds(dutchAuctionLength);
+        const res = await purchaser.setDutchAuctionLengthInSeconds(
+          dutchAuctionLength
+        );
+        await res.wait();
         console.log(
           "Successfully set ETHPurchaser dutchAuctionLengthInSeconds."
         );
       }
 
       if (license) {
-        await purchaser.setLicense(license);
+        const res = await purchaser.setLicense(license);
+        await res.wait();
         console.log("Successfully set ETHPurchaser license.");
       }
 
       if (accountant) {
-        await purchaser.setAccountant(accountant);
+        const res = await purchaser.setAccountant(accountant);
+        await res.wait();
         console.log("Successfully set ETHPurchaser accountant.");
       }
 
       if (collector) {
-        await purchaser.setCollector(collector);
+        const res = await purchaser.setCollector(collector);
+        await res.wait();
         console.log("Successfully set ETHPurchaser collector.");
       }
     }

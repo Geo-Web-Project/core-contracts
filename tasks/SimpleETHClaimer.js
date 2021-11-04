@@ -1,6 +1,7 @@
 task("deploy:claimer", "Deploy the SimpleETHClaimer").setAction(async () => {
   const SimpleETHClaimer = await ethers.getContractFactory("SimpleETHClaimer");
   const claimer = await SimpleETHClaimer.deploy();
+  await claimer.deployed();
 
   console.log("SimpleETHClaimer deployed to:", claimer.address);
 
@@ -28,22 +29,26 @@ task("config:claimer")
       const claimer = await ethers.getContractAt("SimpleETHClaimer", contract);
 
       if (minClaimExpiration) {
-        await claimer.setMinClaimExpiration(minClaimExpiration);
+        const res = await claimer.setMinClaimExpiration(minClaimExpiration);
+        await res.wait();
         console.log("Successfully set SimpleETHClaimer claimer.");
       }
 
       if (license) {
-        await claimer.setLicense(license);
+        const res = await claimer.setLicense(license);
+        await res.wait();
         console.log("Successfully set SimpleETHClaimer license.");
       }
 
       if (parcel) {
-        await claimer.setParcel(parcel);
+        const res = await claimer.setParcel(parcel);
+        await res.wait();
         console.log("Successfully set SimpleETHClaimer parcel.");
       }
 
       if (collector) {
-        await claimer.setCollector(collector);
+        const res = await claimer.setCollector(collector);
+        await res.wait();
         console.log("Successfully set SimpleETHClaimer collector.");
       }
     }

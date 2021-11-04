@@ -116,38 +116,44 @@ task("roles:set-default", "Set default roles on all deployed contracts")
       const parcelContract = await ethers.getContractAt("GeoWebParcel", parcel);
 
       // Accountant roles
-      await accountantContract.grantRole(
+      const res1 = await accountantContract.grantRole(
         await accountantContract.MODIFY_CONTRIBUTION_ROLE(),
         collector
       );
+      await res1.wait();
 
       // ERC721License roles
-      await licenseContract.grantRole(
+      const res2 = await licenseContract.grantRole(
         await licenseContract.MINT_ROLE(),
         claimer
       );
+      await res2.wait();
 
-      await licenseContract.grantRole(
+      const res3 = await licenseContract.grantRole(
         await licenseContract.OPERATOR_ROLE(),
         purchaser
       );
+      await res3.wait();
 
       // ETHExpirationCollector roles
-      await collectorContract.grantRole(
+      const res4 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
         claimer
       );
+      await res4.wait();
 
-      await collectorContract.grantRole(
+      const res5 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
         purchaser
       );
+      await res5.wait();
 
       // GeoWebParcel roles
-      await parcelContract.grantRole(
+      const res6 = await parcelContract.grantRole(
         await parcelContract.BUILD_ROLE(),
         claimer
       );
+      await res6.wait();
     }
   );
 

@@ -4,6 +4,7 @@ task("deploy:collector", "Deploy the ETHExpirationCollector").setAction(
       "ETHExpirationCollector"
     );
     const collector = await ETHExpirationCollector.deploy();
+    await collector.deployed();
 
     console.log("ETHExpirationCollector deployed to:", collector.address);
 
@@ -60,34 +61,40 @@ task("config:collector")
       );
 
       if (minContributionRate) {
-        await collector.setMinContributionRate(minContributionRate);
+        const res = await collector.setMinContributionRate(minContributionRate);
+        await res.wait();
         console.log(
           "Successfully set ETHExpirationCollector minContributionRate."
         );
       }
 
       if (minExpiration) {
-        await collector.setMinExpiration(minExpiration);
+        const res = await collector.setMinExpiration(minExpiration);
+        await res.wait();
         console.log("Successfully set ETHExpirationCollector minExpiration.");
       }
 
       if (maxExpiration) {
-        await collector.setMaxExpiration(maxExpiration);
+        const res = await collector.setMaxExpiration(maxExpiration);
+        await res.wait();
         console.log("Successfully set ETHExpirationCollector maxExpiration.");
       }
 
       if (license) {
-        await collector.setLicense(license);
+        const res = await collector.setLicense(license);
+        await res.wait();
         console.log("Successfully set ETHExpirationCollector license.");
       }
 
       if (receiver) {
-        await collector.setReceiver(receiver);
+        const res = await collector.setReceiver(receiver);
+        await res.wait();
         console.log("Successfully set ETHExpirationCollector receiver.");
       }
 
       if (accountant) {
-        await collector.setAccountant(accountant);
+        const res = await collector.setAccountant(accountant);
+        await res.wait();
         console.log("Successfully set ETHExpirationCollector accountant.");
       }
     }

@@ -8,6 +8,7 @@ function perYearToPerSecondRate(annualRate) {
 task("deploy:accountant", "Deploy the Accountant").setAction(async () => {
   const Accountant = await ethers.getContractFactory("Accountant");
   const accountant = await Accountant.deploy();
+  await accountant.deployed();
 
   console.log("Accountant deployed to:", accountant.address);
 
@@ -36,12 +37,14 @@ task("config:accountant")
 
     if (annualFeeRate) {
       const { numerator, denominator } = perYearToPerSecondRate(annualFeeRate);
-      await accountant.setPerSecondFee(numerator, denominator);
+      const res = await accountant.setPerSecondFee(numerator, denominator);
+      await res.wait();
       console.log("Successfully set Accountant fee.");
     }
 
     if (validator) {
-      await accountant.setValidator(validator);
+      const res = await accountant.setValidator(validator);
+      await res.wait();
       console.log("Successfully set Accountant validator.");
     }
   });

@@ -4,6 +4,7 @@ task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
       "GeoWebCoordinate"
     );
     const geoWebCoordinate = await GeoWebCoordinate.deploy();
+    await geoWebCoordinate.deployed();
 
     console.log("GeoWebCoordinate deployed to:", geoWebCoordinate.address);
 
@@ -11,6 +12,7 @@ task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
       "GeoWebCoordinatePath"
     );
     const geoWebCoordinatePath = await GeoWebCoordinatePath.deploy();
+    await geoWebCoordinatePath.deployed();
 
     console.log(
       "GeoWebCoordinatePath deployed to:",
@@ -19,6 +21,7 @@ task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
 
     const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
     const geoWebParcel = await GeoWebParcel.deploy();
+    await geoWebParcel.deployed();
 
     console.log("GeoWebParcel deployed to:", geoWebParcel.address);
 
