@@ -10,4 +10,4 @@ Live at [http://cadastre.geoweb.eth.link/](http://cadastre.geoweb.eth.link/) or 
 npx hardhat deploy --network <NETWORK>
 ```
 
-The `deploy` tasks will deploy all core contracts with default parameters. Each contract has its own subtask that will be run.
+The `deploy` tasks will deploy all core contracts with default parameters and roles. Each contract has its own subtask that will be run.

@@ -24,6 +24,7 @@ task(
   const purchaser = await hre.run("deploy:purchaser");
   const collector = await hre.run("deploy:collector");
   const claimer = await hre.run("deploy:claimer");
+  console.log("Contracts deployed.");
 
   console.log("\nSetting default configuration...");
 
@@ -64,6 +65,20 @@ task(
     parcel: parcel,
     collector: collector,
   });
+
+  console.log("Default configuration set.");
+
+  console.log("\nSetting roles...");
+  // Set roles
+  await hre.run("roles:set-default", {
+    license: license,
+    parcel: parcel,
+    accountant: accountant,
+    purchaser: purchaser,
+    collector: collector,
+    claimer: claimer,
+  });
+  console.log("Default roles set.");
 });
 
 task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
@@ -76,6 +91,65 @@ task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
     await hre.run("deploy:claimer");
   }
 );
+
+task("roles:set-default", "Set default roles on all deployed contracts")
+  .addParam("license", "Address of ERC721 License used to find owners")
+  .addParam("accountant", "Address of Accountant")
+  .addParam("collector", "Address of ETHExpirationCollector")
+  .addParam("parcel", "Address of GeoWebParcel")
+  .addParam("purchaser", "Address of ETHPurchaser")
+  .addParam("claimer", "Address of SimpleETHClaimer")
+  .setAction(
+    async ({ license, accountant, collector, parcel, purchaser, claimer }) => {
+      const accountantContract = await ethers.getContractAt(
+        "Accountant",
+        accountant
+      );
+      const licenseContract = await ethers.getContractAt(
+        "ERC721License",
+        license
+      );
+      const collectorContract = await ethers.getContractAt(
+        "ETHExpirationCollector",
+        collector
+      );
+      const parcelContract = await ethers.getContractAt("GeoWebParcel", parcel);
+
+      // Accountant roles
+      await accountantContract.grantRole(
+        await accountantContract.MODIFY_CONTRIBUTION_ROLE(),
+        collector
+      );
+
+      // ERC721License roles
+      await licenseContract.grantRole(
+        await licenseContract.MINT_ROLE(),
+        claimer
+      );
+
+      await licenseContract.grantRole(
+        await licenseContract.OPERATOR_ROLE(),
+        purchaser
+      );
+
+      // ETHExpirationCollector roles
+      await collectorContract.grantRole(
+        await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
+        claimer
+      );
+
+      await collectorContract.grantRole(
+        await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
+        purchaser
+      );
+
+      // GeoWebParcel roles
+      await parcelContract.grantRole(
+        await parcelContract.BUILD_ROLE(),
+        claimer
+      );
+    }
+  );
 
 module.exports = {
   networks: {
