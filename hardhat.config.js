@@ -13,21 +13,69 @@ require("./tasks/ETHExpirationCollector");
 require("./tasks/ETHPurchaser");
 require("./tasks/SimpleETHClaimer");
 
-function perYearToPerSecondRate(annualRate) {
-  return {
-    numerator: annualRate * 100,
-    denominator: 60 * 60 * 24 * 365 * 100,
-  };
-}
+task(
+  "deploy",
+  "Deploy the set of contracts with default configuration"
+).setAction(async () => {
+  console.log("Deploying all contracts...");
+  const parcel = await hre.run("deploy:parcel");
+  const accountant = await hre.run("deploy:accountant");
+  const license = await hre.run("deploy:license");
+  const purchaser = await hre.run("deploy:purchaser");
+  const collector = await hre.run("deploy:collector");
+  const claimer = await hre.run("deploy:claimer");
 
-task("deploy", "Deploy the set of contracts").setAction(async () => {
-  await hre.run("deploy:parcel");
-  await hre.run("deploy:accountant");
-  await hre.run("deploy:license");
-  await hre.run("deploy:purchaser");
-  await hre.run("deploy:collector");
-  await hre.run("deploy:claimer");
+  console.log("\nSetting default configuration...");
+
+  const accounts = await ethers.getSigners();
+
+  // Accountant default config
+  await hre.run("config:accountant", {
+    contract: accountant,
+    annualFeeRate: 0.1,
+    validator: collector,
+  });
+
+  // ETHExpirationCollector default config
+  await hre.run("config:collector", {
+    contract: collector,
+    minContributionRate: ethers.utils.parseEther("0.01").toString(),
+    minExpiration: 60 * 60 * 24 * 7, // 7 days
+    maxExpiration: 60 * 60 * 24 * 730, // 730 days
+    license: license,
+    receiver: accounts[0].address,
+    accountant: accountant,
+  });
+
+  // ETHPurchaser default config
+  await hre.run("config:purchaser", {
+    contract: purchaser,
+    dutchAuctionLength: 60 * 60 * 24 * 7, // 7 days
+    license: license,
+    accountant: accountant,
+    collector: collector,
+  });
+
+  // SimpleETHClaimer default config
+  await hre.run("config:claimer", {
+    contract: claimer,
+    minClaimExpiration: 60 * 60 * 24 * 7, // 7 days
+    license: license,
+    parcel: parcel,
+    collector: collector,
+  });
 });
+
+task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
+  async () => {
+    await hre.run("deploy:parcel");
+    await hre.run("deploy:accountant");
+    await hre.run("deploy:license");
+    await hre.run("deploy:purchaser");
+    await hre.run("deploy:collector");
+    await hre.run("deploy:claimer");
+  }
+);
 
 module.exports = {
   networks: {

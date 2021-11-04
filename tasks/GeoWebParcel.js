@@ -21,5 +21,7 @@ task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
     const geoWebParcel = await GeoWebParcel.deploy();
 
     console.log("GeoWebParcel deployed to:", geoWebParcel.address);
+
+    return geoWebParcel.address;
   }
 );

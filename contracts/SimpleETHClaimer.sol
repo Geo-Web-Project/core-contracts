@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./ETHExpirationCollector.sol";
 import "./ERC721License.sol";
-import "./mock/MockParcel.sol";
+import "./GeoWebParcel.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
@@ -18,7 +18,7 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
     ERC721License public license;
 
     /// @notice Parcel
-    MockParcel public parcel;
+    GeoWebParcel public parcel;
 
     /// @notice Minimum initial expiration for a license.
     uint256 public minClaimExpiration;
@@ -76,7 +76,7 @@ contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        parcel = MockParcel(parcelAddress);
+        parcel = GeoWebParcel(parcelAddress);
     }
 
     /**
