@@ -40,7 +40,10 @@ task(
   // ETHExpirationCollector default config
   await hre.run("config:collector", {
     contract: collector,
-    minContributionRate: ethers.utils.parseEther("0.01").toString(),
+    minContributionRate: ethers.utils
+      .parseEther("0.01")
+      .div(60 * 60 * 24 * 365)
+      .toString(),
     minExpiration: 60 * 60 * 24 * 7, // 7 days
     maxExpiration: 60 * 60 * 24 * 730, // 730 days
     license: license,
