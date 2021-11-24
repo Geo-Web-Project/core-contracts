@@ -223,19 +223,48 @@ contract ETHExpirationCollector is
      */
     function moveFunds(
         uint256 fromId,
+        uint256 fromContributionRate,
+        uint256 fromAdditionalPayment,
         uint256 toId,
+        uint256 toContributionRate,
+        uint256 toAdditionalPayment,
         uint256 amount
-    ) external onlyRole(MODIFY_FUNDS_ROLE) {
+    ) external payable onlyRole(MODIFY_FUNDS_ROLE) {
+        require(
+            fromContributionRate >= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
+        require(
+            toContributionRate >= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
+        require(
+            fromAdditionalPayment + toAdditionalPayment == msg.value,
+            "Additional payments must be sent"
+        );
+
         uint256 fromNetworkFeeBalance = _calculateNetworkFeeBalance(fromId);
         require(fromNetworkFeeBalance >= amount, "Not enough funds in FROM");
 
         // Take amount from
-        uint256 fromContributionRate = accountant.contributionRates(fromId);
-        _updateExpiration(fromId, fromContributionRate, 0, amount);
+        _updateExpiration(
+            fromId,
+            fromContributionRate,
+            fromAdditionalPayment,
+            amount
+        );
 
         // Give amount to
-        uint256 toContributionRate = accountant.contributionRates(toId);
-        _updateExpiration(toId, toContributionRate, amount, 0);
+        _updateExpiration(
+            toId,
+            toContributionRate,
+            toAdditionalPayment + amount,
+            0
+        );
+
+        // Update contribution rates in Accountant
+        accountant.setContributionRate(fromId, fromContributionRate);
+        accountant.setContributionRate(toId, toContributionRate);
     }
 
     /**
