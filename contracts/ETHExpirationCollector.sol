@@ -17,6 +17,7 @@ contract ETHExpirationCollector is
 {
     bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
         keccak256("MODIFY_CONTRIBUTION_ROLE");
+    bytes32 public constant MODIFY_FUNDS_ROLE = keccak256("MODIFY_FUNDS_ROLE");
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     /// @notice Minimum contribution rate for a license.
@@ -182,6 +183,25 @@ contract ETHExpirationCollector is
     }
 
     /**
+     * @notice Migrate all funds from one license to another and clear the from license
+     * @param fromId The license to migrate from and clear
+     * @param toId The license to migrate to
+     * @custom:requires MODIFY_FUNDS_ROLE
+     */
+    function migrateFunds(uint256 fromId, uint256 toId)
+        external
+        onlyRole(MODIFY_FUNDS_ROLE)
+    {
+        uint256 fromNetworkFeeBalance = _calculateNetworkFeeBalance(fromId);
+        uint256 toContributionRate = accountant.contributionRates(toId);
+        _updateExpiration(toId, toContributionRate, fromNetworkFeeBalance);
+
+        // Clear from license
+        licenseExpirationTimestamps[fromId] = 0;
+        accountant.setContributionRate(fromId, 0);
+    }
+
+    /**
      * @notice Check if a license is valid.
      * @param id The id of the license
      * @return If the license is valid
@@ -215,20 +235,7 @@ contract ETHExpirationCollector is
         uint256 newContributionRate,
         uint256 additionalContribution
     ) internal {
-        uint256 currentExpirationTimestamp = licenseExpirationTimestamps[id];
-        uint256 currentContributionRate = accountant.contributionRates(id);
-
-        // Calculate existing time balance
-        uint256 existingTimeBalance;
-        if (currentExpirationTimestamp > block.timestamp) {
-            existingTimeBalance = currentExpirationTimestamp - block.timestamp;
-        } else {
-            existingTimeBalance = 0;
-        }
-
-        // Calculate existing network fee balance
-        uint256 existingNetworkFeeBalance = existingTimeBalance *
-            currentContributionRate;
+        uint256 existingNetworkFeeBalance = _calculateNetworkFeeBalance(id);
 
         // Calculate new network fee balance
         uint256 newNetworkFeeBalance = existingNetworkFeeBalance +
@@ -255,5 +262,25 @@ contract ETHExpirationCollector is
         licenseExpirationTimestamps[id] = newExpirationTimestamp;
 
         emit LicenseExpirationUpdated(id, newExpirationTimestamp);
+    }
+
+    function _calculateNetworkFeeBalance(uint256 id)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 currentExpirationTimestamp = licenseExpirationTimestamps[id];
+        uint256 currentContributionRate = accountant.contributionRates(id);
+
+        // Calculate existing time balance
+        uint256 existingTimeBalance;
+        if (currentExpirationTimestamp > block.timestamp) {
+            existingTimeBalance = currentExpirationTimestamp - block.timestamp;
+        } else {
+            existingTimeBalance = 0;
+        }
+
+        // Calculate existing network fee balance
+        return existingTimeBalance * currentContributionRate;
     }
 }
