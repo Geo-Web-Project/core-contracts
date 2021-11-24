@@ -167,7 +167,9 @@ contract ETHExpirationCollector is
     {
         require(
             hasRole(MODIFY_CONTRIBUTION_ROLE, msg.sender) ||
-                license.ownerOf(id) == msg.sender,
+                license.ownerOf(id) == msg.sender ||
+                license.isApprovedForAll(license.ownerOf(id), msg.sender) ||
+                license.getApproved(id) == msg.sender,
             "Caller does not have permission"
         );
         require(

@@ -311,6 +311,86 @@ describe("ETHExpirationCollector", async () => {
       .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
   });
 
+  it("should allow setting contribution rate if approved for all", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let collector = await buildContract({
+      license: license.address,
+      accountant: accountant.address,
+    });
+
+    await license.mint(accounts[2].address, 1);
+
+    var err;
+    try {
+      await collector
+        .connect(accounts[0])
+        .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("Caller does not have permission"),
+      "Expected an error but did not get one"
+    );
+
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(accounts[0].address, true);
+
+    await collector
+      .connect(accounts[0])
+      .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
+  });
+
+  it("should allow setting contribution rate if approved", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let collector = await buildContract({
+      license: license.address,
+      accountant: accountant.address,
+    });
+
+    await license.mint(accounts[2].address, 1);
+
+    var err;
+    try {
+      await collector
+        .connect(accounts[0])
+        .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("Caller does not have permission"),
+      "Expected an error but did not get one"
+    );
+
+    await license.connect(accounts[2]).approve(accounts[0].address, 1);
+
+    await collector
+      .connect(accounts[0])
+      .setContributionRate(1, 10, { value: ethers.utils.parseEther("1") });
+  });
+
   it("should fail to set contribution rate if too low", async () => {
     const MockERC721License = await ethers.getContractFactory(
       "MockERC721License"

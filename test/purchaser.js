@@ -136,6 +136,9 @@ describe("ETHPurchaser", async () => {
     let contributionRate = 10;
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
     await accountant.setContributionRate(1, contributionRate);
     await collector.setContributionRate(1, contributionRate, {
       value: ethers.utils.parseEther("1"),
@@ -203,6 +206,10 @@ describe("ETHPurchaser", async () => {
     });
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, 10);
     await collector.setContributionRate(1, 10, {
       value: ethers.utils.parseEther("1"),
@@ -247,6 +254,10 @@ describe("ETHPurchaser", async () => {
     });
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, 10);
     await collector.setContributionRate(1, 10, {
       value: ethers.utils.parseEther("1"),
@@ -285,6 +296,10 @@ describe("ETHPurchaser", async () => {
     });
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, 10000);
     await collector.setContributionRate(1, 10000, {
       value: ethers.utils.parseEther("1"),
@@ -341,6 +356,10 @@ describe("ETHPurchaser", async () => {
     });
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, 10000);
     await collector.setContributionRate(1, 10000, {
       value: ethers.utils.parseEther("1"),
@@ -398,6 +417,10 @@ describe("ETHPurchaser", async () => {
     });
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, 10000);
     await collector.setContributionRate(1, 10000, {
       value: ethers.utils.parseEther("1"),
@@ -450,6 +473,10 @@ describe("ETHPurchaser", async () => {
     let contributionRate = 10;
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, contributionRate);
     let result1 = await collector.setContributionRate(1, contributionRate, {
       value: ethers.utils.parseEther("1"),
@@ -532,6 +559,10 @@ describe("ETHPurchaser", async () => {
     let contributionRate = 10;
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, contributionRate);
     await collector.setContributionRate(1, contributionRate, {
       value: ethers.utils.parseEther("1"),
@@ -594,6 +625,10 @@ describe("ETHPurchaser", async () => {
     let contributionRate = 10;
 
     await license.mint(accounts[2].address, 1);
+    await license
+      .connect(accounts[2])
+      .setApprovalForAll(purchaser.address, true);
+
     await accountant.setContributionRate(1, contributionRate);
     await collector.setContributionRate(1, contributionRate, {
       value: ethers.utils.parseEther("1"),
