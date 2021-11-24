@@ -146,7 +146,7 @@ contract ETHExpirationCollector is
         uint256 currentContributionRate = accountant.contributionRates(id);
 
         // Update expiration
-        _updateExpiration(id, currentContributionRate, msg.value);
+        _updateExpiration(id, currentContributionRate, msg.value, 0);
 
         // Transfer payment to receiver
         _asyncTransfer(receiver, msg.value);
@@ -176,7 +176,7 @@ contract ETHExpirationCollector is
         );
 
         // Update expiration
-        _updateExpiration(id, newContributionRate, msg.value);
+        _updateExpiration(id, newContributionRate, msg.value, 0);
 
         // Update contribution rate in Accountant
         accountant.setContributionRate(id, newContributionRate);
@@ -194,11 +194,35 @@ contract ETHExpirationCollector is
     {
         uint256 fromNetworkFeeBalance = _calculateNetworkFeeBalance(fromId);
         uint256 toContributionRate = accountant.contributionRates(toId);
-        _updateExpiration(toId, toContributionRate, fromNetworkFeeBalance);
+        _updateExpiration(toId, toContributionRate, fromNetworkFeeBalance, 0);
 
         // Clear from license
         licenseExpirationTimestamps[fromId] = 0;
         accountant.setContributionRate(fromId, 0);
+    }
+
+    /**
+     * @notice Move funds from one license to another
+     * @param fromId The license to move from
+     * @param toId The license to move to
+     * @param amount The amount of funds to move
+     * @custom:requires MODIFY_FUNDS_ROLE
+     */
+    function moveFunds(
+        uint256 fromId,
+        uint256 toId,
+        uint256 amount
+    ) external onlyRole(MODIFY_FUNDS_ROLE) {
+        uint256 fromNetworkFeeBalance = _calculateNetworkFeeBalance(fromId);
+        require(fromNetworkFeeBalance >= amount, "Not enough funds in FROM");
+
+        // Take amount from
+        uint256 fromContributionRate = accountant.contributionRates(fromId);
+        _updateExpiration(fromId, fromContributionRate, 0, amount);
+
+        // Give amount to
+        uint256 toContributionRate = accountant.contributionRates(toId);
+        _updateExpiration(toId, toContributionRate, amount, 0);
     }
 
     /**
@@ -229,25 +253,24 @@ contract ETHExpirationCollector is
      * @param id The id of the license
      * @param newContributionRate The new contribution rate for the license
      * @param additionalContribution The additional contribution amount
+     * @param lessContribution The contribution amount to remove
      */
     function _updateExpiration(
         uint256 id,
         uint256 newContributionRate,
-        uint256 additionalContribution
+        uint256 additionalContribution,
+        uint256 lessContribution
     ) internal {
         uint256 existingNetworkFeeBalance = _calculateNetworkFeeBalance(id);
 
         // Calculate new network fee balance
         uint256 newNetworkFeeBalance = existingNetworkFeeBalance +
-            additionalContribution;
-
-        // Calculate new time balance
-        uint256 newTimeBalance = newNetworkFeeBalance / newContributionRate;
-
-        require(newTimeBalance > 0, "New time balance must be greater than 0");
-
-        // Calculate new expiration
-        uint256 newExpirationTimestamp = newTimeBalance + block.timestamp;
+            additionalContribution -
+            lessContribution;
+        uint256 newExpirationTimestamp = _calculateNewExpiration(
+            newNetworkFeeBalance,
+            newContributionRate
+        );
 
         require(
             (newExpirationTimestamp - block.timestamp) >= minExpiration,
@@ -282,5 +305,18 @@ contract ETHExpirationCollector is
 
         // Calculate existing network fee balance
         return existingTimeBalance * currentContributionRate;
+    }
+
+    function _calculateNewExpiration(
+        uint256 newNetworkFeeBalance,
+        uint256 newContributionRate
+    ) internal view returns (uint256) {
+        // Calculate new time balance
+        uint256 newTimeBalance = newNetworkFeeBalance / newContributionRate;
+
+        require(newTimeBalance > 0, "New time balance must be greater than 0");
+
+        // Calculate new expiration
+        return newTimeBalance + block.timestamp;
     }
 }

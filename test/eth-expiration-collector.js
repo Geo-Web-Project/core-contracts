@@ -735,4 +735,226 @@ describe("ETHExpirationCollector", async () => {
       "TO expiration was not updated correctly"
     );
   });
+
+  it("should allow MODIFY_FUNDS_ROLE to move funds between parcels", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let collector = await buildContract({
+      license: license.address,
+      accountant: accountant.address,
+    });
+    let MODIFY_FUNDS_ROLE = await collector.MODIFY_FUNDS_ROLE();
+
+    await collector.grantRole(MODIFY_FUNDS_ROLE, accounts[1].address);
+    await license.mint(accounts[2].address, 1);
+    await license.mint(accounts[2].address, 2);
+
+    await collector.connect(accounts[2]).setContributionRate(1, 10, {
+      value: 1000,
+    });
+    await collector.connect(accounts[2]).setContributionRate(2, 10, {
+      value: 1000,
+    });
+
+    let originalExpiration1 = await collector.licenseExpirationTimestamps(1);
+    let originalExpiration2 = await collector.licenseExpirationTimestamps(2);
+
+    var err;
+    try {
+      await collector.connect(accounts[2]).moveFunds(1, 2, 500);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("is missing role"),
+      "Expected an error but did not get one"
+    );
+
+    let result = await collector.connect(accounts[1]).moveFunds(1, 2, 500);
+    let receipt = await result.wait();
+    let block = await ethers.provider.getBlock(receipt.blockNumber);
+
+    let newExpiration1 = await collector.licenseExpirationTimestamps(1);
+    let newExpiration2 = await collector.licenseExpirationTimestamps(2);
+
+    let contributionRate1 = await accountant.contributionRates(1);
+    let contributionRate2 = await accountant.contributionRates(2);
+
+    assert.equal(
+      contributionRate1,
+      10,
+      "Did not keep contribution rate the same after migration"
+    );
+    assert.equal(
+      contributionRate2,
+      10,
+      "Did not keep contribution rate the same after migration"
+    );
+    assert.equal(
+      newExpiration1 - block.timestamp,
+      originalExpiration1 - block.timestamp - 50,
+      "FROM expiration was not updated correctly"
+    );
+    assert.equal(
+      newExpiration2 - block.timestamp,
+      originalExpiration2 - block.timestamp + 50,
+      "TO expiration was not updated correctly"
+    );
+  });
+
+  it("should not move funds between parcels if minExpiration is not met", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let collector = await buildContract({
+      license: license.address,
+      accountant: accountant.address,
+    });
+    let MODIFY_FUNDS_ROLE = await collector.MODIFY_FUNDS_ROLE();
+
+    await collector.grantRole(MODIFY_FUNDS_ROLE, accounts[1].address);
+    await license.mint(accounts[2].address, 1);
+    await license.mint(accounts[2].address, 2);
+
+    await collector.connect(accounts[2]).setContributionRate(1, 10, {
+      value: 1000,
+    });
+    await collector.connect(accounts[2]).setContributionRate(2, 10, {
+      value: 1000,
+    });
+
+    var err;
+    try {
+      await collector.connect(accounts[1]).moveFunds(1, 2, 900);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes(
+        "Resulting expiration date must be at least minExpiration"
+      ),
+      "Expected an error but did not get one"
+    );
+  });
+
+  it("should not move funds between parcels if FROM does not have enough funds", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let collector = await buildContract({
+      license: license.address,
+      accountant: accountant.address,
+    });
+    let MODIFY_FUNDS_ROLE = await collector.MODIFY_FUNDS_ROLE();
+
+    await collector.grantRole(MODIFY_FUNDS_ROLE, accounts[1].address);
+    await license.mint(accounts[2].address, 1);
+    await license.mint(accounts[2].address, 2);
+
+    await collector.connect(accounts[2]).setContributionRate(1, 10, {
+      value: 1000,
+    });
+    await collector.connect(accounts[2]).setContributionRate(2, 10, {
+      value: 1000,
+    });
+
+    var err;
+    try {
+      await collector.connect(accounts[1]).moveFunds(1, 2, 1000);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(
+      err.message.includes("Not enough funds in FROM"),
+      "Expected an error but did not get one"
+    );
+  });
+
+  it("should set expiration to max if move funds reaches max", async () => {
+    const MockERC721License = await ethers.getContractFactory(
+      "MockERC721License"
+    );
+    const license = await MockERC721License.deploy("Mock", "MOCK");
+    await license.deployed();
+
+    const MockAccountant = await ethers.getContractFactory("MockAccountant");
+    const accountant = await MockAccountant.deploy(1, 2);
+    await accountant.deployed();
+
+    let collector = await buildContract({
+      license: license.address,
+      accountant: accountant.address,
+    });
+    let MODIFY_FUNDS_ROLE = await collector.MODIFY_FUNDS_ROLE();
+
+    await collector.grantRole(MODIFY_FUNDS_ROLE, accounts[1].address);
+    await license.mint(accounts[2].address, 1);
+    await license.mint(accounts[2].address, 2);
+
+    await collector.connect(accounts[2]).setContributionRate(1, 1, {
+      value: maxExpiration,
+    });
+    await collector.connect(accounts[2]).setContributionRate(2, 1, {
+      value: maxExpiration,
+    });
+
+    let originalExpiration1 = await collector.licenseExpirationTimestamps(1);
+    let originalExpiration2 = await collector.licenseExpirationTimestamps(2);
+
+    let result = await collector.connect(accounts[1]).moveFunds(1, 2, 500);
+    let receipt = await result.wait();
+    let block = await ethers.provider.getBlock(receipt.blockNumber);
+
+    let newExpiration1 = await collector.licenseExpirationTimestamps(1);
+    let newExpiration2 = await collector.licenseExpirationTimestamps(2);
+
+    let contributionRate1 = await accountant.contributionRates(1);
+    let contributionRate2 = await accountant.contributionRates(2);
+
+    assert.equal(
+      contributionRate1,
+      1,
+      "Did not keep contribution rate the same after migration"
+    );
+    assert.equal(
+      contributionRate2,
+      1,
+      "Did not keep contribution rate the same after migration"
+    );
+    assert.equal(
+      newExpiration1 - block.timestamp,
+      originalExpiration1 - block.timestamp - 500,
+      "FROM expiration was not updated correctly"
+    );
+    assert.equal(
+      newExpiration2 - block.timestamp,
+      maxExpiration,
+      "TO expiration was not updated correctly"
+    );
+  });
 });
