@@ -1,11 +1,8 @@
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-
-/// @notice GeoWebCoordinate is an unsigned 64-bit integer that contains x and y coordinates in the upper and lower 32 bits, respectively
+/// @title GeoWebCoordinate is an unsigned 64-bit integer that contains x and y coordinates in the upper and lower 32 bits, respectively
 library GeoWebCoordinate {
-    using SafeMath for uint256;
-
     // Fixed grid size is 2^19 longitude by 2^18 latitude, roughly 10 square meters of area at the equator
     uint64 constant MAX_X = ((2**19) - 1);
     uint64 constant MAX_Y = ((2**18) - 1);
@@ -152,13 +149,13 @@ library GeoWebCoordinate {
         uint256 coord_x = uint256(_getX(coord));
         uint256 coord_y = uint256(_getY(coord));
 
-        i_x = coord_x.div(16);
-        i_y = coord_y.div(16);
+        i_x = coord_x / 16;
+        i_y = coord_y / 16;
 
-        uint256 l_x = coord_x.mod(16);
-        uint256 l_y = coord_y.mod(16);
+        uint256 l_x = coord_x % 16;
+        uint256 l_y = coord_y % 16;
 
-        i = l_y.mul(16).add(l_x);
+        i = l_y * 16 + l_x;
     }
 }
 
