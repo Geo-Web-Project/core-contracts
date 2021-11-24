@@ -17,7 +17,7 @@ describe("ERC721License", async () => {
     accounts = await ethers.getSigners();
   });
 
-  it("should only allow role to mint license", async () => {
+  it("should only allow MINT_ROLE to mint license", async () => {
     let license = await buildContract();
     let MINT_ROLE = await license.MINT_ROLE();
 
@@ -33,6 +33,28 @@ describe("ERC721License", async () => {
     assert(err, "Expected an error but did not get one");
 
     await license.connect(accounts[1]).safeMint(accounts[2].address, 1);
+  });
+
+  it("should only allow BURN_ROLE to burn license", async () => {
+    let license = await buildContract();
+    let MINT_ROLE = await license.MINT_ROLE();
+    let BURN_ROLE = await license.BURN_ROLE();
+
+    await license.grantRole(MINT_ROLE, accounts[1].address);
+    await license.grantRole(BURN_ROLE, accounts[1].address);
+
+    await license.connect(accounts[1]).safeMint(accounts[2].address, 1);
+
+    var err;
+    try {
+      await license.connect(accounts[2]).burn(1);
+    } catch (error) {
+      err = error;
+    }
+
+    assert(err, "Expected an error but did not get one");
+
+    await license.connect(accounts[1]).burn(1);
   });
 
   it("should only allow admin to pause transfers", async () => {

@@ -17,6 +17,7 @@ contract ETHExpirationCollector is
 {
     bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
         keccak256("MODIFY_CONTRIBUTION_ROLE");
+    bytes32 public constant MODIFY_FUNDS_ROLE = keccak256("MODIFY_FUNDS_ROLE");
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     /// @notice Minimum contribution rate for a license.
@@ -145,7 +146,7 @@ contract ETHExpirationCollector is
         uint256 currentContributionRate = accountant.contributionRates(id);
 
         // Update expiration
-        _updateExpiration(id, currentContributionRate, msg.value);
+        _updateExpiration(id, currentContributionRate, msg.value, 0);
 
         // Transfer payment to receiver
         _asyncTransfer(receiver, msg.value);
@@ -166,7 +167,9 @@ contract ETHExpirationCollector is
     {
         require(
             hasRole(MODIFY_CONTRIBUTION_ROLE, msg.sender) ||
-                license.ownerOf(id) == msg.sender,
+                license.ownerOf(id) == msg.sender ||
+                license.isApprovedForAll(license.ownerOf(id), msg.sender) ||
+                license.getApproved(id) == msg.sender,
             "Caller does not have permission"
         );
         require(
@@ -175,10 +178,95 @@ contract ETHExpirationCollector is
         );
 
         // Update expiration
-        _updateExpiration(id, newContributionRate, msg.value);
+        _updateExpiration(id, newContributionRate, msg.value, 0);
 
         // Update contribution rate in Accountant
         accountant.setContributionRate(id, newContributionRate);
+    }
+
+    /**
+     * @notice Migrate all funds from one license to another and clear the from license
+     * @param fromId The license to migrate from and clear
+     * @param toId The license to migrate to
+     * @custom:requires MODIFY_FUNDS_ROLE
+     */
+    function migrateFunds(
+        uint256 fromId,
+        uint256 toId,
+        uint256 toContributionRate
+    ) external payable onlyRole(MODIFY_FUNDS_ROLE) {
+        require(
+            toContributionRate >= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
+
+        uint256 fromNetworkFeeBalance = _calculateNetworkFeeBalance(fromId);
+        _updateExpiration(
+            toId,
+            toContributionRate,
+            fromNetworkFeeBalance + msg.value,
+            0
+        );
+
+        // Clear from license
+        licenseExpirationTimestamps[fromId] = 0;
+        accountant.setContributionRate(fromId, 0);
+
+        // Update contribution rate in Accountant
+        accountant.setContributionRate(toId, toContributionRate);
+    }
+
+    /**
+     * @notice Move funds from one license to another
+     * @param fromId The license to move from
+     * @param toId The license to move to
+     * @param amount The amount of funds to move
+     * @custom:requires MODIFY_FUNDS_ROLE
+     */
+    function moveFunds(
+        uint256 fromId,
+        uint256 fromContributionRate,
+        uint256 fromAdditionalPayment,
+        uint256 toId,
+        uint256 toContributionRate,
+        uint256 toAdditionalPayment,
+        uint256 amount
+    ) external payable onlyRole(MODIFY_FUNDS_ROLE) {
+        require(
+            fromContributionRate >= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
+        require(
+            toContributionRate >= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
+        require(
+            fromAdditionalPayment + toAdditionalPayment == msg.value,
+            "Additional payments must be sent"
+        );
+
+        uint256 fromNetworkFeeBalance = _calculateNetworkFeeBalance(fromId);
+        require(fromNetworkFeeBalance >= amount, "Not enough funds in FROM");
+
+        // Take amount from
+        _updateExpiration(
+            fromId,
+            fromContributionRate,
+            fromAdditionalPayment,
+            amount
+        );
+
+        // Give amount to
+        _updateExpiration(
+            toId,
+            toContributionRate,
+            toAdditionalPayment + amount,
+            0
+        );
+
+        // Update contribution rates in Accountant
+        accountant.setContributionRate(fromId, fromContributionRate);
+        accountant.setContributionRate(toId, toContributionRate);
     }
 
     /**
@@ -209,38 +297,24 @@ contract ETHExpirationCollector is
      * @param id The id of the license
      * @param newContributionRate The new contribution rate for the license
      * @param additionalContribution The additional contribution amount
+     * @param lessContribution The contribution amount to remove
      */
     function _updateExpiration(
         uint256 id,
         uint256 newContributionRate,
-        uint256 additionalContribution
+        uint256 additionalContribution,
+        uint256 lessContribution
     ) internal {
-        uint256 currentExpirationTimestamp = licenseExpirationTimestamps[id];
-        uint256 currentContributionRate = accountant.contributionRates(id);
-
-        // Calculate existing time balance
-        uint256 existingTimeBalance;
-        if (currentExpirationTimestamp > block.timestamp) {
-            existingTimeBalance = currentExpirationTimestamp - block.timestamp;
-        } else {
-            existingTimeBalance = 0;
-        }
-
-        // Calculate existing network fee balance
-        uint256 existingNetworkFeeBalance = existingTimeBalance *
-            currentContributionRate;
+        uint256 existingNetworkFeeBalance = _calculateNetworkFeeBalance(id);
 
         // Calculate new network fee balance
         uint256 newNetworkFeeBalance = existingNetworkFeeBalance +
-            additionalContribution;
-
-        // Calculate new time balance
-        uint256 newTimeBalance = newNetworkFeeBalance / newContributionRate;
-
-        require(newTimeBalance > 0, "New time balance must be greater than 0");
-
-        // Calculate new expiration
-        uint256 newExpirationTimestamp = newTimeBalance + block.timestamp;
+            additionalContribution -
+            lessContribution;
+        uint256 newExpirationTimestamp = _calculateNewExpiration(
+            newNetworkFeeBalance,
+            newContributionRate
+        );
 
         require(
             (newExpirationTimestamp - block.timestamp) >= minExpiration,
@@ -255,5 +329,38 @@ contract ETHExpirationCollector is
         licenseExpirationTimestamps[id] = newExpirationTimestamp;
 
         emit LicenseExpirationUpdated(id, newExpirationTimestamp);
+    }
+
+    function _calculateNetworkFeeBalance(uint256 id)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 currentExpirationTimestamp = licenseExpirationTimestamps[id];
+        uint256 currentContributionRate = accountant.contributionRates(id);
+
+        // Calculate existing time balance
+        uint256 existingTimeBalance;
+        if (currentExpirationTimestamp > block.timestamp) {
+            existingTimeBalance = currentExpirationTimestamp - block.timestamp;
+        } else {
+            existingTimeBalance = 0;
+        }
+
+        // Calculate existing network fee balance
+        return existingTimeBalance * currentContributionRate;
+    }
+
+    function _calculateNewExpiration(
+        uint256 newNetworkFeeBalance,
+        uint256 newContributionRate
+    ) internal view returns (uint256) {
+        // Calculate new time balance
+        uint256 newTimeBalance = newNetworkFeeBalance / newContributionRate;
+
+        require(newTimeBalance > 0, "New time balance must be greater than 0");
+
+        // Calculate new expiration
+        return newTimeBalance + block.timestamp;
     }
 }
