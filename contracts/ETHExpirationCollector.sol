@@ -188,17 +188,30 @@ contract ETHExpirationCollector is
      * @param toId The license to migrate to
      * @custom:requires MODIFY_FUNDS_ROLE
      */
-    function migrateFunds(uint256 fromId, uint256 toId)
-        external
-        onlyRole(MODIFY_FUNDS_ROLE)
-    {
+    function migrateFunds(
+        uint256 fromId,
+        uint256 toId,
+        uint256 toContributionRate
+    ) external payable onlyRole(MODIFY_FUNDS_ROLE) {
+        require(
+            toContributionRate >= minContributionRate,
+            "Contribution rate must be greater than minimum"
+        );
+
         uint256 fromNetworkFeeBalance = _calculateNetworkFeeBalance(fromId);
-        uint256 toContributionRate = accountant.contributionRates(toId);
-        _updateExpiration(toId, toContributionRate, fromNetworkFeeBalance, 0);
+        _updateExpiration(
+            toId,
+            toContributionRate,
+            fromNetworkFeeBalance + msg.value,
+            0
+        );
 
         // Clear from license
         licenseExpirationTimestamps[fromId] = 0;
         accountant.setContributionRate(fromId, 0);
+
+        // Update contribution rate in Accountant
+        accountant.setContributionRate(toId, toContributionRate);
     }
 
     /**
