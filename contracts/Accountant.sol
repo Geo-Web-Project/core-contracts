@@ -78,7 +78,7 @@ contract Accountant is AccessControlEnumerable {
     }
 
     /**
-     * @notice Get the date at which the license will become valid
+     * @notice Get the date at which the license will become invalid
      * @param id The id of the license
      * @return Timestamp of when license will begin to be invalid
      */
