@@ -4,8 +4,12 @@ pragma solidity ^0.8.0;
 import {ISuperfluid, ISuperToken, ISuperApp, ISuperAgreement, ContextDefinitions, SuperAppDefinitions} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-contract CollectorSuperApp is SuperAppBase {
+contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
+    bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
+        keccak256("MODIFY_CONTRIBUTION_ROLE");
+
     ISuperfluid private _host; // host
     IConstantFlowAgreementV1 private _cfa; // the stored constant flow agreement class address
     ISuperToken private _acceptedToken; // accepted token
@@ -13,6 +17,9 @@ contract CollectorSuperApp is SuperAppBase {
 
     /// @notice Stores the total contribution rate of all licenses for a particular user
     mapping(address => int96) public totalContributionRate;
+
+    /// @notice Stores the locked contribution rate of all pending bids for a particular user
+    mapping(address => int96) public lockedContributionRate;
 
     constructor(
         ISuperfluid host,
@@ -41,6 +48,8 @@ contract CollectorSuperApp is SuperAppBase {
 
         _host.registerApp(configWord);
 
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
         // Create initial flow to receiver
         _host.callAgreement(
             _cfa,
@@ -49,6 +58,148 @@ contract CollectorSuperApp is SuperAppBase {
                 _acceptedToken,
                 _receiver,
                 0,
+                new bytes(0)
+            ),
+            "0x"
+        );
+    }
+
+    /// @dev Calculate the available contribution for a user.
+    function calculateAvailableContribution(address user)
+        public
+        view
+        returns (int96)
+    {
+        (, int96 flowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            user,
+            address(this)
+        );
+
+        return
+            flowRate -
+            totalContributionRate[user] -
+            lockedContributionRate[user];
+    }
+
+    /// @dev Locks contribution without starting. Goes against available contribution.
+    function lockContributionRate(address user, int96 amount)
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+        require(
+            calculateAvailableContribution(user) >= amount,
+            "CollectorSuperApp: Not enough contribution available to lock"
+        );
+
+        lockedContributionRate[user] += amount;
+    }
+
+    /// @dev Unlocks contribution that was previously locked.
+    function unlockContributionRate(address user, int96 amount)
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+        require(
+            lockedContributionRate[user] >= amount,
+            "CollectorSuperApp: Not enough contribution available to unlock"
+        );
+
+        lockedContributionRate[user] -= amount;
+    }
+
+    /// @dev Increase contribution rate of user
+    function increaseContributionRate(address user, int96 amount)
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+        require(
+            calculateAvailableContribution(user) >= amount,
+            "CollectorSuperApp: Not enough contribution available to contribute"
+        );
+
+        totalContributionRate[user] += amount;
+
+        // Update Flow(app -> user)
+        (, int96 userFlowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            address(this),
+            user
+        );
+        _host.callAgreement(
+            _cfa,
+            abi.encodeWithSelector(
+                _cfa.updateFlow.selector,
+                _acceptedToken,
+                user,
+                userFlowRate - amount,
+                new bytes(0)
+            ),
+            "0x"
+        );
+
+        // Update Flow(app -> receiver)
+        (, int96 receiverFlowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            address(this),
+            _receiver
+        );
+        _host.callAgreement(
+            _cfa,
+            abi.encodeWithSelector(
+                _cfa.updateFlow.selector,
+                _acceptedToken,
+                _receiver,
+                receiverFlowRate + amount,
+                new bytes(0)
+            ),
+            "0x"
+        );
+    }
+
+    /// @dev Decrease contribution rate of user
+    function decreaseContributionRate(address user, int96 amount)
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+        require(
+            totalContributionRate[user] >= amount,
+            "CollectorSuperApp: Not enough contribution available to decrease"
+        );
+
+        totalContributionRate[user] -= amount;
+
+        // Update Flow(app -> user)
+        (, int96 userFlowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            address(this),
+            user
+        );
+        _host.callAgreement(
+            _cfa,
+            abi.encodeWithSelector(
+                _cfa.updateFlow.selector,
+                _acceptedToken,
+                user,
+                userFlowRate + amount,
+                new bytes(0)
+            ),
+            "0x"
+        );
+
+        // Update Flow(app -> receiver)
+        (, int96 receiverFlowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            address(this),
+            _receiver
+        );
+        _host.callAgreement(
+            _cfa,
+            abi.encodeWithSelector(
+                _cfa.updateFlow.selector,
+                _acceptedToken,
+                _receiver,
+                receiverFlowRate - amount,
                 new bytes(0)
             ),
             "0x"
