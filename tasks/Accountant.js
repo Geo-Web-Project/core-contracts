@@ -51,7 +51,7 @@ task("config:accountant")
 
 task("roles:accountant", "Set default roles for Accountant")
   .addParam("accountant", "Address of Accountant")
-  .addParam("collector", "Address of ETHExpirationCollector")
+  .addParam("collector", "Address of CollectorSuperApp")
   .setAction(async ({ accountant, collector }) => {
     const accountantContract = await ethers.getContractAt(
       "Accountant",
