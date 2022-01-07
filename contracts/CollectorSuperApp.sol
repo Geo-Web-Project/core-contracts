@@ -5,10 +5,12 @@ import {ISuperfluid, ISuperToken, ISuperApp, ISuperAgreement, ContextDefinitions
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
+contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
         keccak256("MODIFY_CONTRIBUTION_ROLE");
+    bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     ISuperfluid private _host; // host
     IConstantFlowAgreementV1 private _cfa; // the stored constant flow agreement class address
@@ -146,6 +148,22 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
         _decreaseAppToReceiverFlow(amount);
     }
 
+    /**
+     * @notice Pause the contract. Pauses payments and setting contribution rates.
+     * @custom:requires PAUSE_ROLE
+     */
+    function pause() external onlyRole(PAUSE_ROLE) {
+        _pause();
+    }
+
+    /**
+     * @notice Unpause the contract.
+     * @custom:requires PAUSE_ROLE
+     */
+    function unpause() external onlyRole(PAUSE_ROLE) {
+        _unpause();
+    }
+
     function _increaseAppToReceiverFlow(int96 amount) private {
         (, int96 flowRate, , ) = _cfa.getFlow(
             _acceptedToken,
@@ -268,6 +286,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
         override
         onlyExpected(_superToken, _agreementClass)
         onlyHost
+        whenNotPaused
         returns (bytes memory newCtx)
     {
         return
@@ -291,6 +310,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
         override
         onlyExpected(_superToken, _agreementClass)
         onlyHost
+        whenNotPaused
         returns (bytes memory newCtx)
     {
         return
