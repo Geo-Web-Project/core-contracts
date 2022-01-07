@@ -76,13 +76,4 @@ contract Accountant is AccessControlEnumerable {
     function isValid(uint256 id) external view returns (bool) {
         return validator.isValid(id);
     }
-
-    /**
-     * @notice Get the date at which the license will become invalid
-     * @param id The id of the license
-     * @return Timestamp of when license will begin to be invalid
-     */
-    function invalidStartDate(uint256 id) external view returns (uint256) {
-        return validator.invalidStartDate(id);
-    }
 }

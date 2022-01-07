@@ -106,21 +106,4 @@ describe("Accountant", async () => {
       "Did not call mock validator"
     );
   });
-
-  it("should call validator on invalidStartDate", async () => {
-    let accountant = await buildAccountant();
-
-    const MockLicenseValidator = await ethers.getContractFactory(
-      "MockLicenseValidator"
-    );
-    const validator = await MockLicenseValidator.deploy(10, 1);
-    await validator.deployed();
-
-    await accountant.setValidator(validator.address);
-
-    assert(
-      (await accountant.invalidStartDate(1)) == 1,
-      "Did not call mock validator"
-    );
-  });
 });

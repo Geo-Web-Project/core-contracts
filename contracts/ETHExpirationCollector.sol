@@ -279,20 +279,6 @@ contract ETHExpirationCollector is
     }
 
     /**
-     * @notice Get the date at which the license will become valid
-     * @param id The id of the license
-     * @return Timestamp of when license will begin to be invalid
-     */
-    function invalidStartDate(uint256 id)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return licenseExpirationTimestamps[id];
-    }
-
-    /**
      * @dev Updates expiration for a license
      * @param id The id of the license
      * @param newContributionRate The new contribution rate for the license

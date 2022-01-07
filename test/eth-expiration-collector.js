@@ -679,44 +679,6 @@ describe("ETHExpirationCollector", async () => {
     );
   });
 
-  it("should use expiration on invalidStartDate", async () => {
-    const MockERC721License = await ethers.getContractFactory(
-      "MockERC721License"
-    );
-    const license = await MockERC721License.deploy("Mock", "MOCK");
-    await license.deployed();
-
-    const MockAccountant = await ethers.getContractFactory("MockAccountant");
-    const accountant = await MockAccountant.deploy(1, 2);
-    await accountant.deployed();
-
-    let collector = await buildContract({
-      license: license.address,
-      accountant: accountant.address,
-    });
-
-    await license.mint(accounts[2].address, 1);
-
-    await collector.connect(accounts[2]).setContributionRate(1, 10, {
-      value: 1000,
-    });
-
-    let newExpiration = await collector.licenseExpirationTimestamps(1);
-    let invalidStartDate = await collector.invalidStartDate(1);
-
-    assert(
-      invalidStartDate.eq(newExpiration),
-      "Invalid start date is incorrect"
-    );
-
-    let contributionRate = await accountant.contributionRates(1);
-    assert.equal(
-      contributionRate,
-      10,
-      "Did not set contribution rate on Accountant"
-    );
-  });
-
   it("should allow MODIFY_FUNDS_ROLE to migrate all funds to another parcel", async () => {
     const MockERC721License = await ethers.getContractFactory(
       "MockERC721License"
