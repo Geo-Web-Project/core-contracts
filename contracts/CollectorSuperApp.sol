@@ -121,40 +121,10 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
         totalContributionRate[user] += amount;
 
         // Update Flow(app -> user)
-        (, int96 userFlowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
-            address(this),
-            user
-        );
-        _host.callAgreement(
-            _cfa,
-            abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
-                user,
-                userFlowRate - amount,
-                new bytes(0)
-            ),
-            "0x"
-        );
+        _decreaseAppToUserFlow(user, amount);
 
         // Update Flow(app -> receiver)
-        (, int96 receiverFlowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
-            address(this),
-            _receiver
-        );
-        _host.callAgreement(
-            _cfa,
-            abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
-                _receiver,
-                receiverFlowRate + amount,
-                new bytes(0)
-            ),
-            "0x"
-        );
+        _increaseAppToReceiverFlow(amount);
     }
 
     /// @dev Decrease contribution rate of user
@@ -170,25 +140,14 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
         totalContributionRate[user] -= amount;
 
         // Update Flow(app -> user)
-        (, int96 userFlowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
-            address(this),
-            user
-        );
-        _host.callAgreement(
-            _cfa,
-            abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
-                user,
-                userFlowRate + amount,
-                new bytes(0)
-            ),
-            "0x"
-        );
+        _increaseAppToUserFlow(user, amount);
 
         // Update Flow(app -> receiver)
-        (, int96 receiverFlowRate, , ) = _cfa.getFlow(
+        _decreaseAppToReceiverFlow(amount);
+    }
+
+    function _increaseAppToReceiverFlow(int96 amount) private {
+        (, int96 flowRate, , ) = _cfa.getFlow(
             _acceptedToken,
             address(this),
             _receiver
@@ -199,7 +158,64 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable {
                 _cfa.updateFlow.selector,
                 _acceptedToken,
                 _receiver,
-                receiverFlowRate - amount,
+                flowRate + amount,
+                new bytes(0)
+            ),
+            "0x"
+        );
+    }
+
+    function _decreaseAppToReceiverFlow(int96 amount) private {
+        (, int96 flowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            address(this),
+            _receiver
+        );
+        _host.callAgreement(
+            _cfa,
+            abi.encodeWithSelector(
+                _cfa.updateFlow.selector,
+                _acceptedToken,
+                _receiver,
+                flowRate - amount,
+                new bytes(0)
+            ),
+            "0x"
+        );
+    }
+
+    function _increaseAppToUserFlow(address user, int96 amount) private {
+        (, int96 flowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            address(this),
+            user
+        );
+        _host.callAgreement(
+            _cfa,
+            abi.encodeWithSelector(
+                _cfa.updateFlow.selector,
+                _acceptedToken,
+                user,
+                flowRate + amount,
+                new bytes(0)
+            ),
+            "0x"
+        );
+    }
+
+    function _decreaseAppToUserFlow(address user, int96 amount) private {
+        (, int96 flowRate, , ) = _cfa.getFlow(
+            _acceptedToken,
+            address(this),
+            user
+        );
+        _host.callAgreement(
+            _cfa,
+            abi.encodeWithSelector(
+                _cfa.updateFlow.selector,
+                _acceptedToken,
+                user,
+                flowRate - amount,
                 new bytes(0)
             ),
             "0x"
