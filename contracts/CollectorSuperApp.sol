@@ -12,10 +12,10 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         keccak256("MODIFY_CONTRIBUTION_ROLE");
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
-    ISuperfluid private _host; // host
-    IConstantFlowAgreementV1 private _cfa; // the stored constant flow agreement class address
-    ISuperToken private _acceptedToken; // accepted token
-    address private _receiver;
+    ISuperfluid private host; // host
+    IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
+    ISuperToken private acceptedToken; // accepted token
+    address private receiver;
 
     /// @notice Stores the total contribution rate of all licenses for a particular user
     mapping(address => int96) public totalContributionRate;
@@ -24,41 +24,42 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     mapping(address => int96) public lockedContributionRate;
 
     constructor(
-        ISuperfluid host,
-        IConstantFlowAgreementV1 cfa,
-        ISuperToken acceptedToken,
-        address receiver
+        ISuperfluid _host,
+        IConstantFlowAgreementV1 _cfa,
+        ISuperToken _acceptedToken,
+        address _receiver
     ) {
-        require(address(host) != address(0), "host is zero address");
-        require(address(cfa) != address(0), "cfa is zero address");
+        require(address(_host) != address(0), "host is zero address");
+        require(address(_cfa) != address(0), "cfa is zero address");
         require(
-            address(acceptedToken) != address(0),
+            address(_acceptedToken) != address(0),
             "acceptedToken is zero address"
         );
-        require(address(receiver) != address(0), "receiver is zero address");
-        require(!host.isApp(ISuperApp(receiver)), "receiver is an app");
+        require(address(_receiver) != address(0), "receiver is zero address");
+        require(!_host.isApp(ISuperApp(_receiver)), "receiver is an app");
 
-        _host = host;
-        _cfa = cfa;
-        _acceptedToken = acceptedToken;
-        _receiver = receiver;
+        host = _host;
+        cfa = _cfa;
+        acceptedToken = _acceptedToken;
+        receiver = _receiver;
 
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
             SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
             SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
             SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
-        _host.registerApp(configWord);
+        host.registerApp(configWord);
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(PAUSE_ROLE, msg.sender);
 
         // Create initial flow to receiver
-        _host.callAgreement(
-            _cfa,
+        host.callAgreement(
+            cfa,
             abi.encodeWithSelector(
-                _cfa.createFlow.selector,
-                _acceptedToken,
-                _receiver,
+                cfa.createFlow.selector,
+                acceptedToken,
+                receiver,
                 0,
                 new bytes(0)
             ),
@@ -72,8 +73,8 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         view
         returns (int96)
     {
-        (, int96 flowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
             user,
             address(this)
         );
@@ -149,6 +150,50 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     /**
+     * @notice Admin can update the receiver.
+     * @param _receiver The new receiver of contributions
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setReceiver(address _receiver)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            receiver
+        );
+
+        // Create flow to new receiver
+        host.callAgreement(
+            cfa,
+            abi.encodeWithSelector(
+                cfa.createFlow.selector,
+                acceptedToken,
+                _receiver,
+                flowRate,
+                new bytes(0)
+            ),
+            "0x"
+        );
+
+        // Delete flow to old receiver
+        host.callAgreement(
+            cfa,
+            abi.encodeWithSelector(
+                cfa.deleteFlow.selector,
+                acceptedToken,
+                address(this),
+                receiver,
+                new bytes(0)
+            ),
+            "0x"
+        );
+
+        receiver = _receiver;
+    }
+
+    /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
      * @custom:requires PAUSE_ROLE
      */
@@ -165,17 +210,17 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _increaseAppToReceiverFlow(int96 amount) private {
-        (, int96 flowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
             address(this),
-            _receiver
+            receiver
         );
-        _host.callAgreement(
-            _cfa,
+        host.callAgreement(
+            cfa,
             abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
-                _receiver,
+                cfa.updateFlow.selector,
+                acceptedToken,
+                receiver,
                 flowRate + amount,
                 new bytes(0)
             ),
@@ -184,17 +229,17 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _decreaseAppToReceiverFlow(int96 amount) private {
-        (, int96 flowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
             address(this),
-            _receiver
+            receiver
         );
-        _host.callAgreement(
-            _cfa,
+        host.callAgreement(
+            cfa,
             abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
-                _receiver,
+                cfa.updateFlow.selector,
+                acceptedToken,
+                receiver,
                 flowRate - amount,
                 new bytes(0)
             ),
@@ -203,16 +248,16 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _increaseAppToUserFlow(address user, int96 amount) private {
-        (, int96 flowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
             address(this),
             user
         );
-        _host.callAgreement(
-            _cfa,
+        host.callAgreement(
+            cfa,
             abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
+                cfa.updateFlow.selector,
+                acceptedToken,
                 user,
                 flowRate + amount,
                 new bytes(0)
@@ -222,16 +267,16 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _decreaseAppToUserFlow(address user, int96 amount) private {
-        (, int96 flowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
             address(this),
             user
         );
-        _host.callAgreement(
-            _cfa,
+        host.callAgreement(
+            cfa,
             abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
+                cfa.updateFlow.selector,
+                acceptedToken,
                 user,
                 flowRate - amount,
                 new bytes(0)
@@ -249,18 +294,18 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     ) private returns (bytes memory newCtx) {
         newCtx = ctx;
         (address user, ) = abi.decode(_agreementData, (address, address));
-        (, int96 flowRate, , ) = _cfa.getFlowByID(_acceptedToken, agreementId);
+        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, agreementId);
 
         require(
             flowRate >= totalContributionRate[user],
             "CollectorSuperApp: Flow cannot be less than totalContributionRate[user]"
         );
 
-        (newCtx, ) = _host.callAgreementWithContext(
-            _cfa,
+        (newCtx, ) = host.callAgreementWithContext(
+            cfa,
             abi.encodeWithSelector(
                 selector,
-                _acceptedToken,
+                acceptedToken,
                 user,
                 flowRate - totalContributionRate[user],
                 new bytes(0)
@@ -294,7 +339,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 _ctx,
                 _agreementId,
                 _agreementData,
-                _cfa.createFlow.selector
+                cfa.createFlow.selector
             );
     }
 
@@ -318,7 +363,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 _ctx,
                 _agreementId,
                 _agreementData,
-                _cfa.updateFlow.selector
+                cfa.updateFlow.selector
             );
     }
 
@@ -338,11 +383,11 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         (address user, ) = abi.decode(_agreementData, (address, address));
 
         // Delete Flow(app -> user)
-        (newCtx, ) = _host.callAgreementWithContext(
-            _cfa,
+        (newCtx, ) = host.callAgreementWithContext(
+            cfa,
             abi.encodeWithSelector(
-                _cfa.deleteFlow.selector,
-                _acceptedToken,
+                cfa.deleteFlow.selector,
+                acceptedToken,
                 address(this),
                 user,
                 new bytes(0)
@@ -352,17 +397,17 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Decrease Flow(app -> receiver)
-        (, int96 appFlowRate, , ) = _cfa.getFlow(
-            _acceptedToken,
+        (, int96 appFlowRate, , ) = cfa.getFlow(
+            acceptedToken,
             address(this),
-            _receiver
+            receiver
         );
-        (newCtx, ) = _host.callAgreementWithContext(
-            _cfa,
+        (newCtx, ) = host.callAgreementWithContext(
+            cfa,
             abi.encodeWithSelector(
-                _cfa.updateFlow.selector,
-                _acceptedToken,
-                _receiver,
+                cfa.updateFlow.selector,
+                acceptedToken,
+                receiver,
                 appFlowRate - totalContributionRate[user],
                 new bytes(0)
             ),
@@ -374,7 +419,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _isSameToken(ISuperToken superToken) private view returns (bool) {
-        return address(superToken) == address(_acceptedToken);
+        return address(superToken) == address(acceptedToken);
     }
 
     function _isCFAv1(address agreementClass) private view returns (bool) {
@@ -387,7 +432,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
     modifier onlyHost() {
         require(
-            msg.sender == address(_host),
+            msg.sender == address(host),
             "CollectorSuperApp: support only one host"
         );
         _;
