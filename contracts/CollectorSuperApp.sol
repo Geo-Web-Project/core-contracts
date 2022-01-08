@@ -52,19 +52,6 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
-
-        // Create initial flow to receiver
-        host.callAgreement(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.createFlow.selector,
-                acceptedToken,
-                receiver,
-                0,
-                new bytes(0)
-            ),
-            "0x"
-        );
     }
 
     /// @dev Calculate the available contribution for a user.
@@ -164,31 +151,33 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             receiver
         );
 
-        // Create flow to new receiver
-        host.callAgreement(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.createFlow.selector,
-                acceptedToken,
-                _receiver,
-                flowRate,
-                new bytes(0)
-            ),
-            "0x"
-        );
+        if (flowRate > 0) {
+            // Create flow to new receiver
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    _receiver,
+                    flowRate,
+                    new bytes(0)
+                ),
+                "0x"
+            );
 
-        // Delete flow to old receiver
-        host.callAgreement(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.deleteFlow.selector,
-                acceptedToken,
-                address(this),
-                receiver,
-                new bytes(0)
-            ),
-            "0x"
-        );
+            // Delete flow to old receiver
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    receiver,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
 
         receiver = _receiver;
     }
@@ -215,17 +204,32 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(this),
             receiver
         );
-        host.callAgreement(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.updateFlow.selector,
-                acceptedToken,
-                receiver,
-                flowRate + amount,
-                new bytes(0)
-            ),
-            "0x"
-        );
+
+        if (flowRate > 0) {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    flowRate + amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
     }
 
     function _decreaseAppToReceiverFlow(int96 amount) private {
@@ -253,17 +257,31 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(this),
             user
         );
-        host.callAgreement(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.updateFlow.selector,
-                acceptedToken,
-                user,
-                flowRate + amount,
-                new bytes(0)
-            ),
-            "0x"
-        );
+        if (flowRate > 0) {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    user,
+                    flowRate + amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    user,
+                    amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
     }
 
     function _decreaseAppToUserFlow(address user, int96 amount) private {
@@ -402,18 +420,33 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(this),
             receiver
         );
-        (newCtx, ) = host.callAgreementWithContext(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.updateFlow.selector,
-                acceptedToken,
-                receiver,
-                appFlowRate - totalContributionRate[user],
-                new bytes(0)
-            ),
-            "0x",
-            newCtx
-        );
+        if (appFlowRate > 0) {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    appFlowRate - totalContributionRate[user],
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        } else {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    appFlowRate - totalContributionRate[user],
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        }
 
         totalContributionRate[user] = 0;
     }
