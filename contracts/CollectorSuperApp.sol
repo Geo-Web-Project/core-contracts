@@ -238,17 +238,32 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(this),
             receiver
         );
-        host.callAgreement(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.updateFlow.selector,
-                acceptedToken,
-                receiver,
-                flowRate - amount,
-                new bytes(0)
-            ),
-            "0x"
-        );
+
+        if (amount < flowRate) {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    flowRate - amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    receiver,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
     }
 
     function _increaseAppToUserFlow(address user, int96 amount) private {
@@ -290,17 +305,32 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(this),
             user
         );
-        host.callAgreement(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.updateFlow.selector,
-                acceptedToken,
-                user,
-                flowRate - amount,
-                new bytes(0)
-            ),
-            "0x"
-        );
+
+        if (amount < flowRate) {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    user,
+                    flowRate - amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    user,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
     }
 
     /// @dev Update back flow to user
@@ -319,18 +349,33 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             "CollectorSuperApp: Flow cannot be less than totalContributionRate[user]"
         );
 
-        (newCtx, ) = host.callAgreementWithContext(
-            cfa,
-            abi.encodeWithSelector(
-                selector,
-                acceptedToken,
-                user,
-                flowRate - totalContributionRate[user],
-                new bytes(0)
-            ),
-            "0x",
-            newCtx
-        );
+        if (totalContributionRate[user] < flowRate) {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    selector,
+                    acceptedToken,
+                    user,
+                    flowRate - totalContributionRate[user],
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        } else {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    user,
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        }
     }
 
     /**************************************************************************
@@ -415,38 +460,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Decrease Flow(app -> receiver)
-        (, int96 appFlowRate, , ) = cfa.getFlow(
-            acceptedToken,
-            address(this),
-            receiver
-        );
-        if (appFlowRate > 0) {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    receiver,
-                    appFlowRate - totalContributionRate[user],
-                    new bytes(0)
-                ),
-                "0x",
-                newCtx
-            );
-        } else {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    receiver,
-                    appFlowRate - totalContributionRate[user],
-                    new bytes(0)
-                ),
-                "0x",
-                newCtx
-            );
-        }
+        _decreaseAppToReceiverFlow(totalContributionRate[user]);
 
         totalContributionRate[user] = 0;
     }

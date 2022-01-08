@@ -86,25 +86,25 @@ task("roles:set-default", "Set default roles on all deployed contracts")
       collector: collector,
     });
 
-    // ERC721License roles
-    const res2 = await licenseContract.grantRole(
-      await licenseContract.MINT_ROLE(),
-      claimer
-    );
-    await res2.wait();
+    // // ERC721License roles
+    // const res2 = await licenseContract.grantRole(
+    //   await licenseContract.MINT_ROLE(),
+    //   claimer
+    // );
+    // await res2.wait();
 
-    const res3 = await licenseContract.grantRole(
-      await licenseContract.OPERATOR_ROLE(),
-      purchaser
-    );
-    await res3.wait();
+    // const res3 = await licenseContract.grantRole(
+    //   await licenseContract.OPERATOR_ROLE(),
+    //   purchaser
+    // );
+    // await res3.wait();
 
-    // GeoWebParcel roles
-    const res6 = await parcelContract.grantRole(
-      await parcelContract.BUILD_ROLE(),
-      claimer
-    );
-    await res6.wait();
+    // // GeoWebParcel roles
+    // const res6 = await parcelContract.grantRole(
+    //   await parcelContract.BUILD_ROLE(),
+    //   claimer
+    // );
+    // await res6.wait();
   });
 
 module.exports = {
