@@ -1,9 +1,10 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { assert } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
 
 describe("Accountant", async () => {
-  let accounts;
+  let accounts: SignerWithAddress[];
 
   async function buildAccountant() {
     const Accountant = await ethers.getContractFactory("Accountant");

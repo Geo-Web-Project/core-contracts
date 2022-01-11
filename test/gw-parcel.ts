@@ -1,14 +1,14 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
-
+import { assert } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
 
 describe("GeoWebParcel", async () => {
-  function makePathPrefix(length) {
+  function makePathPrefix(length: any) {
     return BigNumber.from(length).shl(256 - 8);
   }
 
-  let accounts;
+  let accounts: SignerWithAddress[];
 
   async function buildContract() {
     const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
@@ -517,10 +517,13 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Coordinate is not available"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Coordinate is not available"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should not build parcel that goes too far north", async () => {
@@ -588,10 +591,13 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("missing role"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("missing role"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should not build parcel with empty path", async () => {
@@ -611,10 +617,13 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Path must have at least one component"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Path must have at least one component"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should only destroy one parcel within a word", async () => {
@@ -681,9 +690,12 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("missing role"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("missing role"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 });

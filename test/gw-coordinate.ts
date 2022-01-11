@@ -1,15 +1,16 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { assert } from "chai";
+import { ethers } from "hardhat";
+import { Contract } from "@ethersproject/contracts";
 
 const BigNumber = ethers.BigNumber;
 
 describe("GeoWebCoordinate", async () => {
-  function makeCoord(x, y) {
+  function makeCoord(x: any, y: any) {
     return BigNumber.from(x).shl(32).or(BigNumber.from(y));
   }
 
-  let geoWebCoordinate;
-  let geoWebCoordinatePath;
+  let geoWebCoordinate: Contract;
+  let geoWebCoordinatePath: Contract;
 
   before(async () => {
     const GeoWebCoordinate = await ethers.getContractFactory(
@@ -32,7 +33,7 @@ describe("GeoWebCoordinate", async () => {
 
     let result = await geoWebCoordinatePath.nextDirection(path);
 
-    assert(
+    assert.equal(
       result.direction.toString(),
       BigNumber.from(0b10).toString(),
       "Direction is not correct"

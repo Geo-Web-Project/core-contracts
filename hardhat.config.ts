@@ -2,8 +2,10 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
+ import { task } from "hardhat/config";
+ import "@nomiclabs/hardhat-waffle";
+
 require("@openzeppelin/hardhat-upgrades");
-require("@nomiclabs/hardhat-waffle");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
 require("./tasks/Accountant");
@@ -16,7 +18,7 @@ require("./tasks/SimpleETHClaimer");
 task(
   "deploy",
   "Deploy the set of contracts with default configuration"
-).setAction(async () => {
+).setAction(async (args, hre) => {
   console.log("Deploying all contracts...");
   const parcel = await hre.run("deploy:parcel");
   const accountant = await hre.run("deploy:accountant");
@@ -28,7 +30,7 @@ task(
 
   console.log("\nSetting default configuration...");
 
-  const accounts = await ethers.getSigners();
+  const accounts = await hre.ethers.getSigners();
 
   // Accountant default config
   await hre.run("config:accountant", {
@@ -40,7 +42,7 @@ task(
   // ETHExpirationCollector default config
   await hre.run("config:collector", {
     contract: collector,
-    minContributionRate: ethers.utils
+    minContributionRate: hre.ethers.utils
       .parseEther("0.01")
       .div(60 * 60 * 24 * 365)
       .toString(),
@@ -85,7 +87,7 @@ task(
 });
 
 task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
-  async () => {
+  async (args, hre) => {
     await hre.run("deploy:parcel");
     await hre.run("deploy:accountant");
     await hre.run("deploy:license");
@@ -103,16 +105,16 @@ task("roles:set-default", "Set default roles on all deployed contracts")
   .addParam("purchaser", "Address of ETHPurchaser")
   .addParam("claimer", "Address of SimpleETHClaimer")
   .setAction(
-    async ({ license, accountant, collector, parcel, purchaser, claimer }) => {
-      const licenseContract = await ethers.getContractAt(
+    async ({ license, accountant, collector, parcel, purchaser, claimer }, hre) => {
+      const licenseContract = await hre.ethers.getContractAt(
         "ERC721License",
         license
       );
-      const collectorContract = await ethers.getContractAt(
+      const collectorContract = await hre.ethers.getContractAt(
         "ETHExpirationCollector",
         collector
       );
-      const parcelContract = await ethers.getContractAt("GeoWebParcel", parcel);
+      const parcelContract = await hre.ethers.getContractAt("GeoWebParcel", parcel);
 
       await hre.run("roles:accountant", {
         accountant: accountant,
@@ -156,9 +158,6 @@ task("roles:set-default", "Set default roles on all deployed contracts")
 
 module.exports = {
   networks: {
-    hardhat: {
-      gasPrice: 0,
-    },
     local: {
       gasPrice: 1000000000,
       url: `http://localhost:8545`,

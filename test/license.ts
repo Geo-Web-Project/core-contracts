@@ -1,9 +1,10 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { assert } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
 
 describe("ERC721License", async () => {
-  let accounts;
+  let accounts: SignerWithAddress[];
 
   async function buildContract() {
     const ERC721License = await ethers.getContractFactory("ERC721License");
@@ -84,10 +85,13 @@ describe("ERC721License", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("paused"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("paused"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await license.unpause();
 

@@ -1,12 +1,13 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { assert } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
 
 describe("SimpleETHClaimer", async () => {
-  let accounts;
+  let accounts: SignerWithAddress[];
   let minExpiration = 10;
 
-  async function buildContract({ license, collector, parcel }) {
+  async function buildContract({ license, collector, parcel }: {license?: string, collector?: string, parcel?: string}) {
     const SimpleETHClaimer = await ethers.getContractFactory(
       "SimpleETHClaimer"
     );
@@ -148,10 +149,13 @@ describe("SimpleETHClaimer", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("paused"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("paused"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await claimer.unpause();
 
@@ -235,11 +239,12 @@ describe("SimpleETHClaimer", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes(
-        "Resulting expiration date must be at least minClaimExpiration"
-      ),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Resulting expiration date must be at least minClaimExpiration"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 });
