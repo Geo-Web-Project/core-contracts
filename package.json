@@ -1,4 +1,6 @@
 {
+    "name": "geo-web-core-contracts",
+    "license": "MIT",
     "dependencies": {
         "@eth-optimism/hardhat-ovm": "^0.2.3",
         "@truffle/hdwallet-provider": "^1.1.1",
@@ -6,19 +8,21 @@
         "remixd": "^0.2.4-alpha.0"
     },
     "devDependencies": {
+        "@matterlabs/hardhat-zksync-deploy": "^0.1.2",
+        "@matterlabs/hardhat-zksync-solc": "^0.1.1",
         "@nomiclabs/hardhat-ethers": "^2.0.2",
         "@nomiclabs/hardhat-waffle": "^2.0.1",
         "@openzeppelin/contracts": "^4.3.2",
         "@openzeppelin/hardhat-upgrades": "^1.9.0",
         "@openzeppelin/truffle-upgrades": "^1.3.1",
+        "@types/node": "^17.0.8",
         "chai": "^4.3.4",
         "ethereum-waffle": "^3.4.0",
         "ethers": "^5.4.2",
         "hardhat": "^2.5.0",
-        "solidity-coverage": "^0.7.17"
-    },
-    "scripts": {
-        "migrate:dev": "rm migrations; ln -sv dev-migrations migrations",
-        "migrate:upgrade": "rm migrations; ln -sv upgrade-migrations migrations"
+        "solidity-coverage": "^0.7.17",
+        "ts-node": "^10.4.0",
+        "typescript": "^4.5.4",
+        "zksync-web3": "^0.2.11"
     }
 }
