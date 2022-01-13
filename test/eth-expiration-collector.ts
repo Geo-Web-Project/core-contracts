@@ -1,13 +1,14 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { assert } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
 
 describe("ETHExpirationCollector", async () => {
-  let accounts;
+  let accounts: SignerWithAddress[];
   let minExpiration = 10;
   let maxExpiration = 60 * 60 * 24 * 730; // 730 days
 
-  async function buildContract({ license, accountant }) {
+  async function buildContract({ license, accountant }: { license?: string, accountant?: string }) {
     const ETHExpirationCollector = await ethers.getContractFactory(
       "ETHExpirationCollector"
     );
@@ -177,10 +178,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("paused"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("paused"),
+        "Expected an error but did not get one"
+      );
+    }
 
     var err;
     try {
@@ -189,10 +193,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("paused"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("paused"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await collector.unpause();
 
@@ -228,10 +235,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Caller does not have permission"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Caller does not have permission"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should allow setting contribution rate if license holder", async () => {
@@ -261,10 +271,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Caller does not have permission"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Caller does not have permission"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await collector
       .connect(accounts[2])
@@ -299,10 +312,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Caller does not have permission"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Caller does not have permission"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await collector.grantRole(MODIFY_CONTRIBUTION_ROLE, accounts[0].address);
 
@@ -338,10 +354,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Caller does not have permission"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Caller does not have permission"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await license
       .connect(accounts[2])
@@ -379,10 +398,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Caller does not have permission"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Caller does not have permission"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await license.connect(accounts[2]).approve(accounts[0].address, 1);
 
@@ -418,10 +440,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Contribution rate must be greater than minimum"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Contribution rate must be greater than minimum"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should set initial expiration", async () => {
@@ -671,12 +696,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes(
-        "Resulting expiration date must be at least minExpiration"
-      ),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Resulting expiration date must be at least minExpiration"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should allow MODIFY_FUNDS_ROLE to migrate all funds to another parcel", async () => {
@@ -721,10 +747,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("is missing role"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("is missing role"),
+        "Expected an error but did not get one"
+      );
+    }
 
     let result = await collector
       .connect(accounts[1])
@@ -921,10 +950,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Contribution rate must be greater than minimum"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Contribution rate must be greater than minimum"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should make additional payment on migrate funds", async () => {
@@ -1110,10 +1142,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("is missing role"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("is missing role"),
+        "Expected an error but did not get one"
+      );
+    }
 
     let result = await collector
       .connect(accounts[1])
@@ -1205,12 +1240,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes(
-        "Resulting expiration date must be at least minExpiration"
-      ),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Resulting expiration date must be at least minExpiration"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should not move funds between parcels if FROM does not have enough funds", async () => {
@@ -1261,10 +1297,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Not enough funds in FROM"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Not enough funds in FROM"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should set expiration to max if move funds reaches max", async () => {
@@ -1508,10 +1547,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Additional payments must be sent"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Additional payments must be sent"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should fail to move funds if TO contribution rate is too low", async () => {
@@ -1551,10 +1593,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Contribution rate must be greater than minimum"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Contribution rate must be greater than minimum"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should fail to move funds if FROM contribution rate is too low", async () => {
@@ -1594,10 +1639,13 @@ describe("ETHExpirationCollector", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Contribution rate must be greater than minimum"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Contribution rate must be greater than minimum"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should ignore expiration limits on move funds until after new contribution rate is included", async () => {

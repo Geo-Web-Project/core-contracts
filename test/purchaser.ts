@@ -1,9 +1,11 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { assert } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import * as hre from "hardhat";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
 
 describe("ETHPurchaser", async () => {
-  let accounts;
+  let accounts: SignerWithAddress[];
   let defaultDutchAuctionLengthInSeconds = 60 * 60 * 7;
 
   async function buildContract({
@@ -11,7 +13,7 @@ describe("ETHPurchaser", async () => {
     collector,
     accountant,
     dutchAuctionLengthInSeconds,
-  }) {
+  }: {license?: string, collector?: string, accountant?: string, dutchAuctionLengthInSeconds?: number}) {
     const _dutchAuctionLengthInSeconds =
       dutchAuctionLengthInSeconds ?? defaultDutchAuctionLengthInSeconds;
     const ETHPurchaser = await ethers.getContractFactory("ETHPurchaser");
@@ -168,10 +170,13 @@ describe("ETHPurchaser", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("paused"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("paused"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await purchaser.unpause();
 
@@ -593,10 +598,13 @@ describe("ETHPurchaser", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("above max purchase price"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("above max purchase price"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should fail to purchase license if value is too low", async () => {
@@ -653,11 +661,12 @@ describe("ETHPurchaser", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes(
-        "Message value must be greater than or equal to the total buy price"
-      ),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Message value must be greater than or equal to the total buy price"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 });

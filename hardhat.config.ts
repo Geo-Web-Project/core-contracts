@@ -2,8 +2,10 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
+ import { task } from "hardhat/config";
+ import "@nomiclabs/hardhat-waffle";
+
 require("@openzeppelin/hardhat-upgrades");
-require("@nomiclabs/hardhat-waffle");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
 require("./tasks/Accountant");
@@ -16,8 +18,8 @@ require("./tasks/SimpleETHClaimer");
 task(
   "deploy",
   "Deploy the set of contracts with default configuration"
-).setAction(async () => {
-  const accounts = await ethers.getSigners();
+).setAction(async (args, hre) => {
+  const accounts = await hre.ethers.getSigners();
 
   console.log("Deploying all contracts...");
   const parcel = await hre.run("deploy:parcel");
@@ -57,7 +59,7 @@ task(
 });
 
 task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
-  async () => {
+  async (args, hre) => {
     await hre.run("deploy:parcel");
     await hre.run("deploy:accountant");
     await hre.run("deploy:license");
@@ -70,16 +72,16 @@ task("roles:set-default", "Set default roles on all deployed contracts")
   .addParam("accountant", "Address of Accountant")
   .addParam("collector", "Address of CollectorSuperApp")
   .addParam("parcel", "Address of GeoWebParcel")
-  .setAction(async ({ license, accountant, collector, parcel }) => {
-    const licenseContract = await ethers.getContractAt(
+  .setAction(async ({ license, accountant, collector, parcel }, hre) => {
+    const licenseContract = await hre.ethers.getContractAt(
       "ERC721License",
       license
     );
-    const collectorContract = await ethers.getContractAt(
+    const collectorContract = await hre.ethers.getContractAt(
       "ETHExpirationCollector",
       collector
     );
-    const parcelContract = await ethers.getContractAt("GeoWebParcel", parcel);
+    const parcelContract = await hre.ethers.getContractAt("GeoWebParcel", parcel);
 
     await hre.run("roles:accountant", {
       accountant: accountant,
@@ -109,9 +111,6 @@ task("roles:set-default", "Set default roles on all deployed contracts")
 
 module.exports = {
   networks: {
-    hardhat: {
-      gasPrice: 0,
-    },
     local: {
       gasPrice: 1000000000,
       url: `http://localhost:8545`,
