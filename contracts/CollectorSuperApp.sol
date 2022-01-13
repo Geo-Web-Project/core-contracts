@@ -460,7 +460,39 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Decrease Flow(app -> receiver)
-        _decreaseAppToReceiverFlow(totalContributionRate[user]);
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            receiver
+        );
+
+        if (totalContributionRate[user] < flowRate) {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    flowRate - totalContributionRate[user],
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        } else {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    receiver,
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        }
 
         totalContributionRate[user] = 0;
     }
