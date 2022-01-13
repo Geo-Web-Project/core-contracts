@@ -111,6 +111,10 @@ task("roles:set-default", "Set default roles on all deployed contracts")
 
 module.exports = {
   networks: {
+    hardhat: {
+      gasPrice: 0,
+      initialBaseFeePerGas: 0
+    },
     local: {
       gasPrice: 1000000000,
       url: `http://localhost:8545`,
