@@ -251,7 +251,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 ),
                 "0x"
             );
-        } else {
+        } else if (flowRate > 0) {
             host.callAgreement(
                 cfa,
                 abi.encodeWithSelector(
@@ -318,7 +318,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 ),
                 "0x"
             );
-        } else {
+        } else if (flowRate > 0) {
             host.callAgreement(
                 cfa,
                 abi.encodeWithSelector(
@@ -362,7 +362,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 "0x",
                 newCtx
             );
-        } else {
+        } else if (flowRate > 0) {
             (newCtx, ) = host.callAgreementWithContext(
                 cfa,
                 abi.encodeWithSelector(
@@ -467,6 +467,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (totalContributionRate[user] < flowRate) {
+            // Decrease flow
             (newCtx, ) = host.callAgreementWithContext(
                 cfa,
                 abi.encodeWithSelector(
@@ -479,7 +480,8 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 "0x",
                 newCtx
             );
-        } else {
+        } else if (flowRate > 0) {
+            // Delete flow if it exists
             (newCtx, ) = host.callAgreementWithContext(
                 cfa,
                 abi.encodeWithSelector(
