@@ -443,16 +443,19 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             return _ctx;
 
         newCtx = _ctx;
-        (address sender, address _receiver) = abi.decode(
+        (address flowSender, address flowReceiver) = abi.decode(
             _agreementData,
             (address, address)
         );
 
-        if (sender == address(this)) {
+        address user;
+
+        if (flowSender == address(this)) {
             // Recreate Flow(app -> user)
+            user = flowReceiver;
             (, int96 flowRate, , ) = cfa.getFlow(
                 acceptedToken,
-                receiver,
+                user,
                 address(this)
             );
 
@@ -461,8 +464,8 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 abi.encodeWithSelector(
                     cfa.createFlow.selector,
                     acceptedToken,
-                    sender,
-                    flowRate - totalContributionRate[_receiver],
+                    user,
+                    flowRate - totalContributionRate[user],
                     new bytes(0)
                 ),
                 "0x",
@@ -470,13 +473,14 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             );
         } else {
             // Delete Flow(app -> user)
+            user = flowSender;
             (newCtx, ) = host.callAgreementWithContext(
                 cfa,
                 abi.encodeWithSelector(
                     cfa.deleteFlow.selector,
                     acceptedToken,
                     address(this),
-                    sender,
+                    user,
                     new bytes(0)
                 ),
                 "0x",
@@ -490,7 +494,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 receiver
             );
 
-            if (totalContributionRate[sender] < flowRate) {
+            if (totalContributionRate[user] < flowRate) {
                 // Decrease flow
                 (newCtx, ) = host.callAgreementWithContext(
                     cfa,
@@ -498,7 +502,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                         cfa.updateFlow.selector,
                         acceptedToken,
                         receiver,
-                        flowRate - totalContributionRate[sender],
+                        flowRate - totalContributionRate[user],
                         new bytes(0)
                     ),
                     "0x",
@@ -520,7 +524,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 );
             }
 
-            totalContributionRate[sender] = 0;
+            totalContributionRate[user] = 0;
         }
     }
 
