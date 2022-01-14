@@ -15,7 +15,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     ISuperfluid private host; // host
     IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
     ISuperToken private acceptedToken; // accepted token
-    address private receiver;
+    address public receiver;
 
     /// @notice Stores the total contribution rate of all licenses for a particular user
     mapping(address => int96) public totalContributionRate;

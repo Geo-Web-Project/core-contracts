@@ -4,7 +4,8 @@
 
  import { task } from "hardhat/config";
  import "@nomiclabs/hardhat-waffle";
-
+ import "@nomiclabs/hardhat-web3";
+ 
 require("@openzeppelin/hardhat-upgrades");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
