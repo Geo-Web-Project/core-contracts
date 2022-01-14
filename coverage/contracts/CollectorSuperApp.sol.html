@@ -1,0 +1,1664 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/CollectorSuperApp.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> CollectorSuperApp.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">46.15% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>36/78</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">28% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>14/50</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">42.86% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>9/21</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">48.68% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>37/76</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+&nbsp;
+import {ISuperfluid, ISuperToken, ISuperApp, ISuperAgreement, ContextDefinitions, SuperAppDefinitions} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
+import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
+import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+&nbsp;
+contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
+    bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
+        keccak256("MODIFY_CONTRIBUTION_ROLE");
+    bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
+&nbsp;
+    ISuperfluid private host; // host
+    IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
+    ISuperToken private acceptedToken; // accepted token
+    address public receiver;
+&nbsp;
+    /// @notice Stores the total contribution rate of all licenses for a particular user
+    mapping(address =&gt; int96) public totalContributionRate;
+&nbsp;
+    /// @notice Stores the locked contribution rate of all pending bids for a particular user
+    mapping(address =&gt; int96) public lockedContributionRate;
+&nbsp;
+    constructor(
+        ISuperfluid _host,
+        IConstantFlowAgreementV1 _cfa,
+        ISuperToken _acceptedToken,
+        address _receiver
+    ) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(address(_host) != address(0), "host is zero address");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(address(_cfa) != address(0), "cfa is zero address");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            address(_acceptedToken) != address(0),
+            "acceptedToken is zero address"
+        );
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(address(_receiver) != address(0), "receiver is zero address");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(!_host.isApp(ISuperApp(_receiver)), "receiver is an app");
+&nbsp;
+        host = _host;
+        cfa = _cfa;
+        acceptedToken = _acceptedToken;
+        receiver = _receiver;
+&nbsp;
+        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
+            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
+&nbsp;
+        host.registerApp(configWord);
+&nbsp;
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(PAUSE_ROLE, msg.sender);
+    }
+&nbsp;
+    /// @dev Calculate the available contribution for a user.
+<span class="fstat-no" title="function not covered" >    function calculateAvailableContribution(address user)</span>
+        public
+        view
+        returns (int96)
+    {
+<span class="cstat-no" title="statement not covered" >        (, int96 flowRate, , ) = cfa.getFlow(</span>
+            acceptedToken,
+            user,
+            address(this)
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return</span>
+            flowRate -
+            totalContributionRate[user] -
+            lockedContributionRate[user];
+    }
+&nbsp;
+    /// @dev Locks contribution without starting. Goes against available contribution.
+<span class="fstat-no" title="function not covered" >    function lockContributionRate(address user, int96 amount)</span>
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            calculateAvailableContribution(user) &gt;= amount,
+            "CollectorSuperApp: Not enough contribution available to lock"
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        lockedContributionRate[user] += amount</span>;
+    }
+&nbsp;
+    /// @dev Unlocks contribution that was previously locked.
+<span class="fstat-no" title="function not covered" >    function unlockContributionRate(address user, int96 amount)</span>
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            lockedContributionRate[user] &gt;= amount,
+            "CollectorSuperApp: Not enough contribution available to unlock"
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        lockedContributionRate[user] -= amount</span>;
+    }
+&nbsp;
+    /// @dev Increase contribution rate of user
+<span class="fstat-no" title="function not covered" >    function increaseContributionRate(address user, int96 amount)</span>
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            calculateAvailableContribution(user) &gt;= amount,
+            "CollectorSuperApp: Not enough contribution available to contribute"
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        totalContributionRate[user] += amount</span>;
+&nbsp;
+        // Update Flow(app -&gt; user)
+<span class="cstat-no" title="statement not covered" >        _decreaseAppToUserFlow(user, amount)</span>;
+&nbsp;
+        // Update Flow(app -&gt; receiver)
+<span class="cstat-no" title="statement not covered" >        _increaseAppToReceiverFlow(amount)</span>;
+    }
+&nbsp;
+    /// @dev Decrease contribution rate of user
+<span class="fstat-no" title="function not covered" >    function decreaseContributionRate(address user, int96 amount)</span>
+        external
+        onlyRole(MODIFY_CONTRIBUTION_ROLE)
+    {
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            totalContributionRate[user] &gt;= amount,
+            "CollectorSuperApp: Not enough contribution available to decrease"
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        totalContributionRate[user] -= amount</span>;
+&nbsp;
+        // Update Flow(app -&gt; user)
+<span class="cstat-no" title="statement not covered" >        _increaseAppToUserFlow(user, amount)</span>;
+&nbsp;
+        // Update Flow(app -&gt; receiver)
+<span class="cstat-no" title="statement not covered" >        _decreaseAppToReceiverFlow(amount)</span>;
+    }
+&nbsp;
+    /**
+     * @notice Admin can update the receiver.
+     * @param _receiver The new receiver of contributions
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setReceiver(address _receiver)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            receiver
+        );
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (flowRate &gt; 0) {
+            // Create flow to new receiver
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    _receiver,
+                    flowRate,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+&nbsp;
+            // Delete flow to old receiver
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    receiver,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+&nbsp;
+        receiver = _receiver;
+    }
+&nbsp;
+    /**
+     * @notice Pause the contract. Pauses payments and setting contribution rates.
+     * @custom:requires PAUSE_ROLE
+     */
+<span class="fstat-no" title="function not covered" >    function pause() external onlyRole(PAUSE_ROLE) {</span>
+<span class="cstat-no" title="statement not covered" >        _pause()</span>;
+    }
+&nbsp;
+    /**
+     * @notice Unpause the contract.
+     * @custom:requires PAUSE_ROLE
+     */
+<span class="fstat-no" title="function not covered" >    function unpause() external onlyRole(PAUSE_ROLE) {</span>
+<span class="cstat-no" title="statement not covered" >        _unpause()</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _increaseAppToReceiverFlow(int96 amount) private {</span>
+<span class="cstat-no" title="statement not covered" >        (, int96 flowRate, , ) = cfa.getFlow(</span>
+            acceptedToken,
+            address(this),
+            receiver
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (flowRate &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    flowRate + amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _decreaseAppToReceiverFlow(int96 amount) private {</span>
+<span class="cstat-no" title="statement not covered" >        (, int96 flowRate, , ) = cfa.getFlow(</span>
+            acceptedToken,
+            address(this),
+            receiver
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (amount &lt; flowRate) {</span>
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    flowRate - amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (flowRate &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    receiver,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _increaseAppToUserFlow(address user, int96 amount) private {</span>
+<span class="cstat-no" title="statement not covered" >        (, int96 flowRate, , ) = cfa.getFlow(</span>
+            acceptedToken,
+            address(this),
+            user
+        );
+<span class="cstat-no" title="statement not covered" >        if (flowRate &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    user,
+                    flowRate + amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    user,
+                    amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _decreaseAppToUserFlow(address user, int96 amount) private {</span>
+<span class="cstat-no" title="statement not covered" >        (, int96 flowRate, , ) = cfa.getFlow(</span>
+            acceptedToken,
+            address(this),
+            user
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (amount &lt; flowRate) {</span>
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    user,
+                    flowRate - amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (flowRate &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            host.callAgreement(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    user,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+    }
+&nbsp;
+    /// @dev Update back flow to user
+    function _updateBackflow(
+        bytes calldata ctx,
+        bytes32 agreementId,
+        bytes calldata _agreementData,
+        bytes4 selector
+    ) private returns (bytes memory newCtx) {
+        newCtx = ctx;
+        (address user, ) = abi.decode(_agreementData, (address, address));
+        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, agreementId);
+&nbsp;
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            flowRate &gt;= totalContributionRate[user],
+            "CollectorSuperApp: Flow cannot be less than totalContributionRate[user]"
+        );
+&nbsp;
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (totalContributionRate[user] &lt; flowRate) {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    selector,
+                    acceptedToken,
+                    user,
+                    flowRate - totalContributionRate[user],
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (flowRate &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            (newCtx, ) = host.callAgreementWithContext(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    user,
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        }
+    }
+&nbsp;
+    /**************************************************************************
+     * SuperApp callbacks
+     *************************************************************************/
+&nbsp;
+    function afterAgreementCreated(
+        ISuperToken _superToken,
+        address _agreementClass,
+        bytes32 _agreementId,
+        bytes calldata _agreementData,
+        bytes calldata, // _cbdata,
+        bytes calldata _ctx
+    )
+        external
+        override
+        onlyExpected(_superToken, _agreementClass)
+        onlyHost
+        whenNotPaused
+        returns (bytes memory newCtx)
+    {
+        return
+            _updateBackflow(
+                _ctx,
+                _agreementId,
+                _agreementData,
+                cfa.createFlow.selector
+            );
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function afterAgreementUpdated(</span>
+        ISuperToken _superToken,
+        address _agreementClass,
+        bytes32 _agreementId,
+        bytes calldata _agreementData,
+        bytes calldata, //_cbdata,
+        bytes calldata _ctx
+    )
+        external
+        override
+        onlyExpected(_superToken, _agreementClass)
+        onlyHost
+        whenNotPaused
+        returns (bytes memory newCtx)
+    {
+<span class="cstat-no" title="statement not covered" >        return</span>
+            _updateBackflow(
+                _ctx,
+                _agreementId,
+                _agreementData,
+                cfa.updateFlow.selector
+            );
+    }
+&nbsp;
+    function afterAgreementTerminated(
+        ISuperToken _superToken,
+        address _agreementClass,
+        bytes32, //_agreementId,
+        bytes calldata _agreementData,
+        bytes calldata, //_cbdata,
+        bytes calldata _ctx
+    ) external override onlyHost returns (bytes memory newCtx) {
+        // According to the app basic law, we should never revert in a termination callback
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!_isSameToken(_superToken) || !_isCFAv1(_agreementClass))
+<span class="cstat-no" title="statement not covered" >            return _ctx;</span>
+&nbsp;
+        newCtx = _ctx;
+        (address user, ) = abi.decode(_agreementData, (address, address));
+&nbsp;
+        // Delete Flow(app -&gt; user)
+        (newCtx, ) = host.callAgreementWithContext(
+            cfa,
+            abi.encodeWithSelector(
+                cfa.deleteFlow.selector,
+                acceptedToken,
+                address(this),
+                user,
+                new bytes(0)
+            ),
+            "0x",
+            newCtx
+        );
+&nbsp;
+        // Decrease Flow(app -&gt; receiver)
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            receiver
+        );
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (totalContributionRate[user] &lt; flowRate) {
+            // Decrease flow
+<span class="cstat-no" title="statement not covered" >            (newCtx, ) = host.callAgreementWithContext(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    flowRate - totalContributionRate[user],
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        } else <span class="missing-if-branch" title="if path not taken" >I</span>if (flowRate &gt; 0) {
+            // Delete flow if it exists
+<span class="cstat-no" title="statement not covered" >            (newCtx, ) = host.callAgreementWithContext(</span>
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    receiver,
+                    new bytes(0)
+                ),
+                "0x",
+                newCtx
+            );
+        }
+&nbsp;
+        totalContributionRate[user] = 0;
+    }
+&nbsp;
+    function _isSameToken(ISuperToken superToken) private view returns (bool) {
+        return address(superToken) == address(acceptedToken);
+    }
+&nbsp;
+    function _isCFAv1(address agreementClass) private view returns (bool) {
+        return
+            ISuperAgreement(agreementClass).agreementType() ==
+            keccak256(
+                "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+            );
+    }
+&nbsp;
+    modifier onlyHost() {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            msg.sender == address(host),
+            "CollectorSuperApp: support only one host"
+        );
+        _;
+    }
+&nbsp;
+    modifier onlyExpected(ISuperToken superToken, address agreementClass) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            _isSameToken(superToken),
+            "CollectorSuperApp: not accepted token"
+        );
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            _isCFAv1(agreementClass),
+            "CollectorSuperApp: only CFAv1 supported"
+        );
+        _;
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Jan 13 2022 18:07:02 GMT-0800 (Pacific Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
