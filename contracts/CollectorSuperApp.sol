@@ -433,7 +433,7 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     function afterAgreementTerminated(
         ISuperToken _superToken,
         address _agreementClass,
-        bytes32, //_agreementId,
+        bytes32, // _agreementId,
         bytes calldata _agreementData,
         bytes calldata, //_cbdata,
         bytes calldata _ctx
@@ -443,60 +443,85 @@ contract CollectorSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             return _ctx;
 
         newCtx = _ctx;
-        (address user, ) = abi.decode(_agreementData, (address, address));
+        (address sender, address _receiver) = abi.decode(
+            _agreementData,
+            (address, address)
+        );
 
-        // Delete Flow(app -> user)
-        (newCtx, ) = host.callAgreementWithContext(
-            cfa,
-            abi.encodeWithSelector(
-                cfa.deleteFlow.selector,
+        if (sender == address(this)) {
+            // Recreate Flow(app -> user)
+            (, int96 flowRate, , ) = cfa.getFlow(
                 acceptedToken,
-                address(this),
-                user,
-                new bytes(0)
-            ),
-            "0x",
-            newCtx
-        );
+                receiver,
+                address(this)
+            );
 
-        // Decrease Flow(app -> receiver)
-        (, int96 flowRate, , ) = cfa.getFlow(
-            acceptedToken,
-            address(this),
-            receiver
-        );
-
-        if (totalContributionRate[user] < flowRate) {
-            // Decrease flow
             (newCtx, ) = host.callAgreementWithContext(
                 cfa,
                 abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
+                    cfa.createFlow.selector,
                     acceptedToken,
-                    receiver,
-                    flowRate - totalContributionRate[user],
+                    sender,
+                    flowRate - totalContributionRate[_receiver],
                     new bytes(0)
                 ),
                 "0x",
                 newCtx
             );
-        } else if (flowRate > 0) {
-            // Delete flow if it exists
+        } else {
+            // Delete Flow(app -> user)
             (newCtx, ) = host.callAgreementWithContext(
                 cfa,
                 abi.encodeWithSelector(
                     cfa.deleteFlow.selector,
                     acceptedToken,
                     address(this),
-                    receiver,
+                    sender,
                     new bytes(0)
                 ),
                 "0x",
                 newCtx
             );
-        }
 
-        totalContributionRate[user] = 0;
+            // Decrease Flow(app -> receiver)
+            (, int96 flowRate, , ) = cfa.getFlow(
+                acceptedToken,
+                address(this),
+                receiver
+            );
+
+            if (totalContributionRate[sender] < flowRate) {
+                // Decrease flow
+                (newCtx, ) = host.callAgreementWithContext(
+                    cfa,
+                    abi.encodeWithSelector(
+                        cfa.updateFlow.selector,
+                        acceptedToken,
+                        receiver,
+                        flowRate - totalContributionRate[sender],
+                        new bytes(0)
+                    ),
+                    "0x",
+                    newCtx
+                );
+            } else if (flowRate > 0) {
+                // Delete flow if it exists
+                (newCtx, ) = host.callAgreementWithContext(
+                    cfa,
+                    abi.encodeWithSelector(
+                        cfa.deleteFlow.selector,
+                        acceptedToken,
+                        address(this),
+                        receiver,
+                        new bytes(0)
+                    ),
+                    "0x",
+                    newCtx
+                );
+            }
+
+            totalContributionRate[sender] = 0;
+        }
     }
 
     function _isSameToken(ISuperToken superToken) private view returns (bool) {

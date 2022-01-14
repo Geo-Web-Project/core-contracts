@@ -131,6 +131,7 @@ describe("CollectorSuperApp", async () => {
     assert.equal(flowUserToApp.flowRate, "100", "Did not create backflow");
     assert.equal(flowAppToUser.flowRate, "100", "Did not create backflow");
     assert.equal(netFlow, "0", "Did not create backflow");
+    assert.equal(await superApp.totalContributionRate(user), "0", "Total contribution is not 0");
   })
 
   it("should delete Flow(app -> user) on termination of Flow(user -> app)", async () => {
@@ -206,5 +207,82 @@ describe("CollectorSuperApp", async () => {
     assert.equal(flowUserToApp.flowRate, "0", "Did not delete backflow");
     assert.equal(flowAppToUser.flowRate, "0", "Did not delete backflow");
     assert.equal(netFlow, "0", "Did not delete backflow");
+    assert.equal(await superApp.totalContributionRate(user), "0", "Total contribution is not 0");
+  })
+
+  it("should recreate Flow(app -> user) on termination of Flow(app -> user)", async () => {
+    await deploySuperToken(errorHandler, [":", "ETH"], {
+        web3,
+        from: accounts[0].address
+    });
+
+    const sf = new SuperfluidSDK.Framework({
+        web3,
+        version: "test",
+        tokens: ["ETH"],
+    });
+    await sf.initialize();
+
+    const ethersProvider = accounts[0].provider!;
+    const ethersjsSf = await Framework.create({
+        networkName: "custom",
+        dataMode: "WEB3_ONLY",
+        resolverAddress: sf.resolver.address,
+        protocolReleaseVersion: "test",
+        provider: ethersProvider
+    });
+
+    const superApp = await buildCollectorSuperApp({
+        host: sf.host.address,
+        cfa: sf.agreements.cfa.address,
+        token: sf.tokens.ETHx.address,
+        receiver: accounts[0].address
+    });
+
+    const user = accounts[1].address;
+    await sf.tokens.ETHx.upgradeByETH({
+        from: user,
+        value: ethers.utils.parseEther("10")
+    });
+
+    const createFlowOperation = await ethersjsSf.cfaV1.createFlow({
+        sender: user, 
+        receiver: superApp.address,
+        flowRate: "100",
+        superToken: sf.tokens.ETHx.address
+    });
+    const txnResponse = await createFlowOperation.exec(accounts[1]);
+    await txnResponse.wait();
+
+    const deleteFlowOperation = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address, 
+        receiver: user,
+        superToken: sf.tokens.ETHx.address
+    });
+    const txnResponse1 = await deleteFlowOperation.exec(accounts[1]);
+    await txnResponse1.wait();
+
+    const flowUserToApp = await ethersjsSf.cfaV1.getFlow({
+        sender: user, 
+        receiver: superApp.address,
+        superToken: sf.tokens.ETHx.address,
+        providerOrSigner: accounts[1]
+    });
+    const flowAppToUser = await ethersjsSf.cfaV1.getFlow({
+        sender: superApp.address,
+        receiver: user,
+        superToken: sf.tokens.ETHx.address,
+        providerOrSigner: accounts[1]
+    });
+    const netFlow = await ethersjsSf.cfaV1.getNetFlow({
+        superToken: sf.tokens.ETHx.address,
+        account: user,
+        providerOrSigner: accounts[1]
+    });
+      
+    assert.equal(flowUserToApp.flowRate, "100", "Did not keep inflow");
+    assert.equal(flowAppToUser.flowRate, "100", "Did not recreate backflow");
+    assert.equal(netFlow, "0", "Netflow is not 0");
+    assert.equal(await superApp.totalContributionRate(user), "0", "Total contribution is not 0");
   })
 })
