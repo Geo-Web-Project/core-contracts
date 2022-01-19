@@ -2,10 +2,12 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
- import { task } from "hardhat/config";
- import "@nomiclabs/hardhat-waffle";
- import "@nomiclabs/hardhat-web3";
- 
+//  require("@matterlabs/hardhat-zksync-deploy");
+//  require("@matterlabs/hardhat-zksync-solc");
+import { task, types } from "hardhat/config";
+import "@nomiclabs/hardhat-waffle";
+import { ethers } from "ethers";
+import "@nomiclabs/hardhat-web3";
 require("@openzeppelin/hardhat-upgrades");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
@@ -15,17 +17,18 @@ require("./tasks/ERC721License");
 require("./tasks/CollectorSuperApp");
 require("./tasks/ETHPurchaser");
 require("./tasks/SimpleETHClaimer");
+require("./tasks/estimate_minting_gas");
 
 task(
   "deploy",
   "Deploy the set of contracts with default configuration"
 ).setAction(async (args, hre) => {
-  const accounts = await hre.ethers.getSigners();
-
   console.log("Deploying all contracts...");
   const parcel = await hre.run("deploy:parcel");
   const accountant = await hre.run("deploy:accountant");
   const license = await hre.run("deploy:license");
+
+  const accounts = await hre.ethers.getSigners();
 
   // CollectorSuperApp default config
   const collector = await hre.run("deploy:collector", {
@@ -69,46 +72,56 @@ task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
 );
 
 task("roles:set-default", "Set default roles on all deployed contracts")
-  .addParam("license", "Address of ERC721 License used to find owners")
-  .addParam("accountant", "Address of Accountant")
-  .addParam("collector", "Address of CollectorSuperApp")
-  .addParam("parcel", "Address of GeoWebParcel")
-  .setAction(async ({ license, accountant, collector, parcel }, hre) => {
-    const licenseContract = await hre.ethers.getContractAt(
-      "ERC721License",
-      license
-    );
-    const collectorContract = await hre.ethers.getContractAt(
-      "ETHExpirationCollector",
-      collector
-    );
-    const parcelContract = await hre.ethers.getContractAt("GeoWebParcel", parcel);
+  .addOptionalParam("license", "ERC721 License used to find owners", undefined, types.json)
+  .addOptionalParam("accountant", "Accountant", undefined, types.json)
+  .addOptionalParam("collector", "ETHExpirationCollector", undefined, types.json)
+  .addOptionalParam("parcel", "GeoWebParcel", undefined, types.json)
+  .addOptionalParam("purchaser", "ETHPurchaser", undefined, types.json)
+  .addOptionalParam("claimer", "SimpleETHClaimer", undefined, types.json)
+  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
+  .addOptionalParam("accountantAddress", "Address of Accountant", undefined, types.string)
+  .addOptionalParam("collectorAddress", "Address of ETHExpirationCollector", undefined, types.string)
+  .addOptionalParam("parcelAddress", "Address of GeoWebParcel", undefined, types.string)
+  .addOptionalParam("purchaserAddress", "Address of ETHPurchaser", undefined, types.string)
+  .addOptionalParam("claimerAddress", "Address of SimpleETHClaimer", undefined, types.string)
+  .setAction(
+    async ({ license, accountant, collector, parcel, purchaser, claimer, licenseAddress, accountantAddress, collectorAddress, parcelAddress, purchaserAddress, claimerAddress }: { license?: ethers.Contract, accountant?: ethers.Contract, collector?: ethers.Contract, parcel?: ethers.Contract, purchaser?: ethers.Contract, claimer?: ethers.Contract, licenseAddress?: string, accountantAddress?: string, collectorAddress?: string, parcelAddress?: string, purchaserAddress?: string, claimerAddress?: string }, hre) => {
+      const licenseContract = licenseAddress ? await hre.ethers.getContractAt(
+        "ERC721License",
+        licenseAddress
+      ): license!;
+      const collectorContract = collectorAddress ? await hre.ethers.getContractAt(
+        "ETHExpirationCollector",
+        collectorAddress
+      ): collector!;
+      const parcelContract = parcelAddress ? await hre.ethers.getContractAt("GeoWebParcel", parcelAddress) : parcel!;
 
-    await hre.run("roles:accountant", {
-      accountant: accountant,
-      collector: collector,
-    });
+      await hre.run("roles:accountant", {
+        accountant: accountant,
+        collectorAddress: collectorAddress ?? collector!.address,
+      });
 
-    // // ERC721License roles
-    // const res2 = await licenseContract.grantRole(
-    //   await licenseContract.MINT_ROLE(),
-    //   claimer
-    // );
-    // await res2.wait();
+      // // ERC721License roles
+      // const res2 = await licenseContract.grantRole(
+      //   await licenseContract.MINT_ROLE(),
+      //   claimerAddress ?? claimer!.address
+      // );
+      // await res2.wait();
 
-    // const res3 = await licenseContract.grantRole(
-    //   await licenseContract.OPERATOR_ROLE(),
-    //   purchaser
-    // );
-    // await res3.wait();
+      // const res3 = await licenseContract.grantRole(
+      //   await licenseContract.OPERATOR_ROLE(),
+      //   purchaserAddress ?? purchaser!.address
+      // );
+      // await res3.wait();
 
-    // // GeoWebParcel roles
-    // const res6 = await parcelContract.grantRole(
-    //   await parcelContract.BUILD_ROLE(),
-    //   claimer
-    // );
-    // await res6.wait();
-  });
+      // // GeoWebParcel roles
+      // const res6 = await parcelContract.grantRole(
+      //   await parcelContract.BUILD_ROLE(),
+      //   claimerAddress ?? claimer!.address
+      // );
+      // await res6.wait();
+    }
+  );
 
 module.exports = {
   networks: {
@@ -150,6 +163,22 @@ module.exports = {
       gasPrice: 15000000,
       ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
     },
+  },
+  zksolc: {
+    version: "0.1.0",
+    compilerSource: "docker",
+    settings: {
+      optimizer: {
+        enabled: true,
+      },
+      experimental: {
+        dockerImage: "zksyncrobot/test-build",
+      },
+    },
+  },
+  zkSyncDeploy: {
+    zkSyncNetwork: process.env.ZKSYNC_NETWORK,
+    ethNetwork: "rinkeby",
   },
   solidity: {
     version: "0.8.4",

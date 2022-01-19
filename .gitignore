@@ -11,3 +11,6 @@ cache-ovm/
 build/
 deployments/
 typechain/
+
+# zkSync
+contracts/tmp
