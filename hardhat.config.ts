@@ -16,6 +16,7 @@ require("./tasks/ERC721License");
 require("./tasks/ETHExpirationCollector");
 require("./tasks/ETHPurchaser");
 require("./tasks/SimpleETHClaimer");
+require("./tasks/estimate_minting_gas");
 
 task(
   "deploy",

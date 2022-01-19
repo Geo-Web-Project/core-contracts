@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
 import { task, types } from "hardhat/config";
-import { Provider, Wallet } from "zksync-web3";
 
 function perYearToPerSecondRate(annualRate: number) {
   return {
