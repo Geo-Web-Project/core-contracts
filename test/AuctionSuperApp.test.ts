@@ -1,4 +1,5 @@
-import { assert } from "chai";
+import { expect } from 'chai';
+import { loadFixture, deployContract } from 'ethereum-waffle';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, web3 } from "hardhat";
 import { Framework } from "@superfluid-finance/sdk-core";

@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.7.6;
 
 import "./ETHExpirationCollector.sol";
 import "./ERC721License.sol";
 import "./Accountant.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/security/PullPayment.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/payment/PullPayment.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title A smart contract that enables the sale and transfer of always-for-sale licenses in ETH.
-contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
+contract ETHPurchaser is AccessControl, Pausable, PullPayment {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     /// @notice ETHExpirationCollector
@@ -36,10 +37,25 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
         _setupRole(PAUSE_ROLE, msg.sender);
     }
 
+    modifier onlyRole(bytes32 role) {
+        if (!hasRole(role, _msgSender())) {
+            revert(
+                string(
+                    abi.encodePacked(
+                        "AccessControl: account ",
+                        Strings.toHexString(uint160(_msgSender()), 20),
+                        " is missing role ",
+                        Strings.toHexString(uint256(role), 32)
+                    )
+                )
+            );
+        }
+        _;
+    }
+
     /**
      * @notice Admin can update the license.
      * @param licenseAddress The new license used to find owners
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setLicense(address licenseAddress)
         external
@@ -51,7 +67,6 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
     /**
      * @notice Admin can update the collector.
      * @param collectorAddress The new collector
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setCollector(address collectorAddress)
         external
@@ -63,7 +78,6 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
     /**
      * @notice Admin can update the accountant.
      * @param accountantAddress The new accountant
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setAccountant(address accountantAddress)
         external
@@ -75,7 +89,6 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
     /**
      * @notice Admin can update the dutch auction length.
      * @param _dutchAuctionLengthInSeconds The new dutch auction length
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setDutchAuctionLengthInSeconds(
         uint256 _dutchAuctionLengthInSeconds
@@ -85,7 +98,6 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
 
     /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
-     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -93,7 +105,6 @@ contract ETHPurchaser is AccessControlEnumerable, Pausable, PullPayment {
 
     /**
      * @notice Unpause the contract.
-     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.7.6;
 
 import {ISuperfluid, ISuperToken, ISuperApp, ISuperAgreement, ContextDefinitions, SuperAppDefinitions} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
+contract AuctionSuperApp is SuperAppBase, AccessControl, Pausable {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     ISuperfluid private host; // host
@@ -46,10 +47,25 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         _setupRole(PAUSE_ROLE, msg.sender);
     }
 
+    modifier onlyRole(bytes32 role) {
+        if (!hasRole(role, _msgSender())) {
+            revert(
+                string(
+                    abi.encodePacked(
+                        "AccessControl: account ",
+                        Strings.toHexString(uint160(_msgSender()), 20),
+                        " is missing role ",
+                        Strings.toHexString(uint256(role), 32)
+                    )
+                )
+            );
+        }
+        _;
+    }
+
     /**
      * @notice Admin can update the receiver.
      * @param _receiver The new receiver of contributions
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setReceiver(address _receiver)
         external
@@ -94,7 +110,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
     /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
-     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -102,7 +117,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
     /**
      * @notice Unpause the contract.
-     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();

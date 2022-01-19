@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/security/PullPayment.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/payment/PullPayment.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/ILicenseValidator.sol";
 import "./Accountant.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title A smart contract that collects contributions in ETH and stores expiration timestamps to determine balances.
 contract ETHExpirationCollector is
-    AccessControlEnumerable,
+    AccessControl,
     ILicenseValidator,
     PullPayment,
     Pausable
@@ -50,10 +51,25 @@ contract ETHExpirationCollector is
         _setupRole(PAUSE_ROLE, msg.sender);
     }
 
+    modifier onlyRole(bytes32 role) {
+        if (!hasRole(role, _msgSender())) {
+            revert(
+                string(
+                    abi.encodePacked(
+                        "AccessControl: account ",
+                        Strings.toHexString(uint160(_msgSender()), 20),
+                        " is missing role ",
+                        Strings.toHexString(uint256(role), 32)
+                    )
+                )
+            );
+        }
+        _;
+    }
+
     /**
      * @notice Admin can update the minContributionRate.
      * @param _minContributionRate The new minimum contribute rate for a license
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setMinContributionRate(uint256 _minContributionRate)
         external
@@ -65,7 +81,6 @@ contract ETHExpirationCollector is
     /**
      * @notice Admin can update the minExpiration.
      * @param _minExpiration The new minimum expiration for a license
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setMinExpiration(uint256 _minExpiration)
         external
@@ -77,7 +92,6 @@ contract ETHExpirationCollector is
     /**
      * @notice Admin can update the maxExpiration.
      * @param _maxExpiration The new maximun expiration for a license
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setMaxExpiration(uint256 _maxExpiration)
         external
@@ -89,7 +103,6 @@ contract ETHExpirationCollector is
     /**
      * @notice Admin can update the license.
      * @param licenseAddress The new license used to find owners
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setLicense(address licenseAddress)
         external
@@ -101,7 +114,6 @@ contract ETHExpirationCollector is
     /**
      * @notice Admin can update the receiver.
      * @param _receiver The new receiver of contributions
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setReceiver(address _receiver)
         external
@@ -113,7 +125,6 @@ contract ETHExpirationCollector is
     /**
      * @notice Admin can update the accountant.
      * @param accountantAddress The new accountant
-     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setAccountant(address accountantAddress)
         external
@@ -124,7 +135,6 @@ contract ETHExpirationCollector is
 
     /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
-     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -132,7 +142,6 @@ contract ETHExpirationCollector is
 
     /**
      * @notice Unpause the contract.
-     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
@@ -158,7 +167,6 @@ contract ETHExpirationCollector is
      * @notice Set the contribution rate for a license and optionally make a payment
      * @param id The license to make a payment for
      * @param newContributionRate The new contribution rate for the license
-     * @custom:requires MODIFY_CONTRIBUTION_ROLE or sender is license owner
      */
     function setContributionRate(uint256 id, uint256 newContributionRate)
         external
@@ -188,7 +196,6 @@ contract ETHExpirationCollector is
      * @notice Migrate all funds from one license to another and clear the from license
      * @param fromId The license to migrate from and clear
      * @param toId The license to migrate to
-     * @custom:requires MODIFY_FUNDS_ROLE
      */
     function migrateFunds(
         uint256 fromId,
@@ -221,7 +228,6 @@ contract ETHExpirationCollector is
      * @param fromId The license to move from
      * @param toId The license to move to
      * @param amount The amount of funds to move
-     * @custom:requires MODIFY_FUNDS_ROLE
      */
     function moveFunds(
         uint256 fromId,

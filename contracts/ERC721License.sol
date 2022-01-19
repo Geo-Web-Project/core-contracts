@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ERC721License is ERC721, Pausable, AccessControl {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
@@ -16,9 +17,24 @@ contract ERC721License is ERC721, Pausable, AccessControl {
         _setupRole(PAUSE_ROLE, msg.sender);
     }
 
+    modifier onlyRole(bytes32 role) {
+        if (!hasRole(role, _msgSender())) {
+            revert(
+                string(
+                    abi.encodePacked(
+                        "AccessControl: account ",
+                        Strings.toHexString(uint160(_msgSender()), 20),
+                        " is missing role ",
+                        Strings.toHexString(uint256(role), 32)
+                    )
+                )
+            );
+        }
+        _;
+    }
+
     /**
      * @notice Pause the contract. Pauses transfers.
-     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -26,7 +42,6 @@ contract ERC721License is ERC721, Pausable, AccessControl {
 
     /**
      * @notice Unpause the contract.
-     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
