@@ -28,3 +28,40 @@ ETHPurchaser deployed to: 0xAEAd5f4FAb0cdA5f1E99a12830BF10fF8101c49C
 ETHExpirationCollector deployed to: 0x8C6e0d49ca34fd262B209509F32aE4eC8D04F9eE
 SimpleETHClaimer deployed to: 0x8a9c5ceeE10248e00F11c4F1da11349D6FAf6873
 ```
+
+### zkSync Rinkeby
+
+```
+Running deploy script
+GeoWebCoordinate deployed to: 0x8a9c5ceeE10248e00F11c4F1da11349D6FAf6873
+GeoWebCoordinatePath deployed to: 0x603C2c5554f7c8AAF33679B4318cbD31861979fe
+GeoWebParcel deployed to: 0x578182C07936c9acE19E4c740aA09fE1144C294B
+Accountant deployed to: 0x203a674352CE3f846930bAFb35D9FaC0e37D8107
+ERC721License deployed to: 0x00fF7FF89504267203a811C166b5b2CCb84fAf36
+ETHPurchaser deployed to: 0xEeD666E77524899C26a72961A9E590123f17bc9D
+ETHExpirationCollector deployed to: 0xD2b715895338978Af2580AE64c8C30e48275e559
+SimpleETHClaimer deployed to: 0xff7805b39bd84E130A2bBc06f48f5eFBCD92297C
+
+Setting default configuration...
+Successfully set Accountant fee.
+Successfully set Accountant validator.
+Successfully set ETHExpirationCollector minContributionRate.
+Successfully set ETHExpirationCollector minExpiration.
+Successfully set ETHExpirationCollector maxExpiration.
+Successfully set ETHExpirationCollector license.
+Successfully set ETHExpirationCollector receiver.
+Successfully set ETHExpirationCollector accountant.
+Successfully set ETHPurchaser dutchAuctionLengthInSeconds.
+Successfully set ETHPurchaser license.
+Successfully set ETHPurchaser accountant.
+Successfully set ETHPurchaser collector.
+Successfully set SimpleETHClaimer claimer.
+Successfully set SimpleETHClaimer license.
+Successfully set SimpleETHClaimer parcel.
+Successfully set SimpleETHClaimer collector.
+Default configuration set.
+
+Setting roles...
+Successfully granted Accountant.MODIFY_CONTRIBUTION_ROLE to ETHExpirationCollector
+Default roles set.
+```

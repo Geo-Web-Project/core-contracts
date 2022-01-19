@@ -4,8 +4,9 @@
 
  require("@matterlabs/hardhat-zksync-deploy");
  require("@matterlabs/hardhat-zksync-solc");
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
+import { ethers } from "ethers";
 require("@openzeppelin/hardhat-upgrades");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
@@ -99,59 +100,65 @@ task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
 );
 
 task("roles:set-default", "Set default roles on all deployed contracts")
-  .addParam("license", "Address of ERC721 License used to find owners")
-  .addParam("accountant", "Address of Accountant")
-  .addParam("collector", "Address of ETHExpirationCollector")
-  .addParam("parcel", "Address of GeoWebParcel")
-  .addParam("purchaser", "Address of ETHPurchaser")
-  .addParam("claimer", "Address of SimpleETHClaimer")
+  .addOptionalParam("license", "ERC721 License used to find owners", undefined, types.json)
+  .addOptionalParam("accountant", "Accountant", undefined, types.json)
+  .addOptionalParam("collector", "ETHExpirationCollector", undefined, types.json)
+  .addOptionalParam("parcel", "GeoWebParcel", undefined, types.json)
+  .addOptionalParam("purchaser", "ETHPurchaser", undefined, types.json)
+  .addOptionalParam("claimer", "SimpleETHClaimer", undefined, types.json)
+  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
+  .addOptionalParam("accountantAddress", "Address of Accountant", undefined, types.string)
+  .addOptionalParam("collectorAddress", "Address of ETHExpirationCollector", undefined, types.string)
+  .addOptionalParam("parcelAddress", "Address of GeoWebParcel", undefined, types.string)
+  .addOptionalParam("purchaserAddress", "Address of ETHPurchaser", undefined, types.string)
+  .addOptionalParam("claimerAddress", "Address of SimpleETHClaimer", undefined, types.string)
   .setAction(
-    async ({ license, accountant, collector, parcel, purchaser, claimer }, hre) => {
-      const licenseContract = await hre.ethers.getContractAt(
+    async ({ license, accountant, collector, parcel, purchaser, claimer, licenseAddress, accountantAddress, collectorAddress, parcelAddress, purchaserAddress, claimerAddress }: { license?: ethers.Contract, accountant?: ethers.Contract, collector?: ethers.Contract, parcel?: ethers.Contract, purchaser?: ethers.Contract, claimer?: ethers.Contract, licenseAddress?: string, accountantAddress?: string, collectorAddress?: string, parcelAddress?: string, purchaserAddress?: string, claimerAddress?: string }, hre) => {
+      const licenseContract = licenseAddress ? await hre.ethers.getContractAt(
         "ERC721License",
-        license
-      );
-      const collectorContract = await hre.ethers.getContractAt(
+        licenseAddress
+      ): license!;
+      const collectorContract = collectorAddress ? await hre.ethers.getContractAt(
         "ETHExpirationCollector",
-        collector
-      );
-      const parcelContract = await hre.ethers.getContractAt("GeoWebParcel", parcel);
+        collectorAddress
+      ): collector!;
+      const parcelContract = parcelAddress ? await hre.ethers.getContractAt("GeoWebParcel", parcelAddress) : parcel!;
 
       await hre.run("roles:accountant", {
         accountant: accountant,
-        collector: collector,
+        collectorAddress: collectorAddress ?? collector!.address,
       });
 
       // ERC721License roles
       const res2 = await licenseContract.grantRole(
         await licenseContract.MINT_ROLE(),
-        claimer
+        claimerAddress ?? claimer!.address
       );
       await res2.wait();
 
       const res3 = await licenseContract.grantRole(
         await licenseContract.OPERATOR_ROLE(),
-        purchaser
+        purchaserAddress ?? purchaser!.address
       );
       await res3.wait();
 
       // ETHExpirationCollector roles
       const res4 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        claimer
+        claimerAddress ?? claimer!.address
       );
       await res4.wait();
 
       const res5 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        purchaser
+        purchaserAddress ?? purchaser!.address
       );
       await res5.wait();
 
       // GeoWebParcel roles
       const res6 = await parcelContract.grantRole(
         await parcelContract.BUILD_ROLE(),
-        claimer
+        claimerAddress ?? claimer!.address
       );
       await res6.wait();
     }
@@ -159,9 +166,6 @@ task("roles:set-default", "Set default roles on all deployed contracts")
 
 module.exports = {
   networks: {
-    hardhat: {
-      gasPrice: 0,
-    },
     local: {
       gasPrice: 1000000000,
       url: `http://localhost:8545`,
