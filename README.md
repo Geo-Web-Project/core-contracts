@@ -31,6 +31,8 @@ SimpleETHClaimer deployed to: 0x8a9c5ceeE10248e00F11c4F1da11349D6FAf6873
 
 ### zkSync Rinkeby
 
+Commit:: 938d13fea942842978ae13150a41f75bbd952bc8
+
 ```
 Running deploy script
 GeoWebCoordinate deployed to: 0x8a9c5ceeE10248e00F11c4F1da11349D6FAf6873
