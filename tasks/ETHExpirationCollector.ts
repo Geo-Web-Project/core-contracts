@@ -1,6 +1,9 @@
+import { ethers } from "ethers";
+import { task, types } from "hardhat/config";
+
 task("deploy:collector", "Deploy the ETHExpirationCollector").setAction(
-  async () => {
-    const ETHExpirationCollector = await ethers.getContractFactory(
+  async (args, hre) => {
+    const ETHExpirationCollector = await hre.ethers.getContractFactory(
       "ETHExpirationCollector"
     );
     const collector = await ETHExpirationCollector.deploy();
@@ -12,8 +15,21 @@ task("deploy:collector", "Deploy the ETHExpirationCollector").setAction(
   }
 );
 
+task("deploy-zksync:collector", "Deploy the ETHExpirationCollector").setAction(
+  async ({deployer}, hre) => {
+    const ETHExpirationCollector = await deployer.loadArtifact("ETHExpirationCollector");
+    const collector = await deployer.deploy(ETHExpirationCollector, []);
+
+    console.log("ETHExpirationCollector deployed to:", collector.address);
+
+    return collector;
+  }
+);
+
+
 task("config:collector")
-  .addParam("contract", "Address of deployed ETHExpirationCollector contract")
+  .addOptionalParam("contract", "Deployed ETHExpirationCollector contract", undefined, types.json)
+  .addOptionalParam("contractAddress", "Address of deployed ETHExpirationCollector contract", undefined, types.string)
   .addOptionalParam(
     "minContributionRate",
     "Minimum contribution rate for a license"
@@ -30,35 +46,45 @@ task("config:collector")
     undefined,
     types.int
   )
-  .addOptionalParam("license", "Address of ERC721 License used to find owners")
-  .addOptionalParam("accountant", "Address of Accountant")
+  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners")
+  .addOptionalParam("accountantAddress", "Address of Accountant")
   .addOptionalParam("receiver", "Address of receiver of contributions")
   .setAction(
     async ({
       contract,
+      contractAddress,
       minContributionRate,
       minExpiration,
       maxExpiration,
-      license,
+      licenseAddress,
       receiver,
-      accountant,
-    }) => {
+      accountantAddress,
+    }: {
+      contract?: ethers.Contract,
+      contractAddress?: string,
+      minContributionRate?: string,
+      minExpiration?: number,
+      maxExpiration?: number,
+      licenseAddress?: string,
+      receiver?: string,
+      accountantAddress?: string,
+    }, hre) => {
       if (
         !minContributionRate &&
         !minExpiration &&
         !maxExpiration &&
-        !license &&
+        !licenseAddress &&
         !receiver &&
-        !accountant
+        !accountantAddress
       ) {
         console.log("Nothing to configure. See options");
         return;
       }
 
-      const collector = await ethers.getContractAt(
+      const collector = contractAddress ? await hre.ethers.getContractAt(
         "ETHExpirationCollector",
-        contract
-      );
+        contractAddress
+      ): contract!;
 
       if (minContributionRate) {
         const res = await collector.setMinContributionRate(minContributionRate);
@@ -80,8 +106,8 @@ task("config:collector")
         console.log("Successfully set ETHExpirationCollector maxExpiration.");
       }
 
-      if (license) {
-        const res = await collector.setLicense(license);
+      if (licenseAddress) {
+        const res = await collector.setLicense(licenseAddress);
         await res.wait();
         console.log("Successfully set ETHExpirationCollector license.");
       }
@@ -92,8 +118,8 @@ task("config:collector")
         console.log("Successfully set ETHExpirationCollector receiver.");
       }
 
-      if (accountant) {
-        const res = await collector.setAccountant(accountant);
+      if (accountantAddress) {
+        const res = await collector.setAccountant(accountantAddress);
         await res.wait();
         console.log("Successfully set ETHExpirationCollector accountant.");
       }

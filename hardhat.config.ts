@@ -2,8 +2,12 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
+ require("@matterlabs/hardhat-zksync-deploy");
+ require("@matterlabs/hardhat-zksync-solc");
+import { task, types } from "hardhat/config";
+import "@nomiclabs/hardhat-waffle";
+import { ethers } from "ethers";
 require("@openzeppelin/hardhat-upgrades");
-require("@nomiclabs/hardhat-waffle");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
 require("./tasks/Accountant");
@@ -12,11 +16,12 @@ require("./tasks/ERC721License");
 require("./tasks/ETHExpirationCollector");
 require("./tasks/ETHPurchaser");
 require("./tasks/SimpleETHClaimer");
+require("./tasks/estimate_minting_gas");
 
 task(
   "deploy",
   "Deploy the set of contracts with default configuration"
-).setAction(async () => {
+).setAction(async (args, hre) => {
   console.log("Deploying all contracts...");
   const parcel = await hre.run("deploy:parcel");
   const accountant = await hre.run("deploy:accountant");
@@ -28,7 +33,7 @@ task(
 
   console.log("\nSetting default configuration...");
 
-  const accounts = await ethers.getSigners();
+  const accounts = await hre.ethers.getSigners();
 
   // Accountant default config
   await hre.run("config:accountant", {
@@ -40,7 +45,7 @@ task(
   // ETHExpirationCollector default config
   await hre.run("config:collector", {
     contract: collector,
-    minContributionRate: ethers.utils
+    minContributionRate: hre.ethers.utils
       .parseEther("0.01")
       .div(60 * 60 * 24 * 365)
       .toString(),
@@ -85,7 +90,7 @@ task(
 });
 
 task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
-  async () => {
+  async (args, hre) => {
     await hre.run("deploy:parcel");
     await hre.run("deploy:accountant");
     await hre.run("deploy:license");
@@ -96,59 +101,65 @@ task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
 );
 
 task("roles:set-default", "Set default roles on all deployed contracts")
-  .addParam("license", "Address of ERC721 License used to find owners")
-  .addParam("accountant", "Address of Accountant")
-  .addParam("collector", "Address of ETHExpirationCollector")
-  .addParam("parcel", "Address of GeoWebParcel")
-  .addParam("purchaser", "Address of ETHPurchaser")
-  .addParam("claimer", "Address of SimpleETHClaimer")
+  .addOptionalParam("license", "ERC721 License used to find owners", undefined, types.json)
+  .addOptionalParam("accountant", "Accountant", undefined, types.json)
+  .addOptionalParam("collector", "ETHExpirationCollector", undefined, types.json)
+  .addOptionalParam("parcel", "GeoWebParcel", undefined, types.json)
+  .addOptionalParam("purchaser", "ETHPurchaser", undefined, types.json)
+  .addOptionalParam("claimer", "SimpleETHClaimer", undefined, types.json)
+  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
+  .addOptionalParam("accountantAddress", "Address of Accountant", undefined, types.string)
+  .addOptionalParam("collectorAddress", "Address of ETHExpirationCollector", undefined, types.string)
+  .addOptionalParam("parcelAddress", "Address of GeoWebParcel", undefined, types.string)
+  .addOptionalParam("purchaserAddress", "Address of ETHPurchaser", undefined, types.string)
+  .addOptionalParam("claimerAddress", "Address of SimpleETHClaimer", undefined, types.string)
   .setAction(
-    async ({ license, accountant, collector, parcel, purchaser, claimer }) => {
-      const licenseContract = await ethers.getContractAt(
+    async ({ license, accountant, collector, parcel, purchaser, claimer, licenseAddress, accountantAddress, collectorAddress, parcelAddress, purchaserAddress, claimerAddress }: { license?: ethers.Contract, accountant?: ethers.Contract, collector?: ethers.Contract, parcel?: ethers.Contract, purchaser?: ethers.Contract, claimer?: ethers.Contract, licenseAddress?: string, accountantAddress?: string, collectorAddress?: string, parcelAddress?: string, purchaserAddress?: string, claimerAddress?: string }, hre) => {
+      const licenseContract = licenseAddress ? await hre.ethers.getContractAt(
         "ERC721License",
-        license
-      );
-      const collectorContract = await ethers.getContractAt(
+        licenseAddress
+      ): license!;
+      const collectorContract = collectorAddress ? await hre.ethers.getContractAt(
         "ETHExpirationCollector",
-        collector
-      );
-      const parcelContract = await ethers.getContractAt("GeoWebParcel", parcel);
+        collectorAddress
+      ): collector!;
+      const parcelContract = parcelAddress ? await hre.ethers.getContractAt("GeoWebParcel", parcelAddress) : parcel!;
 
       await hre.run("roles:accountant", {
         accountant: accountant,
-        collector: collector,
+        collectorAddress: collectorAddress ?? collector!.address,
       });
 
       // ERC721License roles
       const res2 = await licenseContract.grantRole(
         await licenseContract.MINT_ROLE(),
-        claimer
+        claimerAddress ?? claimer!.address
       );
       await res2.wait();
 
       const res3 = await licenseContract.grantRole(
         await licenseContract.OPERATOR_ROLE(),
-        purchaser
+        purchaserAddress ?? purchaser!.address
       );
       await res3.wait();
 
       // ETHExpirationCollector roles
       const res4 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        claimer
+        claimerAddress ?? claimer!.address
       );
       await res4.wait();
 
       const res5 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        purchaser
+        purchaserAddress ?? purchaser!.address
       );
       await res5.wait();
 
       // GeoWebParcel roles
       const res6 = await parcelContract.grantRole(
         await parcelContract.BUILD_ROLE(),
-        claimer
+        claimerAddress ?? claimer!.address
       );
       await res6.wait();
     }
@@ -156,9 +167,6 @@ task("roles:set-default", "Set default roles on all deployed contracts")
 
 module.exports = {
   networks: {
-    hardhat: {
-      gasPrice: 0,
-    },
     local: {
       gasPrice: 1000000000,
       url: `http://localhost:8545`,
@@ -193,6 +201,22 @@ module.exports = {
       gasPrice: 15000000,
       ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
     },
+  },
+  zksolc: {
+    version: "0.1.0",
+    compilerSource: "docker",
+    settings: {
+      optimizer: {
+        enabled: true,
+      },
+      experimental: {
+        dockerImage: "zksyncrobot/test-build",
+      },
+    },
+  },
+  zkSyncDeploy: {
+    zkSyncNetwork: process.env.ZKSYNC_NETWORK,
+    ethNetwork: "rinkeby",
   },
   solidity: {
     version: "0.8.4",
