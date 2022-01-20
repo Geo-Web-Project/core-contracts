@@ -1,4 +1,6 @@
-import { assert } from "chai";
+import { expect } from "chai";
+import * as chai from "chai";
+var chaiAsPromised = require("chai-as-promised");
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, web3 } from "hardhat";
 import { Framework } from "@superfluid-finance/sdk-core";
@@ -6,6 +8,8 @@ const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const BigNumber = ethers.BigNumber;
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
+
+chai.use(chaiAsPromised);
 
 describe("AuctionSuperApp", async () => {
   let accounts: SignerWithAddress[];
@@ -51,19 +55,17 @@ describe("AuctionSuperApp", async () => {
         receiver: accounts[0].address
     });
 
-    var err;
-    try {
-      await superApp.connect(accounts[1]).setReceiver(accounts[0].address);
-    } catch (error) {
-      err = error;
-    }
-
-    assert(err, "Expected an error but did not get one");
+    expect(
+      superApp.connect(accounts[1]).setReceiver(accounts[0].address)
+    ).to.eventually.throw();
 
     await superApp.setReceiver(accounts[0].address);
 
     const value = await superApp.receiver();
-    assert(value == accounts[0].address, "Value was not updated");
+    expect(value).to.equal(accounts[0].address);
+  })
+
+  describe("No current owner bid", async () => {
   })
 
 //   it("should create Flow(app -> user) equal to Flow(user -> app) on agreement created", async () => {
