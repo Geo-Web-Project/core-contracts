@@ -8,10 +8,6 @@ contract MockERC721License is ERC721 {
         ERC721(name, symbol)
     {}
 
-    function baseURI() public view returns (string memory) {
-        return baseURI();
-    }
-
     function exists(uint256 tokenId) public view returns (bool) {
         return _exists(tokenId);
     }

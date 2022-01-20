@@ -3,7 +3,6 @@ pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/ILicenseValidator.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title A smart contract that stores accounting information for an always-for-sale license.
 contract Accountant is AccessControl {
@@ -29,18 +28,10 @@ contract Accountant is AccessControl {
     }
 
     modifier onlyRole(bytes32 role) {
-        if (!hasRole(role, _msgSender())) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "AccessControl: account ",
-                        Strings.toHexString(uint160(_msgSender()), 20),
-                        " is missing role ",
-                        Strings.toHexString(uint256(role), 32)
-                    )
-                )
-            );
-        }
+        require(
+            hasRole(role, _msgSender()),
+            "AccessControl: account is missing role"
+        );
         _;
     }
 

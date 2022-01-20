@@ -48,18 +48,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControl, Pausable {
     }
 
     modifier onlyRole(bytes32 role) {
-        if (!hasRole(role, _msgSender())) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "AccessControl: account ",
-                        Strings.toHexString(uint160(_msgSender()), 20),
-                        " is missing role ",
-                        Strings.toHexString(uint256(role), 32)
-                    )
-                )
-            );
-        }
+        require(
+            hasRole(role, _msgSender()),
+            "AccessControl: account is missing role"
+        );
         _;
     }
 
