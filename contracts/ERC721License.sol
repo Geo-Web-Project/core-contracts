@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ERC721License is ERC721, Pausable, AccessControl {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
@@ -17,16 +16,9 @@ contract ERC721License is ERC721, Pausable, AccessControl {
         _setupRole(PAUSE_ROLE, msg.sender);
     }
 
-    modifier onlyRole(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "AccessControl: account is missing role"
-        );
-        _;
-    }
-
     /**
      * @notice Pause the contract. Pauses transfers.
+     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -34,6 +26,7 @@ contract ERC721License is ERC721, Pausable, AccessControl {
 
     /**
      * @notice Unpause the contract.
+     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
@@ -77,5 +70,15 @@ contract ERC721License is ERC721, Pausable, AccessControl {
         uint256 tokenId
     ) internal override whenNotPaused {
         super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    // The following functions are overrides required by Solidity.
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
@@ -7,6 +7,10 @@ contract MockERC721License is ERC721 {
     constructor(string memory name, string memory symbol)
         ERC721(name, symbol)
     {}
+
+    function baseURI() public view returns (string memory) {
+        return _baseURI();
+    }
 
     function exists(uint256 tokenId) public view returns (bool) {
         return _exists(tokenId);

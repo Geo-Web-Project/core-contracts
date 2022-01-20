@@ -8,6 +8,7 @@ import { task, types } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 import { ethers } from "ethers";
 import "@nomiclabs/hardhat-web3";
+require("@openzeppelin/hardhat-upgrades");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
 require("./tasks/Accountant");
@@ -180,7 +181,7 @@ module.exports = {
     ethNetwork: "rinkeby",
   },
   solidity: {
-    version: "0.7.6",
+    version: "0.8.4",
     settings: {
       optimizer: {
         enabled: true,

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "./GeoWebCoordinate.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title A smart contract that stores what area makes up a parcel and defines the rules for mutating a parcel.
 contract GeoWebParcel is AccessControl {
@@ -33,7 +32,7 @@ contract GeoWebParcel is AccessControl {
     mapping(uint256 => mapping(uint256 => uint256)) public availabilityIndex;
 
     /// @notice Stores which coordinates belong to a parcel
-    mapping(uint256 => LandParcel) public landParcels;
+    mapping(uint256 => LandParcel) landParcels;
 
     /// @dev The next ID to assign to a parcel
     uint256 maxId;
@@ -53,18 +52,11 @@ contract GeoWebParcel is AccessControl {
         maxId = 0;
     }
 
-    modifier onlyRole(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "AccessControl: account is missing role"
-        );
-        _;
-    }
-
     /**
      * @notice Build a new parcel. All coordinates along the path must be available. All coordinates are marked unavailable after creation.
      * @param baseCoordinate Base coordinate of new parcel
      * @param path Path of new parcel
+     * @custom:requires BUILD_ROLE
      */
     function build(uint64 baseCoordinate, uint256[] calldata path)
         external
@@ -93,6 +85,7 @@ contract GeoWebParcel is AccessControl {
     /**
      * @notice Destroy an existing parcel. All coordinates along the path are marked as available.
      * @param id ID of land parcel
+     * @custom:requires DESTROY_ROLE
      */
     function destroy(uint256 id) external onlyRole(DESTROY_ROLE) {
         LandParcel storage p = landParcels[id];

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./interfaces/ILicenseValidator.sol";
 
 /// @title A smart contract that stores accounting information for an always-for-sale license.
-contract Accountant is AccessControl {
+contract Accountant is AccessControlEnumerable {
     bytes32 public constant MODIFY_CONTRIBUTION_ROLE =
         keccak256("MODIFY_CONTRIBUTION_ROLE");
 
@@ -27,18 +27,11 @@ contract Accountant is AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    modifier onlyRole(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "AccessControl: account is missing role"
-        );
-        _;
-    }
-
     /**
      * @notice Admin can update the global contribution fee.
      * @param _perSecondFeeNumerator The numerator of the network-wide per second contribution fee
      * @param _perSecondFeeDenominator The denominator of the network-wide per second contribution fee
+     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setPerSecondFee(
         uint256 _perSecondFeeNumerator,
@@ -51,6 +44,7 @@ contract Accountant is AccessControl {
     /**
      * @notice Admin can update the validator.
      * @param _validator The new validator address
+     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setValidator(address _validator)
         external
@@ -63,6 +57,7 @@ contract Accountant is AccessControl {
      * @notice Update contribution rate for a license with permissions.
      * @param id The id of the license to update
      * @param newRate The new per second contribution rate for the license
+     * @custom:requires MODIFY_CONTRIBUTION_ROLE
      */
     function setContributionRate(uint256 id, uint256 newRate)
         external

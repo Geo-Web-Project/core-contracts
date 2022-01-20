@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "./ETHExpirationCollector.sol";
 import "./ERC721License.sol";
 import "./GeoWebParcel.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 /// @title A smart contract that enables simple, first-come-first-serve claims on land parcels.
-contract SimpleETHClaimer is AccessControl, Pausable {
+contract SimpleETHClaimer is AccessControlEnumerable, Pausable {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     /// @notice ETHExpirationCollector
@@ -32,17 +31,10 @@ contract SimpleETHClaimer is AccessControl, Pausable {
         _setupRole(PAUSE_ROLE, msg.sender);
     }
 
-    modifier onlyRole(bytes32 role) {
-        require(
-            hasRole(role, _msgSender()),
-            "AccessControl: account is missing role"
-        );
-        _;
-    }
-
     /**
      * @notice Admin can update the minClaimExpiration.
      * @param _minClaimExpiration The new minimum initial expiration for a license
+     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setMinClaimExpiration(uint256 _minClaimExpiration)
         external
@@ -54,6 +46,7 @@ contract SimpleETHClaimer is AccessControl, Pausable {
     /**
      * @notice Admin can update the license.
      * @param licenseAddress The new license used to find owners
+     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setLicense(address licenseAddress)
         external
@@ -65,6 +58,7 @@ contract SimpleETHClaimer is AccessControl, Pausable {
     /**
      * @notice Admin can update the collector.
      * @param collectorAddress The new collector
+     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setCollector(address collectorAddress)
         external
@@ -76,6 +70,7 @@ contract SimpleETHClaimer is AccessControl, Pausable {
     /**
      * @notice Admin can update the parcel.
      * @param parcelAddress The new parcel
+     * @custom:requires DEFAULT_ADMIN_ROLE
      */
     function setParcel(address parcelAddress)
         external
@@ -123,6 +118,7 @@ contract SimpleETHClaimer is AccessControl, Pausable {
 
     /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
+     * @custom:requires PAUSE_ROLE
      */
     function pause() external onlyRole(PAUSE_ROLE) {
         _pause();
@@ -130,6 +126,7 @@ contract SimpleETHClaimer is AccessControl, Pausable {
 
     /**
      * @notice Unpause the contract.
+     * @custom:requires PAUSE_ROLE
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
