@@ -1,5 +1,4 @@
-import { expect } from "chai";
-import * as chai from "chai";
+import { expect, use } from "chai";
 var chaiAsPromised = require("chai-as-promised");
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, web3 } from "hardhat";
@@ -9,10 +8,14 @@ const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const BigNumber = ethers.BigNumber;
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
+import IClaimer from '../build/IClaimer.json';
+import { deployMockContract, MockContract } from '@ethereum-waffle/mock-contract';
+import { solidity, MockProvider } from "ethereum-waffle";
 
-chai.use(chaiAsPromised);
+use(chaiAsPromised);
+use(solidity);
 
-describe("AuctionSuperApp", async () => {
+describe("AuctionSuperApp", async () => {  
   let accounts: SignerWithAddress[];
 
   const errorHandler = (err: any) => {
@@ -71,7 +74,8 @@ describe("AuctionSuperApp", async () => {
     let ethersjsSf: Framework;
     let superApp: Contract;
     let user: SignerWithAddress;
-
+    let mockClaimer: MockContract;
+    
     beforeEach(async () => {
       await deploySuperToken(errorHandler, [":", "ETH"], {
           web3,
@@ -109,9 +113,14 @@ describe("AuctionSuperApp", async () => {
           token: sf.tokens.ETHx.address,
           receiver: accounts[0].address
       });
+
+      mockClaimer = await deployMockContract(user, IClaimer.abi);
     });
 
     it("should claim on flow increase", async () => {
+      // Setup mocks
+      await mockClaimer.mock.claim.returns();
+
       const createFlowOperation = await ethersjsSf.cfaV1.createFlow({
           sender: user.address, 
           receiver: superApp.address,
@@ -120,6 +129,8 @@ describe("AuctionSuperApp", async () => {
       });
       const txnResponse = await createFlowOperation.exec(accounts[1]);
       await txnResponse.wait();
+
+      expect('claim').to.be.calledOnContract(mockClaimer);
     })
   })
 

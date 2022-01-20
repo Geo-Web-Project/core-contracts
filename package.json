@@ -1,6 +1,9 @@
 {
     "name": "geo-web-core-contracts",
     "license": "MIT",
+    "scripts": {
+        "build": "waffle"
+    },
     "dependencies": {
         "@eth-optimism/hardhat-ovm": "^0.2.3",
         "@superfluid-finance/ethereum-contracts": "^1.0.0-rc.8",

@@ -6,6 +6,7 @@ import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/c
 import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "./interfaces/IClaimer.sol";
 
 contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
@@ -13,6 +14,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     ISuperfluid private host; // host
     IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
     ISuperToken private acceptedToken; // accepted token
+
+    IClaimer private claimer;
     address public receiver;
 
     constructor(
@@ -44,6 +47,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
+    }
+
+    /**
+     * @notice Admin can update the claimer.
+     * @param _claimer The new claimer address
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setClaimer(address _claimer)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        claimer = IClaimer(_claimer);
     }
 
     /**
