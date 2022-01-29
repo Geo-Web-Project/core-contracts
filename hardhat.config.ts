@@ -2,8 +2,14 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
- require("@matterlabs/hardhat-zksync-deploy");
- require("@matterlabs/hardhat-zksync-solc");
+import * as dotenv from "dotenv";
+
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config()
+}
+
+// require("@matterlabs/hardhat-zksync-deploy");
+// require("@matterlabs/hardhat-zksync-solc");
 import { task, types } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 import { ethers } from "ethers";
