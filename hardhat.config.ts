@@ -44,6 +44,7 @@ task(
   // Accountant default config
   await hre.run("config:accountant", {
     contract: accountant,
+    contractAddress: accountant,
     annualFeeRate: 0.1,
     validator: collector,
   });
@@ -51,6 +52,7 @@ task(
   // ETHExpirationCollector default config
   await hre.run("config:collector", {
     contract: collector,
+    contractAddress: collector,
     minContributionRate: hre.ethers.utils
       .parseEther("0.01")
       .div(60 * 60 * 24 * 365)
@@ -65,6 +67,7 @@ task(
   // ETHPurchaser default config
   await hre.run("config:purchaser", {
     contract: purchaser,
+    contractAddress: purchaser,
     dutchAuctionLength: 60 * 60 * 24 * 7, // 7 days
     license: license,
     accountant: accountant,
@@ -74,6 +77,7 @@ task(
   // SimpleETHClaimer default config
   await hre.run("config:claimer", {
     contract: claimer,
+    contractAddress: claimer,
     minClaimExpiration: 60 * 60 * 24 * 7, // 7 days
     license: license,
     parcel: parcel,
@@ -86,11 +90,17 @@ task(
   // Set roles
   await hre.run("roles:set-default", {
     license: license,
-    parcel: parcel,
     accountant: accountant,
-    purchaser: purchaser,
     collector: collector,
+    parcel: parcel,
+    purchaser: purchaser,
     claimer: claimer,
+    licenseAddress: license,
+    accountantAddress: accountant,
+    collectorAddress: collector,
+    parcelAddress: parcel,
+    purchaserAddress: purchaser,
+    claimerAddress: claimer,
   });
   console.log("Default roles set.");
 });
@@ -129,43 +139,45 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         "ETHExpirationCollector",
         collectorAddress
       ): collector!;
+
       const parcelContract = parcelAddress ? await hre.ethers.getContractAt("GeoWebParcel", parcelAddress) : parcel!;
 
       await hre.run("roles:accountant", {
         accountant: accountant,
-        collectorAddress: collectorAddress ?? collector!.address,
+        accountantAddress: accountantAddress,
+        collectorAddress: collectorAddress ?? collector,
       });
 
       // ERC721License roles
       const res2 = await licenseContract.grantRole(
         await licenseContract.MINT_ROLE(),
-        claimerAddress ?? claimer!.address
+        claimerAddress ?? claimer
       );
       await res2.wait();
 
       const res3 = await licenseContract.grantRole(
         await licenseContract.OPERATOR_ROLE(),
-        purchaserAddress ?? purchaser!.address
+        purchaserAddress ?? purchaser
       );
       await res3.wait();
 
       // ETHExpirationCollector roles
       const res4 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        claimerAddress ?? claimer!.address
+        claimerAddress ?? claimer
       );
       await res4.wait();
 
       const res5 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        purchaserAddress ?? purchaser!.address
+        purchaserAddress ?? purchaser
       );
       await res5.wait();
 
       // GeoWebParcel roles
       const res6 = await parcelContract.grantRole(
         await parcelContract.BUILD_ROLE(),
-        claimerAddress ?? claimer!.address
+        claimerAddress ?? claimer
       );
       await res6.wait();
     }
