@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+      "types": ["chai", "node"],
       "target": "es2018",
       "module": "commonjs",
       "strict": true,
