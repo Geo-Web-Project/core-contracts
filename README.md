@@ -2,6 +2,10 @@
 
 Live at [http://cadastre.geoweb.eth.link/](http://cadastre.geoweb.eth.link/) or [ipns://cadastre.geoweb.eth](ipns://cadastre.geoweb.eth)
 
+## Setup
+
+Make sure to make a `.env` file in the root of your project based off the `.env.example` file.
+
 ## Tasks
 
 ### Deploy
