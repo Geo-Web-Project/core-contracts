@@ -14,3 +14,6 @@ typechain/
 
 # zkSync
 contracts/tmp
+
+# dotenv
+.env
