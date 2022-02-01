@@ -61,7 +61,7 @@ describe("AuctionSuperApp", async () => {
 
     expect(
       superApp.connect(accounts[1]).setReceiver(accounts[0].address)
-    ).to.eventually.throw();
+    ).to.be.rejected;
 
     await superApp.setReceiver(accounts[0].address);
 
