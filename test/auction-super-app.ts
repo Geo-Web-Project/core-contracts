@@ -2,18 +2,14 @@ import { expect, use } from "chai";
 var chaiAsPromised = require("chai-as-promised");
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, web3 } from "hardhat";
-import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
-import { Contract } from "ethers";
+import { BatchCall, Framework, SuperToken } from "@superfluid-finance/sdk-core";
+import SFError from "@superfluid-finance/sdk-core/dist/main/SFError";
+import { BigNumber, Contract } from "ethers";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
-const BigNumber = ethers.BigNumber;
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
-import IClaimer from '../build/IClaimer.json';
-import { deployMockContract, MockContract } from '@ethereum-waffle/mock-contract';
-import { solidity, MockProvider } from "ethereum-waffle";
 
 use(chaiAsPromised);
-use(solidity);
 
 describe("AuctionSuperApp", async () => {  
   let accounts: SignerWithAddress[];
@@ -74,7 +70,7 @@ describe("AuctionSuperApp", async () => {
     let ethersjsSf: Framework;
     let superApp: Contract;
     let user: SignerWithAddress;
-    let mockClaimer: MockContract;
+    let mockClaimer: Contract;
     
     beforeEach(async () => {
       await deploySuperToken(errorHandler, [":", "ETH"], {
@@ -114,23 +110,37 @@ describe("AuctionSuperApp", async () => {
           receiver: accounts[0].address
       });
 
-      mockClaimer = await deployMockContract(user, IClaimer.abi);
+      const MockClaimer = await ethers.getContractFactory("MockClaimer");
+      mockClaimer = await MockClaimer.deploy();
+      await mockClaimer.deployed();
+
+      await superApp.setClaimer(mockClaimer.address);
     });
 
     it("should claim on flow increase", async () => {
-      // Setup mocks
-      await mockClaimer.mock.claim.returns();
+      const startingAppBalance = BigNumber.from(await ethx.balanceOf({ account: superApp.address, providerOrSigner: accounts[1] }));
 
-      const createFlowOperation = await ethersjsSf.cfaV1.createFlow({
+      const userData = ethers.utils.defaultAbiCoder.encode([ "uint8", "bytes" ], [ 0, "0x" ]);
+
+      const approveOp = ethx.approve({ receiver: superApp.address, amount: "100" });
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
           sender: user.address, 
           receiver: superApp.address,
           flowRate: "100",
-          superToken: ethx.address
+          superToken: ethx.address,
+          userData: userData
       });
-      const txnResponse = await createFlowOperation.exec(accounts[1]);
-      await txnResponse.wait();
 
-      expect('claim').to.be.calledOnContract(mockClaimer);
+      const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+      const txn = await batchCall.exec(accounts[1]);
+      await txn.wait();
+
+      const endingAppBalance = BigNumber.from(await ethx.balanceOf({ account: superApp.address, providerOrSigner: accounts[1] }));
+
+      const value: BigNumber = await mockClaimer.claimCallCount();
+      expect(value.toNumber()).to.equal(1, "Claimer not called");
+
+      expect(endingAppBalance.sub(startingAppBalance).toNumber()).to.equal(100, "App balance is incorrect");
     })
   })
 

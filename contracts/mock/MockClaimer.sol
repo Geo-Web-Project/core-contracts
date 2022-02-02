@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IClaimer {
+import "../interfaces/IClaimer.sol";
+
+contract MockClaimer is IClaimer {
+    uint256 public claimCallCount = 0;
+
     function claim(
         address user,
         int96 initialContributionRate,
         bytes calldata claimData
-    ) external;
+    ) external override {
+        claimCallCount += 1;
+    }
 
     function claimPrice(
         address user,
         int96 initialContributionRate,
         bytes calldata claimData
-    ) external view returns (uint256);
+    ) external view override returns (uint256) {
+        return 100;
+    }
 }

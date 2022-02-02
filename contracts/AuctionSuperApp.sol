@@ -18,6 +18,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     IClaimer private claimer;
     address public receiver;
 
+    enum Action {
+        CLAIM,
+        BID
+    }
+
     constructor(
         ISuperfluid _host,
         IConstantFlowAgreementV1 _cfa,
@@ -258,6 +263,53 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     //     }
     // }
 
+    function _onIncreaseUserToApp(
+        bytes calldata _ctx,
+        address user,
+        int96 increasedFlowRate
+    ) private returns (bytes memory newCtx) {
+        ISuperfluid.Context memory decompiledContext = host.decodeCtx(_ctx);
+        (Action action, bytes memory actionData) = abi.decode(
+            decompiledContext.userData,
+            (Action, bytes)
+        );
+
+        if (action == Action.CLAIM) {
+            return _claim(_ctx, user, increasedFlowRate, actionData);
+        } else if (action == Action.BID) {
+            return _ctx;
+        } else {
+            revert("AuctionSuperApp: Unknown Action");
+        }
+    }
+
+    function _claim(
+        bytes calldata _ctx,
+        address user,
+        int96 initialContributionRate,
+        bytes memory claimData
+    ) private returns (bytes memory newCtx) {
+        // Get claim price
+        uint256 claimPrice = claimer.claimPrice(
+            user,
+            initialContributionRate,
+            claimData
+        );
+
+        // Collect claim payment
+        bool success = acceptedToken.transferFrom(
+            user,
+            address(this),
+            claimPrice
+        );
+        require(success, "AuctionSuperApp: Claim payment failed");
+
+        // Process claim
+        claimer.claim(user, initialContributionRate, claimData);
+
+        return _ctx;
+    }
+
     /**************************************************************************
      * SuperApp callbacks
      *************************************************************************/
@@ -277,7 +329,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         whenNotPaused
         returns (bytes memory newCtx)
     {
-        return _ctx;
+        (address user, ) = abi.decode(_agreementData, (address, address));
+        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+
+        return _onIncreaseUserToApp(_ctx, user, flowRate);
     }
 
     function afterAgreementUpdated(
