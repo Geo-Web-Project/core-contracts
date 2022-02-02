@@ -17,3 +17,6 @@ contracts/tmp
 
 # dotenv
 .env
+
+# typechain
+/typechain-types
