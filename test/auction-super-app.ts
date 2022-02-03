@@ -45,29 +45,6 @@ describe("AuctionSuperApp", async () => {
     return superApp;
   }
 
-  async function claimSuccess() {
-    const approveOp = ethx.approve({
-      receiver: superApp.address,
-      amount: "100",
-    });
-
-    const userData = ethers.utils.defaultAbiCoder.encode(
-      ["uint8", "bytes"],
-      [0, "0x"]
-    );
-    const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-      sender: user.address,
-      receiver: superApp.address,
-      flowRate: "100",
-      superToken: ethx.address,
-      userData: userData,
-    });
-
-    const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-    const txn = await batchCall.exec(user);
-    return txn;
-  }
-
   before(async () => {
     accounts = await ethers.getSigners();
 
@@ -123,6 +100,29 @@ describe("AuctionSuperApp", async () => {
     await superApp.setClaimer(mockClaimer.address);
   });
 
+  async function claimSuccess() {
+    const approveOp = ethx.approve({
+      receiver: superApp.address,
+      amount: "1000",
+    });
+
+    const userData = ethers.utils.defaultAbiCoder.encode(
+      ["uint8", "bytes"],
+      [0, "0x"]
+    );
+    const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+      sender: user.address,
+      receiver: superApp.address,
+      flowRate: "100",
+      superToken: ethx.address,
+      userData: userData,
+    });
+
+    const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+    const txn = await batchCall.exec(user);
+    return txn;
+  }
+
   it("should only allow admin to set receiver", async () => {
     expect(
       superApp.connect(user).setReceiver(admin.address)
@@ -142,10 +142,8 @@ describe("AuctionSuperApp", async () => {
       superToken: ethx.address,
     });
 
-    const txn = await createFlowOp.exec(user);
-    await txn.wait();
-
-    await expect(txn).to.be.reverted;
+    const txn = createFlowOp.exec(user);
+    await expect(txn).to.be.rejected;
   });
 
   it("should revert flow update on missing user data", async () => {
@@ -158,16 +156,13 @@ describe("AuctionSuperApp", async () => {
       flowRate: "200",
       superToken: ethx.address,
     });
-    const txn1 = await updateFlowOp.exec(user);
-
-    await expect(txn1).to.be.reverted;
+    const txn1 = updateFlowOp.exec(user);
+    await expect(txn1).to.be.rejected;
   });
 
   describe("No current owner bid", async () => {
     it("should claim on flow creation", async () => {
       const txn = await claimSuccess();
-      await txn.wait();
-
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
         .withArgs(user.address, admin.address, 100);
