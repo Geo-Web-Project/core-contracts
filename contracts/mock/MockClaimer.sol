@@ -5,12 +5,14 @@ import "../interfaces/IClaimer.sol";
 
 contract MockClaimer is IClaimer {
     uint256 public claimCallCount = 0;
+    mapping(address => int96) public lastContribution;
 
     function claim(
         address user,
         int96 initialContributionRate,
         bytes calldata claimData
     ) external override {
+        lastContribution[user] = initialContributionRate;
         claimCallCount += 1;
     }
 

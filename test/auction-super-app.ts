@@ -161,6 +161,22 @@ describe("AuctionSuperApp", async () => {
     expect(appNetFlow).to.equal("0", "App net flow is incorrect");
   }
 
+  async function checkClaimCallCount(expectedCount: number) {
+    const value: BigNumber = await mockClaimer.claimCallCount();
+    expect(value).to.equal(expectedCount, "Claimer not called");
+  }
+
+  async function checkClaimLastContribution(
+    user: string,
+    expectedContribution: number
+  ) {
+    const value: BigNumber = await mockClaimer.lastContribution(user);
+    expect(value).to.equal(
+      expectedContribution,
+      "Last contribution is incorrect"
+    );
+  }
+
   it("should only allow admin to set receiver", async () => {
     expect(
       superApp.connect(user).setReceiver(admin.address)
@@ -241,9 +257,8 @@ describe("AuctionSuperApp", async () => {
         .to.emit(ethx_erc20, "Transfer")
         .withArgs(user.address, admin.address, 100);
 
-      const value: BigNumber = await mockClaimer.claimCallCount();
-      expect(value).to.equal(1, "Claimer not called");
-
+      checkClaimCallCount(1);
+      checkClaimLastContribution(user.address, 100);
       checkAppNetFlow();
       checkUserToAppFlow("100");
       checkAppToReceiverFlow("100");
@@ -270,9 +285,8 @@ describe("AuctionSuperApp", async () => {
         .to.emit(ethx_erc20, "Transfer")
         .withArgs(user.address, admin.address, 100);
 
-      const value: BigNumber = await mockClaimer.claimCallCount();
-      expect(value).to.equal(2, "Claimer not called");
-
+      checkClaimCallCount(2);
+      checkClaimLastContribution(user.address, 100);
       checkAppNetFlow();
       checkUserToAppFlow("200");
       checkAppToReceiverFlow("200");
