@@ -160,6 +160,42 @@ describe("AuctionSuperApp", async () => {
     await expect(txn1).to.be.rejected;
   });
 
+  it("should revert flow create on unknown action", async () => {
+    const userData = ethers.utils.defaultAbiCoder.encode(
+      ["uint8", "bytes"],
+      [2, "0x"]
+    );
+    const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+      sender: user.address,
+      receiver: superApp.address,
+      flowRate: "100",
+      superToken: ethx.address,
+      userData: userData,
+    });
+
+    const txn = createFlowOp.exec(user);
+    await expect(txn).to.be.rejected;
+  });
+
+  it("should revert flow update on unknown action", async () => {
+    const txn = await claimSuccess();
+    await txn.wait();
+
+    const userData = ethers.utils.defaultAbiCoder.encode(
+      ["uint8", "bytes"],
+      [2, "0x"]
+    );
+    const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+      sender: user.address,
+      receiver: superApp.address,
+      flowRate: "200",
+      superToken: ethx.address,
+      userData: userData,
+    });
+    const txn1 = updateFlowOp.exec(user);
+    await expect(txn1).to.be.rejected;
+  });
+
   describe("No current owner bid", async () => {
     it("should claim on flow creation", async () => {
       const txn = await claimSuccess();
