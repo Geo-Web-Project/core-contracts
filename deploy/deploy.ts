@@ -63,12 +63,12 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   console.log("\nSetting roles...");
   // Set roles
   await hre.run("roles:set-default", {
-    license: license,
-    parcel: parcel,
-    accountant: accountant,
-    purchaser: purchaser,
-    collector: collector,
-    claimer: claimer,
+    licenseAddress: license.address,
+    parcelAddress: parcel.address,
+    accountantAddress: accountant.address,
+    purchaserAddress: purchaser.address,
+    collectorAddress: collector.address,
+    claimerAddress: claimer.address,
   });
   console.log("Default roles set.");
 }
