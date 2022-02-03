@@ -123,6 +123,44 @@ describe("AuctionSuperApp", async () => {
     return txn;
   }
 
+  async function checkUserToAppFlow(expectedAmount: string) {
+    const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
+      superToken: ethx.address,
+      sender: user.address,
+      receiver: superApp.address,
+      providerOrSigner: admin,
+    });
+
+    expect(userToAppFlow.flowRate).to.equal(
+      expectedAmount,
+      "User -> App flow is incorrect"
+    );
+  }
+
+  async function checkAppToReceiverFlow(expectedAmount: string) {
+    const appToReceiverFlow = await ethersjsSf.cfaV1.getFlow({
+      superToken: ethx.address,
+      sender: superApp.address,
+      receiver: admin.address,
+      providerOrSigner: admin,
+    });
+
+    expect(appToReceiverFlow.flowRate).to.equal(
+      expectedAmount,
+      "App -> Receiver flow is incorrect"
+    );
+  }
+
+  async function checkAppNetFlow() {
+    const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
+      superToken: ethx.address,
+      account: superApp.address,
+      providerOrSigner: admin,
+    });
+
+    expect(appNetFlow).to.equal("0", "App net flow is incorrect");
+  }
+
   it("should only allow admin to set receiver", async () => {
     expect(
       superApp.connect(user).setReceiver(admin.address)
@@ -206,33 +244,9 @@ describe("AuctionSuperApp", async () => {
       const value: BigNumber = await mockClaimer.claimCallCount();
       expect(value).to.equal(1, "Claimer not called");
 
-      const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
-        superToken: ethx.address,
-        sender: user.address,
-        receiver: superApp.address,
-        providerOrSigner: admin,
-      });
-      const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
-        superToken: ethx.address,
-        account: superApp.address,
-        providerOrSigner: admin,
-      });
-      const appToReceiverFlow = await ethersjsSf.cfaV1.getFlow({
-        superToken: ethx.address,
-        sender: superApp.address,
-        receiver: admin.address,
-        providerOrSigner: admin,
-      });
-
-      expect(userToAppFlow.flowRate).to.equal(
-        "100",
-        "User -> App flow is incorrect"
-      );
-      expect(appNetFlow).to.equal("0", "App net flow is incorrect");
-      expect(appToReceiverFlow.flowRate).to.equal(
-        "100",
-        "App -> Receiver flow is incorrect"
-      );
+      checkAppNetFlow();
+      checkUserToAppFlow("100");
+      checkAppToReceiverFlow("100");
     });
 
     it("should claim on flow increase", async () => {
@@ -259,33 +273,9 @@ describe("AuctionSuperApp", async () => {
       const value: BigNumber = await mockClaimer.claimCallCount();
       expect(value).to.equal(2, "Claimer not called");
 
-      const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
-        superToken: ethx.address,
-        sender: user.address,
-        receiver: superApp.address,
-        providerOrSigner: admin,
-      });
-      const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
-        superToken: ethx.address,
-        account: superApp.address,
-        providerOrSigner: admin,
-      });
-      const appToReceiverFlow = await ethersjsSf.cfaV1.getFlow({
-        superToken: ethx.address,
-        sender: superApp.address,
-        receiver: admin.address,
-        providerOrSigner: admin,
-      });
-
-      expect(userToAppFlow.flowRate).to.equal(
-        "200",
-        "User -> App flow is incorrect"
-      );
-      expect(appNetFlow).to.equal("0", "App net flow is incorrect");
-      expect(appToReceiverFlow.flowRate).to.equal(
-        "200",
-        "App -> Receiver flow is incorrect"
-      );
+      checkAppNetFlow();
+      checkUserToAppFlow("200");
+      checkAppToReceiverFlow("200");
     });
   });
 
