@@ -28,7 +28,6 @@ task("deploy-zksync:collector", "Deploy the ETHExpirationCollector").setAction(
 
 
 task("config:collector")
-  .addOptionalParam("contract", "Deployed ETHExpirationCollector contract", undefined, types.json)
   .addOptionalParam("contractAddress", "Address of deployed ETHExpirationCollector contract", undefined, types.string)
   .addOptionalParam(
     "minContributionRate",
@@ -51,7 +50,6 @@ task("config:collector")
   .addOptionalParam("receiver", "Address of receiver of contributions")
   .setAction(
     async ({
-      contract,
       contractAddress,
       minContributionRate,
       minExpiration,
@@ -60,8 +58,7 @@ task("config:collector")
       receiver,
       accountantAddress,
     }: {
-      contract?: ethers.Contract,
-      contractAddress?: string,
+      contractAddress: string,
       minContributionRate?: string,
       minExpiration?: number,
       maxExpiration?: number,
@@ -81,10 +78,10 @@ task("config:collector")
         return;
       }
 
-      const collector = contractAddress ? await hre.ethers.getContractAt(
+      const collector = await hre.ethers.getContractAt(
         "ETHExpirationCollector",
         contractAddress
-      ): contract!;
+      )
 
       if (minContributionRate) {
         const res = await collector.setMinContributionRate(minContributionRate);

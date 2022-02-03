@@ -29,12 +29,12 @@ task(
   "Deploy the set of contracts with default configuration"
 ).setAction(async (args, hre) => {
   console.log("Deploying all contracts...");
-  const parcel = await hre.run("deploy:parcel");
-  const accountant = await hre.run("deploy:accountant");
-  const license = await hre.run("deploy:license");
-  const purchaser = await hre.run("deploy:purchaser");
-  const collector = await hre.run("deploy:collector");
-  const claimer = await hre.run("deploy:claimer");
+  const parcelAddress = await hre.run("deploy:parcel");
+  const accountantAddress = await hre.run("deploy:accountant");
+  const licenseAddress = await hre.run("deploy:license");
+  const purchaserAddress = await hre.run("deploy:purchaser");
+  const collectorAddress = await hre.run("deploy:collector");
+  const claimerAddress = await hre.run("deploy:claimer");
   console.log("Contracts deployed.");
 
   console.log("\nSetting default configuration...");
@@ -43,45 +43,41 @@ task(
 
   // Accountant default config
   await hre.run("config:accountant", {
-    contract: accountant,
-    contractAddress: accountant,
+    contractAddress: accountantAddress,
     annualFeeRate: 0.1,
-    validator: collector,
+    validator: collectorAddress,
   });
 
   // ETHExpirationCollector default config
   await hre.run("config:collector", {
-    contract: collector,
-    contractAddress: collector,
+    contractAddress: collectorAddress,
     minContributionRate: hre.ethers.utils
       .parseEther("0.01")
       .div(60 * 60 * 24 * 365)
       .toString(),
     minExpiration: 60 * 60 * 24 * 7, // 7 days
     maxExpiration: 60 * 60 * 24 * 730, // 730 days
-    license: license,
+    license: licenseAddress,
     receiver: accounts[0].address,
-    accountant: accountant,
+    accountant: accountantAddress,
   });
 
   // ETHPurchaser default config
   await hre.run("config:purchaser", {
-    contract: purchaser,
-    contractAddress: purchaser,
+    contractAddress: purchaserAddress,
     dutchAuctionLength: 60 * 60 * 24 * 7, // 7 days
-    license: license,
-    accountant: accountant,
-    collector: collector,
+    license: licenseAddress,
+    accountant: accountantAddress,
+    collector: collectorAddress,
   });
 
   // SimpleETHClaimer default config
   await hre.run("config:claimer", {
-    contract: claimer,
-    contractAddress: claimer,
+    contractAddress: claimerAddress,
     minClaimExpiration: 60 * 60 * 24 * 7, // 7 days
-    license: license,
-    parcel: parcel,
-    collector: collector,
+    license: licenseAddress,
+    parcel: parcelAddress,
+    collector: collectorAddress,
   });
 
   console.log("Default configuration set.");
@@ -89,18 +85,12 @@ task(
   console.log("\nSetting roles...");
   // Set roles
   await hre.run("roles:set-default", {
-    license: license,
-    accountant: accountant,
-    collector: collector,
-    parcel: parcel,
-    purchaser: purchaser,
-    claimer: claimer,
-    licenseAddress: license,
-    accountantAddress: accountant,
-    collectorAddress: collector,
-    parcelAddress: parcel,
-    purchaserAddress: purchaser,
-    claimerAddress: claimer,
+    licenseAddress,
+    accountantAddress,
+    collectorAddress,
+    parcelAddress,
+    purchaserAddress,
+    claimerAddress,
   });
   console.log("Default roles set.");
 });
@@ -117,12 +107,6 @@ task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
 );
 
 task("roles:set-default", "Set default roles on all deployed contracts")
-  .addOptionalParam("license", "ERC721 License used to find owners", undefined, types.json)
-  .addOptionalParam("accountant", "Accountant", undefined, types.json)
-  .addOptionalParam("collector", "ETHExpirationCollector", undefined, types.json)
-  .addOptionalParam("parcel", "GeoWebParcel", undefined, types.json)
-  .addOptionalParam("purchaser", "ETHPurchaser", undefined, types.json)
-  .addOptionalParam("claimer", "SimpleETHClaimer", undefined, types.json)
   .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
   .addOptionalParam("accountantAddress", "Address of Accountant", undefined, types.string)
   .addOptionalParam("collectorAddress", "Address of ETHExpirationCollector", undefined, types.string)
@@ -130,54 +114,53 @@ task("roles:set-default", "Set default roles on all deployed contracts")
   .addOptionalParam("purchaserAddress", "Address of ETHPurchaser", undefined, types.string)
   .addOptionalParam("claimerAddress", "Address of SimpleETHClaimer", undefined, types.string)
   .setAction(
-    async ({ license, accountant, collector, parcel, purchaser, claimer, licenseAddress, accountantAddress, collectorAddress, parcelAddress, purchaserAddress, claimerAddress }: { license?: ethers.Contract, accountant?: ethers.Contract, collector?: ethers.Contract, parcel?: ethers.Contract, purchaser?: ethers.Contract, claimer?: ethers.Contract, licenseAddress?: string, accountantAddress?: string, collectorAddress?: string, parcelAddress?: string, purchaserAddress?: string, claimerAddress?: string }, hre) => {
-      const licenseContract = licenseAddress ? await hre.ethers.getContractAt(
+    async ({ licenseAddress, accountantAddress, collectorAddress, parcelAddress, purchaserAddress, claimerAddress }: { licenseAddress: string, accountantAddress: string, collectorAddress: string, parcelAddress: string, purchaserAddress: string, claimerAddress: string }, hre) => {
+      const licenseContract = await hre.ethers.getContractAt(
         "ERC721License",
         licenseAddress
-      ): license!;
-      const collectorContract = collectorAddress ? await hre.ethers.getContractAt(
+      );
+      const collectorContract = await hre.ethers.getContractAt(
         "ETHExpirationCollector",
         collectorAddress
-      ): collector!;
+      );
 
-      const parcelContract = parcelAddress ? await hre.ethers.getContractAt("GeoWebParcel", parcelAddress) : parcel!;
+      const parcelContract = await hre.ethers.getContractAt("GeoWebParcel", parcelAddress);
 
       await hre.run("roles:accountant", {
-        accountant: accountant,
         accountantAddress: accountantAddress,
-        collectorAddress: collectorAddress ?? collector,
+        collectorAddress: collectorAddress,
       });
 
       // ERC721License roles
       const res2 = await licenseContract.grantRole(
         await licenseContract.MINT_ROLE(),
-        claimerAddress ?? claimer
+        claimerAddress
       );
       await res2.wait();
 
       const res3 = await licenseContract.grantRole(
         await licenseContract.OPERATOR_ROLE(),
-        purchaserAddress ?? purchaser
+        purchaserAddress
       );
       await res3.wait();
 
       // ETHExpirationCollector roles
       const res4 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        claimerAddress ?? claimer
+        claimerAddress
       );
       await res4.wait();
 
       const res5 = await collectorContract.grantRole(
         await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        purchaserAddress ?? purchaser
+        purchaserAddress
       );
       await res5.wait();
 
       // GeoWebParcel roles
       const res6 = await parcelContract.grantRole(
         await parcelContract.BUILD_ROLE(),
-        claimerAddress ?? claimer
+        claimerAddress
       );
       await res6.wait();
     }

@@ -28,7 +28,6 @@ task("deploy-zksync:accountant", "Deploy the Accountant").setAction(async ({depl
 });
 
 task("config:accountant")
-  .addOptionalParam("contract", "Accountant contract", undefined, types.json)
   .addOptionalParam("contractAddress", "Accountant contract address", undefined, types.string)
   .addOptionalParam(
     "annualFeeRate",
@@ -40,13 +39,13 @@ task("config:accountant")
     "validator",
     "Where to find if a license's account is still valid"
   )
-  .setAction(async ({ contract, contractAddress, annualFeeRate, validator }: {contract?: ethers.Contract, contractAddress?: string, annualFeeRate?: number, validator?: string}, hre) => {
+  .setAction(async ({ contractAddress, annualFeeRate, validator }: { contractAddress: string, annualFeeRate?: number, validator?: string}, hre) => {
     if (!annualFeeRate && !validator) {
       console.log("Nothing to configure. See options");
       return;
     }
 
-    const accountant = contractAddress ? await hre.ethers.getContractAt("Accountant", contractAddress) : contract!;
+    const accountant = await hre.ethers.getContractAt("Accountant", contractAddress);
 
     if (annualFeeRate) {
       const { numerator, denominator } = perYearToPerSecondRate(annualFeeRate);
@@ -63,14 +62,13 @@ task("config:accountant")
   });
 
 task("roles:accountant", "Set default roles for Accountant")
-  .addOptionalParam("accountant", "Accountant contract", undefined, types.json)
   .addOptionalParam("accountantAddress", "Address of Accountant", undefined, types.string)
   .addParam("collectorAddress", "Address of ETHExpirationCollector")
-  .setAction(async ({ accountant, accountantAddress, collectorAddress }: {accountant?: ethers.Contract, accountantAddress?: string, collectorAddress: string}, hre) => {
-    const accountantContract = accountantAddress ? await hre.ethers.getContractAt(
+  .setAction(async ({ accountantAddress, collectorAddress }: { accountantAddress: string, collectorAddress: string}, hre) => {
+    const accountantContract = await hre.ethers.getContractAt(
       "Accountant",
       accountantAddress
-    ) : accountant!;
+    )
 
     // Accountant roles
     const res1 = await accountantContract.grantRole(
