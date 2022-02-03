@@ -5,7 +5,7 @@
 //  require("@matterlabs/hardhat-zksync-deploy");
 //  require("@matterlabs/hardhat-zksync-solc");
 import { task, types } from "hardhat/config";
-import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
 import { ethers } from "ethers";
 import "@nomiclabs/hardhat-web3";
 require("@openzeppelin/hardhat-upgrades");
