@@ -35,11 +35,11 @@ contract AuctionClaimer is Pausable, AccessControl, IClaimer {
         require(block.timestamp < auctionStart, "auction has not started yet");
         require(block.timestamp > auctionEnd, "geneisis auction is done, use the Simple Claimer");
 
-        // check logic
         uint256 timeElapsed = block.timestamp - auctionStart;
         uint256 priceDecrease = startingBid * (timeElapsed / auctionEnd);
         uint256 requiredBid = startingBid - priceDecrease;
 
+        require(msg.value >= requiredBid, "bid is too low");
     }
 
     /**
@@ -58,39 +58,39 @@ contract AuctionClaimer is Pausable, AccessControl, IClaimer {
         _unpause();
     }
 
-    // /**
-    //  * @notice Admin can update the starting bid.
-    //  * @param _startingBid The new starting bid
-    //  * @custom:requires DEFAULT_ADMIN_ROLE
-    //  */
-    // function setStartingBid(uint256 _startingBid) external onlyRole(DEFAULT_ADMIN_ROLE) {
-    //     startingBid = _startingBid;
-    // }
+    /**
+     * @notice Admin can update the starting bid.
+     * @param _startingBid The new starting bid
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setStartingBid(uint256 _startingBid) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        startingBid = _startingBid;
+    }
 
-    // /**
-    //  * @notice Admin can update the ending bid.
-    //  * @param _endingBid The new ending bid
-    //  * @custom:requires DEFAULT_ADMIN_ROLE
-    //  */
-    // function setEndingBid(uint256 _endingBid) external onlyRole(DEFAULT_ADMIN_ROLE) {
-    //     endingBid = _endingBid;
-    // }
+    /**
+     * @notice Admin can update the ending bid.
+     * @param _endingBid The new ending bid
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setEndingBid(uint256 _endingBid) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        endingBid = _endingBid;
+    }
 
-    // /**
-    //  * @notice Admin can update the start time of the initial Dutch auction.
-    //  * @param _auctionStart The new start time of the initial Dutch auction
-    //  * @custom:requires DEFAULT_ADMIN_ROLE
-    //  */
-    // function setAuctionStart(uint256 _auctionStart) external onlyRole(DEFAULT_ADMIN_ROLE) {
-    //     auctionStart = _auctionStart;
-    // }
+    /**
+     * @notice Admin can update the start time of the initial Dutch auction.
+     * @param _auctionStart The new start time of the initial Dutch auction
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setAuctionStart(uint256 _auctionStart) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        auctionStart = _auctionStart;
+    }
 
-    // /**
-    //  * @notice Admin can update the end time of the initial Dutch auction.
-    //  * @param _auctionEnd The new end time of the initial Dutch auction
-    //  * @custom:requires DEFAULT_ADMIN_ROLE
-    //  */
-    // function setAuctionEnd(uint256 _auctionEnd) external onlyRole(DEFAULT_ADMIN_ROLE) {
-    //     auctionEnd = _auctionEnd;
-    // }
+    /**
+     * @notice Admin can update the end time of the initial Dutch auction.
+     * @param _auctionEnd The new end time of the initial Dutch auction
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setAuctionEnd(uint256 _auctionEnd) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        auctionEnd = _auctionEnd;
+    }
 }
