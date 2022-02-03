@@ -10,8 +10,10 @@ if (process.env.NODE_ENV !== 'production') {
 
 // require("@matterlabs/hardhat-zksync-deploy");
 // require("@matterlabs/hardhat-zksync-solc");
-import { task, types } from "hardhat/config";
+require('@typechain/hardhat');
+require('@nomiclabs/hardhat-ethers');
 import "@nomiclabs/hardhat-waffle";
+import { task, types } from "hardhat/config";
 import { ethers } from "ethers";
 require("@openzeppelin/hardhat-upgrades");
 require("@eth-optimism/hardhat-ovm");
