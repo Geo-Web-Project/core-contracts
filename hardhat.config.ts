@@ -85,12 +85,12 @@ task(
   console.log("\nSetting roles...");
   // Set roles
   await hre.run("roles:set-default", {
-    licenseAddress,
-    accountantAddress,
-    collectorAddress,
-    parcelAddress,
-    purchaserAddress,
-    claimerAddress,
+    licenseAddress: licenseAddress,
+    accountantAddress: accountantAddress,
+    collectorAddress: collectorAddress,
+    parcelAddress: parcelAddress,
+    purchaserAddress: purchaserAddress,
+    claimerAddress: claimerAddress,
   });
   console.log("Default roles set.");
 });
@@ -125,14 +125,19 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         "ERC721License",
         licenseAddress
       ): license!;
+
       const collectorContract = collectorAddress ? await hre.ethers.getContractAt(
         "ETHExpirationCollector",
         collectorAddress
       ): collector!;
-      const parcelContract = parcelAddress ? await hre.ethers.getContractAt("GeoWebParcel", parcelAddress) : parcel!;
+
+      const parcelContract = parcelAddress ? await hre.ethers.getContractAt(
+        "GeoWebParcel",
+        parcelAddress
+      ) : parcel!;
 
       await hre.run("roles:accountant", {
-        accountant: accountant,
+        accountantAddress: accountantAddress ?? accountant!.address,
         collectorAddress: collectorAddress ?? collector!.address,
       });
 

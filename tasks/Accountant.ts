@@ -75,6 +75,7 @@ task("roles:accountant", "Set default roles for Accountant")
       await accountantContract.MODIFY_CONTRIBUTION_ROLE(),
       collectorAddress
     );
+
     await res1.wait();
 
     console.log(
