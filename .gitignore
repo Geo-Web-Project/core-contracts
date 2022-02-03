@@ -10,7 +10,6 @@ cache/
 cache-ovm/
 build/
 deployments/
-typechain/
 
 # zkSync
 contracts/tmp
@@ -19,4 +18,13 @@ contracts/tmp
 .env
 
 # typechain
-/typechain-types
+typechain-types/*.js
+typechain-types/*.ts
+typechain-types/factories/*
+!typechain-types/factories/Accountant__factory.ts
+!typechain-types/factories/ERC721License__factory.ts
+!typechain-types/factories/ETHExpirationCollector__factory.ts
+!typechain-types/factories/ETHPurchaser__factory.ts
+!typechain-types/factories/GeoWebCoordinate__factory.ts
+!typechain-types/factories/GeoWebParcel__factory.ts
+!typechain-types/factories/SimpleETHClaimer__factory.ts
