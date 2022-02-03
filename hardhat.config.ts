@@ -10,21 +10,22 @@ if (process.env.NODE_ENV !== 'production') {
 
 // require("@matterlabs/hardhat-zksync-deploy");
 // require("@matterlabs/hardhat-zksync-solc");
-require('@typechain/hardhat');
-require('@nomiclabs/hardhat-ethers');
+import "@typechain/hardhat";
+import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
+import "hardhat-abi-exporter";
 import { task, types } from "hardhat/config";
 import { ethers } from "ethers";
-require("@openzeppelin/hardhat-upgrades");
-require("@eth-optimism/hardhat-ovm");
-require("solidity-coverage");
-require("./tasks/Accountant");
-require("./tasks/GeoWebParcel");
-require("./tasks/ERC721License");
-require("./tasks/ETHExpirationCollector");
-require("./tasks/ETHPurchaser");
-require("./tasks/SimpleETHClaimer");
-require("./tasks/estimate_minting_gas");
+import "@openzeppelin/hardhat-upgrades";
+import "@eth-optimism/hardhat-ovm";
+import "solidity-coverage";
+import "./tasks/Accountant";
+import "./tasks/GeoWebParcel";
+import "./tasks/ERC721License";
+import "./tasks/ETHExpirationCollector";
+import "./tasks/ETHPurchaser";
+import "./tasks/SimpleETHClaimer";
+import "./tasks/estimate_minting_gas";
 
 task(
   "deploy",
@@ -232,5 +233,10 @@ module.exports = {
   },
   ovm: {
     solcVersion: "0.6.12",
+  },
+  abiExporter: {
+    path: './abi',
+    runOnCompile: true,
+    clear: true,
   },
 };
