@@ -16,6 +16,12 @@ describe("AuctionSuperApp", async () => {
   let accounts: SignerWithAddress[];
   let admin: SignerWithAddress;
   let user: SignerWithAddress;
+  let ethx: SuperToken;
+  let ethx_erc20: Contract;
+  let ethersjsSf: Framework;
+  let superApp: Contract;
+  let mockClaimer: Contract;
+  let sf: any;
 
   const errorHandler = (err: any) => {
     if (err) throw err;
@@ -48,28 +54,53 @@ describe("AuctionSuperApp", async () => {
       web3,
       from: admin.address,
     });
-  });
 
-  it("should only allow admin to set receiver", async () => {
     await deploySuperToken(errorHandler, [":", "ETH"], {
       web3,
       from: admin.address,
     });
 
-    const sf = new SuperfluidSDK.Framework({
+    sf = new SuperfluidSDK.Framework({
       web3,
       version: "test",
       tokens: ["ETH"],
     });
     await sf.initialize();
 
-    const superApp = await buildAuctionSuperApp({
+    const ethersProvider = admin.provider!;
+    ethersjsSf = await Framework.create({
+      networkName: "custom",
+      dataMode: "WEB3_ONLY",
+      resolverAddress: sf.resolver.address,
+      protocolReleaseVersion: "test",
+      provider: ethersProvider,
+    });
+
+    ethx = await ethersjsSf.loadSuperToken(sf.tokens.ETHx.address);
+    ethx_erc20 = await ethers.getContractAt("IERC20", sf.tokens.ETHx.address);
+
+    await sf.tokens.ETHx.upgradeByETH({
+      from: user.address,
+      value: ethers.utils.parseEther("10"),
+    });
+  });
+
+  beforeEach(async () => {
+    superApp = await buildAuctionSuperApp({
       host: sf.host.address,
       cfa: sf.agreements.cfa.address,
       token: sf.tokens.ETHx.address,
       receiver: admin.address,
     });
 
+    const MockClaimer = await ethers.getContractFactory("MockClaimer");
+    mockClaimer = await MockClaimer.deploy();
+    await mockClaimer.deployed();
+
+    await superApp.setClaimer(mockClaimer.address);
+  });
+
+  it("should only allow admin to set receiver", async () => {
     expect(
       superApp.connect(user).setReceiver(admin.address)
     ).to.be.revertedWith("is missing role");
@@ -81,56 +112,6 @@ describe("AuctionSuperApp", async () => {
   });
 
   describe("No current owner bid", async () => {
-    let ethx: SuperToken;
-    let ethx_erc20: Contract;
-    let ethersjsSf: Framework;
-    let superApp: Contract;
-    let mockClaimer: Contract;
-
-    beforeEach(async () => {
-      await deploySuperToken(errorHandler, [":", "ETH"], {
-        web3,
-        from: admin.address,
-      });
-
-      const sf = new SuperfluidSDK.Framework({
-        web3,
-        version: "test",
-        tokens: ["ETH"],
-      });
-      await sf.initialize();
-
-      const ethersProvider = admin.provider!;
-      ethersjsSf = await Framework.create({
-        networkName: "custom",
-        dataMode: "WEB3_ONLY",
-        resolverAddress: sf.resolver.address,
-        protocolReleaseVersion: "test",
-        provider: ethersProvider,
-      });
-
-      ethx = await ethersjsSf.loadSuperToken(sf.tokens.ETHx.address);
-      ethx_erc20 = await ethers.getContractAt("IERC20", sf.tokens.ETHx.address);
-
-      await sf.tokens.ETHx.upgradeByETH({
-        from: user.address,
-        value: ethers.utils.parseEther("10"),
-      });
-
-      superApp = await buildAuctionSuperApp({
-        host: sf.host.address,
-        cfa: sf.agreements.cfa.address,
-        token: sf.tokens.ETHx.address,
-        receiver: admin.address,
-      });
-
-      const MockClaimer = await ethers.getContractFactory("MockClaimer");
-      mockClaimer = await MockClaimer.deploy();
-      await mockClaimer.deployed();
-
-      await superApp.setClaimer(mockClaimer.address);
-    });
-
     it("should claim on flow creation", async () => {
       const approveOp = ethx.approve({
         receiver: superApp.address,
