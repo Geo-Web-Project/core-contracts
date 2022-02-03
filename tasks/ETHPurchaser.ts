@@ -25,7 +25,6 @@ task("deploy-zksync:purchaser", "Deploy the ETHPurchaser").setAction(
 );
 
 task("config:purchaser")
-  .addOptionalParam("contract", "Deployed ETHPurchaser contract", undefined, types.json)
   .addOptionalParam("contractAddress", "Address of deployed ETHPurchaser contract", undefined, types.string)
   .addOptionalParam(
     "dutchAuctionLength",
@@ -38,7 +37,7 @@ task("config:purchaser")
   .addOptionalParam("collectorAddress", "Address of ETHExpirationCollector")
   .setAction(
     async (
-      { contract, contractAddress, dutchAuctionLength, licenseAddress, accountantAddress, collectorAddress }: { contract?: ethers.Contract, contractAddress?: string, dutchAuctionLength?: number, licenseAddress?: string, accountantAddress?: string, collectorAddress?: string },
+      { contractAddress, dutchAuctionLength, licenseAddress, accountantAddress, collectorAddress }: { contractAddress: string, dutchAuctionLength?: number, licenseAddress?: string, accountantAddress?: string, collectorAddress?: string },
       hre
     ) => {
       if (!dutchAuctionLength && !licenseAddress && !accountantAddress && !collectorAddress) {
@@ -46,7 +45,7 @@ task("config:purchaser")
         return;
       }
 
-      const purchaser = contractAddress ? await hre.ethers.getContractAt("ETHPurchaser", contractAddress) : contract!;
+      const purchaser = await hre.ethers.getContractAt("ETHPurchaser", contractAddress);
 
       if (dutchAuctionLength) {
         const res = await purchaser.setDutchAuctionLengthInSeconds(

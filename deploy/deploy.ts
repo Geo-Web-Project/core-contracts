@@ -21,14 +21,14 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   // Accountant default config
   await hre.run("config:accountant", {
-    contract: accountant,
+    contractAddress: accountant.address,
     annualFeeRate: 0.1,
     validator: collector.address,
   });
 
   // ETHExpirationCollector default config
   await hre.run("config:collector", {
-    contract: collector,
+    contractAddress: collector.address,
     minContributionRate: hre.ethers.utils
       .parseEther("0.01")
       .div(60 * 60 * 24 * 365)
@@ -42,7 +42,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   // ETHPurchaser default config
   await hre.run("config:purchaser", {
-    contract: purchaser,
+    contractAddress: purchaser.address,
     dutchAuctionLength: 60 * 60 * 24 * 7, // 7 days
     licenseAddress: license.address,
     accountantAddress: accountant.address,
@@ -51,7 +51,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   // SimpleETHClaimer default config
   await hre.run("config:claimer", {
-    contract: claimer,
+    contractAddress: claimer.address,
     minClaimExpiration: 60 * 60 * 24 * 7, // 7 days
     licenseAddress: license.address,
     parcelAddress: parcel.address,
@@ -63,12 +63,12 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   console.log("\nSetting roles...");
   // Set roles
   await hre.run("roles:set-default", {
-    license: license,
-    parcel: parcel,
-    accountant: accountant,
-    purchaser: purchaser,
-    collector: collector,
-    claimer: claimer,
+    licenseAddress: license.address,
+    parcelAddress: parcel.address,
+    accountantAddress: accountant.address,
+    purchaserAddress: purchaser.address,
+    collectorAddress: collector.address,
+    claimerAddress: claimer.address,
   });
   console.log("Default roles set.");
 }
