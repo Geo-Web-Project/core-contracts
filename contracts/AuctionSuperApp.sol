@@ -45,7 +45,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
             SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
             SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
         host.registerApp(configWord);
@@ -128,39 +127,44 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         _unpause();
     }
 
-    // function _increaseAppToReceiverFlow(int96 amount) private {
-    //     (, int96 flowRate, , ) = cfa.getFlow(
-    //         acceptedToken,
-    //         address(this),
-    //         receiver
-    //     );
+    function _increaseAppToReceiverFlow(bytes calldata ctx, int96 amount)
+        private
+        returns (bytes memory newCtx)
+    {
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            receiver
+        );
 
-    //     if (flowRate > 0) {
-    //         host.callAgreement(
-    //             cfa,
-    //             abi.encodeWithSelector(
-    //                 cfa.updateFlow.selector,
-    //                 acceptedToken,
-    //                 receiver,
-    //                 flowRate + amount,
-    //                 new bytes(0)
-    //             ),
-    //             "0x"
-    //         );
-    //     } else {
-    //         host.callAgreement(
-    //             cfa,
-    //             abi.encodeWithSelector(
-    //                 cfa.createFlow.selector,
-    //                 acceptedToken,
-    //                 receiver,
-    //                 amount,
-    //                 new bytes(0)
-    //             ),
-    //             "0x"
-    //         );
-    //     }
-    // }
+        if (flowRate > 0) {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    flowRate + amount,
+                    new bytes(0)
+                ),
+                "0x",
+                ctx
+            );
+        } else {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    receiver,
+                    amount,
+                    new bytes(0)
+                ),
+                "0x",
+                ctx
+            );
+        }
+    }
 
     // function _decreaseAppToReceiverFlow(int96 amount) private {
     //     (, int96 flowRate, , ) = cfa.getFlow(
@@ -297,17 +301,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Collect claim payment
-        bool success = acceptedToken.transferFrom(
-            user,
-            address(this),
-            claimPrice
-        );
+        bool success = acceptedToken.transferFrom(user, receiver, claimPrice);
         require(success, "AuctionSuperApp: Claim payment failed");
 
         // Process claim
         claimer.claim(user, initialContributionRate, claimData);
 
-        return _ctx;
+        // Increase app -> receiver flow
+        newCtx = _increaseAppToReceiverFlow(_ctx, initialContributionRate);
     }
 
     /**************************************************************************
@@ -335,12 +336,31 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         return _onIncreaseUserToApp(_ctx, user, flowRate);
     }
 
+    function beforeAgreementUpdated(
+        ISuperToken _superToken,
+        address _agreementClass,
+        bytes32 _agreementId,
+        bytes calldata,
+        bytes calldata
+    )
+        external
+        view
+        override
+        onlyExpected(_superToken, _agreementClass)
+        onlyHost
+        whenNotPaused
+        returns (bytes memory cbdata)
+    {
+        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+        cbdata = abi.encode(flowRate);
+    }
+
     function afterAgreementUpdated(
         ISuperToken _superToken,
         address _agreementClass,
         bytes32 _agreementId,
         bytes calldata _agreementData,
-        bytes calldata, //_cbdata,
+        bytes calldata _cbdata,
         bytes calldata _ctx
     )
         external
@@ -350,7 +370,24 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         whenNotPaused
         returns (bytes memory newCtx)
     {
-        return _ctx;
+        address user;
+        {
+            (address _sender, address _receiver) = abi.decode(
+                _agreementData,
+                (address, address)
+            );
+            user = _receiver == address(this) ? _sender : _receiver;
+        }
+
+        int96 originalFlowRate = abi.decode(_cbdata, (int96));
+        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+
+        if (originalFlowRate < flowRate) {
+            return
+                _onIncreaseUserToApp(_ctx, user, flowRate - originalFlowRate);
+        } else {
+            return _ctx;
+        }
     }
 
     function afterAgreementTerminated(

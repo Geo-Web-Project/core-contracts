@@ -117,12 +117,12 @@ describe("AuctionSuperApp", async () => {
       await superApp.setClaimer(mockClaimer.address);
     });
 
-    it("should claim on flow increase", async () => {
-      const startingAppBalance = BigNumber.from(await ethx.balanceOf({ account: superApp.address, providerOrSigner: accounts[1] }));
-
-      const userData = ethers.utils.defaultAbiCoder.encode([ "uint8", "bytes" ], [ 0, "0x" ]);
+    it("should claim on flow creation", async () => {
+      const startingReceiverBalance = BigNumber.from(await ethx.balanceOf({ account: accounts[0].address, providerOrSigner: accounts[0] }));
 
       const approveOp = ethx.approve({ receiver: superApp.address, amount: "100" });
+
+      const userData = ethers.utils.defaultAbiCoder.encode([ "uint8", "bytes" ], [ 0, "0x" ]);
       const createFlowOp = await ethersjsSf.cfaV1.createFlow({
           sender: user.address, 
           receiver: superApp.address,
@@ -135,12 +135,89 @@ describe("AuctionSuperApp", async () => {
       const txn = await batchCall.exec(accounts[1]);
       await txn.wait();
 
-      const endingAppBalance = BigNumber.from(await ethx.balanceOf({ account: superApp.address, providerOrSigner: accounts[1] }));
+      const endingReceiverBalance = BigNumber.from(await ethx.balanceOf({ account: accounts[0].address, providerOrSigner: accounts[0] }));
 
       const value: BigNumber = await mockClaimer.claimCallCount();
       expect(value.toNumber()).to.equal(1, "Claimer not called");
 
-      expect(endingAppBalance.sub(startingAppBalance).toNumber()).to.equal(100, "App balance is incorrect");
+      expect(endingReceiverBalance.sub(startingReceiverBalance).toNumber()).to.equal(100, "Receiver did not receive deposit");
+      
+      const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
+        superToken: ethx.address,
+        sender: user.address,
+        receiver: superApp.address,
+        providerOrSigner: accounts[0]
+      });
+      const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
+        superToken: ethx.address,
+        account: superApp.address,
+        providerOrSigner: accounts[0]
+      });
+      const appToReceiverFlow = await ethersjsSf.cfaV1.getFlow({
+        superToken: ethx.address,
+        sender: superApp.address,
+        receiver: accounts[0].address,
+        providerOrSigner: accounts[0]
+      });
+
+      expect(userToAppFlow.flowRate).to.equal("100", "User -> App flow is incorrect");
+      expect(appNetFlow).to.equal("0", "App net flow is incorrect");
+      expect(appToReceiverFlow.flowRate).to.equal("100", "App -> Receiver flow is incorrect");
+    })
+
+    it("should claim on flow increase", async () => {
+      const approveOp = ethx.approve({ receiver: superApp.address, amount: "200" });
+
+      // Create an initial flow
+      const userData = ethers.utils.defaultAbiCoder.encode([ "uint8", "bytes" ], [ 0, "0x" ]);
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: user.address, 
+          receiver: superApp.address,
+          flowRate: "100",
+          superToken: ethx.address,
+          userData: userData
+      });
+
+      const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+      const txn = await batchCall.exec(accounts[1]);
+      await txn.wait();
+
+      // Update existing flow
+      const userData2 = ethers.utils.defaultAbiCoder.encode([ "uint8", "bytes" ], [ 0, "0x" ]);
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: user.address, 
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData2
+      });
+      const txn1 = await updateFlowOp.exec(accounts[1]);
+      await txn1.wait();
+
+      const value: BigNumber = await mockClaimer.claimCallCount();
+      expect(value.toNumber()).to.equal(2, "Claimer not called");
+
+      const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
+        superToken: ethx.address,
+        sender: user.address,
+        receiver: superApp.address,
+        providerOrSigner: accounts[0]
+      });
+      const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
+        superToken: ethx.address,
+        account: superApp.address,
+        providerOrSigner: accounts[0]
+      });
+      const appToReceiverFlow = await ethersjsSf.cfaV1.getFlow({
+        superToken: ethx.address,
+        sender: superApp.address,
+        receiver: accounts[0].address,
+        providerOrSigner: accounts[0]
+      });
+      
+      expect(userToAppFlow.flowRate).to.equal("200", "User -> App flow is incorrect");
+      expect(appNetFlow).to.equal("0", "App net flow is incorrect");
+      expect(appToReceiverFlow.flowRate).to.equal("200", "App -> Receiver flow is incorrect");
     })
   })
 
