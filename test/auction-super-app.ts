@@ -1,13 +1,17 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers, web3 } from "hardhat";
+import { ethers, web3, waffle } from "hardhat";
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 import { BigNumber, Contract, ContractReceipt } from "ethers";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { solidity } from "ethereum-waffle";
+import { AuctionSuperApp } from "../typechain-types/AuctionSuperApp";
+import { AuctionSuperApp__factory } from "../typechain-types/factories/AuctionSuperApp__factory";
+import { ISuperfluid } from "../typechain-types/ISuperfluid";
+import { MockClaimer } from "../typechain-types/MockClaimer";
 
 use(solidity);
 use(chaiAsPromised);
@@ -19,10 +23,10 @@ describe("AuctionSuperApp", async () => {
   let ethx: SuperToken;
   let ethx_erc20: Contract;
   let ethersjsSf: Framework;
-  let superApp: Contract;
-  let mockClaimer: Contract;
+  let superApp: AuctionSuperApp;
+  let mockClaimer: MockClaimer;
   let sf: any;
-  let hostContract: Contract;
+  let hostContract: ISuperfluid;
 
   enum Action {
     CLAIM,
@@ -44,8 +48,13 @@ describe("AuctionSuperApp", async () => {
     token: any;
     receiver: any;
   }) {
-    const AuctionSuperApp = await ethers.getContractFactory("AuctionSuperApp");
-    const superApp = await AuctionSuperApp.deploy(host, cfa, token, receiver);
+    const factory = new AuctionSuperApp__factory(admin);
+    const superApp: AuctionSuperApp = await factory.deploy(
+      host,
+      cfa,
+      token,
+      receiver
+    );
     await superApp.deployed();
 
     return superApp;
