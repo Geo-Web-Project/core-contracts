@@ -1,5 +1,5 @@
 import { expect, use } from "chai";
-var chaiAsPromised = require("chai-as-promised");
+import chaiAsPromised from "chai-as-promised";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, web3 } from "hardhat";
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
@@ -9,8 +9,8 @@ const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { solidity } from "ethereum-waffle";
 
-use(chaiAsPromised);
 use(solidity);
+use(chaiAsPromised);
 
 describe("AuctionSuperApp", async () => {
   let accounts: SignerWithAddress[];

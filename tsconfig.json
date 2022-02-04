@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+      "types": ["chai", "node"],
       "target": "es2018",
       "module": "commonjs",
       "strict": true,
@@ -10,7 +11,8 @@
   "include": [
       "./deploy",
       "./test",
-      "./tasks"
+      "./tasks",
+      "./typechain-types"
   ],
   "files": [
       "./hardhat.config.ts"

@@ -2,10 +2,17 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
-//  require("@matterlabs/hardhat-zksync-deploy");
-//  require("@matterlabs/hardhat-zksync-solc");
-import { task, types } from "hardhat/config";
+import * as dotenv from "dotenv";
+
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
+
+// require("@matterlabs/hardhat-zksync-deploy");
+// require("@matterlabs/hardhat-zksync-solc");
+require("@typechain/hardhat");
 import "@nomiclabs/hardhat-waffle";
+import { task, types } from "hardhat/config";
 import { ethers } from "ethers";
 import "@nomiclabs/hardhat-web3";
 require("@openzeppelin/hardhat-upgrades");
@@ -24,14 +31,14 @@ task(
   "Deploy the set of contracts with default configuration"
 ).setAction(async (args, hre) => {
   console.log("Deploying all contracts...");
-  const parcel = await hre.run("deploy:parcel");
-  const accountant = await hre.run("deploy:accountant");
-  const license = await hre.run("deploy:license");
+  const parcelAddress = await hre.run("deploy:parcel");
+  const accountantAddress = await hre.run("deploy:accountant");
+  const licenseAddress = await hre.run("deploy:license");
 
   const accounts = await hre.ethers.getSigners();
 
   // CollectorSuperApp default config
-  const collector = await hre.run("deploy:collector", {
+  const collectorAddress = await hre.run("deploy:collector", {
     host: "0xeD5B5b32110c3Ded02a07c8b8e97513FAfb883B6",
     cfa: "0xF4C5310E51F6079F601a5fb7120bC72a70b96e2A",
     acceptedToken: "0xa623b2DD931C5162b7a0B25852f4024Db48bb1A0",
@@ -44,9 +51,9 @@ task(
 
   // Accountant default config
   await hre.run("config:accountant", {
-    contract: accountant,
+    contractAddress: accountantAddress,
     annualFeeRate: 0.1,
-    validator: collector,
+    validator: collectorAddress,
   });
 
   console.log("Default configuration set.");
@@ -54,10 +61,10 @@ task(
   console.log("\nSetting roles...");
   // Set roles
   await hre.run("roles:set-default", {
-    license: license,
-    parcel: parcel,
-    accountant: accountant,
-    collector: collector,
+    licenseAddress: licenseAddress,
+    parcelAddress: parcelAddress,
+    accountantAddress: accountantAddress,
+    collectorAddress: collectorAddress,
   });
   console.log("Default roles set.");
 });
@@ -72,33 +79,78 @@ task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
 );
 
 task("roles:set-default", "Set default roles on all deployed contracts")
-  .addOptionalParam("license", "ERC721 License used to find owners", undefined, types.json)
-  .addOptionalParam("accountant", "Accountant", undefined, types.json)
-  .addOptionalParam("collector", "ETHExpirationCollector", undefined, types.json)
-  .addOptionalParam("parcel", "GeoWebParcel", undefined, types.json)
-  .addOptionalParam("purchaser", "ETHPurchaser", undefined, types.json)
-  .addOptionalParam("claimer", "SimpleETHClaimer", undefined, types.json)
-  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
-  .addOptionalParam("accountantAddress", "Address of Accountant", undefined, types.string)
-  .addOptionalParam("collectorAddress", "Address of ETHExpirationCollector", undefined, types.string)
-  .addOptionalParam("parcelAddress", "Address of GeoWebParcel", undefined, types.string)
-  .addOptionalParam("purchaserAddress", "Address of ETHPurchaser", undefined, types.string)
-  .addOptionalParam("claimerAddress", "Address of SimpleETHClaimer", undefined, types.string)
+  .addOptionalParam(
+    "licenseAddress",
+    "Address of ERC721 License used to find owners",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "accountantAddress",
+    "Address of Accountant",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "collectorAddress",
+    "Address of ETHExpirationCollector",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "parcelAddress",
+    "Address of GeoWebParcel",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "purchaserAddress",
+    "Address of ETHPurchaser",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "claimerAddress",
+    "Address of SimpleETHClaimer",
+    undefined,
+    types.string
+  )
   .setAction(
-    async ({ license, accountant, collector, parcel, purchaser, claimer, licenseAddress, accountantAddress, collectorAddress, parcelAddress, purchaserAddress, claimerAddress }: { license?: ethers.Contract, accountant?: ethers.Contract, collector?: ethers.Contract, parcel?: ethers.Contract, purchaser?: ethers.Contract, claimer?: ethers.Contract, licenseAddress?: string, accountantAddress?: string, collectorAddress?: string, parcelAddress?: string, purchaserAddress?: string, claimerAddress?: string }, hre) => {
-      const licenseContract = licenseAddress ? await hre.ethers.getContractAt(
+    async (
+      {
+        licenseAddress,
+        accountantAddress,
+        collectorAddress,
+        parcelAddress,
+        purchaserAddress,
+        claimerAddress,
+      }: {
+        licenseAddress: string;
+        accountantAddress: string;
+        collectorAddress: string;
+        parcelAddress: string;
+        purchaserAddress: string;
+        claimerAddress: string;
+      },
+      hre
+    ) => {
+      const licenseContract = await hre.ethers.getContractAt(
         "ERC721License",
         licenseAddress
-      ): license!;
-      const collectorContract = collectorAddress ? await hre.ethers.getContractAt(
+      );
+      const collectorContract = await hre.ethers.getContractAt(
         "ETHExpirationCollector",
         collectorAddress
-      ): collector!;
-      const parcelContract = parcelAddress ? await hre.ethers.getContractAt("GeoWebParcel", parcelAddress) : parcel!;
+      );
+
+      const parcelContract = await hre.ethers.getContractAt(
+        "GeoWebParcel",
+        parcelAddress
+      );
 
       await hre.run("roles:accountant", {
-        accountant: accountant,
-        collectorAddress: collectorAddress ?? collector!.address,
+        accountantAddress,
+        collectorAddress,
       });
 
       // // ERC721License roles
@@ -127,7 +179,7 @@ module.exports = {
   networks: {
     hardhat: {
       gasPrice: 0,
-      initialBaseFeePerGas: 0
+      initialBaseFeePerGas: 0,
     },
     local: {
       gasPrice: 1000000000,
