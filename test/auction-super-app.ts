@@ -262,6 +262,43 @@ describe("AuctionSuperApp", async () => {
       await checkAppToReceiverFlow("0");
       await checkAppNetFlow();
     });
+
+    it("should recreate Flow(app -> user) on Flow(app -> user) delete", async () => {
+      const txn = await claimSuccess();
+      await txn.wait();
+
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: user.address,
+        superToken: ethx.address,
+      });
+      const txn1 = await deleteFlowOp.exec(user);
+      const receipt = await txn1.wait();
+
+      await checkJailed(receipt);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("100");
+      await checkAppToReceiverFlow("100");
+    });
+
+    it("should recreate Flow(app -> user) on Flow(app -> user) decrease", async () => {
+      const txn = await claimSuccess();
+      await txn.wait();
+
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: superApp.address,
+        receiver: user.address,
+        flowRate: "50",
+        superToken: ethx.address,
+      });
+      const txn1 = await updateFlowOp.exec(user);
+      const receipt = await txn1.wait();
+
+      await checkJailed(receipt);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("100");
+      await checkAppToReceiverFlow("100");
+    });
   });
 
   describe("Unknown Action", async () => {
@@ -341,6 +378,53 @@ describe("AuctionSuperApp", async () => {
       await checkUserToAppFlow("0");
       await checkAppToReceiverFlow("0");
       await checkAppNetFlow();
+    });
+
+    it("should recreate Flow(app -> user) on Flow(app -> user) delete", async () => {
+      const txn = await claimSuccess();
+      await txn.wait();
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [2, "0x"]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: user.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = await deleteFlowOp.exec(user);
+      const receipt = await txn1.wait();
+
+      await checkJailed(receipt);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("100");
+      await checkAppToReceiverFlow("100");
+    });
+
+    it("should recreate Flow(app -> user) on Flow(app -> user) decrease", async () => {
+      const txn = await claimSuccess();
+      await txn.wait();
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [2, "0x"]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: superApp.address,
+        receiver: user.address,
+        flowRate: "50",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = await updateFlowOp.exec(user);
+      const receipt = await txn1.wait();
+
+      await checkJailed(receipt);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("100");
+      await checkAppToReceiverFlow("100");
     });
   });
 
@@ -433,6 +517,53 @@ describe("AuctionSuperApp", async () => {
       await checkUserToAppFlow("0");
       await checkAppToReceiverFlow("0");
       await checkAppNetFlow();
+    });
+
+    it("should recreate Flow(app -> user) on Flow(app -> user) delete", async () => {
+      const txn = await claimSuccess();
+      await txn.wait();
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [Action.CLAIM, "0x"]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: user.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = await deleteFlowOp.exec(user);
+      const receipt = await txn1.wait();
+
+      await checkJailed(receipt);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("100");
+      await checkAppToReceiverFlow("100");
+    });
+
+    it("should recreate Flow(app -> user) on Flow(app -> user) decrease", async () => {
+      const txn = await claimSuccess();
+      await txn.wait();
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [Action.CLAIM, "0x"]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: superApp.address,
+        receiver: user.address,
+        flowRate: "50",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = await updateFlowOp.exec(user);
+      const receipt = await txn1.wait();
+
+      await checkJailed(receipt);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("100");
+      await checkAppToReceiverFlow("100");
     });
   });
 
