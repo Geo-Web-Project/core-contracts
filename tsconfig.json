@@ -14,7 +14,7 @@
       "./tasks",
       "./src",
       "./typechain-types",
-      "abi/**/*.json"
+      "./abi/**/*.json"
   ],
   "files": [
       "./hardhat.config.ts"

@@ -13,11 +13,11 @@ if (process.env.NODE_ENV !== 'production') {
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import "hardhat-abi-exporter";
 import { task, types } from "hardhat/config";
 import { ethers } from "ethers";
 import "@openzeppelin/hardhat-upgrades";
 import "@eth-optimism/hardhat-ovm";
+import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/Accountant";
 import "./tasks/GeoWebParcel";
@@ -236,7 +236,6 @@ module.exports = {
   },
   abiExporter: {
     path: './abi',
-    runOnCompile: true,
     clear: true,
   },
 };
