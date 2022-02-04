@@ -6,7 +6,7 @@ interface IClaimer {
         address user,
         int96 initialContributionRate,
         bytes calldata claimData
-    ) external;
+    ) external returns (uint256 licenseId);
 
     function claimPrice(
         address user,
