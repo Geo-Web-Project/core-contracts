@@ -1,13 +1,24 @@
-import { assert } from "chai";
+import { assert, expect, use } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
+import { solidity } from "ethereum-waffle";
+
+use(solidity);
 
 describe("SimpleETHClaimer", async () => {
   let accounts: SignerWithAddress[];
   let minExpiration = 10;
 
-  async function buildContract({ license, collector, parcel }: {license?: string, collector?: string, parcel?: string}) {
+  async function buildContract({
+    license,
+    collector,
+    parcel,
+  }: {
+    license?: string;
+    collector?: string;
+    parcel?: string;
+  }) {
     const SimpleETHClaimer = await ethers.getContractFactory(
       "SimpleETHClaimer"
     );
@@ -196,12 +207,12 @@ describe("SimpleETHClaimer", async () => {
     );
 
     const receipt = await result.wait();
-    const newParcelId = receipt.events[0].args.parcelId;
+    const newParcelId = receipt.events![0].args!.parcelId;
 
     assert(await license.exists(newParcelId), "License was not minted");
-    assert((await parcel.nextId()) > 0, "Parcel was not built");
-    assert(
-      (await collector.licenseExpirationTimestamps(newParcelId)) > 0,
+    expect(await parcel.nextId()).to.be.gt(0, "Parcel was not built");
+    expect(await collector.licenseExpirationTimestamps(newParcelId)).to.be.gt(
+      0,
       "Collector was not called"
     );
   });
@@ -242,7 +253,9 @@ describe("SimpleETHClaimer", async () => {
     assert(err instanceof Error, "Expected an error but did not get one");
     if (err instanceof Error) {
       assert(
-        err.message.includes("Resulting expiration date must be at least minClaimExpiration"),
+        err.message.includes(
+          "Resulting expiration date must be at least minClaimExpiration"
+        ),
         "Expected an error but did not get one"
       );
     }
