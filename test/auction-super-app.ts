@@ -20,10 +20,12 @@ import { MockClaimer } from "../typechain-types/MockClaimer";
 import { MockAccountant } from "../typechain-types/MockAccountant";
 import { MockERC721License } from "../typechain-types/MockERC721License";
 import {
+  Accountant,
+  ERC721License,
   MockAccountant__factory,
   MockClaimer__factory,
-  MockERC721License__factory,
 } from "../typechain-types";
+import { FakeContract, smock } from "@defi-wonderland/smock";
 
 use(solidity);
 use(chaiAsPromised);
@@ -38,8 +40,8 @@ describe("AuctionSuperApp", async () => {
   let ethersjsSf: Framework;
   let superApp: AuctionSuperApp;
   let mockClaimer: MockClaimer;
-  let mockAccountant: MockAccountant;
-  let mockLicense: MockERC721License;
+  let mockAccountant: FakeContract<Accountant>;
+  let mockLicense: FakeContract<ERC721License>;
   let sf: any;
   let hostContract: ISuperfluid;
 
@@ -257,14 +259,12 @@ describe("AuctionSuperApp", async () => {
   });
 
   beforeEach(async () => {
-    const mockAccountantFactory = new MockAccountant__factory(admin);
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
-    mockAccountant = await mockAccountantFactory.deploy(numerator, denominator);
-    await mockAccountant.deployed();
+    mockAccountant = await smock.fake<Accountant>("Accountant");
+    mockAccountant.perSecondFeeNumerator.returns(numerator);
+    mockAccountant.perSecondFeeDenominator.returns(denominator);
 
-    const mockLicenseFactory = new MockERC721License__factory(admin);
-    mockLicense = await mockLicenseFactory.deploy("Mock", "MOCK");
-    await mockLicense.deployed();
+    mockLicense = await smock.fake<ERC721License>("ERC721License");
 
     superApp = await buildAuctionSuperApp({
       host: sf.host.address,
@@ -534,6 +534,12 @@ describe("AuctionSuperApp", async () => {
 
       const txn = await claimSuccess(user, existingLicenseId);
       await txn.wait();
+      mockLicense.ownerOf
+        .whenCalledWith(existingLicenseId)
+        .returns(user.address);
+      mockAccountant.contributionRates
+        .whenCalledWith(existingLicenseId)
+        .returns(BigNumber.from(100));
 
       const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
 
@@ -580,11 +586,26 @@ describe("AuctionSuperApp", async () => {
       // User 1 claim
       const txn = await claimSuccess(user, existingLicenseId);
       await txn.wait();
+      mockLicense.ownerOf
+        .whenCalledWith(existingLicenseId)
+        .returns(user.address);
+      mockAccountant.contributionRates
+        .whenCalledWith(existingLicenseId)
+        .returns(BigNumber.from(100));
 
       // User 2 claim
       const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-      const txn1 = await claimSuccess(bidder, 2, purchasePrice);
+      const approveOp = ethx.approve({
+        receiver: superApp.address,
+        amount: purchasePrice.toString(),
+      });
+
+      const txn1 = await claimSuccess(bidder, 2);
       await txn1.wait();
+      mockLicense.ownerOf.whenCalledWith(2).returns(bidder.address);
+      mockAccountant.contributionRates
+        .whenCalledWith(2)
+        .returns(BigNumber.from(100));
 
       const actionData = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
@@ -597,12 +618,13 @@ describe("AuctionSuperApp", async () => {
       const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
         sender: bidder.address,
         receiver: superApp.address,
-        flowRate: "200",
+        flowRate: "300",
         superToken: ethx.address,
         userData: userData,
       });
 
-      const txn2 = await updateFlowOp.exec(bidder);
+      const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+      const txn2 = await batchCall.exec(bidder);
       const receipt = await txn2.wait();
 
       await expect(txn2)
@@ -610,10 +632,10 @@ describe("AuctionSuperApp", async () => {
         .withArgs(bidder.address, superApp.address, purchasePrice);
       await checkJailed(receipt);
       await checkAppNetFlow();
-      await checkUserToAppFlow("200", bidder);
+      await checkUserToAppFlow("300", bidder);
       await checkAppToUserFlow("200", bidder);
       await checkUserToAppFlow("100", user);
-      await checkAppToReceiverFlow("100");
+      await checkAppToReceiverFlow("200");
     });
   });
 });
