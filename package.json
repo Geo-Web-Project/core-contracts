@@ -1,8 +1,8 @@
 {
-    "name": "geo-web-core-contracts",
+    "name": "@geo-web/contracts",
     "license": "MIT",
     "version": "0.0.1",
-    "description": "GeoWeb solidity contracts & artifacts",
+    "description": "GeoWeb solidity contracts, artifacts, & types",
     "author": "GeoWebCore",
     "homepage": "https://www.geoweb.network/",
     "main": "dist/src/index.js",
