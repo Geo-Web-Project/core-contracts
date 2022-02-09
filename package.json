@@ -1,14 +1,18 @@
 {
     "name": "geo-web-core-contracts",
     "license": "MIT",
+    "version": "0.0.1",
+    "description": "GeoWeb solidity contracts & artifacts",
+    "author": "GeoWebCore",
+    "homepage": "https://www.geoweb.network/",
     "main": "dist/src/index.js",
     "types": "dist/src/index.d.ts",
     "scripts": {
-      "build": "yarn build:sol && yarn build:abi && yarn build:ts && yarn build:declarations",
-      "build:ts": "npx tsc --build tsconfig.build.json",
-      "build:abi": "npx hardhat export-abi",
-      "build:sol": "npx hardhat compile",
-      "build:declarations": "shx cp typechain-types/*.d.ts dist/typechain-types"
+        "build": "yarn build:sol && yarn build:abi && yarn build:ts && yarn build:declarations",
+        "build:ts": "npx tsc --build tsconfig.build.json",
+        "build:abi": "npx hardhat export-abi",
+        "build:sol": "npx hardhat compile",
+        "build:declarations": "shx cp typechain-types/*.d.ts dist/typechain-types"
     },
     "dependencies": {
         "@eth-optimism/hardhat-ovm": "^0.2.3",
