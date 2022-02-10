@@ -338,6 +338,39 @@ describe("AuctionSuperApp", async () => {
     expect(value).to.equal(admin.address);
   });
 
+  it("should only allow admin to set claimer", async () => {
+    expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setClaimer(admin.address);
+
+    const value = await superApp.claimer();
+    expect(value).to.equal(admin.address);
+  });
+
+  it("should only allow admin to set accountant", async () => {
+    expect(
+      superApp.connect(user).setAccountant(admin.address)
+    ).to.be.revertedWith("is missing role");
+
+    await superApp.setAccountant(admin.address);
+
+    const value = await superApp.accountant();
+    expect(value).to.equal(admin.address);
+  });
+
+  it("should only allow admin to set license", async () => {
+    expect(superApp.connect(user).setLicense(admin.address)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setLicense(admin.address);
+
+    const value = await superApp.license();
+    expect(value).to.equal(admin.address);
+  });
+
   describe("No user data", async () => {
     it("should revert on flow create", async () => {
       const createFlowOp = await ethersjsSf.cfaV1.createFlow({

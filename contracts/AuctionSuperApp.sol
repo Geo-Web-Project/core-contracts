@@ -17,7 +17,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
     ISuperToken private acceptedToken; // accepted token
 
-    IClaimer private claimer;
+    IClaimer public claimer;
     address public receiver;
 
     /// @notice Accountant.
