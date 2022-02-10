@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Code coverage report for contracts/mock/MockParcel.sol</title>
+    <title>Code coverage report for contracts/mock/MockClaimer.sol</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -16,13 +16,13 @@
 <div class='wrapper'>
   <div class='pad1'>
     <h1>
-      <a href="../../index.html">all files</a> / <a href="index.html">contracts/mock/</a> MockParcel.sol
+      <a href="../../index.html">all files</a> / <a href="index.html">contracts/mock/</a> MockClaimer.sol
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>2/2</span>
+        <span class='fraction'>3/3</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -32,12 +32,12 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>1/1</span>
+        <span class='fraction'>2/2</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>2/2</span>
+        <span class='fraction'>3/3</span>
       </div>
     </div>
   </div>
@@ -57,7 +57,19 @@
 12
 13
 14
-15</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -67,22 +79,46 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3×</span>
-<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">165×</span>
+<span class="cline-any cline-yes">165×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">165×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 &nbsp;
-contract MockParcel {
-    uint256 public nextId = 0;
+import "../interfaces/IClaimer.sol";
 &nbsp;
-    function build(uint64, uint256[] calldata)
-        external
-        returns (uint256 newParcelId)
-    {
-        newParcelId = nextId;
-        nextId = nextId + 1;
+contract MockClaimer is IClaimer {
+    uint256 public claimCallCount = 0;
+    mapping(address =&gt; int96) public lastContribution;
+&nbsp;
+    function claim(
+        address user,
+        int96 initialContributionRate,
+        bytes calldata claimData
+    ) external override {
+        lastContribution[user] = initialContributionRate;
+        claimCallCount += 1;
+    }
+&nbsp;
+    function claimPrice(
+        address user,
+        int96 initialContributionRate,
+        bytes calldata claimData
+    ) external view override returns (uint256) {
+        return 100;
     }
 }
 &nbsp;</pre></td></tr>

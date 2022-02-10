@@ -1,14 +1,17 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
-
+import { assert, expect, use } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
+import { solidity } from "ethereum-waffle";
+
+use(solidity);
 
 describe("GeoWebParcel", async () => {
-  function makePathPrefix(length) {
+  function makePathPrefix(length: any) {
     return BigNumber.from(length).shl(256 - 8);
   }
 
-  let accounts;
+  let accounts: SignerWithAddress[];
 
   async function buildContract() {
     const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
@@ -45,16 +48,15 @@ describe("GeoWebParcel", async () => {
       "Incorrect availability"
     );
 
-    let parcel = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
+    const parcelId = buildResult.events![0].args!._id;
+    let parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    await geoWebParcel.destroy(parcelId);
 
     let result1 = await geoWebParcel.availabilityIndex(0, 2);
 
@@ -64,19 +66,12 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should build and destroy parcel within one word", async () => {
@@ -110,16 +105,15 @@ describe("GeoWebParcel", async () => {
       "Incorrect availability"
     );
 
-    let parcel = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
+    const parcelId = buildResult.events![0].args!._id;
+    let parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    await geoWebParcel.destroy(parcelId);
 
     let result1 = await geoWebParcel.availabilityIndex(0, 1);
 
@@ -129,19 +123,12 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should build and destroy parcel that spans multiple words", async () => {
@@ -178,16 +165,15 @@ describe("GeoWebParcel", async () => {
       "Incorrect availability for index 1"
     );
 
-    let parcel = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
+    const parcelId = buildResult.events![0].args!._id;
+    let parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    await geoWebParcel.destroy(parcelId);
 
     let result0_1 = await geoWebParcel.availabilityIndex(0, 0);
     let result1_1 = await geoWebParcel.availabilityIndex(1, 0);
@@ -203,19 +189,12 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should build and destroy parcel with a long path", async () => {
@@ -250,16 +229,15 @@ describe("GeoWebParcel", async () => {
       );
     }
 
-    let parcel = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
+    const parcelId = buildResult.events![0].args!._id;
+    let parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    await geoWebParcel.destroy(parcelId);
 
     for (let i = 0; i < 128 / 16; i++) {
       let result = await geoWebParcel.availabilityIndex(31 - i, 0);
@@ -271,19 +249,12 @@ describe("GeoWebParcel", async () => {
       );
     }
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should build and destroy parcel that crosses the meridian", async () => {
@@ -318,16 +289,15 @@ describe("GeoWebParcel", async () => {
       "Incorrect availability for index 1"
     );
 
-    let parcel = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
+    const parcelId = buildResult.events![0].args!._id;
+    let parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    await geoWebParcel.destroy(parcelId);
 
     let result0_1 = await geoWebParcel.availabilityIndex(0, 10);
     let result1_1 = await geoWebParcel.availabilityIndex(2 ** 19 / 16 - 1, 10);
@@ -342,19 +312,12 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should build and destroy parcel that repeats coordinates", async () => {
@@ -388,16 +351,15 @@ describe("GeoWebParcel", async () => {
       "Incorrect availability"
     );
 
-    let parcel = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
+    const parcelId = buildResult.events![0].args!._id;
+    let parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    await geoWebParcel.destroy(parcelId);
 
     let result1 = await geoWebParcel.availabilityIndex(0, 1);
 
@@ -407,19 +369,12 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should build and destroy parcel that repeats coordinates across multiple words", async () => {
@@ -456,16 +411,15 @@ describe("GeoWebParcel", async () => {
       "Incorrect availability for index 1"
     );
 
-    let parcel = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
+    const parcelId = buildResult.events![0].args!._id;
+    let parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
       "Stored base coordinate is incorrect"
     );
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    await geoWebParcel.destroy(parcelId);
 
     let result0_1 = await geoWebParcel.availabilityIndex(0, 0);
     let result1_1 = await geoWebParcel.availabilityIndex(1, 0);
@@ -481,19 +435,12 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should not build parcel that overlaps with a existing parcel", async () => {
@@ -517,10 +464,13 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Coordinate is not available"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Coordinate is not available"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should not build parcel that goes too far north", async () => {
@@ -588,10 +538,13 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("missing role"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("missing role"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should not build parcel with empty path", async () => {
@@ -611,10 +564,13 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("Path must have at least one component"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("Path must have at least one component"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should only destroy one parcel within a word", async () => {
@@ -635,7 +591,8 @@ describe("GeoWebParcel", async () => {
     let buildTx = await geoWebParcel.build(coord1, [BigNumber.from(0)]);
     let buildResult = await buildTx.wait();
 
-    await geoWebParcel.destroy(buildResult.events[0].args._id);
+    const parcelId = buildResult.events![0].args!._id;
+    await geoWebParcel.destroy(parcelId);
 
     let result1 = await geoWebParcel.availabilityIndex(0, 2);
 
@@ -645,19 +602,12 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(
-      buildResult.events[0].args._id
-    );
-    assert.equal(
-      parcel1.baseCoordinate.toString(),
+    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
     );
-    assert.equal(
-      parcel1.path.toString(),
-      0,
-      "Parcel was not marked as destroyed"
-    );
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
   it("should not destroy parcel if caller does not have DESTROY_ROLE", async () => {
@@ -673,7 +623,7 @@ describe("GeoWebParcel", async () => {
     let buildTx = await geoWebParcel.build(coord, [BigNumber.from(0)]);
 
     let buildResult = await buildTx.wait();
-    let parcelId = buildResult.events[0].args._id;
+    const parcelId = buildResult.events![0].args!._id;
     var err;
     try {
       await geoWebParcel.connect(accounts[1]).destroy(parcelId);
@@ -681,9 +631,12 @@ describe("GeoWebParcel", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("missing role"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("missing role"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 });

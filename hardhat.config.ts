@@ -4,24 +4,24 @@
 
 import * as dotenv from "dotenv";
 
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config()
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
 }
 
 // require("@matterlabs/hardhat-zksync-deploy");
 // require("@matterlabs/hardhat-zksync-solc");
-require('@typechain/hardhat');
-require('@nomiclabs/hardhat-ethers');
+require("@typechain/hardhat");
 import "@nomiclabs/hardhat-waffle";
 import { task, types } from "hardhat/config";
 import { ethers } from "ethers";
+import "@nomiclabs/hardhat-web3";
 require("@openzeppelin/hardhat-upgrades");
 require("@eth-optimism/hardhat-ovm");
 require("solidity-coverage");
 require("./tasks/Accountant");
 require("./tasks/GeoWebParcel");
 require("./tasks/ERC721License");
-require("./tasks/ETHExpirationCollector");
+require("./tasks/CollectorSuperApp");
 require("./tasks/ETHPurchaser");
 require("./tasks/SimpleETHClaimer");
 require("./tasks/estimate_minting_gas");
@@ -34,14 +34,20 @@ task(
   const parcelAddress = await hre.run("deploy:parcel");
   const accountantAddress = await hre.run("deploy:accountant");
   const licenseAddress = await hre.run("deploy:license");
-  const purchaserAddress = await hre.run("deploy:purchaser");
-  const collectorAddress = await hre.run("deploy:collector");
-  const claimerAddress = await hre.run("deploy:claimer");
+
+  const accounts = await hre.ethers.getSigners();
+
+  // CollectorSuperApp default config
+  const collectorAddress = await hre.run("deploy:collector", {
+    host: "0xeD5B5b32110c3Ded02a07c8b8e97513FAfb883B6",
+    cfa: "0xF4C5310E51F6079F601a5fb7120bC72a70b96e2A",
+    acceptedToken: "0xa623b2DD931C5162b7a0B25852f4024Db48bb1A0",
+    receiver: accounts[0].address,
+  });
+
   console.log("Contracts deployed.");
 
   console.log("\nSetting default configuration...");
-
-  const accounts = await hre.ethers.getSigners();
 
   // Accountant default config
   await hre.run("config:accountant", {
@@ -50,49 +56,15 @@ task(
     validator: collectorAddress,
   });
 
-  // ETHExpirationCollector default config
-  await hre.run("config:collector", {
-    licenseAddress,
-    accountantAddress,
-    contractAddress: collectorAddress,
-    minContributionRate: hre.ethers.utils
-      .parseEther("0.01")
-      .div(60 * 60 * 24 * 365)
-      .toString(),
-    minExpiration: 60 * 60 * 24 * 7, // 7 days
-    maxExpiration: 60 * 60 * 24 * 730, // 730 days
-    receiver: accounts[0].address,
-  });
-
-  // ETHPurchaser default config
-  await hre.run("config:purchaser", {
-    licenseAddress,
-    accountantAddress,
-    collectorAddress,
-    contractAddress: purchaserAddress,
-    dutchAuctionLength: 60 * 60 * 24 * 7, // 7 days
-  });
-
-  // SimpleETHClaimer default config
-  await hre.run("config:claimer", {
-    contractAddress: claimerAddress,
-    licenseAddress,
-    parcelAddress,
-    collectorAddress,
-    minClaimExpiration: 60 * 60 * 24 * 7, // 7 days
-  });
-
   console.log("Default configuration set.");
 
   console.log("\nSetting roles...");
   // Set roles
   await hre.run("roles:set-default", {
-    licenseAddress,
-    accountantAddress,
-    collectorAddress,
-    parcelAddress,
-    purchaserAddress,
-    claimerAddress,
+    licenseAddress: licenseAddress,
+    parcelAddress: parcelAddress,
+    accountantAddress: accountantAddress,
+    collectorAddress: collectorAddress,
   });
   console.log("Default roles set.");
 });
@@ -102,21 +74,66 @@ task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
     await hre.run("deploy:parcel");
     await hre.run("deploy:accountant");
     await hre.run("deploy:license");
-    await hre.run("deploy:purchaser");
     await hre.run("deploy:collector");
-    await hre.run("deploy:claimer");
   }
 );
 
 task("roles:set-default", "Set default roles on all deployed contracts")
-  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
-  .addOptionalParam("accountantAddress", "Address of Accountant", undefined, types.string)
-  .addOptionalParam("collectorAddress", "Address of ETHExpirationCollector", undefined, types.string)
-  .addOptionalParam("parcelAddress", "Address of GeoWebParcel", undefined, types.string)
-  .addOptionalParam("purchaserAddress", "Address of ETHPurchaser", undefined, types.string)
-  .addOptionalParam("claimerAddress", "Address of SimpleETHClaimer", undefined, types.string)
+  .addOptionalParam(
+    "licenseAddress",
+    "Address of ERC721 License used to find owners",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "accountantAddress",
+    "Address of Accountant",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "collectorAddress",
+    "Address of ETHExpirationCollector",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "parcelAddress",
+    "Address of GeoWebParcel",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "purchaserAddress",
+    "Address of ETHPurchaser",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "claimerAddress",
+    "Address of SimpleETHClaimer",
+    undefined,
+    types.string
+  )
   .setAction(
-    async ({ licenseAddress, accountantAddress, collectorAddress, parcelAddress, purchaserAddress, claimerAddress }: { licenseAddress: string, accountantAddress: string, collectorAddress: string, parcelAddress: string, purchaserAddress: string, claimerAddress: string }, hre) => {
+    async (
+      {
+        licenseAddress,
+        accountantAddress,
+        collectorAddress,
+        parcelAddress,
+        purchaserAddress,
+        claimerAddress,
+      }: {
+        licenseAddress: string;
+        accountantAddress: string;
+        collectorAddress: string;
+        parcelAddress: string;
+        purchaserAddress: string;
+        claimerAddress: string;
+      },
+      hre
+    ) => {
       const licenseContract = await hre.ethers.getContractAt(
         "ERC721License",
         licenseAddress
@@ -126,50 +143,44 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         collectorAddress
       );
 
-      const parcelContract = await hre.ethers.getContractAt("GeoWebParcel", parcelAddress);
+      const parcelContract = await hre.ethers.getContractAt(
+        "GeoWebParcel",
+        parcelAddress
+      );
 
       await hre.run("roles:accountant", {
         accountantAddress,
         collectorAddress,
       });
 
-      // ERC721License roles
-      const res2 = await licenseContract.grantRole(
-        await licenseContract.MINT_ROLE(),
-        claimerAddress
-      );
-      await res2.wait();
+      // // ERC721License roles
+      // const res2 = await licenseContract.grantRole(
+      //   await licenseContract.MINT_ROLE(),
+      //   claimerAddress ?? claimer!.address
+      // );
+      // await res2.wait();
 
-      const res3 = await licenseContract.grantRole(
-        await licenseContract.OPERATOR_ROLE(),
-        purchaserAddress
-      );
-      await res3.wait();
+      // const res3 = await licenseContract.grantRole(
+      //   await licenseContract.OPERATOR_ROLE(),
+      //   purchaserAddress ?? purchaser!.address
+      // );
+      // await res3.wait();
 
-      // ETHExpirationCollector roles
-      const res4 = await collectorContract.grantRole(
-        await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        claimerAddress
-      );
-      await res4.wait();
-
-      const res5 = await collectorContract.grantRole(
-        await collectorContract.MODIFY_CONTRIBUTION_ROLE(),
-        purchaserAddress
-      );
-      await res5.wait();
-
-      // GeoWebParcel roles
-      const res6 = await parcelContract.grantRole(
-        await parcelContract.BUILD_ROLE(),
-        claimerAddress
-      );
-      await res6.wait();
+      // // GeoWebParcel roles
+      // const res6 = await parcelContract.grantRole(
+      //   await parcelContract.BUILD_ROLE(),
+      //   claimerAddress ?? claimer!.address
+      // );
+      // await res6.wait();
     }
   );
 
 module.exports = {
   networks: {
+    hardhat: {
+      gasPrice: 0,
+      initialBaseFeePerGas: 0,
+    },
     local: {
       gasPrice: 1000000000,
       url: `http://localhost:8545`,

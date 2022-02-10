@@ -1,9 +1,14 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { expect, assert, use } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import * as hre from "hardhat";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
+import { solidity } from "ethereum-waffle";
+
+use(solidity);
 
 describe("ETHPurchaser", async () => {
-  let accounts;
+  let accounts: SignerWithAddress[];
   let defaultDutchAuctionLengthInSeconds = 60 * 60 * 7;
 
   async function buildContract({
@@ -11,6 +16,11 @@ describe("ETHPurchaser", async () => {
     collector,
     accountant,
     dutchAuctionLengthInSeconds,
+  }: {
+    license?: string;
+    collector?: string;
+    accountant?: string;
+    dutchAuctionLengthInSeconds?: number;
   }) {
     const _dutchAuctionLengthInSeconds =
       dutchAuctionLengthInSeconds ?? defaultDutchAuctionLengthInSeconds;
@@ -168,10 +178,13 @@ describe("ETHPurchaser", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("paused"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("paused"),
+        "Expected an error but did not get one"
+      );
+    }
 
     await purchaser.unpause();
 
@@ -223,8 +236,7 @@ describe("ETHPurchaser", async () => {
 
     let purchasePrice = await purchaser.calculatePurchasePrice(1);
 
-    assert.equal(
-      purchasePrice.toString(),
+    expect(purchasePrice).to.equal(
       20 + 1000 * 10,
       "Purchase price was not correct"
     );
@@ -265,11 +277,7 @@ describe("ETHPurchaser", async () => {
 
     let purchasePrice = await purchaser.calculatePurchasePrice(1);
 
-    assert.equal(
-      purchasePrice.toString(),
-      20,
-      "Purchase price was not correct"
-    );
+    expect(purchasePrice).to.equal(20, "Purchase price was not correct");
   });
 
   it("should calculate purchase price during auction", async () => {
@@ -324,8 +332,7 @@ describe("ETHPurchaser", async () => {
     let purchasePrice = await purchaser.calculatePurchasePrice(1);
     let decreaseRate = 20000 / defaultDutchAuctionLengthInSeconds;
 
-    assert.equal(
-      purchasePrice.toString(),
+    expect(purchasePrice).to.equal(
       Math.ceil(20000 - decreaseRate * 3),
       "Purchase price was not correct"
     );
@@ -389,7 +396,7 @@ describe("ETHPurchaser", async () => {
 
     let purchasePrice = await purchaser.calculatePurchasePrice(1);
 
-    assert.equal(purchasePrice.toString(), 0, "Purchase price was not correct");
+    expect(purchasePrice).to.equal(0, "Purchase price was not correct");
   });
 
   it("should calculate purchase price after auction", async () => {
@@ -444,7 +451,7 @@ describe("ETHPurchaser", async () => {
 
     let purchasePrice = await purchaser.calculatePurchasePrice(1);
 
-    assert.equal(purchasePrice.toString(), 0, "Purchase price was not correct");
+    expect(purchasePrice).to.equal(0, "Purchase price was not correct");
   });
 
   it("should purchase a license [ @skip-on-coverage ]", async () => {
@@ -522,8 +529,7 @@ describe("ETHPurchaser", async () => {
       BigNumber.from(originalBalance2).sub(maxPurchasePrice).toString(),
       "Payment was not taken from buyer"
     );
-    assert.equal(
-      (await purchaser.payments(accounts[2].address)).toString(),
+    expect(await purchaser.payments(accounts[2].address)).to.equal(
       finalPurchasePrice,
       "Payment was not sent to seller"
     );
@@ -593,10 +599,13 @@ describe("ETHPurchaser", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes("above max purchase price"),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes("above max purchase price"),
+        "Expected an error but did not get one"
+      );
+    }
   });
 
   it("should fail to purchase license if value is too low", async () => {
@@ -653,11 +662,14 @@ describe("ETHPurchaser", async () => {
       err = error;
     }
 
-    assert(
-      err.message.includes(
-        "Message value must be greater than or equal to the total buy price"
-      ),
-      "Expected an error but did not get one"
-    );
+    assert(err instanceof Error, "Expected an error but did not get one");
+    if (err instanceof Error) {
+      assert(
+        err.message.includes(
+          "Message value must be greater than or equal to the total buy price"
+        ),
+        "Expected an error but did not get one"
+      );
+    }
   });
 });

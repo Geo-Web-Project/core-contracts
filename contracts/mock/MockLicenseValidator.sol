@@ -15,13 +15,4 @@ contract MockLicenseValidator is ILicenseValidator {
     function isValid(uint256 id) external view override returns (bool) {
         return id == truthyValue;
     }
-
-    function invalidStartDate(uint256)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return defaultStartDate;
-    }
 }

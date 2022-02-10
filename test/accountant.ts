@@ -1,9 +1,10 @@
-const { assert } = require("chai");
-const { ethers } = require("hardhat");
+import { assert } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 const BigNumber = ethers.BigNumber;
 
 describe("Accountant", async () => {
-  let accounts;
+  let accounts: SignerWithAddress[];
 
   async function buildAccountant() {
     const Accountant = await ethers.getContractFactory("Accountant");
@@ -103,23 +104,6 @@ describe("Accountant", async () => {
     assert(await accountant.isValid(10), "Did not call mock validator");
     assert(
       (await accountant.isValid(1)) == false,
-      "Did not call mock validator"
-    );
-  });
-
-  it("should call validator on invalidStartDate", async () => {
-    let accountant = await buildAccountant();
-
-    const MockLicenseValidator = await ethers.getContractFactory(
-      "MockLicenseValidator"
-    );
-    const validator = await MockLicenseValidator.deploy(10, 1);
-    await validator.deployed();
-
-    await accountant.setValidator(validator.address);
-
-    assert(
-      (await accountant.invalidStartDate(1)) == 1,
       "Did not call mock validator"
     );
   });
