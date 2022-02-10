@@ -346,14 +346,17 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 increasedFlowRate
     ) private returns (bytes memory newCtx) {
         ISuperfluid.Context memory decompiledContext = host.decodeCtx(_ctx);
-        (Action action, bytes memory actionData) = abi.decode(
+        if (decompiledContext.userData.length == 0) {
+            revert("AuctionSuperApp: Empty user data");
+        }
+        (uint8 action, bytes memory actionData) = abi.decode(
             decompiledContext.userData,
-            (Action, bytes)
+            (uint8, bytes)
         );
 
-        if (action == Action.CLAIM) {
+        if (action == uint8(Action.CLAIM)) {
             return _claim(_ctx, user, increasedFlowRate, actionData);
-        } else if (action == Action.BID) {
+        } else if (action == uint8(Action.BID)) {
             return _increaseBid(_ctx, user, increasedFlowRate, actionData);
         } else {
             revert("AuctionSuperApp: Unknown Action");
@@ -366,14 +369,17 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 decreasedFlowRate
     ) private returns (bytes memory newCtx) {
         ISuperfluid.Context memory decompiledContext = host.decodeCtx(_ctx);
-        (Action action, bytes memory actionData) = abi.decode(
+        if (decompiledContext.userData.length == 0) {
+            revert("AuctionSuperApp: Empty user data");
+        }
+        (uint8 action, bytes memory actionData) = abi.decode(
             decompiledContext.userData,
-            (Action, bytes)
+            (uint8, bytes)
         );
 
-        if (action == Action.CLAIM) {
+        if (action == uint8(Action.CLAIM)) {
             revert("AuctionSuperApp: Cannot decrease flow on CLAIM");
-        } else if (action == Action.BID) {
+        } else if (action == uint8(Action.BID)) {
             return _ctx;
         } else {
             revert("AuctionSuperApp: Unknown Action");
@@ -385,19 +391,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         address user,
         int96 decreasedFlowRate
     ) private returns (bytes memory newCtx) {
-        ISuperfluid.Context memory decompiledContext = host.decodeCtx(_ctx);
-        (Action action, bytes memory actionData) = abi.decode(
-            decompiledContext.userData,
-            (Action, bytes)
-        );
-
-        if (action == Action.CLAIM) {
-            revert("AuctionSuperApp: Cannot decrease flow on CLAIM");
-        } else if (action == Action.BID) {
-            return _ctx;
-        } else {
-            revert("AuctionSuperApp: Unknown Action");
-        }
+        // Increase app -> user flow back to original
+        return _increaseAppToUserFlow(_ctx, user, decreasedFlowRate);
     }
 
     function _onDeleteUserToApp(
@@ -591,15 +586,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         whenNotPaused
         returns (bytes memory newCtx)
     {
-        address user;
-        {
-            (address _sender, address _receiver) = abi.decode(
-                _agreementData,
-                (address, address)
-            );
-            user = _receiver == address(this) ? _sender : _receiver;
-        }
-
+        (address user, ) = abi.decode(_agreementData, (address, address));
         int96 originalFlowRate = abi.decode(_cbdata, (int96));
         (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
 
@@ -636,18 +623,25 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             return _ctx;
 
         address user;
+        bool isUserToApp;
         {
             (address _sender, address _receiver) = abi.decode(
                 _agreementData,
                 (address, address)
             );
-            user = _receiver == address(this) ? _sender : _receiver;
+            isUserToApp = _receiver == address(this);
+            user = isUserToApp ? _sender : _receiver;
         }
 
         int96 originalFlowRate = abi.decode(_cbdata, (int96));
         (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
 
-        return _onDeleteUserToApp(_ctx, user, originalFlowRate - flowRate);
+        if (isUserToApp) {
+            return _onDeleteUserToApp(_ctx, user, originalFlowRate - flowRate);
+        } else {
+            return
+                _onDecreaseAppToUser(_ctx, user, originalFlowRate - flowRate);
+        }
     }
 
     function _isSameToken(ISuperToken superToken) private view returns (bool) {
