@@ -1384,6 +1384,33 @@ describe("AuctionSuperApp", async () => {
         await checkCurrentOwnerBid(existingLicenseId, 150);
         await checkOutstandingBid(existingLicenseId, 200);
       });
+
+      it("should revert if penalty is not approved on flow increase and outstanding bid", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimSuccess(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidSuccess(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+        const txn2 = updateFlowOp.exec(user);
+        await expect(txn2).to.be.rejected;
+      });
     });
   });
 });
