@@ -450,26 +450,45 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     function _increaseBid(
         bytes memory _ctx,
         address bidder,
-        int96 contributionRate,
+        int96 increasedFlowRate,
         bytes memory actionData
     ) private returns (bytes memory newCtx) {
         uint256 licenseId = abi.decode(actionData, (uint256));
 
         if (license.ownerOf(licenseId) == bidder) {
-            return _increaseOwnerBid(_ctx, bidder, contributionRate, licenseId);
+            return
+                _increaseOwnerBid(_ctx, bidder, increasedFlowRate, licenseId);
         } else {
-            return _placeNewBid(_ctx, bidder, contributionRate, licenseId);
+            return _placeNewBid(_ctx, bidder, increasedFlowRate, licenseId);
         }
     }
 
     function _increaseOwnerBid(
         bytes memory _ctx,
-        address bidder,
-        int96 contributionRate,
+        address user,
+        int96 increasedFlowRate,
         uint256 licenseId
     ) private returns (bytes memory newCtx) {
-        // TODO
-        return _ctx;
+        bool outstandingBidExists = outstandingBid[licenseId].contributionRate >
+            0;
+
+        if (outstandingBidExists) {
+            // TODO
+            revert(
+                "AuctionSuperApp: Cannot place another bid with one outstanding"
+            );
+        } else {
+            // Increase app -> receiver flow
+            newCtx = _increaseAppToReceiverFlow(_ctx, increasedFlowRate);
+
+            // Update currentOwnerBid
+            Bid storage bid = currentOwnerBid[licenseId];
+            bid.timestamp = block.timestamp;
+            bid.bidder = user;
+            bid.contributionRate = bid.contributionRate + increasedFlowRate;
+            bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
+            bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+        }
     }
 
     function _placeNewBid(
