@@ -38,6 +38,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     /// @notice Bid period length in seconds
     uint256 public bidPeriodLengthInSeconds;
 
+    /// @dev Last deletion of each user
+    mapping(address => uint256) private lastUserDeletion;
+
     enum Action {
         CLAIM,
         BID
@@ -246,6 +249,24 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         return value;
     }
 
+    /**
+     * @notice Get the current effective contribution rate of a license
+     * @param id Parcel id
+     * @return Current contribution rate
+     */
+    function ownerBidContributionRate(uint256 id) public view returns (int96) {
+        address owner = license.ownerOf(id);
+        uint256 lastOwnerDeletion = lastUserDeletion[owner];
+        Bid storage bid = currentOwnerBid[id];
+
+        // Override to 0 if flow is deleted after bid
+        if (lastOwnerDeletion > bid.timestamp) {
+            return 0;
+        }
+
+        return bid.contributionRate;
+    }
+
     function _increaseAppToReceiverFlow(bytes memory ctx, int96 amount)
         private
         returns (bytes memory newCtx)
@@ -433,7 +454,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         if (action == uint8(Action.CLAIM)) {
             revert("AuctionSuperApp: Cannot decrease flow on CLAIM");
         } else if (action == uint8(Action.BID)) {
-            return _ctx;
+            return _decreaseBid(_ctx, user, decreasedFlowRate, actionData);
         } else {
             revert("AuctionSuperApp: Unknown Action");
         }
@@ -462,6 +483,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             newCtx,
             decreasedFlowRate - decreasedAmount
         );
+
+        // Mark deletion
+        lastUserDeletion[user] = block.timestamp;
     }
 
     function _claim(
@@ -526,7 +550,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         Bid storage bid = currentOwnerBid[licenseId];
 
         bool outstandingBidExists = bidOutstanding.contributionRate > 0;
-        int96 newBidAmount = bid.contributionRate + increasedFlowRate;
+        int96 newBidAmount = ownerBidContributionRate(licenseId) +
+            increasedFlowRate;
 
         if (outstandingBidExists) {
             if (
@@ -556,6 +581,55 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         // Increase app -> receiver flow
         newCtx = _increaseAppToReceiverFlow(_ctx, increasedFlowRate);
+
+        // Update currentOwnerBid
+        bid.timestamp = block.timestamp;
+        bid.bidder = user;
+        bid.contributionRate = newBidAmount;
+        bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
+        bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+    }
+
+    function _decreaseBid(
+        bytes memory _ctx,
+        address user,
+        int96 decreasedFlowRate,
+        bytes memory actionData
+    ) private returns (bytes memory newCtx) {
+        uint256 licenseId = abi.decode(actionData, (uint256));
+
+        if (license.ownerOf(licenseId) == user) {
+            return _decreaseOwnerBid(_ctx, user, decreasedFlowRate, licenseId);
+        } else {
+            // TODO
+            return _ctx;
+        }
+    }
+
+    function _decreaseOwnerBid(
+        bytes memory _ctx,
+        address user,
+        int96 decreasedFlowRate,
+        uint256 licenseId
+    ) private returns (bytes memory newCtx) {
+        Bid storage bidOutstanding = outstandingBid[licenseId];
+        Bid storage bid = currentOwnerBid[licenseId];
+
+        bool outstandingBidExists = bidOutstanding.contributionRate > 0;
+        if (decreasedFlowRate > bid.contributionRate) {
+            revert(
+                "AuctionSuperApp: Cannot decrease bid beyond contribution rate"
+            );
+        }
+        int96 newBidAmount = bid.contributionRate - decreasedFlowRate;
+
+        if (outstandingBidExists) {
+            // TODO
+            return _ctx;
+        }
+
+        // Decrease app -> receiver flow
+        newCtx = _decreaseAppToReceiverFlow(_ctx, decreasedFlowRate);
 
         // Update currentOwnerBid
         bid.timestamp = block.timestamp;
@@ -697,8 +771,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function beforeAgreementTerminated(
-        ISuperToken _superToken,
-        address _agreementClass,
+        ISuperToken, // _superToken,
+        address, // _agreementClass,
         bytes32 _agreementId,
         bytes calldata,
         bytes calldata
