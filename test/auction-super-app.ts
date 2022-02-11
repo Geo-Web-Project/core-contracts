@@ -1,7 +1,7 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers, web3, waffle } from "hardhat";
+import { ethers, web3, network } from "hardhat";
 import { Framework, SFError, SuperToken } from "@superfluid-finance/sdk-core";
 import {
   BigNumber,
@@ -95,6 +95,7 @@ describe("AuctionSuperApp", async () => {
     license,
     penaltyNumerator,
     penaltyDenominator,
+    bidPeriodLengthInSeconds,
   }: {
     host: string;
     cfa: string;
@@ -104,6 +105,7 @@ describe("AuctionSuperApp", async () => {
     license: string;
     penaltyNumerator: BigNumber;
     penaltyDenominator: BigNumber;
+    bidPeriodLengthInSeconds: BigNumber;
   }) {
     const factory = new AuctionSuperApp__factory(admin);
     const superApp: AuctionSuperApp = await factory.deploy(
@@ -114,7 +116,8 @@ describe("AuctionSuperApp", async () => {
       license,
       accountant,
       penaltyNumerator,
-      penaltyDenominator
+      penaltyDenominator,
+      bidPeriodLengthInSeconds
     );
     await superApp.deployed();
 
@@ -358,6 +361,7 @@ describe("AuctionSuperApp", async () => {
       license: mockLicense.address,
       penaltyNumerator: BigNumber.from(1),
       penaltyDenominator: BigNumber.from(10),
+      bidPeriodLengthInSeconds: BigNumber.from(604800),
     });
 
     const mockClaimerFactory = new MockClaimer__factory(admin);
@@ -423,6 +427,17 @@ describe("AuctionSuperApp", async () => {
 
     const value = await superApp.claimer();
     expect(value).to.equal(admin.address);
+  });
+
+  it("should only allow admin to set bid period", async () => {
+    expect(superApp.connect(user).setBidPeriod(100)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setBidPeriod(100);
+
+    const value = await superApp.bidPeriodLengthInSeconds();
+    expect(value).to.equal(100);
   });
 
   // describe("No user data", async () => {
@@ -1409,6 +1424,47 @@ describe("AuctionSuperApp", async () => {
           userData: userData,
         });
         const txn2 = updateFlowOp.exec(user);
+        await expect(txn2).to.be.rejected;
+      });
+
+      it("should revert on flow increase and outstanding bid has elapsed", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimSuccess(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidSuccess(bidder, existingLicenseId);
+        await txn1.wait();
+
+        // Advance time
+        await network.provider.send("evm_increaseTime", [700000]);
+        await network.provider.send("evm_mine");
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
+        const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: penaltyAmount.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+
+        const txn2 = batchCall.exec(user);
         await expect(txn2).to.be.rejected;
       });
     });

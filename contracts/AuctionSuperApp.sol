@@ -35,6 +35,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     uint256 public penaltyNumerator;
     /// @notice The denominator of the penalty to pay to reject a bid.
     uint256 public penaltyDenominator;
+    /// @notice Bid period length in seconds
+    uint256 public bidPeriodLengthInSeconds;
 
     enum Action {
         CLAIM,
@@ -57,7 +59,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         address _license,
         address _accountant,
         uint256 _penaltyNumerator,
-        uint256 _penaltyDenominator
+        uint256 _penaltyDenominator,
+        uint256 _bidPeriodLengthInSeconds
     ) {
         require(address(_host) != address(0), "host is zero address");
         require(address(_cfa) != address(0), "cfa is zero address");
@@ -76,6 +79,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         accountant = Accountant(_accountant);
         penaltyNumerator = _penaltyNumerator;
         penaltyDenominator = _penaltyDenominator;
+        bidPeriodLengthInSeconds = _bidPeriodLengthInSeconds;
 
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
             SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP;
@@ -182,6 +186,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     {
         penaltyNumerator = _penaltyNumerator;
         penaltyDenominator = _penaltyDenominator;
+    }
+
+    /**
+     * @notice Admin can set bid period.
+     * @param _bidPeriodLengthInSeconds The new bid period
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setBidPeriod(uint256 _bidPeriodLengthInSeconds)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        bidPeriodLengthInSeconds = _bidPeriodLengthInSeconds;
     }
 
     /**
@@ -512,20 +528,30 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bool outstandingBidExists = bidOutstanding.contributionRate > 0;
         int96 newBidAmount = bid.contributionRate + increasedFlowRate;
 
-        if (
-            outstandingBidExists &&
-            newBidAmount >= bidOutstanding.contributionRate
-        ) {
-            // Update to new contribution
-            accountant.setContributionRate(licenseId, uint96(newBidAmount));
+        if (outstandingBidExists) {
+            if (
+                (block.timestamp - bidOutstanding.timestamp) >=
+                bidPeriodLengthInSeconds
+            ) {
+                revert("AuctionSuperApp: Bid period has elapsed");
+            }
 
-            // Pay penalty
-            uint256 penalty = calculatePenalty(licenseId);
-            bool success = acceptedToken.transferFrom(user, receiver, penalty);
-            require(success, "AuctionSuperApp: Penalty payment failed");
+            if (newBidAmount >= bidOutstanding.contributionRate) {
+                // Update to new contribution
+                accountant.setContributionRate(licenseId, uint96(newBidAmount));
 
-            // Clear outstanding bid
-            bidOutstanding.contributionRate = 0;
+                // Pay penalty
+                uint256 penalty = calculatePenalty(licenseId);
+                bool success = acceptedToken.transferFrom(
+                    user,
+                    receiver,
+                    penalty
+                );
+                require(success, "AuctionSuperApp: Penalty payment failed");
+
+                // Clear outstanding bid
+                bidOutstanding.contributionRate = 0;
+            }
         }
 
         // Increase app -> receiver flow
