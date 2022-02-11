@@ -31,6 +31,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     /// @notice Outstanding bid for each parcel
     mapping(uint256 => Bid) public outstandingBid;
 
+    /// @notice The numerator of the penalty to pay to reject a bid.
+    uint256 public penaltyNumerator;
+    /// @notice The denominator of the penalty to pay to reject a bid.
+    uint256 public penaltyDenominator;
+
     enum Action {
         CLAIM,
         BID
@@ -50,7 +55,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         ISuperToken _acceptedToken,
         address _receiver,
         address _license,
-        address _accountant
+        address _accountant,
+        uint256 _penaltyNumerator,
+        uint256 _penaltyDenominator
     ) {
         require(address(_host) != address(0), "host is zero address");
         require(address(_cfa) != address(0), "cfa is zero address");
@@ -67,6 +74,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         receiver = _receiver;
         license = IERC721(_license);
         accountant = Accountant(_accountant);
+        penaltyNumerator = _penaltyNumerator;
+        penaltyDenominator = _penaltyDenominator;
 
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
             SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP;
@@ -162,6 +171,20 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     /**
+     * @notice Admin can update the penalty fee.
+     * @param _penaltyNumerator The numerator of the penalty to pay to reject a bid
+     * @param _penaltyDenominator The denominator of the penalty to pay to reject a bid
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setPenalty(uint256 _penaltyNumerator, uint256 _penaltyDenominator)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        penaltyNumerator = _penaltyNumerator;
+        penaltyDenominator = _penaltyDenominator;
+    }
+
+    /**
      * @notice Pause the contract. Pauses payments and setting contribution rates.
      * @custom:requires PAUSE_ROLE
      */
@@ -175,6 +198,20 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
+    }
+
+    /**
+     * @notice Calculate the penalty needed for the current bid to be rejected
+     * @param id Parcel id to purchase
+     * @return Penalty in wei
+     */
+    function calculatePenalty(uint256 id) public view returns (uint256) {
+        uint256 currentPurchasePrice = calculatePurchasePrice(id);
+
+        uint256 value = (currentPurchasePrice * penaltyNumerator) /
+            penaltyDenominator;
+
+        return value;
     }
 
     /**
@@ -477,11 +514,20 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         if (
             outstandingBidExists &&
-            newBidAmount > bidOutstanding.contributionRate
+            newBidAmount >= bidOutstanding.contributionRate
         ) {
-            // TODO: Pay penalty
+            // Update to new contribution
+            accountant.setContributionRate(licenseId, uint96(newBidAmount));
+
+            // Pay penalty
+            uint256 penalty = calculatePenalty(licenseId);
+            bool success = acceptedToken.transferFrom(user, receiver, penalty);
+            require(success, "AuctionSuperApp: Penalty payment failed");
+
             // Clear outstanding bid
             bidOutstanding.contributionRate = 0;
+
+            // TODO: Lower outstanding bid flows
         }
 
         // Increase app -> receiver flow

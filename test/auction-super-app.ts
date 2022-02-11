@@ -64,6 +64,13 @@ describe("AuctionSuperApp", async () => {
     }
   }
 
+  async function calculatePenaltyAmount(rate: BigNumber) {
+    const penaltyNumerator = await superApp.penaltyNumerator();
+    const penaltyDenominator = await superApp.penaltyDenominator();
+
+    return rate.mul(penaltyNumerator).div(penaltyDenominator);
+  }
+
   async function rateToPurchasePrice(rate: BigNumber) {
     const perSecondFeeNumerator = await mockAccountant.perSecondFeeNumerator();
     const perSecondFeeDenominator =
@@ -86,6 +93,8 @@ describe("AuctionSuperApp", async () => {
     receiver,
     accountant,
     license,
+    penaltyNumerator,
+    penaltyDenominator,
   }: {
     host: string;
     cfa: string;
@@ -93,6 +102,8 @@ describe("AuctionSuperApp", async () => {
     receiver: string;
     accountant: string;
     license: string;
+    penaltyNumerator: BigNumber;
+    penaltyDenominator: BigNumber;
   }) {
     const factory = new AuctionSuperApp__factory(admin);
     const superApp: AuctionSuperApp = await factory.deploy(
@@ -101,7 +112,9 @@ describe("AuctionSuperApp", async () => {
       token,
       receiver,
       license,
-      accountant
+      accountant,
+      penaltyNumerator,
+      penaltyDenominator
     );
     await superApp.deployed();
 
@@ -343,6 +356,8 @@ describe("AuctionSuperApp", async () => {
       receiver: admin.address,
       accountant: mockAccountant.address,
       license: mockLicense.address,
+      penaltyNumerator: BigNumber.from(1),
+      penaltyDenominator: BigNumber.from(10),
     });
 
     const mockClaimerFactory = new MockClaimer__factory(admin);
@@ -374,15 +389,18 @@ describe("AuctionSuperApp", async () => {
     expect(value).to.equal(admin.address);
   });
 
-  it("should only allow admin to set accountant", async () => {
-    expect(
-      superApp.connect(user).setAccountant(admin.address)
-    ).to.be.revertedWith("is missing role");
+  it("should only allow admin to set penalty", async () => {
+    expect(superApp.connect(user).setPenalty(1, 2)).to.be.revertedWith(
+      "is missing role"
+    );
 
-    await superApp.setAccountant(admin.address);
+    await superApp.setPenalty(1, 2);
 
-    const value = await superApp.accountant();
-    expect(value).to.equal(admin.address);
+    const numerator = await superApp.penaltyNumerator();
+    const denominator = await superApp.penaltyDenominator();
+
+    expect(numerator).to.equal(1);
+    expect(denominator).to.equal(2);
   });
 
   it("should only allow admin to set license", async () => {
@@ -393,6 +411,17 @@ describe("AuctionSuperApp", async () => {
     await superApp.setLicense(admin.address);
 
     const value = await superApp.license();
+    expect(value).to.equal(admin.address);
+  });
+
+  it("should only allow admin to set claimer", async () => {
+    expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setClaimer(admin.address);
+
+    const value = await superApp.claimer();
     expect(value).to.equal(admin.address);
   });
 
@@ -1278,13 +1307,13 @@ describe("AuctionSuperApp", async () => {
         const txn1 = await placeBidSuccess(bidder, existingLicenseId);
         await txn1.wait();
 
-        const penaltyAmount = 0;
-        // const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
+        const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
 
-        // const approveOp = ethx.approve({
-        //   receiver: superApp.address,
-        //   amount: purchasePrice.toString(),
-        // });
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: penaltyAmount.toString(),
+        });
 
         const actionData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
@@ -1300,13 +1329,14 @@ describe("AuctionSuperApp", async () => {
           superToken: ethx.address,
           userData: userData,
         });
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
 
-        const txn2 = await updateFlowOp.exec(user);
+        const txn2 = await batchCall.exec(user);
         const receipt = await txn2.wait();
 
         await expect(txn2)
           .to.emit(ethx_erc20, "Transfer")
-          .withArgs(user.address, superApp.address, penaltyAmount);
+          .withArgs(user.address, admin.address, penaltyAmount);
         await checkJailed(receipt);
         await checkAppNetFlow();
         await checkUserToAppFlow("0", bidder);
