@@ -469,26 +469,30 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 increasedFlowRate,
         uint256 licenseId
     ) private returns (bytes memory newCtx) {
-        bool outstandingBidExists = outstandingBid[licenseId].contributionRate >
-            0;
+        Bid storage bidOutstanding = outstandingBid[licenseId];
+        Bid storage bid = currentOwnerBid[licenseId];
 
-        if (outstandingBidExists) {
-            // TODO
-            revert(
-                "AuctionSuperApp: Cannot place another bid with one outstanding"
-            );
-        } else {
-            // Increase app -> receiver flow
-            newCtx = _increaseAppToReceiverFlow(_ctx, increasedFlowRate);
+        bool outstandingBidExists = bidOutstanding.contributionRate > 0;
+        int96 newBidAmount = bid.contributionRate + increasedFlowRate;
 
-            // Update currentOwnerBid
-            Bid storage bid = currentOwnerBid[licenseId];
-            bid.timestamp = block.timestamp;
-            bid.bidder = user;
-            bid.contributionRate = bid.contributionRate + increasedFlowRate;
-            bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
-            bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+        if (
+            outstandingBidExists &&
+            newBidAmount > bidOutstanding.contributionRate
+        ) {
+            // TODO: Pay penalty
+            // Clear outstanding bid
+            bidOutstanding.contributionRate = 0;
         }
+
+        // Increase app -> receiver flow
+        newCtx = _increaseAppToReceiverFlow(_ctx, increasedFlowRate);
+
+        // Update currentOwnerBid
+        bid.timestamp = block.timestamp;
+        bid.bidder = user;
+        bid.contributionRate = newBidAmount;
+        bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
+        bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
     }
 
     function _placeNewBid(

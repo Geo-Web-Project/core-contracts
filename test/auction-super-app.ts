@@ -1317,7 +1317,7 @@ describe("AuctionSuperApp", async () => {
         await checkOutstandingBid(existingLicenseId, 0);
       });
 
-      it("should no clear outstanding bid if flow increase is not high enough on outstanding bid", async () => {
+      it("should not clear outstanding bid if flow increase is not high enough on outstanding bid", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimSuccess(user, existingLicenseId);
