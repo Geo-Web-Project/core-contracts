@@ -892,6 +892,70 @@ describe("AuctionSuperApp", async () => {
         await checkAppToReceiverFlow("200");
       });
 
+      it("should revert on flow create when license does not exist", async () => {
+        let existingLicenseId = 1;
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn2 = batchCall.exec(bidder);
+        await expect(txn2).to.be.rejected;
+      });
+
+      it("should revert on flow increase when license does not exist", async () => {
+        let existingLicenseId = 1;
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const txn1 = await claimSuccess(bidder, 2);
+        await txn1.wait();
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn2 = batchCall.exec(bidder);
+        await expect(txn2).to.be.rejected;
+      });
+
       it("should revert on flow create when outstanding bid exists", async () => {
         let existingLicenseId = 2;
 

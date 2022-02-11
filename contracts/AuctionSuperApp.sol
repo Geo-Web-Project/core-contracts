@@ -478,6 +478,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 bidContributionRate,
         uint256 licenseId
     ) private returns (bytes memory newCtx) {
+        if (license.ownerOf(licenseId) == address(0x0)) {
+            revert("AuctionSuperApp: Cannot place bid on non-existent license");
+        }
+
         bool outstandingBidExists = outstandingBid[licenseId].contributionRate >
             0;
 
