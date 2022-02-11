@@ -597,9 +597,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory actionData
     ) private returns (bytes memory newCtx) {
         uint256 licenseId = abi.decode(actionData, (uint256));
+        Bid storage bidOutstanding = outstandingBid[licenseId];
 
         if (license.ownerOf(licenseId) == user) {
             return _decreaseOwnerBid(_ctx, user, decreasedFlowRate, licenseId);
+        } else if (
+            bidOutstanding.contributionRate > 0 && bidOutstanding.bidder == user
+        ) {
+            revert("AuctionSuperApp: Cannot decrease outstanding bid");
         } else {
             // TODO
             return _ctx;
