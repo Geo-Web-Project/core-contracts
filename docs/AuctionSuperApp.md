@@ -1,6 +1,6 @@
 # AuctionSuperApp
 
-![](https://mermaid.ink/img/pako:eNqFlF9v2jAUxb-K5yeQzDRQ9y9VmSj0AakrUlEfpqYPXnwBi2BHtrO0Qnz33tghJBTYU-J7fz4-Po6zpYkWQCO6SHWRrLhx5P6RkFgRqRLzZMGMsqzzPMUBcAskxwrpDQnPspcuUgIa1ATOUmkDSsGdRLBdUjWCrZIoSY8Y-AfGDWP66F9i-oLFJOVyg7Vx-QTz2Y873dA8iI4SJ7VCrtLuNMS7hCtBavP7loEEJC5UaRnfd1AJehuh0hYLtLTj3MwKBWYb06klODKgHPGlXzHdIWPBzXJ3KwVqzcERnTvr0IpUS_JXCu-qDv7jGu0zIr0eiemTWitdKML9dmOK1WGV2yn8QYdzENzx_8JBk9zckPH9aPq74n3el_Hb6aSCD6m0ItqbqSjtQ-ljcLNGIlgid6_SOlvGF6b8AXtsu5p8JKmgwKrwp_EABVnJ5QqsK2OuDuOEoYN6EB1cdhRE6pWOHNQGj4DDIvXn4I-2cbFaeX5q5lmLHi7Yefj4MrTux6U1Wt99aS5WqVTruXtLgXxhfTZgV-wr-8Z-sJ-sj4U-6w-IdUavIVoaAMXCoFdI4VbRVfbKEp1qE5rXTbnv-3nacLWEcxND95oyind-w6XAP9gWN4R7cCvYQEwjfBWw4HmKP4pY7RDNM_zO4U5Ipw2NFjy1wCjPnZ6_qYRGzuSwhyaSLw3fVNTuHZs9t2Q)
+![](https://mermaid.ink/img/pako:eNqNVm1v2jAQ_itepEpFM1MT6BsdTJRWGlLXVq36YVr6wUsOsBqcyDGjqOp_38V23kM3CUF899zrc2fy5gRxCM7IWUTxNlgxqcjNAyG-IFwE8ikFOU2Sw19zPABLgWxQQvoTwpLkuYeoECqoK9iLiiqgCFQnBNUZqoCgKkNkSA2R8Aekcie-86CffOe5kHoNaRAxvkbZLPsF-UWfD3tGWcaaBorHAnE25GElZo8wEZKiplwlIQCOgXp5-EyvwDrUaRhJ3ZlB83S2kXdbAfLNd-YpwZMEoYgWffOdd8SkoO426pKH6OsRFIk3KlWYChdL8puHOquCj44YCdvdg2CR2qGDe7Yj9kQ-k1kETJK7ikMMYzMTAZbwYItDy1aIRuEsCCCxaU71c-kstE0z2qKFub4-XaTfJ77zJF5EvM3cZoz4DkonOeNd-NvYjFDIFPs32ngl4zGZ3UznP6yBHgr9VK_-Yw-X8ytrX7JZozZP0KJiTaaLhDcaT65fearSjHZj8hPSVinWuuFTwBaloR6jW9iSFV-uIFXZfNgpwk8BahiXzhuIMn4xg5qsypLXmvGp2gy7h7Vt14rmttUW0JrWdsgMSKOdZW6mI96H_Swa5zWtsUPXEUtS0Ix8Z2lrv8CorZsKvpMDS0BmOKm60qwWLW5mUe5o9_hVrYqALVStxP2wVgkdc_YBy3tG3tt_g1VA3eQN_o-8QdM6S3G6FiqjLr9V8EJcxxuhfF-Mx_gVmIR0-EuzDsRWp02bPot7rA1qbIzXTKzQ53Zed15f9-RVieh1lWqv0DasI7FWzxv3z9DQ1eh6rd3D7unwsumIuHh5VLsIyBF1qUcHdEiP6Qk9pWf0nLoodKnrUXdA3SF1j6l7Qt1T6p5R95x6R9Q7od4p9c7o4IikSsYvMFpKAEHNob_loVqNhskrDeIolkZ54YuDA1JG1h5y81gysYR99kaLDvCKT9MrWNhayIJH0UhCaHHbFVcFLN8Gauu25wuHOvgKsWY8xPekN2wXNkmtYA2-M8LHEBZsE-F7hy_eEbpJ8C8JrkOuYumMFixKgTpso-LHnQgKgUFdcbaUbG2l738BzmMoGg)
 
 <details>
   <summary>Show source code</summary>
@@ -8,36 +8,59 @@
 ````
 ```mermaid
   flowchart LR
-    incrUserApp([Increase user -> app])
-    decrUserApp([Decrease user -> app])
-    delUserApp([Delete user -> app])
-    delAppUser([Delete app -> user])
-    revert>"Revert"]
-    claim>"Claimer.claim()"]
-    delAppUserAction>"Delete (app -> user) and Decrease (app -> receiver)"]
-    recreateAppUser>"Recreate (app -> user)"]
-    isCurOwner{"Is Current Owner?"}
-    setOutBid>"Set outstanding bid and Increase (app -> user)"]
+ incrUserApp([Increase user -> app])
+ decrUserApp([Decrease user -> app])
+ delUserApp([Delete user -> app])
+ delAppUser([Delete app -> user])
+ revert1>"Revert"]
+ revert2>"Revert"]
+ claim>"Claimer.claim()"]
+ delAppUserAction>"Delete (app -> user) and Decrease (app -> receiver)"]
+ recreateAppUser>"Recreate (app -> user)"]
+ isCurOwner{"Is Current Owner?"}
+ setOutBid>"Set outstanding bid and Increase (app -> user)"]
+ payPenalty>"Pay Penalty + Clear Outstanding Bid"]
+ incAppReceiver>"Increase (app -> receiver)"]
+ acceptBid>"Accept Bid"]
+ decreaseBid>"Decrease Bid"]
 
-    incrUserApp -- "Unknown action" --> revert
-    incrUserApp -- "No user data" --> revert
-    incrUserApp -- "action == CLAIM" --> claim
-    incrUserApp -- "action == BID" --> isCurOwner
-    isCurOwner -- "No" --> outBid1{"Outstanding Bid Exists?"} -- "Yes" --> revert
-    outBid1 -- "No" --> newBidder{"New highest bid?"}
+ incrUserApp -- "Unknown action" --> revert1
+ incrUserApp -- "No user data" --> revert1
+ incrUserApp -- "action == CLAIM" --> claim --> incAppReceiver
+ incrUserApp -- "action == BID" --> isCurOwner
+ isCurOwner -- "No" --> outBid1{"Outstanding Bid Exists?"} -- "Yes" --> revert1
+ outBid1 -- "No" --> newBidder{"New highest bid?"}
 
-    isCurOwner -- "Yes" --> outBid2{"Outstanding Bid Exists?"}
+ newBidder -- "No" --> revert1
+ newBidder -- "Yes" --> setOutBid
 
-    newBidder -- "No" --> revert
-    newBidder -- "Yes" --> setOutBid
+ decrUserApp -- "action != BID" --> revert2
+ delUserApp --> delAppUserAction
+ delAppUser --> recreateAppUser
 
-    decrUserApp -- "action != BID" --> revert
-    delUserApp -- "action != BID" --> delAppUserAction
-    delAppUser -- "action != BID" --> recreateAppUser
+ isCurOwner -- "Yes" --> outBid2{"Outstanding Bid Exists?"}
+ outBid2 -- "Yes" --> bidElapsed1{"Has outstanding bid elapsed?"}
+ bidElapsed1 -- "No" --> newBid{"New bid > outstanding?"}
+ newBid -- "Yes" --> payPenalty --> incAppReceiver
+ newBid -- "No" --> incAppReceiver
+ outBid2 -- "No" --> incAppReceiver
+ bidElapsed1 -- "Yes" --> revert1
 
+ decrUserApp -- "action == BID" --> isCurOwner2{"Is Current Owner?"}
+ isCurOwner2 -- "Yes" --> outBid3{"Outstanding Bid Exists?"}
+ outBid3 -- "Yes" --> decrAmnt1{"Decreased amount\n==\ncurrentOwnerBid?"}
+ decrAmnt1 -- "Yes" --> acceptBid
+ decrAmnt1 -- "No" --> revert2
+ outBid3 -- "No" --> decrAmnt2{"Decreased amount\n<=\ncurrentOwnerBid?"}
+ decrAmnt2 -- "Yes" --> decreaseBid
+ decrAmnt2 -- "No" --> revert2
+ isCurOwner2 -- "No" --> outBid4{"Is Outstanding Bid?"}
+ outBid4 -- "Yes" --> revert2
 
-    linkStyle 0,1,2,4,5,6,8,9,10,11,12 stroke:green,stroke-width:4px,color:green;
-    linkStyle 7 stroke:orange,stroke-width:4px,color:orange;
+linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,26,27,28,30 stroke:green,stroke-width:4px,color:green;
+%% linkStyle 27,28 stroke:orange,stroke-width:4px,color:orange;
+classDef revert fill:red,color:white;
+class revert1,revert2 revert;
 ````
 
 </details>
