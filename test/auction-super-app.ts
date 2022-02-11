@@ -1339,8 +1339,8 @@ describe("AuctionSuperApp", async () => {
           .withArgs(user.address, admin.address, penaltyAmount);
         await checkJailed(receipt);
         await checkAppNetFlow();
-        await checkUserToAppFlow("0", bidder);
-        await checkAppToUserFlow("0", bidder);
+        await checkUserToAppFlow("200", bidder);
+        await checkAppToUserFlow("200", bidder);
         await checkUserToAppFlow("200", user);
         await checkAppToReceiverFlow("200");
         await checkCurrentOwnerBid(existingLicenseId, 200);
