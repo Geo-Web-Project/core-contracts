@@ -169,43 +169,54 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     }
   );
 
-module.exports = {
-  networks: {
-    local: {
-      gasPrice: 1000000000,
-      url: `http://localhost:8545`,
-    },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
-      chainId: 0x2a,
-      gas: 4700000,
-    },
-    rinkeby: {
+const networks: any = {
+  local: {
+    gasPrice: 1000000000,
+    url: `http://localhost:8545`,
+  },
+  sokul: {
+    url: "https://sokol.poa.network",
+    chainId: 77,
+    gasPrice: 1000000000,
+  },
+  xdai: {
+    url: "https://xdai.poanetwork.dev",
+    network_id: 100,
+    gasPrice: 1000000000,
+  },
+  arbitrumRinkeby: {
+    url: "https://rinkeby.arbitrum.io/rpc",
+    chainId: 421611,
+    gasPrice: 0,
+  },
+  optimisticKovan: {
+    url: "https://kovan.optimism.io",
+    gasPrice: 15000000,
+    ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
+  },
+};
+
+if(process.env.INFURA_KEY){
+  networks['kovan']=  {
+    url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
+    chainId: 0x2a,
+    gas: 4700000,
+  }
+  if(process.env.DEV_PRIVATE_KEY){
+    networks['rinkeby'] = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 4,
       accounts: [process.env.DEV_PRIVATE_KEY],
-    },
-    sokul: {
-      url: "https://sokol.poa.network",
-      chainId: 77,
-      gasPrice: 1000000000,
-    },
-    xdai: {
-      url: "https://xdai.poanetwork.dev",
-      network_id: 100,
-      gasPrice: 1000000000,
-    },
-    arbitrumRinkeby: {
-      url: "https://rinkeby.arbitrum.io/rpc",
-      chainId: 421611,
-      gasPrice: 0,
-    },
-    optimisticKovan: {
-      url: "https://kovan.optimism.io",
-      gasPrice: 15000000,
-      ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
-    },
-  },
+    }
+  }else{
+    console.warn('Missing env.DEV_PRIVATE_KEY')
+  }
+}else{
+  console.warn('Missing env.INFURA_KEY')
+}
+
+module.exports = {
+  networks,
   zksolc: {
     version: "0.1.0",
     compilerSource: "docker",
