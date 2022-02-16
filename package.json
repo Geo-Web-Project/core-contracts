@@ -12,7 +12,9 @@
         "build:ts": "npx tsc --build tsconfig.build.json",
         "build:abi": "npx hardhat export-abi",
         "build:sol": "npx hardhat compile",
-        "build:declarations": "shx cp typechain-types/*.d.ts dist/typechain-types"
+        "build:declarations": "shx cp typechain-types/*.d.ts dist/typechain-types",
+        "tests:run": "npx hardhat test",
+        "tests:coverage": "npx hardhat coverage"
     },
     "dependencies": {
         "@eth-optimism/hardhat-ovm": "^0.2.3",
