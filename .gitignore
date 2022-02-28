@@ -3,6 +3,7 @@ node_modules/
 .openzeppelin/unknown-1337.json
 .openzeppelin/unknown-31337.json
 migrations
+dist/
 
 # hardhat
 artifacts/
@@ -28,3 +29,7 @@ typechain-types/factories/*
 !typechain-types/factories/GeoWebCoordinate__factory.ts
 !typechain-types/factories/GeoWebParcel__factory.ts
 !typechain-types/factories/SimpleETHClaimer__factory.ts
+
+# abi exporter
+abi/@openzeppelin
+abi/contracts/mock
