@@ -11,6 +11,7 @@ if (process.env.NODE_ENV !== "production") {
 // require("@matterlabs/hardhat-zksync-deploy");
 // require("@matterlabs/hardhat-zksync-solc");
 import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-waffle";
 import { task, types } from "hardhat/config";
 import { ethers } from "ethers";
