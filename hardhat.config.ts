@@ -10,21 +10,21 @@ if (process.env.NODE_ENV !== "production") {
 
 // require("@matterlabs/hardhat-zksync-deploy");
 // require("@matterlabs/hardhat-zksync-solc");
-require("@typechain/hardhat");
+import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import { task, types } from "hardhat/config";
 import { ethers } from "ethers";
-import "@nomiclabs/hardhat-web3";
-require("@openzeppelin/hardhat-upgrades");
-require("@eth-optimism/hardhat-ovm");
-require("solidity-coverage");
-require("./tasks/Accountant");
-require("./tasks/GeoWebParcel");
-require("./tasks/ERC721License");
-require("./tasks/CollectorSuperApp");
-require("./tasks/ETHPurchaser");
-require("./tasks/SimpleETHClaimer");
-require("./tasks/estimate_minting_gas");
+import "@openzeppelin/hardhat-upgrades";
+import "@eth-optimism/hardhat-ovm";
+import '@typechain/hardhat';
+import "hardhat-abi-exporter";
+import "solidity-coverage";
+import "./tasks/Accountant";
+import "./tasks/GeoWebParcel";
+import "./tasks/ERC721License";
+import "./tasks/ETHPurchaser";
+import "./tasks/SimpleETHClaimer";
+import "./tasks/estimate_minting_gas";
 
 task(
   "deploy",
@@ -175,47 +175,54 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     }
   );
 
-module.exports = {
-  networks: {
-    hardhat: {
-      gasPrice: 0,
-      initialBaseFeePerGas: 0,
-    },
-    local: {
-      gasPrice: 1000000000,
-      url: `http://localhost:8545`,
-    },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
-      chainId: 0x2a,
-      gas: 4700000,
-    },
-    rinkeby: {
+const networks: any = {
+  local: {
+    gasPrice: 1000000000,
+    url: `http://localhost:8545`,
+  },
+  sokul: {
+    url: "https://sokol.poa.network",
+    chainId: 77,
+    gasPrice: 1000000000,
+  },
+  xdai: {
+    url: "https://xdai.poanetwork.dev",
+    network_id: 100,
+    gasPrice: 1000000000,
+  },
+  arbitrumRinkeby: {
+    url: "https://rinkeby.arbitrum.io/rpc",
+    chainId: 421611,
+    gasPrice: 0,
+  },
+  optimisticKovan: {
+    url: "https://kovan.optimism.io",
+    gasPrice: 15000000,
+    ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
+  },
+};
+
+if(process.env.INFURA_KEY){
+  networks['kovan']=  {
+    url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
+    chainId: 0x2a,
+    gas: 4700000,
+  }
+  if(process.env.DEV_PRIVATE_KEY){
+    networks['rinkeby'] = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 4,
       accounts: [process.env.DEV_PRIVATE_KEY],
-    },
-    sokul: {
-      url: "https://sokol.poa.network",
-      chainId: 77,
-      gasPrice: 1000000000,
-    },
-    xdai: {
-      url: "https://xdai.poanetwork.dev",
-      network_id: 100,
-      gasPrice: 1000000000,
-    },
-    arbitrumRinkeby: {
-      url: "https://rinkeby.arbitrum.io/rpc",
-      chainId: 421611,
-      gasPrice: 0,
-    },
-    optimisticKovan: {
-      url: "https://kovan.optimism.io",
-      gasPrice: 15000000,
-      ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
-    },
-  },
+    }
+  }else{
+    console.warn('Missing env.DEV_PRIVATE_KEY')
+  }
+}else{
+  console.warn('Missing env.INFURA_KEY')
+}
+
+module.exports = {
+  networks,
   zksolc: {
     version: "0.1.0",
     compilerSource: "docker",
@@ -249,4 +256,8 @@ module.exports = {
   ovm: {
     solcVersion: "0.6.12",
   },
+  abiExporter: {
+    path: './abi',
+    clear: true,
+  }
 };

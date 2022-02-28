@@ -3,6 +3,7 @@ node_modules/
 .openzeppelin/unknown-1337.json
 .openzeppelin/unknown-31337.json
 migrations
+dist/
 
 # hardhat
 artifacts/
@@ -31,3 +32,6 @@ typechain-types/factories/*
 
 # solidity-coverage
 coverage/
+# abi exporter
+abi/@openzeppelin
+abi/contracts/mock
