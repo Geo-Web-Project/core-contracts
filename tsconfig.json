@@ -4,6 +4,7 @@
       "target": "es2018",
       "module": "commonjs",
       "strict": true,
+      "resolveJsonModule": true,
       "esModuleInterop": true,
       "outDir": "dist",
       "resolveJsonModule": true
@@ -12,7 +13,9 @@
       "./deploy",
       "./test",
       "./tasks",
-      "./typechain-types"
+      "./src",
+      "./typechain-types",
+      "./abi/**/*.json"
   ],
   "files": [
       "./hardhat.config.ts"
