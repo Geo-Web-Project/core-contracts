@@ -18,7 +18,13 @@
       }
     ],
     "name": "claim",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "licenseId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

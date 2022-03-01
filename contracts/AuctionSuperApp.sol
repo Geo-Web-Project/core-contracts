@@ -31,6 +31,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     /// @notice Outstanding bid for each parcel
     mapping(uint256 => Bid) public outstandingBid;
 
+    /// @notice All old bids for each user that are not the current owner or outstanding
+    mapping(address => mapping(uint256 => Bid)) public oldBids;
+
     /// @notice The numerator of the penalty to pay to reject a bid.
     uint256 public penaltyNumerator;
     /// @notice The denominator of the penalty to pay to reject a bid.
@@ -385,6 +388,45 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
     }
 
+    function _decreaseAppToUserFlow(
+        bytes memory ctx,
+        address user,
+        int96 amount
+    ) private returns (bytes memory newCtx) {
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            user
+        );
+
+        if (flowRate > amount) {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    user,
+                    flowRate - amount,
+                    new bytes(0)
+                ),
+                "0x",
+                ctx
+            );
+        } else {
+            (newCtx, ) = host.callAgreementWithContext(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    user,
+                    new bytes(0)
+                ),
+                "0x",
+                ctx
+            );
+        }
+    }
+
     function _deleteAppToUserFlow(bytes memory ctx, address user)
         private
         returns (bytes memory newCtx, int96 amountDeleted)
@@ -574,6 +616,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 );
                 require(success, "AuctionSuperApp: Penalty payment failed");
 
+                // Update old bid
+                oldBids[bidOutstanding.bidder][licenseId] = bidOutstanding;
+
                 // Clear outstanding bid
                 bidOutstanding.contributionRate = 0;
             }
@@ -606,8 +651,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         ) {
             revert("AuctionSuperApp: Cannot decrease outstanding bid");
         } else {
-            // TODO
-            return _ctx;
+            return
+                _decreaseNonOwnerBid(_ctx, user, decreasedFlowRate, licenseId);
         }
     }
 
@@ -642,6 +687,35 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.contributionRate = newBidAmount;
         bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
         bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+    }
+
+    function _decreaseNonOwnerBid(
+        bytes memory _ctx,
+        address user,
+        int96 decreasedFlowRate,
+        uint256 licenseId
+    ) private returns (bytes memory newCtx) {
+        Bid storage bidOutstanding = outstandingBid[licenseId];
+        Bid storage oldBid = oldBids[user][licenseId];
+
+        bool outstandingBidExists = bidOutstanding.contributionRate > 0;
+
+        if (outstandingBidExists && bidOutstanding.bidder == user) {
+            revert("AuctionSuperApp: Cannot decrease outstanding bid");
+        }
+
+        if (decreasedFlowRate > oldBid.contributionRate) {
+            revert(
+                "AuctionSuperApp: Cannot decrease bid beyond contribution rate"
+            );
+        }
+        int96 newBidAmount = oldBid.contributionRate - decreasedFlowRate;
+
+        // Update oldBid
+        oldBid.contributionRate = newBidAmount;
+
+        // Decrease app -> user flow
+        newCtx = _decreaseAppToUserFlow(_ctx, user, decreasedFlowRate);
     }
 
     function _placeNewBid(
