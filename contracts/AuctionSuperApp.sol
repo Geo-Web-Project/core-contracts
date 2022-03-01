@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/IClaimer.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./Accountant.sol";
+import "hardhat/console.sol";
 
 contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
@@ -766,6 +767,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         int96 updatedRate = bidOutstanding.contributionRate -
             bid.contributionRate;
+        int96 bidContributionRate = bidOutstanding.contributionRate;
 
         // Update currentOwnerBid
         currentOwnerBid[licenseId] = bidOutstanding;
@@ -776,13 +778,13 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         newCtx = _increaseAppToReceiverFlow(_ctx, updatedRate);
 
         newCtx = _decreaseAppToUserFlow(
-            _ctx,
+            newCtx,
             bidOutstanding.bidder,
-            bidOutstanding.contributionRate
+            bidContributionRate
         );
 
         // Transfer license
-        // license.safeTransferFrom(oldOwner, bidOutstanding.bidder, licenseId);
+        license.safeTransferFrom(oldOwner, bidOutstanding.bidder, licenseId);
     }
 
     function _setOutstandingBid(

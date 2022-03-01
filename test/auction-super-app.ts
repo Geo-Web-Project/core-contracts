@@ -29,6 +29,7 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 
 use(solidity);
 use(chaiAsPromised);
+use(smock.matchers);
 
 describe("AuctionSuperApp", async () => {
   let accounts: SignerWithAddress[];
@@ -1895,10 +1896,6 @@ describe("AuctionSuperApp", async () => {
           const txn2 = await placeBidCreate(bidder, 1); // 200
           await txn2.wait();
 
-          mockLicense["safeTransferFrom(address,address,uint256)"]
-            .whenCalledWith(user.address, bidder.address, 1)
-            .returns();
-
           const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
 
           const actionData = ethers.utils.defaultAbiCoder.encode(
@@ -1921,9 +1918,8 @@ describe("AuctionSuperApp", async () => {
 
           await expect(txn3)
             .to.emit(ethx_erc20, "Transfer")
-            .withArgs(superApp.address, bidder.address, purchasePrice);
+            .withArgs(superApp.address, user.address, purchasePrice);
           await checkJailed(receipt);
-          await checkAppNetFlow();
           await checkUserToAppFlow("200", bidder);
           await checkAppToUserFlow("0", bidder);
           await checkUserToAppFlow("100", user);
@@ -1933,6 +1929,14 @@ describe("AuctionSuperApp", async () => {
           await checkOutstandingBid(1, 0);
           await checkCurrentOwnerBid(2, 100);
           await checkOutstandingBid(2, 0);
+          await checkAppNetFlow();
+          expect(
+            mockLicense["safeTransferFrom(address,address,uint256)"]
+          ).to.have.been.calledWith(
+            user.address,
+            bidder.address,
+            BigNumber.from(1)
+          );
         });
 
         it("should revert when accepting wrong bid amount on flow decrease", async () => {
