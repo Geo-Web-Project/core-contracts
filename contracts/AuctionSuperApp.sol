@@ -666,17 +666,23 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         Bid storage bid = currentOwnerBid[licenseId];
 
         bool outstandingBidExists = bidOutstanding.contributionRate > 0;
+
+        if (outstandingBidExists) {
+            if (decreasedFlowRate != bid.contributionRate) {
+                revert(
+                    "AuctionSuperApp: Can only decrease entire bid with bid outstanding"
+                );
+            }
+
+            return _acceptBid(_ctx, licenseId);
+        }
+
         if (decreasedFlowRate > bid.contributionRate) {
             revert(
                 "AuctionSuperApp: Cannot decrease bid beyond contribution rate"
             );
         }
         int96 newBidAmount = bid.contributionRate - decreasedFlowRate;
-
-        if (outstandingBidExists) {
-            // TODO
-            return _ctx;
-        }
 
         // Decrease app -> receiver flow
         newCtx = _decreaseAppToReceiverFlow(_ctx, decreasedFlowRate);
@@ -743,6 +749,40 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 "AuctionSuperApp: New bid must be higher than current owner"
             );
         }
+    }
+
+    function _acceptBid(bytes memory _ctx, uint256 licenseId)
+        private
+        returns (bytes memory newCtx)
+    {
+        Bid storage bidOutstanding = outstandingBid[licenseId];
+        Bid storage bid = currentOwnerBid[licenseId];
+
+        // Transfer deposit to owner
+        uint256 depositAmount = calculatePurchasePrice(licenseId);
+        address oldOwner = bid.bidder;
+        bool success = acceptedToken.transfer(oldOwner, depositAmount);
+        require(success, "AuctionSuperApp: Transfer deposit failed");
+
+        int96 updatedRate = bidOutstanding.contributionRate -
+            bid.contributionRate;
+
+        // Update currentOwnerBid
+        currentOwnerBid[licenseId] = bidOutstanding;
+
+        // Clear outstanding bid
+        bidOutstanding.contributionRate = 0;
+
+        newCtx = _increaseAppToReceiverFlow(_ctx, updatedRate);
+
+        newCtx = _decreaseAppToUserFlow(
+            _ctx,
+            bidOutstanding.bidder,
+            bidOutstanding.contributionRate
+        );
+
+        // Transfer license
+        // license.safeTransferFrom(oldOwner, bidOutstanding.bidder, licenseId);
     }
 
     function _setOutstandingBid(
