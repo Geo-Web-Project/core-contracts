@@ -19,5 +19,7 @@ jobs:
           cache: "yarn"
       - name: "Install JS Dependencies"
         run: "yarn install --frozen-lockfile --dev"
+      - name: "Build"
+        run: "yarn build"
       - name: "Run tests"
         run: "yarn tests:run"
