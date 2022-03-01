@@ -30,6 +30,12 @@ typechain-types/factories/*
 !typechain-types/factories/GeoWebParcel__factory.ts
 !typechain-types/factories/SimpleETHClaimer__factory.ts
 !typechain-types/factories/AuctionSuperApp__factory.ts
+
+# tests-typechain
+!typechain-types/AuctionSuperApp.ts
+!typechain-types/ISuperfluid.ts
+!typechain-types/MockClaimer.ts
+
 # abi exporter
 abi/@openzeppelin
 abi/contracts/mock
