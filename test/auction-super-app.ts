@@ -539,6 +539,17 @@ describe("AuctionSuperApp", async () => {
     expect(denominator).to.equal(2);
   });
 
+  it("should only allow admin to set accountant", async () => {
+    expect(
+      superApp.connect(user).setAccountant(admin.address)
+    ).to.be.revertedWith("is missing role");
+
+    await superApp.setAccountant(admin.address);
+
+    const value = await superApp.accountant();
+    expect(value).to.equal(admin.address);
+  });
+
   it("should only allow admin to set license", async () => {
     expect(superApp.connect(user).setLicense(admin.address)).to.be.revertedWith(
       "is missing role"
@@ -716,9 +727,94 @@ describe("AuctionSuperApp", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
+      const txn1 = await placeBidCreate(bidder, 2);
+      await txn1.wait();
+
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["uint8", "bytes"],
         [2, "0x"]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: bidder.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn2 = await deleteFlowOp.exec(bidder);
+      const receipt = await txn2.wait();
+
+      await checkJailed(receipt);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+    });
+  });
+
+  describe("Random user data", async () => {
+    it("should revert on flow create", async () => {
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "100",
+        superToken: ethx.address,
+        userData: userData,
+      });
+
+      const txn = createFlowOp.exec(user);
+      await expect(txn).to.be.rejected;
+    });
+
+    it("should revert on flow increase", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "200",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
+
+    it("should revert on flow decrease", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "50",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
+
+    it("should delete Flow(app -> user) on flow delete", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
       );
       const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
         sender: user.address,
@@ -741,6 +837,38 @@ describe("AuctionSuperApp", async () => {
       await txn.wait();
 
       const txn1 = await placeBidCreate(bidder, existingLicenseId);
+      await txn1.wait();
+
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: bidder.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn2 = await deleteFlowOp.exec(bidder);
+      const receipt = await txn2.wait();
+
+      await checkJailed(receipt);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+    });
+  });
+
+  describe("CLAIM Action", async () => {
+    it("should claim on flow create", async () => {
+      const txn = await claimCreate(user);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user.address, admin.address, 100);
+
+      const txn1 = await placeBidCreate(bidder, 2);
       await txn1.wait();
 
       await checkUserToAppFlow("200", bidder);
