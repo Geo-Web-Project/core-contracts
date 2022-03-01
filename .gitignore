@@ -29,7 +29,7 @@ typechain-types/factories/*
 !typechain-types/factories/GeoWebCoordinate__factory.ts
 !typechain-types/factories/GeoWebParcel__factory.ts
 !typechain-types/factories/SimpleETHClaimer__factory.ts
-
+!typechain-types/factories/AuctionSuperApp__factory.ts
 # abi exporter
 abi/@openzeppelin
 abi/contracts/mock
