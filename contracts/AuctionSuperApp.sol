@@ -418,6 +418,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 abi.encodeWithSelector(
                     cfa.deleteFlow.selector,
                     acceptedToken,
+                    address(this),
                     user,
                     new bytes(0)
                 ),
@@ -651,8 +652,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         ) {
             revert("AuctionSuperApp: Cannot decrease outstanding bid");
         } else {
-            return
-                _decreaseNonOwnerBid(_ctx, user, decreasedFlowRate, licenseId);
+            return _decreaseOldBid(_ctx, user, decreasedFlowRate, licenseId);
         }
     }
 
@@ -689,20 +689,13 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
     }
 
-    function _decreaseNonOwnerBid(
+    function _decreaseOldBid(
         bytes memory _ctx,
         address user,
         int96 decreasedFlowRate,
         uint256 licenseId
     ) private returns (bytes memory newCtx) {
-        Bid storage bidOutstanding = outstandingBid[licenseId];
         Bid storage oldBid = oldBids[user][licenseId];
-
-        bool outstandingBidExists = bidOutstanding.contributionRate > 0;
-
-        if (outstandingBidExists && bidOutstanding.bidder == user) {
-            revert("AuctionSuperApp: Cannot decrease outstanding bid");
-        }
 
         if (decreasedFlowRate > oldBid.contributionRate) {
             revert(

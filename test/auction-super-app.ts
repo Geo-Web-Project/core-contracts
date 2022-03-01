@@ -1967,6 +1967,87 @@ describe("AuctionSuperApp", async () => {
         await checkUserToAppFlow("150", bidder);
         await checkAppToUserFlow("150", bidder);
         await checkAppToReceiverFlow("200");
+        await checkOldBid(bidder, existingLicenseId, 150);
+      });
+
+      it("should decrease partial bid on flow decrease and multiple bids", async () => {
+        const txn = await claimCreate(user, 1); // 100
+        await txn.wait();
+
+        const txn1 = await claimCreate(bidder, 2); // 100
+        await txn1.wait();
+
+        const txn2 = await placeBidUpdate(bidder, 1); // 300
+        await txn2.wait();
+
+        const txn3 = await rejectBid(user, 1); // 200
+        await txn3.wait();
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [1]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "150",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const txn4 = await updateFlowOp.exec(bidder);
+        const receipt = await txn4.wait();
+
+        await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("150", bidder);
+        await checkAppToUserFlow("50", bidder);
+        await checkAppToReceiverFlow("300");
+        await checkOldBid(bidder, 1, 50);
+      });
+
+      it("should decrease entire bid on flow decrease", async () => {
+        const txn = await claimCreate(user, 1); // 100
+        await txn.wait();
+
+        const txn1 = await claimCreate(bidder, 2); // 100
+        await txn1.wait();
+
+        const txn2 = await placeBidUpdate(bidder, 1); // 300
+        await txn2.wait();
+
+        const txn3 = await rejectBid(user, 1); // 200
+        await txn3.wait();
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [1]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "100",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const txn4 = await updateFlowOp.exec(bidder);
+        const receipt = await txn4.wait();
+
+        await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("100", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkAppToReceiverFlow("300");
+        await checkOldBid(bidder, 1, 0);
       });
 
       it("should revert if decrease bid on flow decrease is too large", async () => {
