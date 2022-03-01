@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/IClaimer.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./Accountant.sol";
-import "hardhat/console.sol";
 
 contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
