@@ -30,6 +30,8 @@ typechain-types/factories/*
 !typechain-types/factories/GeoWebParcel__factory.ts
 !typechain-types/factories/SimpleETHClaimer__factory.ts
 
+# solidity-coverage
+coverage/
 # abi exporter
 abi/@openzeppelin
 abi/contracts/mock

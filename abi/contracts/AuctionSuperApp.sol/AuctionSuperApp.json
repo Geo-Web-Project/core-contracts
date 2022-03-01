@@ -20,6 +20,16 @@
         "internalType": "address",
         "name": "_receiver",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_license",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_accountant",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -147,6 +157,19 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "accountant",
+    "outputs": [
+      {
+        "internalType": "contract Accountant",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -404,6 +427,77 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculatePurchasePrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claimer",
+    "outputs": [
+      {
+        "internalType": "contract IClaimer",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "currentOwnerBid",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "bidder",
+        "type": "address"
+      },
+      {
+        "internalType": "int96",
+        "name": "contributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "perSecondFeeNumerator",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "perSecondFeeDenominator",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -507,6 +601,58 @@
   },
   {
     "inputs": [],
+    "name": "license",
+    "outputs": [
+      {
+        "internalType": "contract IERC721",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "outstandingBid",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "bidder",
+        "type": "address"
+      },
+      {
+        "internalType": "int96",
+        "name": "contributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "perSecondFeeNumerator",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "perSecondFeeDenominator",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "pause",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -578,11 +724,37 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "accountantAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setAccountant",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_claimer",
         "type": "address"
       }
     ],
     "name": "setClaimer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "licenseAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setLicense",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

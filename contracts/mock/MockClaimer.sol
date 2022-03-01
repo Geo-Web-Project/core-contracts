@@ -11,9 +11,11 @@ contract MockClaimer is IClaimer {
         address user,
         int96 initialContributionRate,
         bytes calldata claimData
-    ) external override {
+    ) external override returns (uint256 licenseId) {
         lastContribution[user] = initialContributionRate;
         claimCallCount += 1;
+
+        licenseId = abi.decode(claimData, (uint256));
     }
 
     function claimPrice(
