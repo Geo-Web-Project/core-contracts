@@ -1,9 +1,5 @@
 name: "CI"
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - "*" # All branches
+on: ["pull_request"]
 jobs:
   tests:
     name: "Tests"
