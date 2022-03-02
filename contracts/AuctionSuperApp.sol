@@ -17,7 +17,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     ISuperToken private acceptedToken; // accepted token
 
     IClaimer public claimer;
-    address public receiver;
+    address public beneficiary;
 
     /// @notice ERC721 License used to find owners.
     IERC721 public license;
@@ -62,7 +62,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         ISuperfluid _host,
         IConstantFlowAgreementV1 _cfa,
         ISuperToken _acceptedToken,
-        address _receiver,
+        address _beneficiary,
         address _license,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator,
@@ -76,13 +76,16 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(_acceptedToken) != address(0),
             "acceptedToken is zero address"
         );
-        require(address(_receiver) != address(0), "receiver is zero address");
-        require(!_host.isApp(ISuperApp(_receiver)), "receiver is an app");
+        require(
+            address(_beneficiary) != address(0),
+            "beneficiary is zero address"
+        );
+        require(!_host.isApp(ISuperApp(_beneficiary)), "beneficiary is an app");
 
         host = _host;
         cfa = _cfa;
         acceptedToken = _acceptedToken;
-        receiver = _receiver;
+        beneficiary = _beneficiary;
         license = IERC721(_license);
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
@@ -112,51 +115,51 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     /**
-     * @notice Admin can update the receiver.
-     * @param _receiver The new receiver of contributions
+     * @notice Admin can update the beneficiary.
+     * @param _beneficiary The new beneficiary of contributions
      * @custom:requires DEFAULT_ADMIN_ROLE
      */
-    function setReceiver(address _receiver)
+    function setBeneficiary(address _beneficiary)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(!host.isApp(ISuperApp(_receiver)), "receiver is an app");
+        require(!host.isApp(ISuperApp(_beneficiary)), "beneficiary is an app");
 
         (, int96 flowRate, , ) = cfa.getFlow(
             acceptedToken,
             address(this),
-            receiver
+            beneficiary
         );
 
         if (flowRate > 0) {
-            // Create flow to new receiver
+            // Create flow to new beneficiary
             host.callAgreement(
                 cfa,
                 abi.encodeWithSelector(
                     cfa.createFlow.selector,
                     acceptedToken,
-                    _receiver,
+                    _beneficiary,
                     flowRate,
                     new bytes(0)
                 ),
                 "0x"
             );
 
-            // Delete flow to old receiver
+            // Delete flow to old beneficiary
             host.callAgreement(
                 cfa,
                 abi.encodeWithSelector(
                     cfa.deleteFlow.selector,
                     acceptedToken,
                     address(this),
-                    receiver,
+                    beneficiary,
                     new bytes(0)
                 ),
                 "0x"
             );
         }
 
-        receiver = _receiver;
+        beneficiary = _beneficiary;
     }
 
     /**
@@ -274,14 +277,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         return bid.contributionRate;
     }
 
-    function _increaseAppToReceiverFlow(bytes memory ctx, int96 amount)
+    function _increaseAppToBeneficiaryFlow(bytes memory ctx, int96 amount)
         private
         returns (bytes memory newCtx)
     {
         (, int96 flowRate, , ) = cfa.getFlow(
             acceptedToken,
             address(this),
-            receiver
+            beneficiary
         );
 
         if (flowRate > 0) {
@@ -290,7 +293,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 abi.encodeWithSelector(
                     cfa.updateFlow.selector,
                     acceptedToken,
-                    receiver,
+                    beneficiary,
                     flowRate + amount,
                     new bytes(0)
                 ),
@@ -303,7 +306,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 abi.encodeWithSelector(
                     cfa.createFlow.selector,
                     acceptedToken,
-                    receiver,
+                    beneficiary,
                     amount,
                     new bytes(0)
                 ),
@@ -313,14 +316,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
     }
 
-    function _decreaseAppToReceiverFlow(bytes memory ctx, int96 amount)
+    function _decreaseAppToBeneficiaryFlow(bytes memory ctx, int96 amount)
         private
         returns (bytes memory newCtx)
     {
         (, int96 flowRate, , ) = cfa.getFlow(
             acceptedToken,
             address(this),
-            receiver
+            beneficiary
         );
 
         if (amount < flowRate) {
@@ -329,7 +332,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 abi.encodeWithSelector(
                     cfa.updateFlow.selector,
                     acceptedToken,
-                    receiver,
+                    beneficiary,
                     flowRate - amount,
                     new bytes(0)
                 ),
@@ -343,7 +346,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                     cfa.deleteFlow.selector,
                     acceptedToken,
                     address(this),
-                    receiver,
+                    beneficiary,
                     new bytes(0)
                 ),
                 "0x",
@@ -525,8 +528,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 decreasedAmount;
         (newCtx, decreasedAmount) = _deleteAppToUserFlow(_ctx, user);
 
-        // Decrease app -> receiver flow by remaining
-        newCtx = _decreaseAppToReceiverFlow(
+        // Decrease app -> beneficiary flow by remaining
+        newCtx = _decreaseAppToBeneficiaryFlow(
             newCtx,
             decreasedFlowRate - decreasedAmount
         );
@@ -549,7 +552,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Collect claim payment
-        bool success = acceptedToken.transferFrom(user, receiver, claimPrice);
+        bool success = acceptedToken.transferFrom(
+            user,
+            beneficiary,
+            claimPrice
+        );
         require(success, "AuctionSuperApp: Claim payment failed");
 
         // Process claim
@@ -559,8 +566,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             claimData
         );
 
-        // Increase app -> receiver flow
-        newCtx = _increaseAppToReceiverFlow(_ctx, initialContributionRate);
+        // Increase app -> beneficiary flow
+        newCtx = _increaseAppToBeneficiaryFlow(_ctx, initialContributionRate);
 
         // Set currentOwnerBid
         Bid storage bid = currentOwnerBid[licenseId];
@@ -613,7 +620,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 uint256 penalty = calculatePenalty(licenseId);
                 bool success = acceptedToken.transferFrom(
                     user,
-                    receiver,
+                    beneficiary,
                     penalty
                 );
                 require(success, "AuctionSuperApp: Penalty payment failed");
@@ -626,8 +633,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             }
         }
 
-        // Increase app -> receiver flow
-        newCtx = _increaseAppToReceiverFlow(_ctx, increasedFlowRate);
+        // Increase app -> beneficiary flow
+        newCtx = _increaseAppToBeneficiaryFlow(_ctx, increasedFlowRate);
 
         // Update currentOwnerBid
         bid.timestamp = block.timestamp;
@@ -685,8 +692,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
         int96 newBidAmount = bid.contributionRate - decreasedFlowRate;
 
-        // Decrease app -> receiver flow
-        newCtx = _decreaseAppToReceiverFlow(_ctx, decreasedFlowRate);
+        // Decrease app -> beneficiary flow
+        newCtx = _decreaseAppToBeneficiaryFlow(_ctx, decreasedFlowRate);
 
         // Update currentOwnerBid
         bid.timestamp = block.timestamp;
@@ -775,7 +782,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         // Clear outstanding bid
         bidOutstanding.contributionRate = 0;
 
-        newCtx = _increaseAppToReceiverFlow(_ctx, updatedRate);
+        newCtx = _increaseAppToBeneficiaryFlow(_ctx, updatedRate);
 
         newCtx = _decreaseAppToUserFlow(
             newCtx,
@@ -910,12 +917,12 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         address user;
         bool isUserToApp;
         {
-            (address _sender, address _receiver) = abi.decode(
+            (address _sender, address _beneficiary) = abi.decode(
                 _agreementData,
                 (address, address)
             );
-            isUserToApp = _receiver == address(this);
-            user = isUserToApp ? _sender : _receiver;
+            isUserToApp = _beneficiary == address(this);
+            user = isUserToApp ? _sender : _beneficiary;
         }
 
         int96 originalFlowRate = abi.decode(_cbdata, (int96));

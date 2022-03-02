@@ -18,7 +18,7 @@
       },
       {
         "internalType": "address",
-        "name": "_receiver",
+        "name": "_beneficiary",
         "type": "address"
       },
       {
@@ -433,6 +433,19 @@
   },
   {
     "inputs": [],
+    "name": "beneficiary",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "bidPeriodLengthInSeconds",
     "outputs": [
       {
@@ -826,19 +839,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "receiver",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -870,6 +870,19 @@
       }
     ],
     "name": "revokeRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_beneficiary",
+        "type": "address"
+      }
+    ],
+    "name": "setBeneficiary",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -945,19 +958,6 @@
       }
     ],
     "name": "setPerSecondFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_receiver",
-        "type": "address"
-      }
-    ],
-    "name": "setReceiver",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

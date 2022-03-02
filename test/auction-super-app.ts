@@ -77,7 +77,7 @@ describe("AuctionSuperApp", async () => {
     host,
     cfa,
     token,
-    receiver,
+    beneficiary,
     license,
     perSecondFeeNumerator,
     perSecondFeeDenominator,
@@ -88,7 +88,7 @@ describe("AuctionSuperApp", async () => {
     host: string;
     cfa: string;
     token: string;
-    receiver: string;
+    beneficiary: string;
     license: string;
     perSecondFeeNumerator: BigNumber;
     perSecondFeeDenominator: BigNumber;
@@ -101,7 +101,7 @@ describe("AuctionSuperApp", async () => {
       host,
       cfa,
       token,
-      receiver,
+      beneficiary,
       license,
       perSecondFeeNumerator,
       perSecondFeeDenominator,
@@ -326,17 +326,17 @@ describe("AuctionSuperApp", async () => {
     );
   }
 
-  async function checkAppToReceiverFlow(expectedAmount: string) {
-    const appToReceiverFlow = await ethersjsSf.cfaV1.getFlow({
+  async function checkAppToBeneficiaryFlow(expectedAmount: string) {
+    const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
       superToken: ethx.address,
       sender: superApp.address,
       receiver: admin.address,
       providerOrSigner: admin,
     });
 
-    expect(appToReceiverFlow.flowRate).to.equal(
+    expect(appToBeneficiaryFlow.flowRate).to.equal(
       expectedAmount,
-      "App -> Receiver flow is incorrect"
+      "App -> Beneficiary flow is incorrect"
     );
   }
 
@@ -468,7 +468,7 @@ describe("AuctionSuperApp", async () => {
       host: sf.host.address,
       cfa: sf.agreements.cfa.address,
       token: sf.tokens.ETHx.address,
-      receiver: admin.address,
+      beneficiary: admin.address,
       license: mockLicense.address,
       perSecondFeeNumerator: BigNumber.from(numerator),
       perSecondFeeDenominator: BigNumber.from(denominator),
@@ -484,14 +484,14 @@ describe("AuctionSuperApp", async () => {
     await superApp.setClaimer(mockClaimer.address);
   });
 
-  it("should only allow admin to set receiver", async () => {
+  it("should only allow admin to set beneficiary", async () => {
     expect(
-      superApp.connect(user).setReceiver(admin.address)
+      superApp.connect(user).setBeneficiary(admin.address)
     ).to.be.revertedWith("is missing role");
 
-    await superApp.setReceiver(admin.address);
+    await superApp.setBeneficiary(admin.address);
 
-    const value = await superApp.receiver();
+    const value = await superApp.beneficiary();
     expect(value).to.equal(admin.address);
   });
 
@@ -622,7 +622,7 @@ describe("AuctionSuperApp", async () => {
 
       await checkJailed(receipt);
       await checkUserToAppFlow("0");
-      await checkAppToReceiverFlow("0");
+      await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
     });
 
@@ -726,7 +726,7 @@ describe("AuctionSuperApp", async () => {
 
       await checkJailed(receipt);
       await checkUserToAppFlow("0");
-      await checkAppToReceiverFlow("0");
+      await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
     });
 
@@ -835,7 +835,7 @@ describe("AuctionSuperApp", async () => {
 
       await checkJailed(receipt);
       await checkUserToAppFlow("0");
-      await checkAppToReceiverFlow("0");
+      await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
     });
 
@@ -883,7 +883,7 @@ describe("AuctionSuperApp", async () => {
       await checkClaimLastContribution(user.address, 100);
       await checkAppNetFlow();
       await checkUserToAppFlow("100");
-      await checkAppToReceiverFlow("100");
+      await checkAppToBeneficiaryFlow("100");
     });
 
     it("should claim on flow increase", async () => {
@@ -915,7 +915,7 @@ describe("AuctionSuperApp", async () => {
       await checkClaimLastContribution(user.address, 200);
       await checkAppNetFlow();
       await checkUserToAppFlow("300");
-      await checkAppToReceiverFlow("300");
+      await checkAppToBeneficiaryFlow("300");
     });
 
     it("should revert on flow decrease", async () => {
@@ -959,7 +959,7 @@ describe("AuctionSuperApp", async () => {
 
       await checkJailed(receipt);
       await checkUserToAppFlow("0");
-      await checkAppToReceiverFlow("0");
+      await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
     });
 
@@ -1037,7 +1037,7 @@ describe("AuctionSuperApp", async () => {
         await checkUserToAppFlow("200", bidder);
         await checkAppToUserFlow("200", bidder);
         await checkUserToAppFlow("100", user);
-        await checkAppToReceiverFlow("100");
+        await checkAppToBeneficiaryFlow("100");
       });
 
       it("should place bid on flow increase", async () => {
@@ -1085,7 +1085,7 @@ describe("AuctionSuperApp", async () => {
         await checkUserToAppFlow("300", bidder);
         await checkAppToUserFlow("200", bidder);
         await checkUserToAppFlow("100", user);
-        await checkAppToReceiverFlow("200");
+        await checkAppToBeneficiaryFlow("200");
       });
 
       it("should revert on flow create when license does not exist", async () => {
@@ -1466,7 +1466,7 @@ describe("AuctionSuperApp", async () => {
         await checkUserToAppFlow("100", user);
         await checkUserToAppFlow("0", bidder);
         await checkAppToUserFlow("0", bidder);
-        await checkAppToReceiverFlow("100");
+        await checkAppToBeneficiaryFlow("100");
         await checkCurrentOwnerBid(existingLicenseId, 100);
         await checkOutstandingBid(existingLicenseId, 200);
       });
@@ -1503,7 +1503,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("200", user);
-          await checkAppToReceiverFlow("200");
+          await checkAppToBeneficiaryFlow("200");
           await checkCurrentOwnerBid(existingLicenseId, 200);
         });
 
@@ -1536,7 +1536,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("50", user);
-          await checkAppToReceiverFlow("50");
+          await checkAppToBeneficiaryFlow("50");
           await checkCurrentOwnerBid(existingLicenseId, 50);
         });
 
@@ -1570,7 +1570,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("150", user);
-          await checkAppToReceiverFlow("150");
+          await checkAppToBeneficiaryFlow("150");
           await checkCurrentOwnerBid(1, 100);
           await checkCurrentOwnerBid(2, 50);
         });
@@ -1605,7 +1605,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("100", user);
-          await checkAppToReceiverFlow("100");
+          await checkAppToBeneficiaryFlow("100");
           await checkCurrentOwnerBid(1, 100);
           await checkCurrentOwnerBid(2, 0);
         });
@@ -1630,7 +1630,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("0", user);
-          await checkAppToReceiverFlow("0");
+          await checkAppToBeneficiaryFlow("0");
           await checkOwnerBidContributionRate(1, 0);
           await checkOwnerBidContributionRate(2, 0);
         });
@@ -1652,7 +1652,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("0", user);
-          await checkAppToReceiverFlow("0");
+          await checkAppToBeneficiaryFlow("0");
           await checkOwnerBidContributionRate(1, 0);
         });
 
@@ -1676,7 +1676,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("200", user);
-          await checkAppToReceiverFlow("200");
+          await checkAppToBeneficiaryFlow("200");
           await checkCurrentOwnerBid(1, 200);
         });
 
@@ -1706,7 +1706,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("400", user);
-          await checkAppToReceiverFlow("400");
+          await checkAppToBeneficiaryFlow("400");
           await checkCurrentOwnerBid(2, 200);
         });
 
@@ -1733,7 +1733,7 @@ describe("AuctionSuperApp", async () => {
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("400", user);
-          await checkAppToReceiverFlow("400");
+          await checkAppToBeneficiaryFlow("400");
           await checkCurrentOwnerBid(1, 400);
         });
 
@@ -1810,7 +1810,7 @@ describe("AuctionSuperApp", async () => {
           await checkUserToAppFlow("200", bidder);
           await checkAppToUserFlow("200", bidder);
           await checkUserToAppFlow("200", user);
-          await checkAppToReceiverFlow("200");
+          await checkAppToBeneficiaryFlow("200");
           await checkCurrentOwnerBid(existingLicenseId, 200);
           await checkOutstandingBid(existingLicenseId, 0);
           await checkOldBid(bidder, existingLicenseId, 200);
@@ -1849,7 +1849,7 @@ describe("AuctionSuperApp", async () => {
           await checkUserToAppFlow("200", bidder);
           await checkAppToUserFlow("200", bidder);
           await checkUserToAppFlow("150", user);
-          await checkAppToReceiverFlow("150");
+          await checkAppToBeneficiaryFlow("150");
           await checkCurrentOwnerBid(existingLicenseId, 150);
           await checkOutstandingBid(existingLicenseId, 200);
         });
@@ -1919,7 +1919,7 @@ describe("AuctionSuperApp", async () => {
           await checkAppToUserFlow("0", bidder);
           await checkUserToAppFlow("100", user);
           await checkAppToUserFlow("0", user);
-          await checkAppToReceiverFlow("300");
+          await checkAppToBeneficiaryFlow("300");
           await checkCurrentOwnerBid(1, 200);
           await checkOutstandingBid(1, 0);
           await checkCurrentOwnerBid(2, 100);
@@ -1986,7 +1986,7 @@ describe("AuctionSuperApp", async () => {
           await checkAppToUserFlow("200", bidder);
           await checkUserToAppFlow("0", user);
           await checkAppToUserFlow("0", user);
-          await checkAppToReceiverFlow("0");
+          await checkAppToBeneficiaryFlow("0");
           await checkCurrentOwnerBid(1, 100);
           await checkOutstandingBid(1, 200);
           await checkOwnerBidContributionRate(1, 0);
@@ -2080,7 +2080,7 @@ describe("AuctionSuperApp", async () => {
           await checkAppToUserFlow("0", bidder);
           await checkUserToAppFlow("100", user);
           await checkAppToUserFlow("0", user);
-          await checkAppToReceiverFlow("300");
+          await checkAppToBeneficiaryFlow("300");
           await checkCurrentOwnerBid(1, 200);
           await checkOutstandingBid(1, 0);
           await checkCurrentOwnerBid(2, 100);
@@ -2121,7 +2121,7 @@ describe("AuctionSuperApp", async () => {
           await checkAppToUserFlow("200", bidder);
           await checkUserToAppFlow("0", user);
           await checkAppToUserFlow("0", user);
-          await checkAppToReceiverFlow("0");
+          await checkAppToBeneficiaryFlow("0");
           await checkCurrentOwnerBid(1, 100);
           await checkOutstandingBid(1, 200);
           await checkOwnerBidContributionRate(1, 0);
@@ -2168,7 +2168,7 @@ describe("AuctionSuperApp", async () => {
         await checkAppNetFlow();
         await checkUserToAppFlow("150", bidder);
         await checkAppToUserFlow("150", bidder);
-        await checkAppToReceiverFlow("200");
+        await checkAppToBeneficiaryFlow("200");
         await checkOldBid(bidder, existingLicenseId, 150);
       });
 
@@ -2208,7 +2208,7 @@ describe("AuctionSuperApp", async () => {
         await checkAppNetFlow();
         await checkUserToAppFlow("150", bidder);
         await checkAppToUserFlow("50", bidder);
-        await checkAppToReceiverFlow("300");
+        await checkAppToBeneficiaryFlow("300");
         await checkOldBid(bidder, 1, 50);
       });
 
@@ -2248,7 +2248,7 @@ describe("AuctionSuperApp", async () => {
         await checkAppNetFlow();
         await checkUserToAppFlow("100", bidder);
         await checkAppToUserFlow("0", bidder);
-        await checkAppToReceiverFlow("300");
+        await checkAppToBeneficiaryFlow("300");
         await checkOldBid(bidder, 1, 0);
       });
 
@@ -2319,7 +2319,7 @@ describe("AuctionSuperApp", async () => {
         await checkAppNetFlow();
         await checkUserToAppFlow("0", bidder);
         await checkAppToUserFlow("0", bidder);
-        await checkAppToReceiverFlow("200");
+        await checkAppToBeneficiaryFlow("200");
       });
     });
   });
