@@ -33,3 +33,7 @@ typechain-types/factories/*
 # abi exporter
 abi/@openzeppelin
 abi/contracts/mock
+
+# solidity-coverage
+coverage.json
+coverage/
