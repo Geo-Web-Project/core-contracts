@@ -28,18 +28,35 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     "beforeAgreementCreated(address,address,bytes32,bytes,bytes)": FunctionFragment;
     "beforeAgreementTerminated(address,address,bytes32,bytes,bytes)": FunctionFragment;
     "beforeAgreementUpdated(address,address,bytes32,bytes,bytes)": FunctionFragment;
+    "beneficiary()": FunctionFragment;
+    "bidPeriodLengthInSeconds()": FunctionFragment;
+    "calculatePenalty(uint256)": FunctionFragment;
+    "calculatePurchasePrice(uint256)": FunctionFragment;
+    "claimer()": FunctionFragment;
+    "currentOwnerBid(uint256)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "getRoleMember(bytes32,uint256)": FunctionFragment;
     "getRoleMemberCount(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
+    "license()": FunctionFragment;
+    "oldBids(address,uint256)": FunctionFragment;
+    "outstandingBid(uint256)": FunctionFragment;
+    "ownerBidContributionRate(uint256)": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
-    "receiver()": FunctionFragment;
+    "penaltyDenominator()": FunctionFragment;
+    "penaltyNumerator()": FunctionFragment;
+    "perSecondFeeDenominator()": FunctionFragment;
+    "perSecondFeeNumerator()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
+    "setBeneficiary(address)": FunctionFragment;
+    "setBidPeriod(uint256)": FunctionFragment;
     "setClaimer(address)": FunctionFragment;
-    "setReceiver(address)": FunctionFragment;
+    "setLicense(address)": FunctionFragment;
+    "setPenalty(uint256,uint256)": FunctionFragment;
+    "setPerSecondFee(uint256,uint256)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "unpause()": FunctionFragment;
   };
@@ -77,6 +94,27 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     values: [string, string, BytesLike, BytesLike, BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "beneficiary",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "bidPeriodLengthInSeconds",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "calculatePenalty",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "calculatePurchasePrice",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(functionFragment: "claimer", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "currentOwnerBid",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getRoleAdmin",
     values: [BytesLike]
   ): string;
@@ -96,9 +134,37 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     functionFragment: "hasRole",
     values: [BytesLike, string]
   ): string;
+  encodeFunctionData(functionFragment: "license", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "oldBids",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "outstandingBid",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ownerBidContributionRate",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
-  encodeFunctionData(functionFragment: "receiver", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "penaltyDenominator",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "penaltyNumerator",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "perSecondFeeDenominator",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "perSecondFeeNumerator",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
     values: [BytesLike, string]
@@ -107,8 +173,24 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     functionFragment: "revokeRole",
     values: [BytesLike, string]
   ): string;
+  encodeFunctionData(
+    functionFragment: "setBeneficiary",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setBidPeriod",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "setClaimer", values: [string]): string;
-  encodeFunctionData(functionFragment: "setReceiver", values: [string]): string;
+  encodeFunctionData(functionFragment: "setLicense", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "setPenalty",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPerSecondFee",
+    values: [BigNumberish, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
@@ -145,6 +227,27 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "beneficiary",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "bidPeriodLengthInSeconds",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "calculatePenalty",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "calculatePurchasePrice",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "claimer", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "currentOwnerBid",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getRoleAdmin",
     data: BytesLike
   ): Result;
@@ -158,17 +261,52 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "license", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "oldBids", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "outstandingBid",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "ownerBidContributionRate",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "receiver", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "penaltyDenominator",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "penaltyNumerator",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "perSecondFeeDenominator",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "perSecondFeeNumerator",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "renounceRole",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "setClaimer", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "setReceiver",
+    functionFragment: "setBeneficiary",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setBidPeriod",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "setClaimer", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setLicense", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setPenalty", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setPerSecondFee",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -294,8 +432,8 @@ export interface AuctionSuperApp extends BaseContract {
     ): Promise<[string]>;
 
     beforeAgreementTerminated(
-      _superToken: string,
-      _agreementClass: string,
+      arg0: string,
+      arg1: string,
       _agreementId: BytesLike,
       arg3: BytesLike,
       arg4: BytesLike,
@@ -310,6 +448,35 @@ export interface AuctionSuperApp extends BaseContract {
       arg4: BytesLike,
       overrides?: CallOverrides
     ): Promise<[string] & { cbdata: string }>;
+
+    beneficiary(overrides?: CallOverrides): Promise<[string]>;
+
+    bidPeriodLengthInSeconds(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    calculatePenalty(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    calculatePurchasePrice(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    claimer(overrides?: CallOverrides): Promise<[string]>;
+
+    currentOwnerBid(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+        timestamp: BigNumber;
+        bidder: string;
+        contributionRate: BigNumber;
+        perSecondFeeNumerator: BigNumber;
+        perSecondFeeDenominator: BigNumber;
+      }
+    >;
 
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
 
@@ -336,13 +503,53 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    license(overrides?: CallOverrides): Promise<[string]>;
+
+    oldBids(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+        timestamp: BigNumber;
+        bidder: string;
+        contributionRate: BigNumber;
+        perSecondFeeNumerator: BigNumber;
+        perSecondFeeDenominator: BigNumber;
+      }
+    >;
+
+    outstandingBid(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+        timestamp: BigNumber;
+        bidder: string;
+        contributionRate: BigNumber;
+        perSecondFeeNumerator: BigNumber;
+        perSecondFeeDenominator: BigNumber;
+      }
+    >;
+
+    ownerBidContributionRate(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     pause(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     paused(overrides?: CallOverrides): Promise<[boolean]>;
 
-    receiver(overrides?: CallOverrides): Promise<[string]>;
+    penaltyDenominator(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    penaltyNumerator(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    perSecondFeeDenominator(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    perSecondFeeNumerator(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     renounceRole(
       role: BytesLike,
@@ -356,13 +563,35 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setBeneficiary(
+      _beneficiary: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setBidPeriod(
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setClaimer(
       _claimer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setReceiver(
-      _receiver: string,
+    setLicense(
+      licenseAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setPenalty(
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setPerSecondFee(
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -420,8 +649,8 @@ export interface AuctionSuperApp extends BaseContract {
   ): Promise<string>;
 
   beforeAgreementTerminated(
-    _superToken: string,
-    _agreementClass: string,
+    arg0: string,
+    arg1: string,
     _agreementId: BytesLike,
     arg3: BytesLike,
     arg4: BytesLike,
@@ -436,6 +665,35 @@ export interface AuctionSuperApp extends BaseContract {
     arg4: BytesLike,
     overrides?: CallOverrides
   ): Promise<string>;
+
+  beneficiary(overrides?: CallOverrides): Promise<string>;
+
+  bidPeriodLengthInSeconds(overrides?: CallOverrides): Promise<BigNumber>;
+
+  calculatePenalty(
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  calculatePurchasePrice(
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  claimer(overrides?: CallOverrides): Promise<string>;
+
+  currentOwnerBid(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      timestamp: BigNumber;
+      bidder: string;
+      contributionRate: BigNumber;
+      perSecondFeeNumerator: BigNumber;
+      perSecondFeeDenominator: BigNumber;
+    }
+  >;
 
   getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
@@ -462,13 +720,53 @@ export interface AuctionSuperApp extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  license(overrides?: CallOverrides): Promise<string>;
+
+  oldBids(
+    arg0: string,
+    arg1: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      timestamp: BigNumber;
+      bidder: string;
+      contributionRate: BigNumber;
+      perSecondFeeNumerator: BigNumber;
+      perSecondFeeDenominator: BigNumber;
+    }
+  >;
+
+  outstandingBid(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      timestamp: BigNumber;
+      bidder: string;
+      contributionRate: BigNumber;
+      perSecondFeeNumerator: BigNumber;
+      perSecondFeeDenominator: BigNumber;
+    }
+  >;
+
+  ownerBidContributionRate(
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   pause(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   paused(overrides?: CallOverrides): Promise<boolean>;
 
-  receiver(overrides?: CallOverrides): Promise<string>;
+  penaltyDenominator(overrides?: CallOverrides): Promise<BigNumber>;
+
+  penaltyNumerator(overrides?: CallOverrides): Promise<BigNumber>;
+
+  perSecondFeeDenominator(overrides?: CallOverrides): Promise<BigNumber>;
+
+  perSecondFeeNumerator(overrides?: CallOverrides): Promise<BigNumber>;
 
   renounceRole(
     role: BytesLike,
@@ -482,13 +780,35 @@ export interface AuctionSuperApp extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setBeneficiary(
+    _beneficiary: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setBidPeriod(
+    _bidPeriodLengthInSeconds: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setClaimer(
     _claimer: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setReceiver(
-    _receiver: string,
+  setLicense(
+    licenseAddress: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setPenalty(
+    _penaltyNumerator: BigNumberish,
+    _penaltyDenominator: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setPerSecondFee(
+    _perSecondFeeNumerator: BigNumberish,
+    _perSecondFeeDenominator: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -546,8 +866,8 @@ export interface AuctionSuperApp extends BaseContract {
     ): Promise<string>;
 
     beforeAgreementTerminated(
-      _superToken: string,
-      _agreementClass: string,
+      arg0: string,
+      arg1: string,
       _agreementId: BytesLike,
       arg3: BytesLike,
       arg4: BytesLike,
@@ -562,6 +882,35 @@ export interface AuctionSuperApp extends BaseContract {
       arg4: BytesLike,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    beneficiary(overrides?: CallOverrides): Promise<string>;
+
+    bidPeriodLengthInSeconds(overrides?: CallOverrides): Promise<BigNumber>;
+
+    calculatePenalty(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    calculatePurchasePrice(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    claimer(overrides?: CallOverrides): Promise<string>;
+
+    currentOwnerBid(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+        timestamp: BigNumber;
+        bidder: string;
+        contributionRate: BigNumber;
+        perSecondFeeNumerator: BigNumber;
+        perSecondFeeDenominator: BigNumber;
+      }
+    >;
 
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
@@ -588,11 +937,51 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    license(overrides?: CallOverrides): Promise<string>;
+
+    oldBids(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+        timestamp: BigNumber;
+        bidder: string;
+        contributionRate: BigNumber;
+        perSecondFeeNumerator: BigNumber;
+        perSecondFeeDenominator: BigNumber;
+      }
+    >;
+
+    outstandingBid(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+        timestamp: BigNumber;
+        bidder: string;
+        contributionRate: BigNumber;
+        perSecondFeeNumerator: BigNumber;
+        perSecondFeeDenominator: BigNumber;
+      }
+    >;
+
+    ownerBidContributionRate(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     pause(overrides?: CallOverrides): Promise<void>;
 
     paused(overrides?: CallOverrides): Promise<boolean>;
 
-    receiver(overrides?: CallOverrides): Promise<string>;
+    penaltyDenominator(overrides?: CallOverrides): Promise<BigNumber>;
+
+    penaltyNumerator(overrides?: CallOverrides): Promise<BigNumber>;
+
+    perSecondFeeDenominator(overrides?: CallOverrides): Promise<BigNumber>;
+
+    perSecondFeeNumerator(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceRole(
       role: BytesLike,
@@ -606,9 +995,34 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setBeneficiary(
+      _beneficiary: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setBidPeriod(
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setClaimer(_claimer: string, overrides?: CallOverrides): Promise<void>;
 
-    setReceiver(_receiver: string, overrides?: CallOverrides): Promise<void>;
+    setLicense(
+      licenseAddress: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setPenalty(
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setPerSecondFee(
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -704,8 +1118,8 @@ export interface AuctionSuperApp extends BaseContract {
     ): Promise<BigNumber>;
 
     beforeAgreementTerminated(
-      _superToken: string,
-      _agreementClass: string,
+      arg0: string,
+      arg1: string,
       _agreementId: BytesLike,
       arg3: BytesLike,
       arg4: BytesLike,
@@ -718,6 +1132,27 @@ export interface AuctionSuperApp extends BaseContract {
       _agreementId: BytesLike,
       arg3: BytesLike,
       arg4: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    beneficiary(overrides?: CallOverrides): Promise<BigNumber>;
+
+    bidPeriodLengthInSeconds(overrides?: CallOverrides): Promise<BigNumber>;
+
+    calculatePenalty(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    calculatePurchasePrice(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    claimer(overrides?: CallOverrides): Promise<BigNumber>;
+
+    currentOwnerBid(
+      arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -749,13 +1184,37 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    license(overrides?: CallOverrides): Promise<BigNumber>;
+
+    oldBids(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    outstandingBid(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    ownerBidContributionRate(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     pause(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     paused(overrides?: CallOverrides): Promise<BigNumber>;
 
-    receiver(overrides?: CallOverrides): Promise<BigNumber>;
+    penaltyDenominator(overrides?: CallOverrides): Promise<BigNumber>;
+
+    penaltyNumerator(overrides?: CallOverrides): Promise<BigNumber>;
+
+    perSecondFeeDenominator(overrides?: CallOverrides): Promise<BigNumber>;
+
+    perSecondFeeNumerator(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceRole(
       role: BytesLike,
@@ -769,13 +1228,35 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setBeneficiary(
+      _beneficiary: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setBidPeriod(
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setClaimer(
       _claimer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setReceiver(
-      _receiver: string,
+    setLicense(
+      licenseAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setPenalty(
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setPerSecondFee(
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -836,8 +1317,8 @@ export interface AuctionSuperApp extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     beforeAgreementTerminated(
-      _superToken: string,
-      _agreementClass: string,
+      arg0: string,
+      arg1: string,
       _agreementId: BytesLike,
       arg3: BytesLike,
       arg4: BytesLike,
@@ -850,6 +1331,29 @@ export interface AuctionSuperApp extends BaseContract {
       _agreementId: BytesLike,
       arg3: BytesLike,
       arg4: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    beneficiary(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    bidPeriodLengthInSeconds(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    calculatePenalty(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    calculatePurchasePrice(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    claimer(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    currentOwnerBid(
+      arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -881,13 +1385,43 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    license(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    oldBids(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    outstandingBid(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    ownerBidContributionRate(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     pause(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    receiver(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    penaltyDenominator(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    penaltyNumerator(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    perSecondFeeDenominator(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    perSecondFeeNumerator(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     renounceRole(
       role: BytesLike,
@@ -901,13 +1435,35 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setBeneficiary(
+      _beneficiary: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setBidPeriod(
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setClaimer(
       _claimer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setReceiver(
-      _receiver: string,
+    setLicense(
+      licenseAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setPenalty(
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setPerSecondFee(
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

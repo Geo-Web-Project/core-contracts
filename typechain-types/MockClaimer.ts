@@ -131,7 +131,7 @@ export interface MockClaimer extends BaseContract {
       initialContributionRate: BigNumberish,
       claimData: BytesLike,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<BigNumber>;
 
     claimCallCount(overrides?: CallOverrides): Promise<BigNumber>;
 
