@@ -454,90 +454,90 @@ describe("ETHPurchaser", async () => {
     expect(purchasePrice).to.equal(0, "Purchase price was not correct");
   });
 
-  it("should purchase a license [ @skip-on-coverage ]", async () => {
-    const MockERC721License = await ethers.getContractFactory(
-      "MockERC721License"
-    );
-    const license = await MockERC721License.deploy("Mock", "MOCK");
-    await license.deployed();
+  // it("should purchase a license [ @skip-on-coverage ]", async () => {
+  //   const MockERC721License = await ethers.getContractFactory(
+  //     "MockERC721License"
+  //   );
+  //   const license = await MockERC721License.deploy("Mock", "MOCK");
+  //   await license.deployed();
 
-    const minPayment = 1;
+  //   const minPayment = 1;
 
-    const MockCollector = await ethers.getContractFactory("MockCollector");
-    const collector = await MockCollector.deploy(1000, minPayment);
-    await collector.deployed();
+  //   const MockCollector = await ethers.getContractFactory("MockCollector");
+  //   const collector = await MockCollector.deploy(1000, minPayment);
+  //   await collector.deployed();
 
-    const MockAccountant = await ethers.getContractFactory("MockAccountant");
-    const accountant = await MockAccountant.deploy(1, 2);
-    await accountant.deployed();
+  //   const MockAccountant = await ethers.getContractFactory("MockAccountant");
+  //   const accountant = await MockAccountant.deploy(1, 2);
+  //   await accountant.deployed();
 
-    let purchaser = await buildContract({
-      accountant: accountant.address,
-      license: license.address,
-      collector: collector.address,
-    });
+  //   let purchaser = await buildContract({
+  //     accountant: accountant.address,
+  //     license: license.address,
+  //     collector: collector.address,
+  //   });
 
-    let contributionRate = 10;
+  //   let contributionRate = 10;
 
-    await license.mint(accounts[2].address, 1);
-    await license
-      .connect(accounts[2])
-      .setApprovalForAll(purchaser.address, true);
+  //   await license.mint(accounts[2].address, 1);
+  //   await license
+  //     .connect(accounts[2])
+  //     .setApprovalForAll(purchaser.address, true);
 
-    await accountant.setContributionRate(1, contributionRate);
-    let result1 = await collector.setContributionRate(1, contributionRate, {
-      value: ethers.utils.parseEther("1"),
-    });
-    let receipt1 = await result1.wait();
-    let block1 = await ethers.provider.getBlock(receipt1.blockNumber);
+  //   await accountant.setContributionRate(1, contributionRate);
+  //   let result1 = await collector.setContributionRate(1, contributionRate, {
+  //     value: ethers.utils.parseEther("1"),
+  //   });
+  //   let receipt1 = await result1.wait();
+  //   let block1 = await ethers.provider.getBlock(receipt1.blockNumber);
 
-    // Token ID: 1
-    // Expiration: now + 1000
-    // Contribution rate: 10
-    // Time balance: 1000*10
-    // Value: 20
+  //   // Token ID: 1
+  //   // Expiration: now + 1000
+  //   // Contribution rate: 10
+  //   // Time balance: 1000*10
+  //   // Value: 20
 
-    let initialExpiration = await collector.licenseExpirationTimestamps(1);
+  //   let initialExpiration = await collector.licenseExpirationTimestamps(1);
 
-    let originalBalance2 = await ethers.provider.getBalance(
-      accounts[3].address
-    );
+  //   let originalBalance2 = await ethers.provider.getBalance(
+  //     accounts[3].address
+  //   );
 
-    const maxPurchasePrice = 20 + 1000 * contributionRate;
-    let result2 = await purchaser
-      .connect(accounts[3])
-      .purchase(1, accounts[3].address, maxPurchasePrice, contributionRate, {
-        value: maxPurchasePrice,
-      });
+  //   const maxPurchasePrice = 20 + 1000 * contributionRate;
+  //   let result2 = await purchaser
+  //     .connect(accounts[3])
+  //     .purchase(1, accounts[3].address, maxPurchasePrice, contributionRate, {
+  //       value: maxPurchasePrice,
+  //     });
 
-    let receipt2 = await result2.wait();
-    let block2 = await ethers.provider.getBlock(receipt2.blockNumber);
+  //   let receipt2 = await result2.wait();
+  //   let block2 = await ethers.provider.getBlock(receipt2.blockNumber);
 
-    let finalPurchasePrice =
-      maxPurchasePrice -
-      (block2.timestamp - block1.timestamp) * contributionRate;
+  //   let finalPurchasePrice =
+  //     maxPurchasePrice -
+  //     (block2.timestamp - block1.timestamp) * contributionRate;
 
-    let buyerBalance = await ethers.provider.getBalance(accounts[3].address);
+  //   let buyerBalance = await ethers.provider.getBalance(accounts[3].address);
 
-    assert.equal(
-      await license.ownerOf(1),
-      accounts[3].address,
-      "License did not transfer"
-    );
-    assert.equal(
-      buyerBalance.toString(),
-      BigNumber.from(originalBalance2).sub(maxPurchasePrice).toString(),
-      "Payment was not taken from buyer"
-    );
-    expect(await purchaser.payments(accounts[2].address)).to.equal(
-      finalPurchasePrice,
-      "Payment was not sent to seller"
-    );
-    assert(
-      (await collector.licenseExpirationTimestamps(1)).gt(initialExpiration),
-      "Collector was not updated"
-    );
-  });
+  //   assert.equal(
+  //     await license.ownerOf(1),
+  //     accounts[3].address,
+  //     "License did not transfer"
+  //   );
+  //   assert.equal(
+  //     buyerBalance.toString(),
+  //     BigNumber.from(originalBalance2).sub(maxPurchasePrice).toString(),
+  //     "Payment was not taken from buyer"
+  //   );
+  //   expect(await purchaser.payments(accounts[2].address)).to.equal(
+  //     finalPurchasePrice,
+  //     "Payment was not sent to seller"
+  //   );
+  //   assert(
+  //     (await collector.licenseExpirationTimestamps(1)).gt(initialExpiration),
+  //     "Collector was not updated"
+  //   );
+  // });
 
   it("should fail to purchase license if maxPurchasePrice is too low", async () => {
     const MockERC721License = await ethers.getContractFactory(
