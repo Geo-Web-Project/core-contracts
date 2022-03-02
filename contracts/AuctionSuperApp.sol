@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/IClaimer.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./Accountant.sol";
 
 contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
@@ -20,8 +19,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     IClaimer public claimer;
     address public receiver;
 
-    /// @notice Accountant.
-    Accountant public accountant;
     /// @notice ERC721 License used to find owners.
     IERC721 public license;
 
@@ -34,6 +31,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     /// @notice All old bids for each user that are not the current owner or outstanding
     mapping(address => mapping(uint256 => Bid)) public oldBids;
 
+    /// @notice The numerator of the network-wide per second contribution fee.
+    uint256 public perSecondFeeNumerator;
+    /// @notice The denominator of the network-wide per second contribution fee.
+    uint256 public perSecondFeeDenominator;
     /// @notice The numerator of the penalty to pay to reject a bid.
     uint256 public penaltyNumerator;
     /// @notice The denominator of the penalty to pay to reject a bid.
@@ -63,7 +64,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         ISuperToken _acceptedToken,
         address _receiver,
         address _license,
-        address _accountant,
+        uint256 _perSecondFeeNumerator,
+        uint256 _perSecondFeeDenominator,
         uint256 _penaltyNumerator,
         uint256 _penaltyDenominator,
         uint256 _bidPeriodLengthInSeconds
@@ -82,7 +84,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         acceptedToken = _acceptedToken;
         receiver = _receiver;
         license = IERC721(_license);
-        accountant = Accountant(_accountant);
+        perSecondFeeNumerator = _perSecondFeeNumerator;
+        perSecondFeeDenominator = _perSecondFeeDenominator;
         penaltyNumerator = _penaltyNumerator;
         penaltyDenominator = _penaltyDenominator;
         bidPeriodLengthInSeconds = _bidPeriodLengthInSeconds;
@@ -169,15 +172,17 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     /**
-     * @notice Admin can update the accountant.
-     * @param accountantAddress The new accountant
+     * @notice Admin can update the global contribution fee.
+     * @param _perSecondFeeNumerator The numerator of the network-wide per second contribution fee
+     * @param _perSecondFeeDenominator The denominator of the network-wide per second contribution fee
      * @custom:requires DEFAULT_ADMIN_ROLE
      */
-    function setAccountant(address accountantAddress)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        accountant = Accountant(accountantAddress);
+    function setPerSecondFee(
+        uint256 _perSecondFeeNumerator,
+        uint256 _perSecondFeeDenominator
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        perSecondFeeNumerator = _perSecondFeeNumerator;
+        perSecondFeeDenominator = _perSecondFeeDenominator;
     }
 
     /**
@@ -242,12 +247,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      * @return Current purchase price in wei
      */
     function calculatePurchasePrice(uint256 id) public view returns (uint256) {
-        uint256 contributionRate = accountant.contributionRates(id);
+        uint96 contributionRate = uint96(ownerBidContributionRate(id));
 
         // Value * Per Second Fee = Contribution Rate
-        uint256 value = (contributionRate *
-            accountant.perSecondFeeDenominator()) /
-            accountant.perSecondFeeNumerator();
+        uint256 value = (contributionRate * perSecondFeeDenominator) /
+            perSecondFeeNumerator;
 
         return value;
     }
@@ -563,8 +567,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.timestamp = block.timestamp;
         bid.bidder = user;
         bid.contributionRate = initialContributionRate;
-        bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
-        bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
     }
 
     function _increaseBid(
@@ -605,9 +609,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             }
 
             if (newBidAmount >= bidOutstanding.contributionRate) {
-                // Update to new contribution
-                accountant.setContributionRate(licenseId, uint96(newBidAmount));
-
                 // Pay penalty
                 uint256 penalty = calculatePenalty(licenseId);
                 bool success = acceptedToken.transferFrom(
@@ -632,8 +633,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.timestamp = block.timestamp;
         bid.bidder = user;
         bid.contributionRate = newBidAmount;
-        bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
-        bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
     }
 
     function _decreaseBid(
@@ -691,8 +692,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.timestamp = block.timestamp;
         bid.bidder = user;
         bid.contributionRate = newBidAmount;
-        bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
-        bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
     }
 
     function _decreaseOldBid(
@@ -796,8 +797,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.timestamp = block.timestamp;
         bid.bidder = bidder;
         bid.contributionRate = bidContributionRate;
-        bid.perSecondFeeNumerator = accountant.perSecondFeeNumerator();
-        bid.perSecondFeeDenominator = accountant.perSecondFeeDenominator();
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
 
         newCtx = _increaseAppToUserFlow(_ctx, bidder, bidContributionRate);
 

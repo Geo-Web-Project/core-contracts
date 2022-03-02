@@ -14,17 +14,13 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-waffle";
 import { task, types } from "hardhat/config";
-import { ethers } from "ethers";
 import "@openzeppelin/hardhat-upgrades";
 import "@eth-optimism/hardhat-ovm";
-import '@typechain/hardhat';
+import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
-import "./tasks/Accountant";
 import "./tasks/GeoWebParcel";
 import "./tasks/ERC721License";
-import "./tasks/ETHPurchaser";
-import "./tasks/SimpleETHClaimer";
 import "./tasks/estimate_minting_gas";
 
 task(
@@ -33,7 +29,6 @@ task(
 ).setAction(async (args, hre) => {
   console.log("Deploying all contracts...");
   const parcelAddress = await hre.run("deploy:parcel");
-  const accountantAddress = await hre.run("deploy:accountant");
   const licenseAddress = await hre.run("deploy:license");
 
   const accounts = await hre.ethers.getSigners();
@@ -50,13 +45,6 @@ task(
 
   console.log("\nSetting default configuration...");
 
-  // Accountant default config
-  await hre.run("config:accountant", {
-    contractAddress: accountantAddress,
-    annualFeeRate: 0.1,
-    validator: collectorAddress,
-  });
-
   console.log("Default configuration set.");
 
   console.log("\nSetting roles...");
@@ -64,7 +52,6 @@ task(
   await hre.run("roles:set-default", {
     licenseAddress: licenseAddress,
     parcelAddress: parcelAddress,
-    accountantAddress: accountantAddress,
     collectorAddress: collectorAddress,
   });
   console.log("Default roles set.");
@@ -73,7 +60,6 @@ task(
 task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
   async (args, hre) => {
     await hre.run("deploy:parcel");
-    await hre.run("deploy:accountant");
     await hre.run("deploy:license");
     await hre.run("deploy:collector");
   }
@@ -87,32 +73,8 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     types.string
   )
   .addOptionalParam(
-    "accountantAddress",
-    "Address of Accountant",
-    undefined,
-    types.string
-  )
-  .addOptionalParam(
-    "collectorAddress",
-    "Address of ETHExpirationCollector",
-    undefined,
-    types.string
-  )
-  .addOptionalParam(
     "parcelAddress",
     "Address of GeoWebParcel",
-    undefined,
-    types.string
-  )
-  .addOptionalParam(
-    "purchaserAddress",
-    "Address of ETHPurchaser",
-    undefined,
-    types.string
-  )
-  .addOptionalParam(
-    "claimerAddress",
-    "Address of SimpleETHClaimer",
     undefined,
     types.string
   )
@@ -120,18 +82,12 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     async (
       {
         licenseAddress,
-        accountantAddress,
         collectorAddress,
         parcelAddress,
-        purchaserAddress,
-        claimerAddress,
       }: {
         licenseAddress: string;
-        accountantAddress: string;
         collectorAddress: string;
         parcelAddress: string;
-        purchaserAddress: string;
-        claimerAddress: string;
       },
       hre
     ) => {
@@ -139,20 +95,11 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         "ERC721License",
         licenseAddress
       );
-      const collectorContract = await hre.ethers.getContractAt(
-        "ETHExpirationCollector",
-        collectorAddress
-      );
 
       const parcelContract = await hre.ethers.getContractAt(
         "GeoWebParcel",
         parcelAddress
       );
-
-      await hre.run("roles:accountant", {
-        accountantAddress,
-        collectorAddress,
-      });
 
       // // ERC721License roles
       // const res2 = await licenseContract.grantRole(
@@ -203,23 +150,23 @@ const networks: any = {
   },
 };
 
-if(process.env.INFURA_KEY){
-  networks['kovan']=  {
+if (process.env.INFURA_KEY) {
+  networks["kovan"] = {
     url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
     chainId: 0x2a,
     gas: 4700000,
-  }
-  if(process.env.DEV_PRIVATE_KEY){
-    networks['rinkeby'] = {
+  };
+  if (process.env.DEV_PRIVATE_KEY) {
+    networks["rinkeby"] = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 4,
       accounts: [process.env.DEV_PRIVATE_KEY],
-    }
-  }else{
-    console.warn('Missing env.DEV_PRIVATE_KEY')
+    };
+  } else {
+    console.warn("Missing env.DEV_PRIVATE_KEY");
   }
-}else{
-  console.warn('Missing env.INFURA_KEY')
+} else {
+  console.warn("Missing env.INFURA_KEY");
 }
 
 module.exports = {
@@ -258,7 +205,7 @@ module.exports = {
     solcVersion: "0.6.12",
   },
   abiExporter: {
-    path: './abi',
+    path: "./abi",
     clear: true,
-  }
+  },
 };

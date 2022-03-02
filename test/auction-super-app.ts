@@ -3,12 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, web3, network } from "hardhat";
 import { Framework, SFError, SuperToken } from "@superfluid-finance/sdk-core";
-import {
-  BigNumber,
-  Contract,
-  ContractReceipt,
-  ContractTransaction,
-} from "ethers";
+import { BigNumber, Contract, ContractReceipt } from "ethers";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
@@ -17,14 +12,7 @@ import { AuctionSuperApp } from "../typechain-types/AuctionSuperApp";
 import { AuctionSuperApp__factory } from "../typechain-types/factories/AuctionSuperApp__factory";
 import { ISuperfluid } from "../typechain-types/ISuperfluid";
 import { MockClaimer } from "../typechain-types/MockClaimer";
-import { MockAccountant } from "../typechain-types/MockAccountant";
-import { MockERC721License } from "../typechain-types/MockERC721License";
-import {
-  Accountant,
-  ERC721License,
-  MockAccountant__factory,
-  MockClaimer__factory,
-} from "../typechain-types";
+import { ERC721License, MockClaimer__factory } from "../typechain-types";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 
 use(solidity);
@@ -42,7 +30,6 @@ describe("AuctionSuperApp", async () => {
   let ethersjsSf: Framework;
   let superApp: AuctionSuperApp;
   let mockClaimer: MockClaimer;
-  let mockAccountant: FakeContract<Accountant>;
   let mockLicense: FakeContract<ERC721License>;
   let sf: any;
   let hostContract: ISuperfluid;
@@ -73,9 +60,8 @@ describe("AuctionSuperApp", async () => {
   }
 
   async function rateToPurchasePrice(rate: BigNumber) {
-    const perSecondFeeNumerator = await mockAccountant.perSecondFeeNumerator();
-    const perSecondFeeDenominator =
-      await mockAccountant.perSecondFeeDenominator();
+    const perSecondFeeNumerator = await superApp.perSecondFeeNumerator();
+    const perSecondFeeDenominator = await superApp.perSecondFeeDenominator();
 
     return rate.mul(perSecondFeeDenominator).div(perSecondFeeNumerator);
   }
@@ -92,8 +78,9 @@ describe("AuctionSuperApp", async () => {
     cfa,
     token,
     receiver,
-    accountant,
     license,
+    perSecondFeeNumerator,
+    perSecondFeeDenominator,
     penaltyNumerator,
     penaltyDenominator,
     bidPeriodLengthInSeconds,
@@ -102,8 +89,9 @@ describe("AuctionSuperApp", async () => {
     cfa: string;
     token: string;
     receiver: string;
-    accountant: string;
     license: string;
+    perSecondFeeNumerator: BigNumber;
+    perSecondFeeDenominator: BigNumber;
     penaltyNumerator: BigNumber;
     penaltyDenominator: BigNumber;
     bidPeriodLengthInSeconds: BigNumber;
@@ -115,7 +103,8 @@ describe("AuctionSuperApp", async () => {
       token,
       receiver,
       license,
-      accountant,
+      perSecondFeeNumerator,
+      perSecondFeeDenominator,
       penaltyNumerator,
       penaltyDenominator,
       bidPeriodLengthInSeconds
@@ -157,9 +146,6 @@ describe("AuctionSuperApp", async () => {
     mockLicense.ownerOf
       .whenCalledWith(mockLicenseId ?? 1)
       .returns(_user.address);
-    mockAccountant.contributionRates
-      .whenCalledWith(mockLicenseId ?? 1)
-      .returns(BigNumber.from(100));
     return txn;
   }
 
@@ -203,9 +189,6 @@ describe("AuctionSuperApp", async () => {
     mockLicense.ownerOf
       .whenCalledWith(mockLicenseId ?? 1)
       .returns(_user.address);
-    mockAccountant.contributionRates
-      .whenCalledWith(mockLicenseId ?? 1)
-      .returns(BigNumber.from(100));
     return txn;
   }
 
@@ -478,9 +461,6 @@ describe("AuctionSuperApp", async () => {
 
   beforeEach(async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
-    mockAccountant = await smock.fake<Accountant>("Accountant");
-    mockAccountant.perSecondFeeNumerator.returns(numerator);
-    mockAccountant.perSecondFeeDenominator.returns(denominator);
 
     mockLicense = await smock.fake<ERC721License>("ERC721License");
 
@@ -489,8 +469,9 @@ describe("AuctionSuperApp", async () => {
       cfa: sf.agreements.cfa.address,
       token: sf.tokens.ETHx.address,
       receiver: admin.address,
-      accountant: mockAccountant.address,
       license: mockLicense.address,
+      perSecondFeeNumerator: BigNumber.from(numerator),
+      perSecondFeeDenominator: BigNumber.from(denominator),
       penaltyNumerator: BigNumber.from(1),
       penaltyDenominator: BigNumber.from(10),
       bidPeriodLengthInSeconds: BigNumber.from(604800),
@@ -523,6 +504,20 @@ describe("AuctionSuperApp", async () => {
 
     const value = await superApp.claimer();
     expect(value).to.equal(admin.address);
+  });
+
+  it("should only allow admin to set fee", async () => {
+    expect(superApp.connect(user).setPerSecondFee(1, 2)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setPerSecondFee(1, 2);
+
+    const numerator = await superApp.perSecondFeeNumerator();
+    const denominator = await superApp.perSecondFeeDenominator();
+
+    expect(numerator).to.equal(1);
+    expect(denominator).to.equal(2);
   });
 
   it("should only allow admin to set penalty", async () => {
