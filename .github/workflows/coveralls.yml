@@ -14,6 +14,8 @@ jobs:
           cache: "yarn"
       - name: "Install JS Dependencies"
         run: "yarn install --frozen-lockfile --dev"
+      - name: "Build"
+        run: "yarn build"
       - name: "Run solidity coverage"
         run: "yarn hardhat coverage"
       - name: Coveralls

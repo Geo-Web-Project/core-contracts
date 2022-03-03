@@ -1,43 +1,120 @@
 # AuctionSuperApp
 
-![](https://mermaid.ink/img/pako:eNqFlF9v2jAUxb-K5yeQzDRQ9y9VmSj0AakrUlEfpqYPXnwBi2BHtrO0Qnz33tghJBTYU-J7fz4-Po6zpYkWQCO6SHWRrLhx5P6RkFgRqRLzZMGMsqzzPMUBcAskxwrpDQnPspcuUgIa1ATOUmkDSsGdRLBdUjWCrZIoSY8Y-AfGDWP66F9i-oLFJOVyg7Vx-QTz2Y873dA8iI4SJ7VCrtLuNMS7hCtBavP7loEEJC5UaRnfd1AJehuh0hYLtLTj3MwKBWYb06klODKgHPGlXzHdIWPBzXJ3KwVqzcERnTvr0IpUS_JXCu-qDv7jGu0zIr0eiemTWitdKML9dmOK1WGV2yn8QYdzENzx_8JBk9zckPH9aPq74n3el_Hb6aSCD6m0ItqbqSjtQ-ljcLNGIlgid6_SOlvGF6b8AXtsu5p8JKmgwKrwp_EABVnJ5QqsK2OuDuOEoYN6EB1cdhRE6pWOHNQGj4DDIvXn4I-2cbFaeX5q5lmLHi7Yefj4MrTux6U1Wt99aS5WqVTruXtLgXxhfTZgV-wr-8Z-sJ-sj4U-6w-IdUavIVoaAMXCoFdI4VbRVfbKEp1qE5rXTbnv-3nacLWEcxND95oyind-w6XAP9gWN4R7cCvYQEwjfBWw4HmKP4pY7RDNM_zO4U5Ipw2NFjy1wCjPnZ6_qYRGzuSwhyaSLw3fVNTuHZs9t2Q)]
+![](https://mermaid.ink/img/pako:eNqNVm1v2jAQ_itepEpFO6bG0Dc2OlFaaUhdW7Xqh2npBy85wGpwIseMoqr_fU7ivDmBVUgQ3z1399ybyZvjRwE6I2ceRht_yaQiNw-e8AQXvnxKUE7i-PD3TB-QJUjWWkL6F4TF8XMvhQVYg13hblhYQ4WoujFan8JKjNalkBSaYyT-RancC895yJ4857kSU1vsh4yvtHCa_qL8kp0Pe0ZbxZv4ikdCA03Yw1rcHmEiIGVmhUqij1yH6pUMUoBC4zFjkkua3gycJ9O1vNsIlG-eM0uIPkkUimSi757znoISVHdrdckD7e0RFYnWKlGaDRcL8ocHGbGyM11RYra9R8FCtdUe7tmWmBP5TKYhMknuah51nIKc8HUaDyZDbdoKYmfPfB9jw3SSPdfcBaZ2ubqsZAWwxo30-8RznsSLiDaCsKw3nqOladys_Z0Gt1E-UgFT7APw3C8Zj8n0ZjL7aSyyCcmemkX4j4vL2ZVxUDW22eaCo4FFWV9d3XyrBeT6lScqSUcgN_mFSTsbY245FbjR0iCbqVvckCVfLDFR6awUI5V-SphlXvNvQSoO5UgWzmr73yjKp3pRzHo2L4JMY-9gcy-NcWOzyoGxSltxzItD99a2KiK1zXW1rkMWJ5i15wdLWnuHubrwUzPobIjpRmp5UfdV2Ocom0a1uzvGsW5WRmzDGlnuwbWy6By8fS3fsQd0zw1XQ3V3cfDBLg5s85TkZCVU2sPiytE35ipaC-V5YjzWX35OKYt_We1IaWr7LG-5DpS1RbRFrQQUhrSb2beUWQcb2pWhuVY7cF18WtW2rqNh3imr3s1CD7uHg1r6drb57IRcvDyqbYjkCFygMIAhHMMJnMIZnIOrhS64FNwBuENwj8E9AfcU3DNwz4EeAdU2FOgA6BDoMdAToKdAz4Cew-AIBi5JlIxecLSQiALyQ3_DA7UcDeNX8KMwkrnya8rm4IBUhAa0sI4kEwvcZZ5rv5r3iyS5wrkpApnzMBxJDAxys-SqBiz2CEzJzFkDHHD068mK8UC_iL15gugKqiWu0HNG-jHAOVuH-qXGE-8auo71XxxeB1xF0hnNWZggOGytoset8EtBjrribCHZykjf_wFu8lQw)
 
 <details>
   <summary>Show source code</summary>
 
 ````
 ```mermaid
-  flowchart LR
-    incrUserApp([Increase user -> app])
-    decrUserApp([Decrease user -> app])
-    delUserApp([Delete user -> app])
-    delAppUser([Delete app -> user])
-    revert>"Revert"]
-    claim>"Claimer.claim()"]
-    delAppUserAction>"Delete (app -> user) and Decrease (app -> receiver)"]
-    recreateAppUser>"Recreate (app -> user)"]
-    isCurOwner{"Is Current Owner?"}
-    setOutBid>"Set outstanding bid and Increase (app -> user)"]
+flowchart LR
 
-    incrUserApp -- "Unknown action" --> revert
-    incrUserApp -- "No user data" --> revert
-    incrUserApp -- "action == CLAIM" --> claim
-    incrUserApp -- "action == BID" --> isCurOwner
-    isCurOwner -- "No" --> outBid1{"Outstanding Bid Exists?"} -- "Yes" --> revert
-    outBid1 -- "No" --> newBidder{"New highest bid?"}
+incrUserApp([Increase user -> app])
 
-    isCurOwner -- "Yes" --> outBid2{"Outstanding Bid Exists?"}
+decrUserApp([Decrease user -> app])
 
-    newBidder -- "No" --> revert
-    newBidder -- "Yes" --> setOutBid
+delUserApp([Delete user -> app])
 
-    decrUserApp -- "action != BID" --> revert
-    delUserApp -- "action != BID" --> delAppUserAction
-    delAppUser -- "action != BID" --> recreateAppUser
+delAppUser([Delete app -> user])
+
+revert1>"Revert"]
+
+revert2>"Revert"]
+
+claim>"Claimer.claim()"]
+
+delAppUserAction>"Delete (app -> user) and Decrease (app -> receiver)"]
+
+recreateAppUser>"Recreate (app -> user)"]
+
+isCurOwner{"Is Current Owner?"}
+
+setOutBid>"Set outstanding bid and Increase (app -> user)"]
+
+payPenalty>"Pay Penalty + Clear Outstanding Bid"]
+
+incAppReceiver>"Increase (app -> receiver)"]
+
+acceptBid>"Accept Bid"]
+
+decreaseBid>"Decrease Bid"]
 
 
-    linkStyle 0,1,2,4,5,6,8,9,10,11,12 stroke:green,stroke-width:4px,color:green;
-    linkStyle 7 stroke:orange,stroke-width:4px,color:orange;
+
+incrUserApp -- "Unknown action" --> revert1
+
+incrUserApp -- "No user data" --> revert1
+
+incrUserApp -- "action == CLAIM" --> claim --> incAppReceiver
+
+incrUserApp -- "action == BID" --> isCurOwner
+
+isCurOwner -- "No" --> outBid1{"Outstanding Bid Exists?"} -- "Yes" --> revert1
+
+outBid1 -- "No" --> newBidder{"New highest bid?"}
+
+
+
+newBidder -- "No" --> revert1
+
+newBidder -- "Yes" --> setOutBid
+
+
+
+decrUserApp -- "action != BID" --> revert2
+
+delUserApp --> delAppUserAction
+
+delAppUser --> recreateAppUser
+
+
+
+isCurOwner -- "Yes" --> outBid2{"Outstanding Bid Exists?"}
+
+outBid2 -- "Yes" --> bidElapsed1{"Has outstanding bid elapsed?"}
+
+bidElapsed1 -- "No" --> newBid{"New bid > outstanding?"}
+
+newBid -- "Yes" --> payPenalty --> incAppReceiver
+
+newBid -- "No" --> incAppReceiver
+
+outBid2 -- "No" --> incAppReceiver
+
+bidElapsed1 -- "Yes" --> revert1
+
+
+
+decrUserApp -- "action == BID" --> isCurOwner2{"Is Current Owner?"}
+
+isCurOwner2 -- "Yes" --> outBid3{"Outstanding Bid Exists?"}
+
+outBid3 -- "Yes" --> decrAmnt1{"Decreased amount\n==\ncurrentOwnerBid?"}
+
+decrAmnt1 -- "Yes" --> acceptBid
+
+decrAmnt1 -- "No" --> revert2
+
+outBid3 -- "No" --> decrAmnt2{"Decreased amount\n<=\nBid?"}
+
+decrAmnt2 -- "Yes" --> decreaseBid
+
+decrAmnt2 -- "No" --> revert2
+
+isCurOwner2 -- "No" --> outBid4{"Is Outstanding Bid?"}
+
+outBid4 -- "Yes" --> revert2
+outBid4 -- "No" --> decrAmnt2
+
+
+linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 stroke:green,stroke-width:4px,color:green;
+
+%% linkStyle 32 stroke:orange,stroke-width:4px,color:orange;
+
+classDef revert fill:red,color:white;
+
+class revert1,revert2 revert;
+
 ````
 
 </details>
@@ -122,5 +199,81 @@ const createFlowOp = await sf.cfaV1.createFlow({
 
 // Perform these in a single batch call
 const batchCall = sf.batchCall([approveOp, createFlowOp]);
+const txn = await batchCall.exec(user);
+```
+
+## Accept a Bid
+
+Accept a bid by decreasing a flow with some user data that contains the license ID when there is an outstanding bid.
+
+```javascript
+let ethx: SuperToken;
+enum Action {
+  CLAIM,
+  BID,
+}
+
+let licenseId: string; // License ID to bid on
+
+const actionData = ethers.utils.defaultAbiCoder.encode(
+  ["uint256"],
+  [licenseId]
+);
+const userData = ethers.utils.defaultAbiCoder.encode(
+  ["uint8", "bytes"],
+  [Action.BID, "0x"]
+);
+
+// Lower flow from 200 to 100
+const updateFlowOp = await sf.cfaV1.updateFlow({
+  sender: user.address,
+  receiver: superApp.address,
+  flowRate: "100",
+  superToken: ethx.address,
+  userData: userData,
+});
+
+const txn = await updateFlowOp.exec(user);
+```
+
+## Reject a Bid
+
+Reject a bid by increasing a flow with some user data that contains the license ID when there is an outstanding bid.
+
+```javascript
+let ethx: SuperToken;
+enum Action {
+  CLAIM,
+  BID,
+}
+
+let licenseId: string; // License ID to bid on
+
+// Approve ETHx amount above penalty
+const approveOp = ethx.approve({
+  receiver: superApp.address,
+  amount: "1000",
+});
+
+const actionData = ethers.utils.defaultAbiCoder.encode(
+  ["uint256"],
+  [licenseId]
+);
+const userData = ethers.utils.defaultAbiCoder.encode(
+  ["uint8", "bytes"],
+  [Action.BID, "0x"]
+);
+
+// Increase flow from 100 to 200 and pay penalty
+const updateFlowOp = await sf.cfaV1.updateFlow({
+  sender: user.address,
+  receiver: superApp.address,
+  flowRate: "200",
+  superToken: ethx.address,
+  userData: userData,
+});
+
+// Perform these in a single batch call
+const batchCall = sf.batchCall([approveOp, updateFlowOp]);
 const txn = await batchCall.exec(user);
 ```
