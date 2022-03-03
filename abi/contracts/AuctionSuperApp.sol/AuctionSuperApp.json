@@ -27,6 +27,16 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "_claimer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_reclaimer",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_perSecondFeeNumerator",
         "type": "uint256"
@@ -852,6 +862,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "reclaimer",
+    "outputs": [
+      {
+        "internalType": "contract IClaimer",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -971,6 +994,19 @@
       }
     ],
     "name": "setPerSecondFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_reclaimer",
+        "type": "address"
+      }
+    ],
+    "name": "setReclaimer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

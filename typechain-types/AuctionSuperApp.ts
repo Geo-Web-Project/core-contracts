@@ -50,6 +50,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     "penaltyNumerator()": FunctionFragment;
     "perSecondFeeDenominator()": FunctionFragment;
     "perSecondFeeNumerator()": FunctionFragment;
+    "reclaimer()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
     "setBeneficiary(address)": FunctionFragment;
@@ -58,6 +59,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     "setLicense(address)": FunctionFragment;
     "setPenalty(uint256,uint256)": FunctionFragment;
     "setPerSecondFee(uint256,uint256)": FunctionFragment;
+    "setReclaimer(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "unpause()": FunctionFragment;
   };
@@ -170,6 +172,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     functionFragment: "perSecondFeeNumerator",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "reclaimer", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
     values: [BytesLike, string]
@@ -195,6 +198,10 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "setPerSecondFee",
     values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setReclaimer",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
@@ -298,6 +305,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     functionFragment: "perSecondFeeNumerator",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "reclaimer", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceRole",
     data: BytesLike
@@ -316,6 +324,10 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "setPenalty", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setPerSecondFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setReclaimer",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -565,6 +577,8 @@ export interface AuctionSuperApp extends BaseContract {
 
     perSecondFeeNumerator(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    reclaimer(overrides?: CallOverrides): Promise<[string]>;
+
     renounceRole(
       role: BytesLike,
       account: string,
@@ -606,6 +620,11 @@ export interface AuctionSuperApp extends BaseContract {
     setPerSecondFee(
       _perSecondFeeNumerator: BigNumberish,
       _perSecondFeeDenominator: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setReclaimer(
+      _reclaimer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -787,6 +806,8 @@ export interface AuctionSuperApp extends BaseContract {
 
   perSecondFeeNumerator(overrides?: CallOverrides): Promise<BigNumber>;
 
+  reclaimer(overrides?: CallOverrides): Promise<string>;
+
   renounceRole(
     role: BytesLike,
     account: string,
@@ -828,6 +849,11 @@ export interface AuctionSuperApp extends BaseContract {
   setPerSecondFee(
     _perSecondFeeNumerator: BigNumberish,
     _perSecondFeeDenominator: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setReclaimer(
+    _reclaimer: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1007,6 +1033,8 @@ export interface AuctionSuperApp extends BaseContract {
 
     perSecondFeeNumerator(overrides?: CallOverrides): Promise<BigNumber>;
 
+    reclaimer(overrides?: CallOverrides): Promise<string>;
+
     renounceRole(
       role: BytesLike,
       account: string,
@@ -1047,6 +1075,8 @@ export interface AuctionSuperApp extends BaseContract {
       _perSecondFeeDenominator: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    setReclaimer(_reclaimer: string, overrides?: CallOverrides): Promise<void>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -1245,6 +1275,8 @@ export interface AuctionSuperApp extends BaseContract {
 
     perSecondFeeNumerator(overrides?: CallOverrides): Promise<BigNumber>;
 
+    reclaimer(overrides?: CallOverrides): Promise<BigNumber>;
+
     renounceRole(
       role: BytesLike,
       account: string,
@@ -1286,6 +1318,11 @@ export interface AuctionSuperApp extends BaseContract {
     setPerSecondFee(
       _perSecondFeeNumerator: BigNumberish,
       _perSecondFeeDenominator: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setReclaimer(
+      _reclaimer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1457,6 +1494,8 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    reclaimer(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     renounceRole(
       role: BytesLike,
       account: string,
@@ -1498,6 +1537,11 @@ export interface AuctionSuperApp extends BaseContract {
     setPerSecondFee(
       _perSecondFeeNumerator: BigNumberish,
       _perSecondFeeDenominator: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setReclaimer(
+      _reclaimer: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

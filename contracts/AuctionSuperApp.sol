@@ -16,8 +16,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
     ISuperToken private acceptedToken; // accepted token
 
-    IClaimer public claimer;
+    /// @notice Beneficiary of funds.
     address public beneficiary;
+
+    /// @notice Claimer.
+    IClaimer public claimer;
+
+    /// @notice Reclaimer to use when owner contribution is deleted
+    IClaimer public reclaimer;
 
     /// @notice ERC721 License used to find owners.
     IERC721 public license;
@@ -64,6 +70,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         ISuperToken _acceptedToken,
         address _beneficiary,
         address _license,
+        address _claimer,
+        address _reclaimer,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator,
         uint256 _penaltyNumerator,
@@ -80,6 +88,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(_beneficiary) != address(0),
             "beneficiary is zero address"
         );
+        require(address(_claimer) != address(0), "claimer is zero address");
+        require(address(_reclaimer) != address(0), "reclaimer is zero address");
+        require(address(_license) != address(0), "license is zero address");
         require(!_host.isApp(ISuperApp(_beneficiary)), "beneficiary is an app");
 
         host = _host;
@@ -87,6 +98,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         acceptedToken = _acceptedToken;
         beneficiary = _beneficiary;
         license = IERC721(_license);
+        claimer = IClaimer(_claimer);
+        reclaimer = IClaimer(_reclaimer);
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
         penaltyNumerator = _penaltyNumerator;
@@ -112,6 +125,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         claimer = IClaimer(_claimer);
+    }
+
+    /**
+     * @notice Admin can update the reclaimer.
+     * @param _reclaimer The new reclaimer address
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setReclaimer(address _reclaimer)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        reclaimer = IClaimer(_reclaimer);
     }
 
     /**
@@ -632,7 +657,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (action == uint8(Action.CLAIM)) {
-            return _claim(_ctx, user, increasedFlowRate, actionData);
+            return _claim(_ctx, user, increasedFlowRate, claimer, actionData);
         } else if (action == uint8(Action.BID)) {
             return _increaseBid(_ctx, user, increasedFlowRate, actionData);
         } else {
@@ -695,10 +720,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address user,
         int96 initialContributionRate,
+        IClaimer _claimer,
         bytes memory claimData
     ) private returns (bytes memory newCtx) {
         // Get claim price
-        uint256 claimPrice = claimer.claimPrice(
+        uint256 claimPrice = _claimer.claimPrice(
             user,
             initialContributionRate,
             claimData
@@ -713,7 +739,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         require(success, "AuctionSuperApp: Claim payment failed");
 
         // Process claim
-        uint256 licenseId = claimer.claim(
+        uint256 licenseId = _claimer.claim(
             user,
             initialContributionRate,
             claimData
@@ -898,6 +924,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             revert(
                 "AuctionSuperApp: Cannot place another bid with one outstanding"
             );
+        }
+
+        if (ownerBidContributionRate(licenseId) == 0) {
+            // Reclaim
+            return
+                _claim(
+                    _ctx,
+                    bidder,
+                    bidContributionRate,
+                    reclaimer,
+                    abi.encode(licenseId)
+                );
         }
 
         if (bidContributionRate > currentOwnerBid[licenseId].contributionRate) {
