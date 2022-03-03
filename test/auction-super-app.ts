@@ -486,88 +486,232 @@ describe("AuctionSuperApp", async function () {
     await superApp.setClaimer(mockClaimer.address);
   });
 
-  // it("should only allow admin to set beneficiary", async () => {
-  //   expect(
-  //     superApp.connect(user).setBeneficiary(admin.address)
-  //   ).to.be.revertedWith("is missing role");
+  it("should fail to deploy if host is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        ethers.constants.AddressZero,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        admin.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("host is zero address");
+  });
 
-  //   await superApp.setBeneficiary(admin.address);
+  it("should fail to deploy if cfa is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        ethers.constants.AddressZero,
+        sf.tokens.ETHx.address,
+        admin.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("cfa is zero address");
+  });
 
-  //   const value = await superApp.beneficiary();
-  //   expect(value).to.equal(admin.address);
-  // });
+  it("should fail to deploy if acceptedToken is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        ethers.constants.AddressZero,
+        admin.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("acceptedToken is zero address");
+  });
 
-  // it("should only allow admin to set claimer", async () => {
-  //   expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
-  //     "is missing role"
-  //   );
+  it("should fail to deploy if beneficiary is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        ethers.constants.AddressZero,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("beneficiary is zero address");
+  });
 
-  //   await superApp.setClaimer(admin.address);
+  it("should fail to deploy if beneficiary is an app", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        superApp.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("beneficiary is an app");
+  });
 
-  //   const value = await superApp.claimer();
-  //   expect(value).to.equal(admin.address);
-  // });
+  it("should not allow beneficiary to be an app", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    const superApp1 = await factory.deploy(
+      sf.host.address,
+      sf.agreements.cfa.address,
+      sf.tokens.ETHx.address,
+      admin.address,
+      mockLicense.address,
+      BigNumber.from(numerator),
+      BigNumber.from(denominator),
+      BigNumber.from(1),
+      BigNumber.from(10),
+      BigNumber.from(604800)
+    );
+    await superApp1.deployed();
 
-  // it("should only allow admin to set fee", async () => {
-  //   expect(superApp.connect(user).setPerSecondFee(1, 2)).to.be.revertedWith(
-  //     "is missing role"
-  //   );
+    expect(
+      superApp.connect(admin).setBeneficiary(superApp1.address)
+    ).to.be.revertedWith("beneficiary is an app");
+  });
 
-  //   await superApp.setPerSecondFee(1, 2);
+  it("should only allow admin to set beneficiary", async () => {
+    expect(
+      superApp.connect(user).setBeneficiary(admin.address)
+    ).to.be.revertedWith("is missing role");
 
-  //   const numerator = await superApp.perSecondFeeNumerator();
-  //   const denominator = await superApp.perSecondFeeDenominator();
+    await superApp.setBeneficiary(admin.address);
 
-  //   expect(numerator).to.equal(1);
-  //   expect(denominator).to.equal(2);
-  // });
+    const value = await superApp.beneficiary();
+    expect(value).to.equal(admin.address);
+  });
 
-  // it("should only allow admin to set penalty", async () => {
-  //   expect(superApp.connect(user).setPenalty(1, 2)).to.be.revertedWith(
-  //     "is missing role"
-  //   );
+  it("should move flow to new beneficiary", async () => {
+    const txn = await claimCreate(user);
+    await txn.wait();
 
-  //   await superApp.setPenalty(1, 2);
+    await superApp.setBeneficiary(other.address);
 
-  //   const numerator = await superApp.penaltyNumerator();
-  //   const denominator = await superApp.penaltyDenominator();
+    const value = await superApp.beneficiary();
+    expect(value).to.equal(other.address);
+    await checkAppToUserFlow("0", admin);
+    await checkAppToUserFlow("100", other);
+    await checkAppNetFlow();
+  });
 
-  //   expect(numerator).to.equal(1);
-  //   expect(denominator).to.equal(2);
-  // });
+  it("should only allow PAUSE_ROLE to pause and unpause", async () => {
+    expect(superApp.connect(user).pause()).to.be.revertedWith(
+      "is missing role"
+    );
 
-  // it("should only allow admin to set license", async () => {
-  //   expect(superApp.connect(user).setLicense(admin.address)).to.be.revertedWith(
-  //     "is missing role"
-  //   );
+    await superApp.pause();
 
-  //   await superApp.setLicense(admin.address);
+    expect(superApp.connect(user).unpause()).to.be.revertedWith(
+      "is missing role"
+    );
 
-  //   const value = await superApp.license();
-  //   expect(value).to.equal(admin.address);
-  // });
+    await superApp.unpause();
+  });
 
-  // it("should only allow admin to set claimer", async () => {
-  //   expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
-  //     "is missing role"
-  //   );
+  it("should only allow admin to set claimer", async () => {
+    expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
+      "is missing role"
+    );
 
-  //   await superApp.setClaimer(admin.address);
+    await superApp.setClaimer(admin.address);
 
-  //   const value = await superApp.claimer();
-  //   expect(value).to.equal(admin.address);
-  // });
+    const value = await superApp.claimer();
+    expect(value).to.equal(admin.address);
+  });
 
-  // it("should only allow admin to set bid period", async () => {
-  //   expect(superApp.connect(user).setBidPeriod(100)).to.be.revertedWith(
-  //     "is missing role"
-  //   );
+  it("should only allow admin to set fee", async () => {
+    expect(superApp.connect(user).setPerSecondFee(1, 2)).to.be.revertedWith(
+      "is missing role"
+    );
 
-  //   await superApp.setBidPeriod(100);
+    await superApp.setPerSecondFee(1, 2);
 
-  //   const value = await superApp.bidPeriodLengthInSeconds();
-  //   expect(value).to.equal(100);
-  // });
+    const numerator = await superApp.perSecondFeeNumerator();
+    const denominator = await superApp.perSecondFeeDenominator();
+
+    expect(numerator).to.equal(1);
+    expect(denominator).to.equal(2);
+  });
+
+  it("should only allow admin to set penalty", async () => {
+    expect(superApp.connect(user).setPenalty(1, 2)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setPenalty(1, 2);
+
+    const numerator = await superApp.penaltyNumerator();
+    const denominator = await superApp.penaltyDenominator();
+
+    expect(numerator).to.equal(1);
+    expect(denominator).to.equal(2);
+  });
+
+  it("should only allow admin to set license", async () => {
+    expect(superApp.connect(user).setLicense(admin.address)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setLicense(admin.address);
+
+    const value = await superApp.license();
+    expect(value).to.equal(admin.address);
+  });
+
+  it("should only allow admin to set claimer", async () => {
+    expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setClaimer(admin.address);
+
+    const value = await superApp.claimer();
+    expect(value).to.equal(admin.address);
+  });
+
+  it("should only allow admin to set bid period", async () => {
+    expect(superApp.connect(user).setBidPeriod(100)).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.setBidPeriod(100);
+
+    const value = await superApp.bidPeriodLengthInSeconds();
+    expect(value).to.equal(100);
+  });
 
   // describe("No user data", async () => {
   //   it("should revert on flow create", async () => {
@@ -2347,6 +2491,45 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow("200");
       await checkCurrentOwnerBid(1, 200);
       await checkOutstandingBid(1, 0);
+      await checkAppNetFlow();
+
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledWith(
+        user.address,
+        bidder.address,
+        BigNumber.from(1)
+      );
+    });
+
+    it("should claim bid after bidding period has elapsed with multiple bids", async () => {
+      const txn = await claimCreate(user, 1);
+      await txn.wait();
+
+      const txn1 = await claimCreate(bidder, 2);
+      await txn1.wait();
+
+      const txn2 = await placeBidUpdate(bidder, 1);
+      await txn2.wait();
+
+      const txn3 = await placeBidUpdate(user, 2);
+      await txn3.wait();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [700000]);
+      await network.provider.send("evm_mine");
+
+      await superApp.connect(bidder).claimOutstandingBid(1);
+
+      await checkUserToAppFlow("300", user);
+      await checkAppToUserFlow("300", user);
+      await checkUserToAppFlow("300", bidder);
+      await checkAppToUserFlow("0", bidder);
+      await checkAppToBeneficiaryFlow("300");
+      await checkCurrentOwnerBid(1, 200);
+      await checkCurrentOwnerBid(2, 100);
+      await checkOutstandingBid(1, 0);
+      await checkOutstandingBid(2, 200);
       await checkAppNetFlow();
 
       expect(

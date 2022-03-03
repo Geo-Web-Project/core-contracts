@@ -132,19 +132,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > 0) {
-            // Create flow to new beneficiary
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    _beneficiary,
-                    flowRate,
-                    new bytes(0)
-                ),
-                "0x"
-            );
-
             // Delete flow to old beneficiary
             host.callAgreement(
                 cfa,
@@ -153,6 +140,19 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                     acceptedToken,
                     address(this),
                     beneficiary,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+
+            // Create flow to new beneficiary
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    _beneficiary,
+                    flowRate,
                     new bytes(0)
                 ),
                 "0x"
