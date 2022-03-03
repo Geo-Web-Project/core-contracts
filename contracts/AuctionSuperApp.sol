@@ -657,7 +657,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (action == uint8(Action.CLAIM)) {
-            return _claim(_ctx, user, increasedFlowRate, claimer, actionData);
+            return _claim(_ctx, user, increasedFlowRate, actionData);
         } else if (action == uint8(Action.BID)) {
             return _increaseBid(_ctx, user, increasedFlowRate, actionData);
         } else {
@@ -720,11 +720,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address user,
         int96 initialContributionRate,
-        IClaimer _claimer,
         bytes memory claimData
     ) private returns (bytes memory newCtx) {
         // Get claim price
-        uint256 claimPrice = _claimer.claimPrice(
+        uint256 claimPrice = claimer.claimPrice(
             user,
             initialContributionRate,
             claimData
@@ -739,7 +738,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         require(success, "AuctionSuperApp: Claim payment failed");
 
         // Process claim
-        uint256 licenseId = _claimer.claim(
+        uint256 licenseId = claimer.claim(
             user,
             initialContributionRate,
             claimData
@@ -758,6 +757,45 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.contributionRate = initialContributionRate;
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
+    }
+
+    function _reclaim(
+        bytes memory _ctx,
+        address user,
+        int96 initialContributionRate,
+        uint256 licenseId
+    ) private returns (bytes memory newCtx) {
+        // Get claim price
+        uint256 claimPrice = reclaimer.claimPrice(
+            user,
+            initialContributionRate,
+            abi.encode(licenseId)
+        );
+
+        // Collect claim payment
+        address oldOwner = license.ownerOf(licenseId);
+        bool success = acceptedToken.transferFrom(user, oldOwner, claimPrice);
+        require(success, "AuctionSuperApp: Claim payment failed");
+
+        // Process claim
+        reclaimer.claim(user, initialContributionRate, abi.encode(licenseId));
+
+        // Increase app -> beneficiary flow
+        newCtx = _increaseAppToBeneficiaryFlowWithCtx(
+            _ctx,
+            initialContributionRate
+        );
+
+        // Set currentOwnerBid
+        Bid storage bid = currentOwnerBid[licenseId];
+        bid.timestamp = block.timestamp;
+        bid.bidder = user;
+        bid.contributionRate = initialContributionRate;
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
+
+        // Transfer license
+        license.safeTransferFrom(oldOwner, user, licenseId);
     }
 
     function _increaseBid(
@@ -928,14 +966,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         if (ownerBidContributionRate(licenseId) == 0) {
             // Reclaim
-            return
-                _claim(
-                    _ctx,
-                    bidder,
-                    bidContributionRate,
-                    reclaimer,
-                    abi.encode(licenseId)
-                );
+            return _reclaim(_ctx, bidder, bidContributionRate, licenseId);
         }
 
         if (bidContributionRate > currentOwnerBid[licenseId].contributionRate) {

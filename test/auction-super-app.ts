@@ -12,7 +12,11 @@ import { AuctionSuperApp } from "../typechain-types/AuctionSuperApp";
 import { AuctionSuperApp__factory } from "../typechain-types/factories/AuctionSuperApp__factory";
 import { ISuperfluid } from "../typechain-types/ISuperfluid";
 import { MockClaimer } from "../typechain-types/MockClaimer";
-import { ERC721License, MockClaimer__factory } from "../typechain-types";
+import {
+  ERC721License,
+  IClaimer,
+  MockClaimer__factory,
+} from "../typechain-types";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 
 use(solidity);
@@ -33,6 +37,7 @@ describe("AuctionSuperApp", async function () {
   let superApp: AuctionSuperApp;
   let mockClaimer: MockClaimer;
   let mockLicense: FakeContract<ERC721License>;
+  let mockReclaimer: FakeContract<IClaimer>;
   let sf: any;
   let hostContract: ISuperfluid;
 
@@ -476,13 +481,15 @@ describe("AuctionSuperApp", async function () {
     mockClaimer = await mockClaimerFactory.deploy();
     await mockClaimer.deployed();
 
+    mockReclaimer = await smock.fake<IClaimer>("IClaimer");
+
     superApp = await buildAuctionSuperApp({
       host: sf.host.address,
       cfa: sf.agreements.cfa.address,
       token: sf.tokens.ETHx.address,
       beneficiary: admin.address,
       claimer: mockClaimer.address,
-      reclaimer: mockClaimer.address,
+      reclaimer: mockReclaimer.address,
       license: mockLicense.address,
       perSecondFeeNumerator: BigNumber.from(numerator),
       perSecondFeeDenominator: BigNumber.from(denominator),
@@ -794,911 +801,1107 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(100);
   });
 
-  // describe("No user data", async () => {
-  //   it("should revert on flow create", async () => {
-  //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "100",
-  //       superToken: ethx.address,
-  //     });
+  describe("No user data", async () => {
+    it("should revert on flow create", async () => {
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "100",
+        superToken: ethx.address,
+      });
 
-  //     const txn = createFlowOp.exec(user);
-  //     await expect(txn).to.be.rejected;
-  //   });
+      const txn = createFlowOp.exec(user);
+      await expect(txn).to.be.rejected;
+    });
 
-  //   it("should revert on flow increase", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should revert on flow increase", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "200",
-  //       superToken: ethx.address,
-  //     });
-  //     const txn1 = updateFlowOp.exec(user);
-  //     await expect(txn1).to.be.rejected;
-  //   });
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "200",
+        superToken: ethx.address,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
 
-  //   it("should revert on flow decrease", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should revert on flow decrease", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "50",
-  //       superToken: ethx.address,
-  //     });
-  //     const txn1 = updateFlowOp.exec(user);
-  //     await expect(txn1).to.be.rejected;
-  //   });
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "50",
+        superToken: ethx.address,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
 
-  //   it("should delete Flow(app -> user) on flow delete", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should delete Flow(app -> user) on flow delete", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       superToken: ethx.address,
-  //     });
-  //     const txn1 = await deleteFlowOp.exec(user);
-  //     const receipt = await txn1.wait();
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        superToken: ethx.address,
+      });
+      const txn1 = await deleteFlowOp.exec(user);
+      const receipt = await txn1.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("0");
-  //     await checkAppToBeneficiaryFlow("0");
-  //     await checkAppNetFlow();
-  //   });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("0");
+      await checkAppToBeneficiaryFlow("0");
+      await checkAppNetFlow();
+    });
 
-  //   it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
-  //     let existingLicenseId = 1;
-  //     const txn = await claimCreate(user, existingLicenseId);
-  //     await txn.wait();
+    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+      let existingLicenseId = 1;
+      const txn = await claimCreate(user, existingLicenseId);
+      await txn.wait();
 
-  //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-  //     await txn1.wait();
+      const txn1 = await placeBidCreate(bidder, existingLicenseId);
+      await txn1.wait();
 
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
 
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: superApp.address,
-  //       receiver: bidder.address,
-  //       superToken: ethx.address,
-  //     });
-  //     const txn2 = await deleteFlowOp.exec(bidder);
-  //     const receipt = await txn2.wait();
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: bidder.address,
+        superToken: ethx.address,
+      });
+      const txn2 = await deleteFlowOp.exec(bidder);
+      const receipt = await txn2.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
-  //   });
-  // });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+    });
+  });
 
-  // describe("Unknown Action", async () => {
-  //   it("should revert on flow create", async () => {
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [2, "0x"]
-  //     );
-  //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "100",
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
+  describe("Unknown Action", async () => {
+    it("should revert on flow create", async () => {
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [2, "0x"]
+      );
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "100",
+        superToken: ethx.address,
+        userData: userData,
+      });
 
-  //     const txn = createFlowOp.exec(user);
-  //     await expect(txn).to.be.rejected;
-  //   });
+      const txn = createFlowOp.exec(user);
+      await expect(txn).to.be.rejected;
+    });
 
-  //   it("should revert on flow increase", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should revert on flow increase", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [2, "0x"]
-  //     );
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "200",
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn1 = updateFlowOp.exec(user);
-  //     await expect(txn1).to.be.rejected;
-  //   });
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [2, "0x"]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "200",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
 
-  //   it("should revert on flow decrease", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should revert on flow decrease", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [2, "0x"]
-  //     );
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "50",
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn1 = updateFlowOp.exec(user);
-  //     await expect(txn1).to.be.rejected;
-  //   });
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [2, "0x"]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "50",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
 
-  //   it("should delete Flow(app -> user) on flow delete", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should delete Flow(app -> user) on flow delete", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [2, "0x"]
-  //     );
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn1 = await deleteFlowOp.exec(user);
-  //     const receipt = await txn1.wait();
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [2, "0x"]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = await deleteFlowOp.exec(user);
+      const receipt = await txn1.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("0");
-  //     await checkAppToBeneficiaryFlow("0");
-  //     await checkAppNetFlow();
-  //   });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("0");
+      await checkAppToBeneficiaryFlow("0");
+      await checkAppNetFlow();
+    });
 
-  //   it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
-  //     let existingLicenseId = 1;
-  //     const txn = await claimCreate(user, existingLicenseId);
-  //     await txn.wait();
+    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+      let existingLicenseId = 1;
+      const txn = await claimCreate(user, existingLicenseId);
+      await txn.wait();
 
-  //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-  //     await txn1.wait();
+      const txn1 = await placeBidCreate(bidder, existingLicenseId);
+      await txn1.wait();
 
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [2, "0x"]
-  //     );
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: superApp.address,
-  //       receiver: bidder.address,
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn2 = await deleteFlowOp.exec(bidder);
-  //     const receipt = await txn2.wait();
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [2, "0x"]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: bidder.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn2 = await deleteFlowOp.exec(bidder);
+      const receipt = await txn2.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
-  //   });
-  // });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+    });
+  });
 
-  // describe("Random user data", async () => {
-  //   it("should revert on flow create", async () => {
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["bytes"],
-  //       [ethers.utils.randomBytes(8)]
-  //     );
-  //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "100",
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
+  describe("Random user data", async () => {
+    it("should revert on flow create", async () => {
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "100",
+        superToken: ethx.address,
+        userData: userData,
+      });
 
-  //     const txn = createFlowOp.exec(user);
-  //     await expect(txn).to.be.rejected;
-  //   });
+      const txn = createFlowOp.exec(user);
+      await expect(txn).to.be.rejected;
+    });
 
-  //   it("should revert on flow increase", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should revert on flow increase", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["bytes"],
-  //       [ethers.utils.randomBytes(8)]
-  //     );
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "200",
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn1 = updateFlowOp.exec(user);
-  //     await expect(txn1).to.be.rejected;
-  //   });
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "200",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
 
-  //   it("should revert on flow decrease", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should revert on flow decrease", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["bytes"],
-  //       [ethers.utils.randomBytes(8)]
-  //     );
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "50",
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn1 = updateFlowOp.exec(user);
-  //     await expect(txn1).to.be.rejected;
-  //   });
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "50",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
 
-  //   it("should delete Flow(app -> user) on flow delete", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should delete Flow(app -> user) on flow delete", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["bytes"],
-  //       [ethers.utils.randomBytes(8)]
-  //     );
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn1 = await deleteFlowOp.exec(user);
-  //     const receipt = await txn1.wait();
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = await deleteFlowOp.exec(user);
+      const receipt = await txn1.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("0");
-  //     await checkAppToBeneficiaryFlow("0");
-  //     await checkAppNetFlow();
-  //   });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("0");
+      await checkAppToBeneficiaryFlow("0");
+      await checkAppNetFlow();
+    });
 
-  //   it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
-  //     let existingLicenseId = 1;
-  //     const txn = await claimCreate(user, existingLicenseId);
-  //     await txn.wait();
+    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+      let existingLicenseId = 1;
+      const txn = await claimCreate(user, existingLicenseId);
+      await txn.wait();
 
-  //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-  //     await txn1.wait();
+      const txn1 = await placeBidCreate(bidder, existingLicenseId);
+      await txn1.wait();
 
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["bytes"],
-  //       [ethers.utils.randomBytes(8)]
-  //     );
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: superApp.address,
-  //       receiver: bidder.address,
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn2 = await deleteFlowOp.exec(bidder);
-  //     const receipt = await txn2.wait();
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["bytes"],
+        [ethers.utils.randomBytes(8)]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: bidder.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn2 = await deleteFlowOp.exec(bidder);
+      const receipt = await txn2.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
-  //   });
-  // });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+    });
+  });
 
-  // describe("CLAIM Action", async () => {
-  //   it("should claim on flow create", async () => {
-  //     const txn = await claimCreate(user);
-  //     await expect(txn)
-  //       .to.emit(ethx_erc20, "Transfer")
-  //       .withArgs(user.address, admin.address, 100);
+  describe("CLAIM Action", async () => {
+    it("should claim on flow create", async () => {
+      const txn = await claimCreate(user);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user.address, admin.address, 100);
 
-  //     const receipt = await txn.wait();
+      const receipt = await txn.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkClaimCallCount(1);
-  //     await checkClaimLastContribution(user.address, 100);
-  //     await checkAppNetFlow();
-  //     await checkUserToAppFlow("100");
-  //     await checkAppToBeneficiaryFlow("100");
-  //   });
+      await checkJailed(receipt);
+      await checkClaimCallCount(1);
+      await checkClaimLastContribution(user.address, 100);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("100");
+      await checkAppToBeneficiaryFlow("100");
+    });
 
-  //   it("should claim on flow increase", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should claim on flow increase", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     // Update existing flow
-  //     const actionData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [Action.CLAIM, actionData]
-  //     );
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "300",
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn1 = await updateFlowOp.exec(user);
-  //     await expect(txn1)
-  //       .to.emit(ethx_erc20, "Transfer")
-  //       .withArgs(user.address, admin.address, 100);
-  //     const receipt = await txn1.wait();
+      // Update existing flow
+      const actionData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [Action.CLAIM, actionData]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "300",
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn1 = await updateFlowOp.exec(user);
+      await expect(txn1)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user.address, admin.address, 100);
+      const receipt = await txn1.wait();
 
-  //     await checkJailed(receipt);
+      await checkJailed(receipt);
 
-  //     await checkClaimCallCount(2);
-  //     await checkClaimLastContribution(user.address, 200);
-  //     await checkAppNetFlow();
-  //     await checkUserToAppFlow("300");
-  //     await checkAppToBeneficiaryFlow("300");
-  //   });
+      await checkClaimCallCount(2);
+      await checkClaimLastContribution(user.address, 200);
+      await checkAppNetFlow();
+      await checkUserToAppFlow("300");
+      await checkAppToBeneficiaryFlow("300");
+    });
 
-  //   it("should revert on flow decrease", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should revert on flow decrease", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     // Update existing flow
-  //     const actionData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
-  //     const userData2 = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [Action.CLAIM, actionData]
-  //     );
-  //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       flowRate: "50",
-  //       superToken: ethx.address,
-  //       userData: userData2,
-  //     });
-  //     const txn1 = updateFlowOp.exec(user);
-  //     await expect(txn1).to.be.rejected;
-  //   });
+      // Update existing flow
+      const actionData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
+      const userData2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [Action.CLAIM, actionData]
+      );
+      const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: "50",
+        superToken: ethx.address,
+        userData: userData2,
+      });
+      const txn1 = updateFlowOp.exec(user);
+      await expect(txn1).to.be.rejected;
+    });
 
-  //   it("should delete Flow(app -> user) on flow delete", async () => {
-  //     const txn = await claimCreate(user);
-  //     await txn.wait();
+    it("should delete Flow(app -> user) on flow delete", async () => {
+      const txn = await claimCreate(user);
+      await txn.wait();
 
-  //     const actionData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
-  //     const userData2 = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [Action.CLAIM, actionData]
-  //     );
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: user.address,
-  //       receiver: superApp.address,
-  //       superToken: ethx.address,
-  //       userData: userData2,
-  //     });
-  //     const txn1 = await deleteFlowOp.exec(user);
-  //     const receipt = await txn1.wait();
+      const actionData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
+      const userData2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [Action.CLAIM, actionData]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        superToken: ethx.address,
+        userData: userData2,
+      });
+      const txn1 = await deleteFlowOp.exec(user);
+      const receipt = await txn1.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("0");
-  //     await checkAppToBeneficiaryFlow("0");
-  //     await checkAppNetFlow();
-  //   });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("0");
+      await checkAppToBeneficiaryFlow("0");
+      await checkAppNetFlow();
+    });
 
-  //   it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
-  //     let existingLicenseId = 1;
-  //     const txn = await claimCreate(user, existingLicenseId);
-  //     await txn.wait();
+    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+      let existingLicenseId = 1;
+      const txn = await claimCreate(user, existingLicenseId);
+      await txn.wait();
 
-  //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-  //     await txn1.wait();
+      const txn1 = await placeBidCreate(bidder, existingLicenseId);
+      await txn1.wait();
 
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
 
-  //     const userData = ethers.utils.defaultAbiCoder.encode(
-  //       ["uint8", "bytes"],
-  //       [0, "0x"]
-  //     );
-  //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-  //       sender: superApp.address,
-  //       receiver: bidder.address,
-  //       superToken: ethx.address,
-  //       userData: userData,
-  //     });
-  //     const txn2 = await deleteFlowOp.exec(bidder);
-  //     const receipt = await txn2.wait();
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [0, "0x"]
+      );
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: superApp.address,
+        receiver: bidder.address,
+        superToken: ethx.address,
+        userData: userData,
+      });
+      const txn2 = await deleteFlowOp.exec(bidder);
+      const receipt = await txn2.wait();
 
-  //     await checkJailed(receipt);
-  //     await checkUserToAppFlow("200", bidder);
-  //     await checkAppToUserFlow("200", bidder);
-  //   });
-  // });
+      await checkJailed(receipt);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("200", bidder);
+    });
+  });
 
   describe("BID Action", async () => {
-    // describe("New highest bidder", async () => {
-    //   it("should place bid on flow create", async () => {
-    //     let existingLicenseId = 1;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "200",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-    //     const txn1 = await batchCall.exec(bidder);
-    //     const receipt = await txn1.wait();
-
-    //     await expect(txn1)
-    //       .to.emit(ethx_erc20, "Transfer")
-    //       .withArgs(bidder.address, superApp.address, purchasePrice);
-
-    //     await checkJailed(receipt);
-    //     await checkAppNetFlow();
-    //     await checkUserToAppFlow("200", bidder);
-    //     await checkAppToUserFlow("200", bidder);
-    //     await checkUserToAppFlow("100", user);
-    //     await checkAppToBeneficiaryFlow("100");
-    //   });
-
-    //   it("should place bid on flow increase", async () => {
-    //     let existingLicenseId = 1;
-
-    //     // User 1 claim
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     // User 2 claim
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const txn1 = await claimCreate(bidder, 2);
-    //     await txn1.wait();
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "300",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
-    //     const txn2 = await batchCall.exec(bidder);
-    //     const receipt = await txn2.wait();
-
-    //     await expect(txn2)
-    //       .to.emit(ethx_erc20, "Transfer")
-    //       .withArgs(bidder.address, superApp.address, purchasePrice);
-    //     await checkJailed(receipt);
-    //     await checkAppNetFlow();
-    //     await checkUserToAppFlow("300", bidder);
-    //     await checkAppToUserFlow("200", bidder);
-    //     await checkUserToAppFlow("100", user);
-    //     await checkAppToBeneficiaryFlow("200");
-    //   });
-
-    //   it("should revert on flow create when license does not exist", async () => {
-    //     let existingLicenseId = 1;
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "200",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-    //     const txn2 = batchCall.exec(bidder);
-    //     await expect(txn2).to.be.rejected;
-    //   });
-
-    //   it("should revert on flow increase when license does not exist", async () => {
-    //     let existingLicenseId = 1;
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const txn1 = await claimCreate(bidder, 2);
-    //     await txn1.wait();
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "300",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
-    //     const txn2 = batchCall.exec(bidder);
-    //     await expect(txn2).to.be.rejected;
-    //   });
-
-    //   it("should revert on flow create when outstanding bid exists", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-    //       sender: other.address,
-    //       receiver: superApp.address,
-    //       flowRate: "300",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-    //     const txn2 = batchCall.exec(other);
-    //     await expect(txn2).to.be.rejected;
-    //   });
-
-    //   it("should revert on flow increase when outstanding bid exists", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
-
-    //     const txn2 = await claimCreate(other, 1);
-    //     await txn2.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       sender: other.address,
-    //       receiver: superApp.address,
-    //       flowRate: "300",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
-    //     const txn3 = batchCall.exec(other);
-    //     await expect(txn3).to.be.rejected;
-    //   });
-
-    //   it("should revert on flow create when bid is not high enough", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "100",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-    //     const txn1 = batchCall.exec(bidder);
-    //     await expect(txn1).to.be.rejected;
-    //   });
-
-    //   it("should revert on flow increase when bid is not high enough", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await claimCreate(bidder, 1);
-    //     await txn1.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "200",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-    //     const txn2 = batchCall.exec(bidder);
-    //     await expect(txn2).to.be.rejected;
-    //   });
-    // });
-
-    // describe("Outstanding bidder", async () => {
-    //   it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
-    //     let existingLicenseId = 1;
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
-
-    //     await checkUserToAppFlow("200", bidder);
-    //     await checkAppToUserFlow("200", bidder);
-
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [1, "0x"]
-    //     );
-    //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-    //       sender: superApp.address,
-    //       receiver: bidder.address,
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-    //     const txn2 = await deleteFlowOp.exec(bidder);
-    //     const receipt = await txn2.wait();
-
-    //     await checkJailed(receipt);
-    //     await checkUserToAppFlow("200", bidder);
-    //     await checkAppToUserFlow("200", bidder);
-    //   });
-
-    //   it("should revert on flow create on second bid", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "300",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-    //     const txn2 = batchCall.exec(bidder);
-    //     await expect(txn2).to.be.rejected;
-    //   });
-
-    //   it("should revert on flow increase on second bid", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "300",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
-    //     const txn3 = batchCall.exec(bidder);
-    //     await expect(txn3).to.be.rejected;
-    //   });
-
-    //   it("should revert on flow decrease on second bid", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
-
-    //     const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-    //     const approveOp = ethx.approve({
-    //       receiver: superApp.address,
-    //       amount: purchasePrice.toString(),
-    //     });
-
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       flowRate: "150",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
-
-    //     const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
-    //     const txn3 = batchCall.exec(bidder);
-    //     await expect(txn3).to.be.rejected;
-    //   });
-
-    //   it("should not delete bid on flow delete", async () => {
-    //     let existingLicenseId = 2;
-
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
-
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
-
-    //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       superToken: ethx.address,
-    //     });
-
-    //     const txn2 = await deleteFlowOp.exec(bidder);
-    //     const receipt = await txn2.wait();
-
-    //     await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
-    //     await checkJailed(receipt);
-    //     await checkAppNetFlow();
-    //     await checkUserToAppFlow("100", user);
-    //     await checkUserToAppFlow("0", bidder);
-    //     await checkAppToUserFlow("0", bidder);
-    //     await checkAppToBeneficiaryFlow("100");
-    //     await checkCurrentOwnerBid(existingLicenseId, 100);
-    //     await checkOwnerBidContributionRate(existingLicenseId, 100);
-    //     await checkOutstandingBid(existingLicenseId, 200);
-    //   });
-    // });
+    describe("New highest bidder", async () => {
+      it("should place bid on flow create", async () => {
+        let existingLicenseId = 1;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn1 = await batchCall.exec(bidder);
+        const receipt = await txn1.wait();
+
+        await expect(txn1)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, superApp.address, purchasePrice);
+
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("200", bidder);
+        await checkAppToUserFlow("200", bidder);
+        await checkUserToAppFlow("100", user);
+        await checkAppToBeneficiaryFlow("100");
+      });
+
+      it("should place bid on flow increase", async () => {
+        let existingLicenseId = 1;
+
+        // User 1 claim
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        // User 2 claim
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn2 = await batchCall.exec(bidder);
+        const receipt = await txn2.wait();
+
+        await expect(txn2)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, superApp.address, purchasePrice);
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("300", bidder);
+        await checkAppToUserFlow("200", bidder);
+        await checkUserToAppFlow("100", user);
+        await checkAppToBeneficiaryFlow("200");
+      });
+
+      it("should revert on flow create when license does not exist", async () => {
+        let existingLicenseId = 1;
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn2 = batchCall.exec(bidder);
+        await expect(txn2).to.be.rejected;
+      });
+
+      it("should revert on flow increase when license does not exist", async () => {
+        let existingLicenseId = 1;
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn2 = batchCall.exec(bidder);
+        await expect(txn2).to.be.rejected;
+      });
+
+      it("should revert on flow create when outstanding bid exists", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: other.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn2 = batchCall.exec(other);
+        await expect(txn2).to.be.rejected;
+      });
+
+      it("should revert on flow increase when outstanding bid exists", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const txn2 = await claimCreate(other, 1);
+        await txn2.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: other.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn3 = batchCall.exec(other);
+        await expect(txn3).to.be.rejected;
+      });
+
+      it("should revert on flow increase after owner deleted bid when outstanding bid exists", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const txn2 = await claimCreate(other, 1);
+        await txn2.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn3 = await deleteFlowOp.exec(user);
+        await txn3.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: other.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn4 = batchCall.exec(other);
+        expect(txn4).to.be.rejected;
+      });
+
+      it("should revert on flow create when bid is not high enough", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "100",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn1 = batchCall.exec(bidder);
+        await expect(txn1).to.be.rejected;
+      });
+
+      it("should revert on flow increase when bid is not high enough", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await claimCreate(bidder, 1);
+        await txn1.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn2 = batchCall.exec(bidder);
+        await expect(txn2).to.be.rejected;
+      });
+
+      it("should reclaim on flow create after owner deleted bid", async () => {
+        let existingLicenseId = 1;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn2 = await deleteFlowOp.exec(user);
+        await txn2.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        mockReclaimer.claimPrice.returns(purchasePrice);
+        mockReclaimer.claim.returns(existingLicenseId);
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn3 = await batchCall.exec(bidder);
+        const receipt = await txn3.wait();
+
+        mockLicense.ownerOf
+          .whenCalledWith(existingLicenseId)
+          .returns(bidder.address);
+
+        await expect(txn3)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, user.address, purchasePrice);
+
+        await checkJailed(receipt);
+        await checkUserToAppFlow("200", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkUserToAppFlow("0", user);
+        await checkAppToBeneficiaryFlow("200");
+        await checkCurrentOwnerBid(existingLicenseId, 200);
+        await checkOwnerBidContributionRate(existingLicenseId, 200);
+        await checkOutstandingBid(existingLicenseId, 0);
+        await checkAppNetFlow();
+
+        expect(
+          mockLicense["safeTransferFrom(address,address,uint256)"]
+        ).to.have.been.calledWith(
+          user.address,
+          bidder.address,
+          BigNumber.from(existingLicenseId)
+        );
+      });
+
+      it("should reclaim on flow increase after owner deleted bid", async () => {
+        let existingLicenseId = 1;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn2 = await deleteFlowOp.exec(user);
+        await txn2.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        mockReclaimer.claimPrice.returns(purchasePrice);
+        mockReclaimer.claim.returns(existingLicenseId);
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn3 = await batchCall.exec(bidder);
+        const receipt = await txn3.wait();
+
+        mockLicense.ownerOf
+          .whenCalledWith(existingLicenseId)
+          .returns(bidder.address);
+
+        await expect(txn3)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, user.address, purchasePrice);
+
+        await checkJailed(receipt);
+        await checkUserToAppFlow("300", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkUserToAppFlow("0", user);
+        await checkAppToBeneficiaryFlow("300");
+        await checkCurrentOwnerBid(existingLicenseId, 200);
+        await checkOwnerBidContributionRate(existingLicenseId, 200);
+        await checkOutstandingBid(existingLicenseId, 0);
+        await checkAppNetFlow();
+
+        expect(
+          mockLicense["safeTransferFrom(address,address,uint256)"]
+        ).to.have.been.calledWith(
+          user.address,
+          bidder.address,
+          BigNumber.from(existingLicenseId)
+        );
+      });
+    });
+
+    describe("Outstanding bidder", async () => {
+      it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+        let existingLicenseId = 1;
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        await checkUserToAppFlow("200", bidder);
+        await checkAppToUserFlow("200", bidder);
+
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [1, "0x"]
+        );
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: superApp.address,
+          receiver: bidder.address,
+          superToken: ethx.address,
+          userData: userData,
+        });
+        const txn2 = await deleteFlowOp.exec(bidder);
+        const receipt = await txn2.wait();
+
+        await checkJailed(receipt);
+        await checkUserToAppFlow("200", bidder);
+        await checkAppToUserFlow("200", bidder);
+      });
+
+      it("should revert on flow create on second bid", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn2 = batchCall.exec(bidder);
+        await expect(txn2).to.be.rejected;
+      });
+
+      it("should revert on flow increase on second bid", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn3 = batchCall.exec(bidder);
+        await expect(txn3).to.be.rejected;
+      });
+
+      it("should revert on flow decrease on second bid", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "150",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn3 = batchCall.exec(bidder);
+        await expect(txn3).to.be.rejected;
+      });
+
+      it("should not delete bid on flow delete", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn2 = await deleteFlowOp.exec(bidder);
+        const receipt = await txn2.wait();
+
+        await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("100", user);
+        await checkUserToAppFlow("0", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkAppToBeneficiaryFlow("100");
+        await checkCurrentOwnerBid(existingLicenseId, 100);
+        await checkOwnerBidContributionRate(existingLicenseId, 100);
+        await checkOutstandingBid(existingLicenseId, 200);
+      });
+    });
 
     describe("Current owner", async () => {
       describe("No outstanding bid", async () => {
@@ -2229,9 +2432,8 @@ describe("AuctionSuperApp", async function () {
           await checkAppToUserFlow("0", user);
           await checkAppToBeneficiaryFlow("0");
           await checkCurrentOwnerBid(1, 100);
-          await checkOwnerBidContributionRate(1, 100);
-          await checkOutstandingBid(1, 200);
           await checkOwnerBidContributionRate(1, 0);
+          await checkOutstandingBid(1, 200);
           await checkAppNetFlow();
           expect(mockLicense["safeTransferFrom(address,address,uint256)"]).to
             .not.have.been.called;
@@ -2253,13 +2455,13 @@ describe("AuctionSuperApp", async function () {
           const txn3 = await deleteFlowOp.exec(user);
           await txn3.wait();
 
-          const txn4 = await placeBidCreate(user, 1);
+          const txn4 = placeBidCreate(user, 1);
           expect(txn4).to.be.rejected;
         });
       });
 
       describe("Outstanding bid has elapsed", async () => {
-        it("should revert on flow increase and outstanding bid has elapsed", async () => {
+        it("should revert on flow increase", async () => {
           let existingLicenseId = 2;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -2297,7 +2499,7 @@ describe("AuctionSuperApp", async function () {
           const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
 
           const txn2 = batchCall.exec(user);
-          await expect(txn2).to.be.rejected;
+          expect(txn2).to.be.rejected;
         });
 
         it("should accept bid on flow decrease", async () => {
@@ -2387,9 +2589,8 @@ describe("AuctionSuperApp", async function () {
           await checkAppToUserFlow("0", user);
           await checkAppToBeneficiaryFlow("0");
           await checkCurrentOwnerBid(1, 100);
-          await checkOwnerBidContributionRate(1, 100);
-          await checkOutstandingBid(1, 200);
           await checkOwnerBidContributionRate(1, 0);
+          await checkOutstandingBid(1, 200);
           await checkAppNetFlow();
           expect(mockLicense["safeTransferFrom(address,address,uint256)"]).to
             .not.have.been.called;
@@ -2415,202 +2616,202 @@ describe("AuctionSuperApp", async function () {
           await network.provider.send("evm_increaseTime", [700000]);
           await network.provider.send("evm_mine");
 
-          const txn4 = await placeBidCreate(user, 1);
+          const txn4 = placeBidCreate(user, 1);
           expect(txn4).to.be.rejected;
         });
       });
     });
 
-    // describe("Not outstanding bidder or owner", async () => {
-    //   it("should decrease partial bid on flow decrease", async () => {
-    //     let existingLicenseId = 2;
+    describe("Not outstanding bidder or owner", async () => {
+      it("should decrease partial bid on flow decrease", async () => {
+        let existingLicenseId = 2;
 
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
 
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
 
-    //     const txn2 = await rejectBid(user, existingLicenseId);
-    //     await txn2.wait();
+        const txn2 = await rejectBid(user, existingLicenseId);
+        await txn2.wait();
 
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       receiver: superApp.address,
-    //       flowRate: "150",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "150",
+          superToken: ethx.address,
+          userData: userData,
+        });
 
-    //     const txn3 = await updateFlowOp.exec(bidder);
-    //     const receipt = await txn3.wait();
+        const txn3 = await updateFlowOp.exec(bidder);
+        const receipt = await txn3.wait();
 
-    //     await expect(txn3).to.not.emit(ethx_erc20, "Transfer");
-    //     await checkJailed(receipt);
-    //     await checkAppNetFlow();
-    //     await checkUserToAppFlow("150", bidder);
-    //     await checkAppToUserFlow("150", bidder);
-    //     await checkAppToBeneficiaryFlow("200");
-    //     await checkOldBid(bidder, existingLicenseId, 150);
-    //   });
+        await expect(txn3).to.not.emit(ethx_erc20, "Transfer");
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("150", bidder);
+        await checkAppToUserFlow("150", bidder);
+        await checkAppToBeneficiaryFlow("200");
+        await checkOldBid(bidder, existingLicenseId, 150);
+      });
 
-    //   it("should decrease partial bid on flow decrease and multiple bids", async () => {
-    //     const txn = await claimCreate(user, 1); // 100
-    //     await txn.wait();
+      it("should decrease partial bid on flow decrease and multiple bids", async () => {
+        const txn = await claimCreate(user, 1); // 100
+        await txn.wait();
 
-    //     const txn1 = await claimCreate(bidder, 2); // 100
-    //     await txn1.wait();
+        const txn1 = await claimCreate(bidder, 2); // 100
+        await txn1.wait();
 
-    //     const txn2 = await placeBidUpdate(bidder, 1); // 300
-    //     await txn2.wait();
+        const txn2 = await placeBidUpdate(bidder, 1); // 300
+        await txn2.wait();
 
-    //     const txn3 = await rejectBid(user, 1); // 200
-    //     await txn3.wait();
+        const txn3 = await rejectBid(user, 1); // 200
+        await txn3.wait();
 
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [1]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       receiver: superApp.address,
-    //       flowRate: "150",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [1]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "150",
+          superToken: ethx.address,
+          userData: userData,
+        });
 
-    //     const txn4 = await updateFlowOp.exec(bidder);
-    //     const receipt = await txn4.wait();
+        const txn4 = await updateFlowOp.exec(bidder);
+        const receipt = await txn4.wait();
 
-    //     await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
-    //     await checkJailed(receipt);
-    //     await checkAppNetFlow();
-    //     await checkUserToAppFlow("150", bidder);
-    //     await checkAppToUserFlow("50", bidder);
-    //     await checkAppToBeneficiaryFlow("300");
-    //     await checkOldBid(bidder, 1, 50);
-    //   });
+        await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("150", bidder);
+        await checkAppToUserFlow("50", bidder);
+        await checkAppToBeneficiaryFlow("300");
+        await checkOldBid(bidder, 1, 50);
+      });
 
-    //   it("should decrease entire bid on flow decrease", async () => {
-    //     const txn = await claimCreate(user, 1); // 100
-    //     await txn.wait();
+      it("should decrease entire bid on flow decrease", async () => {
+        const txn = await claimCreate(user, 1); // 100
+        await txn.wait();
 
-    //     const txn1 = await claimCreate(bidder, 2); // 100
-    //     await txn1.wait();
+        const txn1 = await claimCreate(bidder, 2); // 100
+        await txn1.wait();
 
-    //     const txn2 = await placeBidUpdate(bidder, 1); // 300
-    //     await txn2.wait();
+        const txn2 = await placeBidUpdate(bidder, 1); // 300
+        await txn2.wait();
 
-    //     const txn3 = await rejectBid(user, 1); // 200
-    //     await txn3.wait();
+        const txn3 = await rejectBid(user, 1); // 200
+        await txn3.wait();
 
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [1]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       receiver: superApp.address,
-    //       flowRate: "100",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [1]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "100",
+          superToken: ethx.address,
+          userData: userData,
+        });
 
-    //     const txn4 = await updateFlowOp.exec(bidder);
-    //     const receipt = await txn4.wait();
+        const txn4 = await updateFlowOp.exec(bidder);
+        const receipt = await txn4.wait();
 
-    //     await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
-    //     await checkJailed(receipt);
-    //     await checkAppNetFlow();
-    //     await checkUserToAppFlow("100", bidder);
-    //     await checkAppToUserFlow("0", bidder);
-    //     await checkAppToBeneficiaryFlow("300");
-    //     await checkOldBid(bidder, 1, 0);
-    //   });
+        await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("100", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkAppToBeneficiaryFlow("300");
+        await checkOldBid(bidder, 1, 0);
+      });
 
-    //   it("should revert if decrease bid on flow decrease is too large", async () => {
-    //     const txn = await claimCreate(user, 1);
-    //     await txn.wait();
+      it("should revert if decrease bid on flow decrease is too large", async () => {
+        const txn = await claimCreate(user, 1);
+        await txn.wait();
 
-    //     const txn1 = await claimCreate(bidder, 2);
-    //     await txn1.wait();
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
 
-    //     const txn2 = await placeBidUpdate(bidder, 1);
-    //     await txn2.wait();
+        const txn2 = await placeBidUpdate(bidder, 1);
+        await txn2.wait();
 
-    //     const txn3 = await rejectBid(user, 1);
-    //     await txn3.wait();
+        const txn3 = await rejectBid(user, 1);
+        await txn3.wait();
 
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [1]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
-    //       receiver: superApp.address,
-    //       flowRate: "50",
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [1]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          receiver: superApp.address,
+          flowRate: "50",
+          superToken: ethx.address,
+          userData: userData,
+        });
 
-    //     const txn4 = updateFlowOp.exec(bidder);
-    //     await expect(txn4).to.be.rejected;
-    //   });
+        const txn4 = updateFlowOp.exec(bidder);
+        await expect(txn4).to.be.rejected;
+      });
 
-    //   it("should decrease bid on flow delete", async () => {
-    //     let existingLicenseId = 2;
+      it("should decrease bid on flow delete", async () => {
+        let existingLicenseId = 2;
 
-    //     const txn = await claimCreate(user, existingLicenseId);
-    //     await txn.wait();
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
 
-    //     const txn1 = await placeBidCreate(bidder, existingLicenseId);
-    //     await txn1.wait();
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
 
-    //     const txn2 = await rejectBid(user, existingLicenseId);
-    //     await txn2.wait();
+        const txn2 = await rejectBid(user, existingLicenseId);
+        await txn2.wait();
 
-    //     const actionData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint256"],
-    //       [existingLicenseId]
-    //     );
-    //     const userData = ethers.utils.defaultAbiCoder.encode(
-    //       ["uint8", "bytes"],
-    //       [Action.BID, actionData]
-    //     );
-    //     const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
-    //       sender: bidder.address,
-    //       receiver: superApp.address,
-    //       superToken: ethx.address,
-    //       userData: userData,
-    //     });
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+          userData: userData,
+        });
 
-    //     const txn3 = await deleteFlowOp.exec(bidder);
-    //     const receipt = await txn3.wait();
+        const txn3 = await deleteFlowOp.exec(bidder);
+        const receipt = await txn3.wait();
 
-    //     await expect(txn3).to.not.emit(ethx_erc20, "Transfer");
-    //     await checkJailed(receipt);
-    //     await checkAppNetFlow();
-    //     await checkUserToAppFlow("0", bidder);
-    //     await checkAppToUserFlow("0", bidder);
-    //     await checkAppToBeneficiaryFlow("200");
-    //   });
-    // });
+        await expect(txn3).to.not.emit(ethx_erc20, "Transfer");
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("0", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkAppToBeneficiaryFlow("200");
+      });
+    });
   });
 
   describe("Claim Outstanding Bid", async () => {
