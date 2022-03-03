@@ -32,6 +32,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     "bidPeriodLengthInSeconds()": FunctionFragment;
     "calculatePenalty(uint256)": FunctionFragment;
     "calculatePurchasePrice(uint256)": FunctionFragment;
+    "claimOutstandingBid(uint256)": FunctionFragment;
     "claimer()": FunctionFragment;
     "currentOwnerBid(uint256)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
@@ -107,6 +108,10 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "calculatePurchasePrice",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "claimOutstandingBid",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "claimer", values?: undefined): string;
@@ -240,6 +245,10 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "calculatePurchasePrice",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "claimOutstandingBid",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "claimer", data: BytesLike): Result;
@@ -463,6 +472,11 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
+    claimOutstandingBid(
+      id: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     claimer(overrides?: CallOverrides): Promise<[string]>;
 
     currentOwnerBid(
@@ -680,6 +694,11 @@ export interface AuctionSuperApp extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  claimOutstandingBid(
+    id: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   claimer(overrides?: CallOverrides): Promise<string>;
 
   currentOwnerBid(
@@ -896,6 +915,11 @@ export interface AuctionSuperApp extends BaseContract {
       id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    claimOutstandingBid(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     claimer(overrides?: CallOverrides): Promise<string>;
 
@@ -1149,6 +1173,11 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    claimOutstandingBid(
+      id: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     claimer(overrides?: CallOverrides): Promise<BigNumber>;
 
     currentOwnerBid(
@@ -1348,6 +1377,11 @@ export interface AuctionSuperApp extends BaseContract {
     calculatePurchasePrice(
       id: BigNumberish,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    claimOutstandingBid(
+      id: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     claimer(overrides?: CallOverrides): Promise<PopulatedTransaction>;
