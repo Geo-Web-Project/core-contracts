@@ -19,7 +19,9 @@ use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe("AuctionSuperApp", async () => {
+describe("AuctionSuperApp", async function () {
+  this.timeout(0);
+
   let accounts: SignerWithAddress[];
   let admin: SignerWithAddress;
   let user: SignerWithAddress;
