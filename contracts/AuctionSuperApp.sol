@@ -290,11 +290,13 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         uint256 elapsedTime = block.timestamp - bidOutstanding.timestamp;
-
-        require(
-            elapsedTime >= bidPeriodLengthInSeconds,
-            "AuctionSuperApp: Bid period has not elapsed"
-        );
+        int96 oldOwnerBidContributionRate = ownerBidContributionRate(id);
+        if (oldOwnerBidContributionRate > 0) {
+            require(
+                elapsedTime >= bidPeriodLengthInSeconds,
+                "AuctionSuperApp: Bid period has not elapsed"
+            );
+        }
 
         Bid storage bid = currentOwnerBid[id];
 
@@ -305,8 +307,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         require(success, "AuctionSuperApp: Transfer deposit failed");
 
         int96 updatedRate = bidOutstanding.contributionRate -
-            bid.contributionRate;
-        int96 oldBidContributionRate = bid.contributionRate;
+            oldOwnerBidContributionRate;
         int96 bidContributionRate = bidOutstanding.contributionRate;
 
         // Update currentOwnerBid
@@ -319,7 +320,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         _decreaseAppToUserFlow(bidOutstanding.bidder, bidContributionRate);
 
-        _increaseAppToUserFlow(oldOwner, oldBidContributionRate);
+        if (oldOwnerBidContributionRate > 0) {
+            _increaseAppToUserFlow(oldOwner, oldOwnerBidContributionRate);
+        }
 
         // Transfer license
         license.safeTransferFrom(oldOwner, bidOutstanding.bidder, id);
