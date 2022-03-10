@@ -21,7 +21,17 @@ import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/GeoWebParcel";
 import "./tasks/ERC721License";
+import "./tasks/AuctionSuperApp";
 import "./tasks/estimate_minting_gas";
+import {
+  AuctionSuperApp__factory,
+  ERC721License__factory,
+  GeoWebParcel__factory,
+  MockClaimer__factory,
+} from "./typechain-types";
+const SuperfluidSDK = require("@superfluid-finance/js-sdk");
+const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
+const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 
 task(
   "deploy",
@@ -31,14 +41,46 @@ task(
   const parcelAddress = await hre.run("deploy:parcel");
   const licenseAddress = await hre.run("deploy:license");
 
-  const accounts = await hre.ethers.getSigners();
+  const [admin] = await hre.ethers.getSigners();
 
-  // CollectorSuperApp default config
-  const collectorAddress = await hre.run("deploy:collector", {
-    host: "0xeD5B5b32110c3Ded02a07c8b8e97513FAfb883B6",
-    cfa: "0xF4C5310E51F6079F601a5fb7120bC72a70b96e2A",
-    acceptedToken: "0xa623b2DD931C5162b7a0B25852f4024Db48bb1A0",
-    receiver: accounts[0].address,
+  // TODO: Replace claimer and reclaimer
+  const mockClaimerFactory = new MockClaimer__factory(admin);
+  const mockClaimer = await mockClaimerFactory.deploy();
+  await mockClaimer.deployed();
+
+  const errorHandler = (err: any) => {
+    if (err) throw err;
+  };
+
+  await deployFramework(errorHandler, {
+    web3: hre.web3,
+    from: admin.address,
+  });
+
+  await deploySuperToken(errorHandler, [":", "ETH"], {
+    web3: hre.web3,
+    from: admin.address,
+  });
+
+  const sf = new SuperfluidSDK.Framework({
+    web3: hre.web3,
+    version: "test",
+    tokens: ["ETH"],
+  });
+  await sf.initialize();
+
+  // AuctionSuperApp default config
+  const superAppAddress = await hre.run("deploy:super-app", {
+    host: sf.host.address,
+    cfa: sf.agreements.cfa.address,
+    acceptedToken: sf.tokens.ETHx.address,
+    beneficiary: admin.address,
+    licenseAddress: licenseAddress,
+    claimerAddress: mockClaimer.address,
+    reclaimerAddress: mockClaimer.address,
+    annualFeeRate: 0.1,
+    penaltyRate: 0.1,
+    bidPeriodLengthInSeconds: 60 * 60 * 24 * 7, // 7 days
   });
 
   console.log("Contracts deployed.");
@@ -52,18 +94,10 @@ task(
   await hre.run("roles:set-default", {
     licenseAddress: licenseAddress,
     parcelAddress: parcelAddress,
-    collectorAddress: collectorAddress,
+    superAppAddress: superAppAddress,
   });
   console.log("Default roles set.");
 });
-
-task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
-  async (args, hre) => {
-    await hre.run("deploy:parcel");
-    await hre.run("deploy:license");
-    await hre.run("deploy:collector");
-  }
-);
 
 task("roles:set-default", "Set default roles on all deployed contracts")
   .addOptionalParam(
@@ -78,27 +112,40 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     undefined,
     types.string
   )
+  .addOptionalParam(
+    "superAppAddress",
+    "Address of AuctionSuperApp",
+    undefined,
+    types.string
+  )
   .setAction(
     async (
       {
         licenseAddress,
-        collectorAddress,
+        superAppAddress,
         parcelAddress,
       }: {
         licenseAddress: string;
-        collectorAddress: string;
+        superAppAddress: string;
         parcelAddress: string;
       },
       hre
     ) => {
-      const licenseContract = await hre.ethers.getContractAt(
-        "ERC721License",
-        licenseAddress
+      const [admin] = await hre.ethers.getSigners();
+
+      const licenseContract = ERC721License__factory.connect(
+        licenseAddress,
+        admin
       );
 
-      const parcelContract = await hre.ethers.getContractAt(
-        "GeoWebParcel",
-        parcelAddress
+      const parcelContract = GeoWebParcel__factory.connect(
+        parcelAddress,
+        admin
+      );
+
+      const superAppContract = AuctionSuperApp__factory.connect(
+        superAppAddress,
+        admin
       );
 
       // // ERC721License roles
@@ -108,11 +155,11 @@ task("roles:set-default", "Set default roles on all deployed contracts")
       // );
       // await res2.wait();
 
-      // const res3 = await licenseContract.grantRole(
-      //   await licenseContract.OPERATOR_ROLE(),
-      //   purchaserAddress ?? purchaser!.address
-      // );
-      // await res3.wait();
+      const res3 = await licenseContract.grantRole(
+        await licenseContract.OPERATOR_ROLE(),
+        superAppContract.address
+      );
+      await res3.wait();
 
       // // GeoWebParcel roles
       // const res6 = await parcelContract.grantRole(
