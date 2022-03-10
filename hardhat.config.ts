@@ -15,7 +15,6 @@ import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-waffle";
 import { task, types } from "hardhat/config";
 import "@openzeppelin/hardhat-upgrades";
-import "@eth-optimism/hardhat-ovm";
 import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
@@ -175,26 +174,6 @@ const networks: any = {
     gasPrice: 1000000000,
     url: `http://localhost:8545`,
   },
-  sokul: {
-    url: "https://sokol.poa.network",
-    chainId: 77,
-    gasPrice: 1000000000,
-  },
-  xdai: {
-    url: "https://xdai.poanetwork.dev",
-    network_id: 100,
-    gasPrice: 1000000000,
-  },
-  arbitrumRinkeby: {
-    url: "https://rinkeby.arbitrum.io/rpc",
-    chainId: 421611,
-    gasPrice: 0,
-  },
-  optimisticKovan: {
-    url: "https://kovan.optimism.io",
-    gasPrice: 15000000,
-    ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
-  },
 };
 
 if (process.env.INFURA_KEY) {
@@ -247,9 +226,6 @@ module.exports = {
         },
       },
     },
-  },
-  ovm: {
-    solcVersion: "0.6.12",
   },
   abiExporter: {
     path: "./abi",
