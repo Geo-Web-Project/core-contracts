@@ -12,7 +12,11 @@ import { AuctionSuperApp } from "../typechain-types/AuctionSuperApp";
 import { AuctionSuperApp__factory } from "../typechain-types/factories/AuctionSuperApp__factory";
 import { ISuperfluid } from "../typechain-types/ISuperfluid";
 import { MockClaimer } from "../typechain-types/MockClaimer";
-import { ERC721License, MockClaimer__factory } from "../typechain-types";
+import {
+  ERC721License,
+  IClaimer,
+  MockClaimer__factory,
+} from "../typechain-types";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 
 use(solidity);
@@ -33,6 +37,7 @@ describe("AuctionSuperApp", async function () {
   let superApp: AuctionSuperApp;
   let mockClaimer: MockClaimer;
   let mockLicense: FakeContract<ERC721License>;
+  let mockReclaimer: FakeContract<IClaimer>;
   let sf: any;
   let hostContract: ISuperfluid;
 
@@ -81,6 +86,8 @@ describe("AuctionSuperApp", async function () {
     token,
     beneficiary,
     license,
+    claimer,
+    reclaimer,
     perSecondFeeNumerator,
     perSecondFeeDenominator,
     penaltyNumerator,
@@ -92,6 +99,8 @@ describe("AuctionSuperApp", async function () {
     token: string;
     beneficiary: string;
     license: string;
+    claimer: string;
+    reclaimer: string;
     perSecondFeeNumerator: BigNumber;
     perSecondFeeDenominator: BigNumber;
     penaltyNumerator: BigNumber;
@@ -105,6 +114,8 @@ describe("AuctionSuperApp", async function () {
       token,
       beneficiary,
       license,
+      claimer,
+      reclaimer,
       perSecondFeeNumerator,
       perSecondFeeDenominator,
       penaltyNumerator,
@@ -466,11 +477,19 @@ describe("AuctionSuperApp", async function () {
 
     mockLicense = await smock.fake<ERC721License>("ERC721License");
 
+    const mockClaimerFactory = new MockClaimer__factory(admin);
+    mockClaimer = await mockClaimerFactory.deploy();
+    await mockClaimer.deployed();
+
+    mockReclaimer = await smock.fake<IClaimer>("IClaimer");
+
     superApp = await buildAuctionSuperApp({
       host: sf.host.address,
       cfa: sf.agreements.cfa.address,
       token: sf.tokens.ETHx.address,
       beneficiary: admin.address,
+      claimer: mockClaimer.address,
+      reclaimer: mockReclaimer.address,
       license: mockLicense.address,
       perSecondFeeNumerator: BigNumber.from(numerator),
       perSecondFeeDenominator: BigNumber.from(denominator),
@@ -478,12 +497,198 @@ describe("AuctionSuperApp", async function () {
       penaltyDenominator: BigNumber.from(10),
       bidPeriodLengthInSeconds: BigNumber.from(604800),
     });
+  });
 
-    const mockClaimerFactory = new MockClaimer__factory(admin);
-    mockClaimer = await mockClaimerFactory.deploy();
-    await mockClaimer.deployed();
+  it("should fail to deploy if host is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        ethers.constants.AddressZero,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        admin.address,
+        mockLicense.address,
+        mockLicense.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("host is zero address");
+  });
 
-    await superApp.setClaimer(mockClaimer.address);
+  it("should fail to deploy if cfa is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        ethers.constants.AddressZero,
+        sf.tokens.ETHx.address,
+        admin.address,
+        mockLicense.address,
+        mockLicense.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("cfa is zero address");
+  });
+
+  it("should fail to deploy if acceptedToken is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        ethers.constants.AddressZero,
+        admin.address,
+        mockLicense.address,
+        mockLicense.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("acceptedToken is zero address");
+  });
+
+  it("should fail to deploy if beneficiary is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        ethers.constants.AddressZero,
+        mockLicense.address,
+        mockLicense.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("beneficiary is zero address");
+  });
+
+  it("should fail to deploy if license is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        admin.address,
+        ethers.constants.AddressZero,
+        mockLicense.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("license is zero address");
+  });
+
+  it("should fail to deploy if claimer is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        admin.address,
+        mockLicense.address,
+        ethers.constants.AddressZero,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("claimer is zero address");
+  });
+
+  it("should fail to deploy if reclaimer is zero", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        admin.address,
+        mockLicense.address,
+        mockLicense.address,
+        ethers.constants.AddressZero,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("reclaimer is zero address");
+  });
+
+  it("should fail to deploy if beneficiary is an app", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    expect(
+      factory.deploy(
+        sf.host.address,
+        sf.agreements.cfa.address,
+        sf.tokens.ETHx.address,
+        superApp.address,
+        mockLicense.address,
+        mockLicense.address,
+        mockLicense.address,
+        BigNumber.from(numerator),
+        BigNumber.from(denominator),
+        BigNumber.from(1),
+        BigNumber.from(10),
+        BigNumber.from(604800)
+      )
+    ).to.be.revertedWith("beneficiary is an app");
+  });
+
+  it("should not allow beneficiary to be an app", async () => {
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+    const factory = new AuctionSuperApp__factory(admin);
+    const superApp1 = await factory.deploy(
+      sf.host.address,
+      sf.agreements.cfa.address,
+      sf.tokens.ETHx.address,
+      admin.address,
+      mockLicense.address,
+      mockLicense.address,
+      mockLicense.address,
+      BigNumber.from(numerator),
+      BigNumber.from(denominator),
+      BigNumber.from(1),
+      BigNumber.from(10),
+      BigNumber.from(604800)
+    );
+    await superApp1.deployed();
+
+    expect(
+      superApp.connect(admin).setBeneficiary(superApp1.address)
+    ).to.be.revertedWith("beneficiary is an app");
   });
 
   it("should only allow admin to set beneficiary", async () => {
@@ -495,6 +700,33 @@ describe("AuctionSuperApp", async function () {
 
     const value = await superApp.beneficiary();
     expect(value).to.equal(admin.address);
+  });
+
+  it("should move flow to new beneficiary", async () => {
+    const txn = await claimCreate(user);
+    await txn.wait();
+
+    await superApp.setBeneficiary(other.address);
+
+    const value = await superApp.beneficiary();
+    expect(value).to.equal(other.address);
+    await checkAppToUserFlow("0", admin);
+    await checkAppToUserFlow("100", other);
+    await checkAppNetFlow();
+  });
+
+  it("should only allow PAUSE_ROLE to pause and unpause", async () => {
+    expect(superApp.connect(user).pause()).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.pause();
+
+    expect(superApp.connect(user).unpause()).to.be.revertedWith(
+      "is missing role"
+    );
+
+    await superApp.unpause();
   });
 
   it("should only allow admin to set claimer", async () => {
@@ -1231,6 +1463,55 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3).to.be.rejected;
       });
 
+      it("should revert on flow increase after owner deleted bid when outstanding bid exists", async () => {
+        let existingLicenseId = 2;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await placeBidCreate(bidder, existingLicenseId);
+        await txn1.wait();
+
+        const txn2 = await claimCreate(other, 1);
+        await txn2.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn3 = await deleteFlowOp.exec(user);
+        await txn3.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: other.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn4 = batchCall.exec(other);
+        await expect(txn4).to.be.rejected;
+      });
+
       it("should revert on flow create when bid is not high enough", async () => {
         let existingLicenseId = 2;
 
@@ -1300,6 +1581,153 @@ describe("AuctionSuperApp", async function () {
         const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
         const txn2 = batchCall.exec(bidder);
         await expect(txn2).to.be.rejected;
+      });
+
+      it("should reclaim on flow create after owner deleted bid", async () => {
+        let existingLicenseId = 1;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn2 = await deleteFlowOp.exec(user);
+        await txn2.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        mockReclaimer.claimPrice.returns(purchasePrice);
+        mockReclaimer.claim.returns(existingLicenseId);
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn3 = await batchCall.exec(bidder);
+        const receipt = await txn3.wait();
+
+        mockLicense.ownerOf
+          .whenCalledWith(existingLicenseId)
+          .returns(bidder.address);
+
+        await expect(txn3)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, user.address, purchasePrice);
+
+        await checkJailed(receipt);
+        await checkUserToAppFlow("200", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkUserToAppFlow("0", user);
+        await checkAppToBeneficiaryFlow("200");
+        await checkCurrentOwnerBid(existingLicenseId, 200);
+        await checkOwnerBidContributionRate(existingLicenseId, 200);
+        await checkOutstandingBid(existingLicenseId, 0);
+        await checkAppNetFlow();
+
+        expect(
+          mockLicense["safeTransferFrom(address,address,uint256)"]
+        ).to.have.been.calledWith(
+          user.address,
+          bidder.address,
+          BigNumber.from(existingLicenseId)
+        );
+      });
+
+      it("should reclaim on flow increase after owner deleted bid", async () => {
+        let existingLicenseId = 1;
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn2 = await deleteFlowOp.exec(user);
+        await txn2.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        mockReclaimer.claimPrice.returns(purchasePrice);
+        mockReclaimer.claim.returns(existingLicenseId);
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "300",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn3 = await batchCall.exec(bidder);
+        const receipt = await txn3.wait();
+
+        mockLicense.ownerOf
+          .whenCalledWith(existingLicenseId)
+          .returns(bidder.address);
+
+        await expect(txn3)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, user.address, purchasePrice);
+
+        await checkJailed(receipt);
+        await checkUserToAppFlow("300", bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkUserToAppFlow("0", user);
+        await checkAppToBeneficiaryFlow("300");
+        await checkCurrentOwnerBid(existingLicenseId, 200);
+        await checkOwnerBidContributionRate(existingLicenseId, 200);
+        await checkOutstandingBid(existingLicenseId, 0);
+        await checkAppNetFlow();
+
+        expect(
+          mockLicense["safeTransferFrom(address,address,uint256)"]
+        ).to.have.been.calledWith(
+          user.address,
+          bidder.address,
+          BigNumber.from(existingLicenseId)
+        );
       });
     });
 
@@ -1470,6 +1898,7 @@ describe("AuctionSuperApp", async function () {
         await checkAppToUserFlow("0", bidder);
         await checkAppToBeneficiaryFlow("100");
         await checkCurrentOwnerBid(existingLicenseId, 100);
+        await checkOwnerBidContributionRate(existingLicenseId, 100);
         await checkOutstandingBid(existingLicenseId, 200);
       });
     });
@@ -1507,6 +1936,7 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("200", user);
           await checkAppToBeneficiaryFlow("200");
           await checkCurrentOwnerBid(existingLicenseId, 200);
+          await checkOwnerBidContributionRate(existingLicenseId, 200);
         });
 
         it("should decrease bid on flow decrease", async () => {
@@ -1540,6 +1970,7 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("50", user);
           await checkAppToBeneficiaryFlow("50");
           await checkCurrentOwnerBid(existingLicenseId, 50);
+          await checkOwnerBidContributionRate(existingLicenseId, 50);
         });
 
         it("should decrease bid on flow decrease and multiple bids", async () => {
@@ -1574,7 +2005,9 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("150", user);
           await checkAppToBeneficiaryFlow("150");
           await checkCurrentOwnerBid(1, 100);
+          await checkOwnerBidContributionRate(1, 100);
           await checkCurrentOwnerBid(2, 50);
+          await checkOwnerBidContributionRate(2, 50);
         });
 
         it("should delete bid on flow decrease and multiple bids", async () => {
@@ -1609,7 +2042,9 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("100", user);
           await checkAppToBeneficiaryFlow("100");
           await checkCurrentOwnerBid(1, 100);
+          await checkOwnerBidContributionRate(1, 100);
           await checkCurrentOwnerBid(2, 0);
+          await checkOwnerBidContributionRate(2, 0);
         });
 
         it("should delete all bids on flow delete and multiple bids", async () => {
@@ -1680,6 +2115,7 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("200", user);
           await checkAppToBeneficiaryFlow("200");
           await checkCurrentOwnerBid(1, 200);
+          await checkOwnerBidContributionRate(1, 200);
         });
 
         it("should increase bid on flow increase after multiple deleted bids", async () => {
@@ -1710,6 +2146,7 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("400", user);
           await checkAppToBeneficiaryFlow("400");
           await checkCurrentOwnerBid(2, 200);
+          await checkOwnerBidContributionRate(2, 200);
         });
 
         it("should increase bid twice after deleted bid", async () => {
@@ -1737,6 +2174,7 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("400", user);
           await checkAppToBeneficiaryFlow("400");
           await checkCurrentOwnerBid(1, 400);
+          await checkOwnerBidContributionRate(1, 400);
         });
 
         it("should revert on flow decrease of more than contribution", async () => {
@@ -1814,6 +2252,7 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("200", user);
           await checkAppToBeneficiaryFlow("200");
           await checkCurrentOwnerBid(existingLicenseId, 200);
+          await checkOwnerBidContributionRate(existingLicenseId, 200);
           await checkOutstandingBid(existingLicenseId, 0);
           await checkOldBid(bidder, existingLicenseId, 200);
         });
@@ -1853,6 +2292,7 @@ describe("AuctionSuperApp", async function () {
           await checkUserToAppFlow("150", user);
           await checkAppToBeneficiaryFlow("150");
           await checkCurrentOwnerBid(existingLicenseId, 150);
+          await checkOwnerBidContributionRate(existingLicenseId, 150);
           await checkOutstandingBid(existingLicenseId, 200);
         });
 
@@ -1923,8 +2363,10 @@ describe("AuctionSuperApp", async function () {
           await checkAppToUserFlow("0", user);
           await checkAppToBeneficiaryFlow("300");
           await checkCurrentOwnerBid(1, 200);
+          await checkOwnerBidContributionRate(1, 200);
           await checkOutstandingBid(1, 0);
           await checkCurrentOwnerBid(2, 100);
+          await checkOwnerBidContributionRate(2, 100);
           await checkOutstandingBid(2, 0);
           await checkAppNetFlow();
           expect(
@@ -1990,16 +2432,74 @@ describe("AuctionSuperApp", async function () {
           await checkAppToUserFlow("0", user);
           await checkAppToBeneficiaryFlow("0");
           await checkCurrentOwnerBid(1, 100);
-          await checkOutstandingBid(1, 200);
           await checkOwnerBidContributionRate(1, 0);
+          await checkOutstandingBid(1, 200);
           await checkAppNetFlow();
           expect(mockLicense["safeTransferFrom(address,address,uint256)"]).to
             .not.have.been.called;
         });
+
+        it("should pay penalty on flow increase after deleted bid", async () => {
+          const txn = await claimCreate(user, 1);
+          await txn.wait();
+
+          const txn2 = await placeBidCreate(bidder, 1); // 200
+          await txn2.wait();
+
+          const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+            sender: user.address,
+            receiver: superApp.address,
+            superToken: ethx.address,
+          });
+
+          const txn3 = await deleteFlowOp.exec(user);
+          await txn3.wait();
+
+          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
+          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+
+          const approveOp = ethx.approve({
+            receiver: superApp.address,
+            amount: penaltyAmount.toString(),
+          });
+
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            [1]
+          );
+          const userData = ethers.utils.defaultAbiCoder.encode(
+            ["uint8", "bytes"],
+            [Action.BID, actionData]
+          );
+          const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+            receiver: superApp.address,
+            flowRate: "200",
+            superToken: ethx.address,
+            userData: userData,
+          });
+          const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+
+          const txn4 = await batchCall.exec(user);
+          const receipt = await txn4.wait();
+
+          await expect(txn4)
+            .to.emit(ethx_erc20, "Transfer")
+            .withArgs(user.address, admin.address, penaltyAmount);
+          await checkJailed(receipt);
+          await checkAppNetFlow();
+          await checkUserToAppFlow("200", bidder);
+          await checkAppToUserFlow("200", bidder);
+          await checkUserToAppFlow("200", user);
+          await checkAppToBeneficiaryFlow("200");
+          await checkCurrentOwnerBid(1, 200);
+          await checkOwnerBidContributionRate(1, 200);
+          await checkOutstandingBid(1, 0);
+          await checkOldBid(bidder, 1, 200);
+        });
       });
 
       describe("Outstanding bid has elapsed", async () => {
-        it("should revert on flow increase and outstanding bid has elapsed", async () => {
+        it("should revert on flow increase", async () => {
           let existingLicenseId = 2;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -2084,8 +2584,10 @@ describe("AuctionSuperApp", async function () {
           await checkAppToUserFlow("0", user);
           await checkAppToBeneficiaryFlow("300");
           await checkCurrentOwnerBid(1, 200);
+          await checkOwnerBidContributionRate(1, 200);
           await checkOutstandingBid(1, 0);
           await checkCurrentOwnerBid(2, 100);
+          await checkOwnerBidContributionRate(2, 100);
           await checkOutstandingBid(2, 0);
           await checkAppNetFlow();
           expect(
@@ -2125,11 +2627,35 @@ describe("AuctionSuperApp", async function () {
           await checkAppToUserFlow("0", user);
           await checkAppToBeneficiaryFlow("0");
           await checkCurrentOwnerBid(1, 100);
-          await checkOutstandingBid(1, 200);
           await checkOwnerBidContributionRate(1, 0);
+          await checkOutstandingBid(1, 200);
           await checkAppNetFlow();
           expect(mockLicense["safeTransferFrom(address,address,uint256)"]).to
             .not.have.been.called;
+        });
+
+        it("should revert on flow increase after deleted bid", async () => {
+          const txn = await claimCreate(user, 1); // 100
+          await txn.wait();
+
+          const txn2 = await placeBidCreate(bidder, 1); // 200
+          await txn2.wait();
+
+          const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+            sender: user.address,
+            receiver: superApp.address,
+            superToken: ethx.address,
+          });
+
+          const txn3 = await deleteFlowOp.exec(user);
+          await txn3.wait();
+
+          // Advance time
+          await network.provider.send("evm_increaseTime", [700000]);
+          await network.provider.send("evm_mine");
+
+          const txn4 = placeBidCreate(user, 1);
+          await expect(txn4).to.be.rejected;
         });
       });
     });
@@ -2323,6 +2849,142 @@ describe("AuctionSuperApp", async function () {
         await checkAppToUserFlow("0", bidder);
         await checkAppToBeneficiaryFlow("200");
       });
+    });
+  });
+
+  describe("Claim Outstanding Bid", async () => {
+    it("should claim bid after bidding period has elapsed", async () => {
+      const txn = await claimCreate(user, 1);
+      await txn.wait();
+
+      const txn1 = await placeBidCreate(bidder, 1);
+      await txn1.wait();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [700000]);
+      await network.provider.send("evm_mine");
+
+      await superApp.connect(bidder).claimOutstandingBid(1);
+      mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
+
+      await checkUserToAppFlow("100", user);
+      await checkAppToUserFlow("100", user);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("0", bidder);
+      await checkAppToBeneficiaryFlow("200");
+      await checkCurrentOwnerBid(1, 200);
+      await checkOwnerBidContributionRate(1, 200);
+      await checkOutstandingBid(1, 0);
+      await checkAppNetFlow();
+
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledWith(
+        user.address,
+        bidder.address,
+        BigNumber.from(1)
+      );
+    });
+
+    it("should claim bid after bidding period has elapsed with multiple bids", async () => {
+      const txn = await claimCreate(user, 1);
+      await txn.wait();
+
+      const txn1 = await claimCreate(bidder, 2);
+      await txn1.wait();
+
+      const txn2 = await placeBidUpdate(bidder, 1);
+      await txn2.wait();
+
+      const txn3 = await placeBidUpdate(user, 2);
+      await txn3.wait();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [700000]);
+      await network.provider.send("evm_mine");
+
+      await superApp.connect(bidder).claimOutstandingBid(1);
+      mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
+
+      await checkUserToAppFlow("300", user);
+      await checkAppToUserFlow("300", user);
+      await checkUserToAppFlow("300", bidder);
+      await checkAppToUserFlow("0", bidder);
+      await checkAppToBeneficiaryFlow("300");
+      await checkCurrentOwnerBid(1, 200);
+      await checkOwnerBidContributionRate(1, 200);
+      await checkCurrentOwnerBid(2, 100);
+      await checkOwnerBidContributionRate(2, 100);
+      await checkOutstandingBid(1, 0);
+      await checkOutstandingBid(2, 200);
+      await checkAppNetFlow();
+
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledWith(
+        user.address,
+        bidder.address,
+        BigNumber.from(1)
+      );
+    });
+
+    it("should be able to claim bid after owner flow delete", async () => {
+      const txn = await claimCreate(user, 1); // 100
+      await txn.wait();
+
+      const txn2 = await placeBidCreate(bidder, 1); // 200
+      await txn2.wait();
+
+      const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        superToken: ethx.address,
+      });
+
+      const txn3 = await deleteFlowOp.exec(user);
+      await txn3.wait();
+
+      await superApp.connect(bidder).claimOutstandingBid(1);
+      mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
+
+      await checkUserToAppFlow("0", user);
+      await checkAppToUserFlow("0", user);
+      await checkUserToAppFlow("200", bidder);
+      await checkAppToUserFlow("0", bidder);
+      await checkAppToBeneficiaryFlow("200");
+      await checkCurrentOwnerBid(1, 200);
+      await checkOwnerBidContributionRate(1, 200);
+      await checkOutstandingBid(1, 0);
+      await checkAppNetFlow();
+
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledWith(
+        user.address,
+        bidder.address,
+        BigNumber.from(1)
+      );
+    });
+
+    it("should revert claim bid if bidding period has not elapsed", async () => {
+      const txn = await claimCreate(user, 1);
+      await txn.wait();
+
+      const txn1 = await placeBidCreate(bidder, 1);
+      await txn1.wait();
+
+      expect(
+        superApp.connect(bidder).claimOutstandingBid(1)
+      ).to.be.revertedWith("Bid period has not elapsed");
+    });
+
+    it("should revert claim bid if outstanding bid does not exist", async () => {
+      const txn = await claimCreate(user, 1);
+      await txn.wait();
+
+      expect(
+        superApp.connect(bidder).claimOutstandingBid(1)
+      ).to.be.revertedWith("Outstanding bid does not exist");
     });
   });
 });

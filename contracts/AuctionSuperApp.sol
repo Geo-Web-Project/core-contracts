@@ -16,8 +16,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
     ISuperToken private acceptedToken; // accepted token
 
-    IClaimer public claimer;
+    /// @notice Beneficiary of funds.
     address public beneficiary;
+
+    /// @notice Claimer.
+    IClaimer public claimer;
+
+    /// @notice Reclaimer to use when owner contribution is deleted
+    IClaimer public reclaimer;
 
     /// @notice ERC721 License used to find owners.
     IERC721 public license;
@@ -64,6 +70,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         ISuperToken _acceptedToken,
         address _beneficiary,
         address _license,
+        address _claimer,
+        address _reclaimer,
         uint256 _perSecondFeeNumerator,
         uint256 _perSecondFeeDenominator,
         uint256 _penaltyNumerator,
@@ -80,6 +88,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             address(_beneficiary) != address(0),
             "beneficiary is zero address"
         );
+        require(address(_claimer) != address(0), "claimer is zero address");
+        require(address(_reclaimer) != address(0), "reclaimer is zero address");
+        require(address(_license) != address(0), "license is zero address");
         require(!_host.isApp(ISuperApp(_beneficiary)), "beneficiary is an app");
 
         host = _host;
@@ -87,6 +98,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         acceptedToken = _acceptedToken;
         beneficiary = _beneficiary;
         license = IERC721(_license);
+        claimer = IClaimer(_claimer);
+        reclaimer = IClaimer(_reclaimer);
         perSecondFeeNumerator = _perSecondFeeNumerator;
         perSecondFeeDenominator = _perSecondFeeDenominator;
         penaltyNumerator = _penaltyNumerator;
@@ -115,6 +128,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     /**
+     * @notice Admin can update the reclaimer.
+     * @param _reclaimer The new reclaimer address
+     * @custom:requires DEFAULT_ADMIN_ROLE
+     */
+    function setReclaimer(address _reclaimer)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        reclaimer = IClaimer(_reclaimer);
+    }
+
+    /**
      * @notice Admin can update the beneficiary.
      * @param _beneficiary The new beneficiary of contributions
      * @custom:requires DEFAULT_ADMIN_ROLE
@@ -132,19 +157,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > 0) {
-            // Create flow to new beneficiary
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    _beneficiary,
-                    flowRate,
-                    new bytes(0)
-                ),
-                "0x"
-            );
-
             // Delete flow to old beneficiary
             host.callAgreement(
                 cfa,
@@ -153,6 +165,19 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                     acceptedToken,
                     address(this),
                     beneficiary,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+
+            // Create flow to new beneficiary
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    _beneficiary,
+                    flowRate,
                     new bytes(0)
                 ),
                 "0x"
@@ -236,7 +261,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      * @return Penalty in wei
      */
     function calculatePenalty(uint256 id) public view returns (uint256) {
-        uint256 currentPurchasePrice = calculatePurchasePrice(id);
+        Bid storage bid = currentOwnerBid[id];
+
+        // Value * Per Second Fee = Contribution Rate
+        uint256 currentPurchasePrice = (uint96(bid.contributionRate) *
+            bid.perSecondFeeDenominator) / bid.perSecondFeeNumerator;
 
         uint256 value = (currentPurchasePrice * penaltyNumerator) /
             penaltyDenominator;
@@ -250,11 +279,12 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      * @return Current purchase price in wei
      */
     function calculatePurchasePrice(uint256 id) public view returns (uint256) {
+        Bid storage bid = currentOwnerBid[id];
         uint96 contributionRate = uint96(ownerBidContributionRate(id));
 
         // Value * Per Second Fee = Contribution Rate
-        uint256 value = (contributionRate * perSecondFeeDenominator) /
-            perSecondFeeNumerator;
+        uint256 value = (contributionRate * bid.perSecondFeeDenominator) /
+            bid.perSecondFeeNumerator;
 
         return value;
     }
@@ -277,10 +307,95 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         return bid.contributionRate;
     }
 
-    function _increaseAppToBeneficiaryFlow(bytes memory ctx, int96 amount)
-        private
-        returns (bytes memory newCtx)
-    {
+    function claimOutstandingBid(uint256 id) external {
+        Bid storage bidOutstanding = outstandingBid[id];
+
+        require(
+            bidOutstanding.contributionRate > 0,
+            "AuctionSuperApp: Outstanding bid does not exist"
+        );
+        require(
+            bidOutstanding.timestamp < block.timestamp,
+            "AuctionSuperApp: Outstanding bid must be in past"
+        );
+
+        uint256 elapsedTime = block.timestamp - bidOutstanding.timestamp;
+        int96 oldOwnerBidContributionRate = ownerBidContributionRate(id);
+        if (oldOwnerBidContributionRate > 0) {
+            require(
+                elapsedTime >= bidPeriodLengthInSeconds,
+                "AuctionSuperApp: Bid period has not elapsed"
+            );
+        }
+
+        Bid storage bid = currentOwnerBid[id];
+
+        // Transfer deposit to owner
+        uint256 depositAmount = calculatePurchasePrice(id);
+        address oldOwner = bid.bidder;
+        bool success = acceptedToken.transfer(oldOwner, depositAmount);
+        require(success, "AuctionSuperApp: Transfer deposit failed");
+
+        int96 updatedRate = bidOutstanding.contributionRate -
+            oldOwnerBidContributionRate;
+        int96 bidContributionRate = bidOutstanding.contributionRate;
+
+        // Update currentOwnerBid
+        currentOwnerBid[id] = bidOutstanding;
+
+        // Clear outstanding bid
+        bidOutstanding.contributionRate = 0;
+
+        _increaseAppToBeneficiaryFlow(updatedRate);
+
+        _decreaseAppToUserFlow(bidOutstanding.bidder, bidContributionRate);
+
+        if (oldOwnerBidContributionRate > 0) {
+            _increaseAppToUserFlow(oldOwner, oldOwnerBidContributionRate);
+        }
+
+        // Transfer license
+        license.safeTransferFrom(oldOwner, bidOutstanding.bidder, id);
+    }
+
+    function _increaseAppToBeneficiaryFlow(int96 amount) private {
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            beneficiary
+        );
+
+        if (flowRate > 0) {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    beneficiary,
+                    flowRate + amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    beneficiary,
+                    amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+    }
+
+    function _increaseAppToBeneficiaryFlowWithCtx(
+        bytes memory ctx,
+        int96 amount
+    ) private returns (bytes memory newCtx) {
         (, int96 flowRate, , ) = cfa.getFlow(
             acceptedToken,
             address(this),
@@ -355,7 +470,41 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
     }
 
-    function _increaseAppToUserFlow(
+    function _increaseAppToUserFlow(address user, int96 amount) private {
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            user
+        );
+
+        if (flowRate > 0) {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    user,
+                    flowRate + amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.createFlow.selector,
+                    acceptedToken,
+                    user,
+                    amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+    }
+
+    function _increaseAppToUserFlowWithCtx(
         bytes memory ctx,
         address user,
         int96 amount
@@ -395,7 +544,41 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
     }
 
-    function _decreaseAppToUserFlow(
+    function _decreaseAppToUserFlow(address user, int96 amount) private {
+        (, int96 flowRate, , ) = cfa.getFlow(
+            acceptedToken,
+            address(this),
+            user
+        );
+
+        if (flowRate > amount) {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.updateFlow.selector,
+                    acceptedToken,
+                    user,
+                    flowRate - amount,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        } else {
+            host.callAgreement(
+                cfa,
+                abi.encodeWithSelector(
+                    cfa.deleteFlow.selector,
+                    acceptedToken,
+                    address(this),
+                    user,
+                    new bytes(0)
+                ),
+                "0x"
+            );
+        }
+    }
+
+    function _decreaseAppToUserFlowWithCtx(
         bytes memory ctx,
         address user,
         int96 amount
@@ -435,7 +618,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
     }
 
-    function _deleteAppToUserFlow(bytes memory ctx, address user)
+    function _deleteAppToUserFlowWithCtx(bytes memory ctx, address user)
         private
         returns (bytes memory newCtx, int96 amountDeleted)
     {
@@ -516,7 +699,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 decreasedFlowRate
     ) private returns (bytes memory newCtx) {
         // Increase app -> user flow back to original
-        return _increaseAppToUserFlow(_ctx, user, decreasedFlowRate);
+        return _increaseAppToUserFlowWithCtx(_ctx, user, decreasedFlowRate);
     }
 
     function _onDeleteUserToApp(
@@ -526,7 +709,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     ) private returns (bytes memory newCtx) {
         // Delete app -> user flow
         int96 decreasedAmount;
-        (newCtx, decreasedAmount) = _deleteAppToUserFlow(_ctx, user);
+        (newCtx, decreasedAmount) = _deleteAppToUserFlowWithCtx(_ctx, user);
 
         // Decrease app -> beneficiary flow by remaining
         newCtx = _decreaseAppToBeneficiaryFlow(
@@ -567,7 +750,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Increase app -> beneficiary flow
-        newCtx = _increaseAppToBeneficiaryFlow(_ctx, initialContributionRate);
+        newCtx = _increaseAppToBeneficiaryFlowWithCtx(
+            _ctx,
+            initialContributionRate
+        );
 
         // Set currentOwnerBid
         Bid storage bid = currentOwnerBid[licenseId];
@@ -576,6 +762,45 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.contributionRate = initialContributionRate;
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
+    }
+
+    function _reclaim(
+        bytes memory _ctx,
+        address user,
+        int96 initialContributionRate,
+        uint256 licenseId
+    ) private returns (bytes memory newCtx) {
+        // Get claim price
+        uint256 claimPrice = reclaimer.claimPrice(
+            user,
+            initialContributionRate,
+            abi.encode(licenseId)
+        );
+
+        // Collect claim payment
+        address oldOwner = license.ownerOf(licenseId);
+        bool success = acceptedToken.transferFrom(user, oldOwner, claimPrice);
+        require(success, "AuctionSuperApp: Claim payment failed");
+
+        // Process claim
+        reclaimer.claim(user, initialContributionRate, abi.encode(licenseId));
+
+        // Increase app -> beneficiary flow
+        newCtx = _increaseAppToBeneficiaryFlowWithCtx(
+            _ctx,
+            initialContributionRate
+        );
+
+        // Set currentOwnerBid
+        Bid storage bid = currentOwnerBid[licenseId];
+        bid.timestamp = block.timestamp;
+        bid.bidder = user;
+        bid.contributionRate = initialContributionRate;
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
+
+        // Transfer license
+        license.safeTransferFrom(oldOwner, user, licenseId);
     }
 
     function _increaseBid(
@@ -634,7 +859,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
 
         // Increase app -> beneficiary flow
-        newCtx = _increaseAppToBeneficiaryFlow(_ctx, increasedFlowRate);
+        newCtx = _increaseAppToBeneficiaryFlowWithCtx(_ctx, increasedFlowRate);
 
         // Update currentOwnerBid
         bid.timestamp = block.timestamp;
@@ -722,7 +947,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         oldBid.contributionRate = newBidAmount;
 
         // Decrease app -> user flow
-        newCtx = _decreaseAppToUserFlow(_ctx, user, decreasedFlowRate);
+        newCtx = _decreaseAppToUserFlowWithCtx(_ctx, user, decreasedFlowRate);
     }
 
     function _placeNewBid(
@@ -742,6 +967,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             revert(
                 "AuctionSuperApp: Cannot place another bid with one outstanding"
             );
+        }
+
+        if (ownerBidContributionRate(licenseId) == 0) {
+            // Reclaim
+            return _reclaim(_ctx, bidder, bidContributionRate, licenseId);
         }
 
         if (bidContributionRate > currentOwnerBid[licenseId].contributionRate) {
@@ -782,9 +1012,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         // Clear outstanding bid
         bidOutstanding.contributionRate = 0;
 
-        newCtx = _increaseAppToBeneficiaryFlow(_ctx, updatedRate);
+        newCtx = _increaseAppToBeneficiaryFlowWithCtx(_ctx, updatedRate);
 
-        newCtx = _decreaseAppToUserFlow(
+        newCtx = _decreaseAppToUserFlowWithCtx(
             newCtx,
             bidOutstanding.bidder,
             bidContributionRate
@@ -807,7 +1037,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
 
-        newCtx = _increaseAppToUserFlow(_ctx, bidder, bidContributionRate);
+        newCtx = _increaseAppToUserFlowWithCtx(
+            _ctx,
+            bidder,
+            bidContributionRate
+        );
 
         // Collect deposit
         uint256 depositAmount = calculatePurchasePrice(licenseId);
@@ -951,7 +1185,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     modifier onlyHost() {
         require(
             msg.sender == address(host),
-            "CollectorSuperApp: support only one host"
+            "AuctionSuperApp: support only one host"
         );
         _;
     }
@@ -959,11 +1193,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     modifier onlyExpected(ISuperToken superToken, address agreementClass) {
         require(
             _isSameToken(superToken),
-            "CollectorSuperApp: not accepted token"
+            "AuctionSuperApp: not accepted token"
         );
         require(
             _isCFAv1(agreementClass),
-            "CollectorSuperApp: only CFAv1 supported"
+            "AuctionSuperApp: only CFAv1 supported"
         );
         _;
     }
