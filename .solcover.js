@@ -5,4 +5,5 @@ module.exports = {
     enableTimeouts: false,
     skipFiles: ["mock/"],
   },
+  configureYulOptimizer: true,
 };

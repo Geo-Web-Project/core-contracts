@@ -261,7 +261,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      * @return Penalty in wei
      */
     function calculatePenalty(uint256 id) public view returns (uint256) {
-        uint256 currentPurchasePrice = calculatePurchasePrice(id);
+        Bid storage bid = currentOwnerBid[id];
+
+        // Value * Per Second Fee = Contribution Rate
+        uint256 currentPurchasePrice = (uint96(bid.contributionRate) *
+            bid.perSecondFeeDenominator) / bid.perSecondFeeNumerator;
 
         uint256 value = (currentPurchasePrice * penaltyNumerator) /
             penaltyDenominator;
@@ -275,11 +279,12 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      * @return Current purchase price in wei
      */
     function calculatePurchasePrice(uint256 id) public view returns (uint256) {
+        Bid storage bid = currentOwnerBid[id];
         uint96 contributionRate = uint96(ownerBidContributionRate(id));
 
         // Value * Per Second Fee = Contribution Rate
-        uint256 value = (contributionRate * perSecondFeeDenominator) /
-            perSecondFeeNumerator;
+        uint256 value = (contributionRate * bid.perSecondFeeDenominator) /
+            bid.perSecondFeeNumerator;
 
         return value;
     }

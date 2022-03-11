@@ -1509,7 +1509,7 @@ describe("AuctionSuperApp", async function () {
 
         const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
         const txn4 = batchCall.exec(other);
-        expect(txn4).to.be.rejected;
+        await expect(txn4).to.be.rejected;
       });
 
       it("should revert on flow create when bid is not high enough", async () => {
@@ -2439,8 +2439,8 @@ describe("AuctionSuperApp", async function () {
             .not.have.been.called;
         });
 
-        it("should revert on flow increase after deleted bid", async () => {
-          const txn = await claimCreate(user, 1); // 100
+        it("should pay penalty on flow increase after deleted bid", async () => {
+          const txn = await claimCreate(user, 1);
           await txn.wait();
 
           const txn2 = await placeBidCreate(bidder, 1); // 200
@@ -2455,8 +2455,46 @@ describe("AuctionSuperApp", async function () {
           const txn3 = await deleteFlowOp.exec(user);
           await txn3.wait();
 
-          const txn4 = placeBidCreate(user, 1);
-          expect(txn4).to.be.rejected;
+          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
+          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+
+          const approveOp = ethx.approve({
+            receiver: superApp.address,
+            amount: penaltyAmount.toString(),
+          });
+
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            [1]
+          );
+          const userData = ethers.utils.defaultAbiCoder.encode(
+            ["uint8", "bytes"],
+            [Action.BID, actionData]
+          );
+          const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+            receiver: superApp.address,
+            flowRate: "200",
+            superToken: ethx.address,
+            userData: userData,
+          });
+          const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+
+          const txn4 = await batchCall.exec(user);
+          const receipt = await txn4.wait();
+
+          await expect(txn4)
+            .to.emit(ethx_erc20, "Transfer")
+            .withArgs(user.address, admin.address, penaltyAmount);
+          await checkJailed(receipt);
+          await checkAppNetFlow();
+          await checkUserToAppFlow("200", bidder);
+          await checkAppToUserFlow("200", bidder);
+          await checkUserToAppFlow("200", user);
+          await checkAppToBeneficiaryFlow("200");
+          await checkCurrentOwnerBid(1, 200);
+          await checkOwnerBidContributionRate(1, 200);
+          await checkOutstandingBid(1, 0);
+          await checkOldBid(bidder, 1, 200);
         });
       });
 
@@ -2499,7 +2537,7 @@ describe("AuctionSuperApp", async function () {
           const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
 
           const txn2 = batchCall.exec(user);
-          expect(txn2).to.be.rejected;
+          await expect(txn2).to.be.rejected;
         });
 
         it("should accept bid on flow decrease", async () => {
@@ -2617,7 +2655,7 @@ describe("AuctionSuperApp", async function () {
           await network.provider.send("evm_mine");
 
           const txn4 = placeBidCreate(user, 1);
-          expect(txn4).to.be.rejected;
+          await expect(txn4).to.be.rejected;
         });
       });
     });
