@@ -18,19 +18,46 @@ npx hardhat deploy --network <NETWORK>
 
 The `deploy` tasks will deploy all core contracts with default parameters and roles. Each contract has its own subtask that will be run.
 
-## Current Deployments
+## Architecture
 
-### Rinkeby
+![](https://mermaid.ink/img/pako:eNqlU8tqwzAQ_BWhUwtJoL0UdCi4iQsG54GdHAqGokibRiDLRo9DCPn3yq7S2HVDDrl4zexoZrSSjphVHDDBTFJjZoJ-aVoiVCjUAmhFNQOJjoUqLNo6IfnDI3rbJOnsM1umcQtzMFZXB9-Yxfk6W36EFjr9ysTZ9OX5KRUMlIGgZugO5kJZv26eLNYXva3TqnXJFhewps6AR1fRJo8vsFP_NTrOkWNWVCp3NeioroN3MpVUlKAbUlP7oIYu3M8uf-pdmd6p0Cl1iu3PjscbTuEY6ra0SJvQW0zTKJnfMSb__TuiyeR1GPEKrxfZc4Zba1irkPtK-7bIeFydZ0B61-8Kt6dIuvdrsIuGPhQhncHiEfZQSQX378SflH8e2O6hhAIT_8thR520BS7UyVNdzamFmAtbaUx2VBoYYepslR8Uw8RqB2dSeG6BdfoGN0Yzzw)
 
-Commit:: 6e57060e9299911dc14cb4374890840ba50d5a1e
+<details>
+  <summary>Show source code</summary>
 
-```
-GeoWebCoordinate deployed to: 0x75CD1B88d09b2D8fCF46ec94dc028cF3DB04d96C
-GeoWebCoordinatePath deployed to: 0xbdbd0Eb8190f1519c7213a0E61256476c01781C7
-GeoWebParcel deployed to: 0x36Cf448d15Dbf4365c7421FA94dBEC93B95720E4
-Accountant deployed to: 0x45fdCbcAaBE80b630d83a0f5a0Fb4a8b9cEFf84E
-ERC721License deployed to: 0xF2282541d384D6d9A5C9B02D020fDFededd8D827
-ETHPurchaser deployed to: 0xAEAd5f4FAb0cdA5f1E99a12830BF10fF8101c49C
-ETHExpirationCollector deployed to: 0x8C6e0d49ca34fd262B209509F32aE4eC8D04F9eE
-SimpleETHClaimer deployed to: 0x8a9c5ceeE10248e00F11c4F1da11349D6FAf6873
-```
+````
+```mermaid
+classDiagram
+ class Parcel {
+	 build() BUILD_ROLE
+	 destroy() DESTROY_ROLE
+ }
+ class ERC721License {
+	 safeMint() MINT_ROLE
+	 burn() BURN_ROLE
+	 pause() PAUSE_ROLE
+	 unpause() PAUSE_ROLE
+ }
+ class AuctionSuperApp {
+	 IClaimer claimer
+	 IClaimer reclaimer
+	 ERC721License license
+	 pause() PAUSE_ROLE
+	 unpause() PAUSE_ROLE
+ }
+ class FairLaunchClaimer {
+	 ERC721License license
+	 Parcel parcel
+	 claim() CLAIM_ROLE
+	 pause() PAUSE_ROLE
+	 unpause() PAUSE_ROLE
+ }
+
+ AuctionSuperApp ..> FairLaunchClaimer
+ AuctionSuperApp ..> ERC721License
+ FairLaunchClaimer ..> Parcel
+ FairLaunchClaimer ..> ERC721License
+ FairLaunchClaimer --o Parcel : BUILD_ROLE
+ FairLaunchClaimer --o ERC721License: MINT_ROLE
+ AuctionSuperApp --o FairLaunchClaimer : CLAIM_ROLE
+````
