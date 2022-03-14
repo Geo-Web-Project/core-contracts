@@ -21,13 +21,17 @@ use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe('FairLaunchClaimer', () => {
+describe('FairLaunchClaimer', async function () {
   let accounts: SignerWithAddress[];
   let admin: SignerWithAddress;
   let user: SignerWithAddress;
   let claimer: Contract;
   let fakeParcel: FakeContract<GeoWebParcel>
   let fakeLicense: FakeContract<ERC721License>
+  let userArg: string;
+  let initialContributionRate: BigNumber
+  let claimData: any;
+  let licenseId: number;
 
   async function buildContract(): Promise<FairLaunchClaimer> {
     const factory = new FairLaunchClaimer__factory(admin);
@@ -36,6 +40,7 @@ describe('FairLaunchClaimer', () => {
 
     return claimerContract;
   }
+
 
   async function setupAuction() {
     claimer = await buildContract();
@@ -56,12 +61,6 @@ describe('FairLaunchClaimer', () => {
 
     await claimer.connect(admin).setParcel(fakeParcel.address)
     await claimer.connect(admin).setLicense(fakeLicense.address)
-
-    return {
-      claimer,
-      fakeParcel,
-      fakeLicense
-    }
   }
 
   beforeEach(async() => {
@@ -70,84 +69,72 @@ describe('FairLaunchClaimer', () => {
     [admin, user] = accounts;
   })
 
-  describe('#claim', () => {
-    let contract: any;
-    let parcel: FakeContract<GeoWebParcel>;
-    let license: FakeContract<ERC721License>;
-    let userArg: string;
-    let initialContributionRate: BigNumber
-    let claimData: any;
-
+  describe('#claim', async() => {
     beforeEach(async() =>  {
-      const { claimer, fakeParcel, fakeLicense } = await setupAuction()
-
-      contract = claimer;
-      parcel = fakeParcel;
-      license = fakeLicense
+      console.log('claim')
+      await setupAuction();
 
       claimData = ethers.utils.defaultAbiCoder.encode(
         ["uint64", "uint256[]"],
         [BigNumber.from(1), [BigNumber.from(1)]]
       );
+
       userArg = await user.getAddress();
       initialContributionRate = BigNumber.from(9);
     })
 
     it('requires the CLAIMER role', async() => {
-      await expect(contract.connect(user)
+      await expect(claimer.connect(user)
         .claim(userArg, initialContributionRate, claimData))
         .to.be.rejectedWith(/AccessControl/)
 
-      const CLAIM_ROLE = await contract.CLAIM_ROLE();
-      await contract.connect(admin).grantRole(CLAIM_ROLE, await user.getAddress());
-      await expect(contract.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.fulfilled;
+      const CLAIM_ROLE = await claimer.CLAIM_ROLE();
+      await claimer.connect(admin).grantRole(CLAIM_ROLE, await user.getAddress());
+      await expect(claimer.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.fulfilled;
     })
 
-    describe('success', () => {
-      let licenseId: number;
-
+    describe('success', async() => {
       beforeEach(async () => {
-        const CLAIM_ROLE = await contract.CLAIM_ROLE();
-
-        await contract.connect(admin).grantRole(CLAIM_ROLE, await user.getAddress());
+        const CLAIM_ROLE = await claimer.CLAIM_ROLE();
+        await claimer.connect(admin).grantRole(CLAIM_ROLE, await user.getAddress());
 
         licenseId = BigNumber.from(1).toNumber();
-        parcel.build.returns(licenseId);
+        fakeParcel.build.returns(licenseId);
       })
 
       it('returns the licenseId', async () => {
-        const tx = await contract.connect(user).claim(userArg, initialContributionRate, claimData)
+        const tx = await claimer.connect(user).claim(userArg, initialContributionRate, claimData)
         const receipt = await tx.wait();
         const retVal = receipt.events![0].topics[1];
         expect(Number(retVal)).to.be.equal(licenseId);
       })
 
       it('calls license.safeMint', async () => {
-        await contract.connect(user).claim(userArg, initialContributionRate, claimData)
-        expect(license.safeMint).to.have.been.calledWith(userArg, licenseId);
+        await claimer.connect(user).claim(userArg, initialContributionRate, claimData)
+        expect(fakeLicense.safeMint).to.have.been.calledWith(userArg, licenseId);
       })
 
       it('user must claim when auction has started', async() => {
-        await contract.connect(admin).setAuctionStart(getUnixTime(endOfToday()))
-        await contract.connect(admin).setAuctionEnd(getUnixTime(addDays(startOfToday(), 2)))
-        await expect(contract.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.rejectedWith(/auction has not started yet/)
+        await claimer.connect(admin).setAuctionStart(getUnixTime(endOfToday()))
+        await claimer.connect(admin).setAuctionEnd(getUnixTime(addDays(startOfToday(), 2)))
+        await expect(claimer.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.rejectedWith(/auction has not started yet/)
 
-        await contract.connect(admin).setAuctionStart(getUnixTime(startOfToday()))
-        await expect(contract.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.fulfilled
+        await claimer.connect(admin).setAuctionStart(getUnixTime(startOfToday()))
+        await expect(claimer.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.fulfilled
       })
 
       it('user must claim when auction has started', async() => {
-        await contract.connect(admin).setAuctionStart(getUnixTime(startOfToday()))
-        await contract.connect(admin).setAuctionEnd(getUnixTime(startOfToday()))
-        await expect(contract.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.rejectedWith(/geneisis is complete/)
+        await claimer.connect(admin).setAuctionStart(getUnixTime(startOfToday()))
+        await claimer.connect(admin).setAuctionEnd(getUnixTime(startOfToday()))
+        await expect(claimer.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.rejectedWith(/geneisis is complete/)
 
-        await contract.connect(admin).setAuctionEnd(getUnixTime(addDays(startOfToday(), 2)))
-        await expect(contract.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.fulfilled
+        await claimer.connect(admin).setAuctionEnd(getUnixTime(addDays(startOfToday(), 2)))
+        await expect(claimer.connect(user).claim(userArg, initialContributionRate, claimData)).to.be.fulfilled
       })
     })
   })
 
-  describe('#claimPrice', () => {
+  describe('#claimPrice', async() => {
     let startBid: BigNumber;
     let endingBid: BigNumber;
     let prevPrice: BigNumber;
@@ -209,7 +196,7 @@ describe('FairLaunchClaimer', () => {
     })
   })
 
-  describe('#pause()', () => {
+  describe('#pause()', async() => {
     it('should pause the contract', async () => {
       const claimer = await buildContract();
       expect(await claimer.paused()).to.equal(false)
@@ -224,7 +211,7 @@ describe('FairLaunchClaimer', () => {
     })
   })
 
-  describe('#unpause()', () => {
+  describe('#unpause()', async() => {
     beforeEach(async() =>  {
       claimer = await buildContract();
       await claimer.connect(admin).pause();
@@ -243,7 +230,7 @@ describe('FairLaunchClaimer', () => {
     })
   })
 
-  describe('setters', () => {
+  describe('setters', async() => {
     beforeEach(async() => {
       claimer = await buildContract();
     })
@@ -266,7 +253,7 @@ describe('FairLaunchClaimer', () => {
       })
     })
 
-    describe('#setSuperApp', () => {
+    describe('#setSuperApp', async() => {
       let fakeAuctionApp: FakeContract<AuctionSuperApp>;
 
       beforeEach(async() => {
@@ -286,7 +273,7 @@ describe('FairLaunchClaimer', () => {
       })
     })
 
-    describe('#setLicense', () => {
+    describe('#setLicense', async() => {
       beforeEach(async() => {
         fakeLicense = await smock.fake('ERC721License');
         await fakeLicense.deployed();
@@ -304,7 +291,7 @@ describe('FairLaunchClaimer', () => {
       })
     })
 
-    describe('#setStartingBid', () => {
+    describe('#setStartingBid', async() => {
       it('sets the StartingBid', async() => {
         await claimer.connect(admin).setStartingBid(BigNumber.from(10));
         expect(await claimer.startingBid()).to.equal(BigNumber.from(10));
@@ -315,7 +302,7 @@ describe('FairLaunchClaimer', () => {
       })
     })
 
-    describe('#setEndingBid', () => {
+    describe('#setEndingBid', async() => {
       it('sets the EndingBid', async() => {
         await claimer.connect(admin).setEndingBid(BigNumber.from(10));
         expect(await claimer.endingBid()).to.equal(BigNumber.from(10));
@@ -326,7 +313,7 @@ describe('FairLaunchClaimer', () => {
       })
     })
 
-    describe('#setAuctionStart', () => {
+    describe('#setAuctionStart', async() => {
       it('sets the AuctionStart', async() => {
         await claimer.connect(admin).setAuctionStart(1512918335);
         expect(await claimer.auctionStart()).to.equal(1512918335);
@@ -337,7 +324,7 @@ describe('FairLaunchClaimer', () => {
       })
     })
 
-    describe('#setAuctionEnd', () => {
+    describe('#setAuctionEnd', async() => {
       it('sets the AuctionEnd', async() => {
         await claimer.connect(admin).setAuctionStart(1512928335);
         expect(await claimer.auctionStart()).to.equal(1512928335);

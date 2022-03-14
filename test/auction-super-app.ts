@@ -421,6 +421,10 @@ describe("AuctionSuperApp", async function () {
     expect(events, `App was jailed: ${events[0]?.args?.reason}`).to.be.empty;
   }
 
+  after(async() => {
+    await network.provider.send("hardhat_reset");
+  })
+
   before(async () => {
     accounts = await ethers.getSigners();
 
