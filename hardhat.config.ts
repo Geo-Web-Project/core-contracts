@@ -21,6 +21,7 @@ import "solidity-coverage";
 import "./tasks/GeoWebParcel";
 import "./tasks/ERC721License";
 import "./tasks/AuctionSuperApp";
+import "./tasks/FairLaunchAuction";
 import "./tasks/estimate_minting_gas";
 import {
   AuctionSuperApp__factory,
@@ -39,6 +40,7 @@ task(
   console.log("Deploying all contracts...");
   const parcelAddress = await hre.run("deploy:parcel");
   const licenseAddress = await hre.run("deploy:license");
+  const fairClaimerAddress = await hre.run("deploy:fair-claimer");
 
   const [admin] = await hre.ethers.getSigners();
 
@@ -112,6 +114,12 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     types.string
   )
   .addOptionalParam(
+    "claimerAddress",
+    "Address of FairAuctionClaimer",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
     "superAppAddress",
     "Address of AuctionSuperApp",
     undefined,
@@ -123,10 +131,12 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         licenseAddress,
         superAppAddress,
         parcelAddress,
+        claimerAddress,
       }: {
         licenseAddress: string;
         superAppAddress: string;
         parcelAddress: string;
+        claimerAddress: string;
       },
       hre
     ) => {

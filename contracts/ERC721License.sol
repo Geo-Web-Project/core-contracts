@@ -69,6 +69,12 @@ contract ERC721License is ERC721, Pausable, AccessControl {
         address to,
         uint256 tokenId
     ) internal override whenNotPaused {
+        if (from != address(0) && to != address(0)) {
+            require(
+                hasRole(OPERATOR_ROLE, msg.sender),
+                "Only OPERATOR_ROLE can transfer"
+            );
+        }
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
