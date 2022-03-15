@@ -1,21 +1,18 @@
 import { task } from "hardhat/config";
-import {
-  GeoWebParcel__factory,
-  GeoWebCoordinate__factory,
-  GeoWebCoordinatePath__factory,
-} from "../typechain-types";
 
 task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
   async (args, hre) => {
-    const [admin] = await hre.ethers.getSigners();
-
-    const GeoWebCoordinate = new GeoWebCoordinate__factory(admin);
+    const GeoWebCoordinate = await hre.ethers.getContractFactory(
+      "GeoWebCoordinate"
+    );
     const geoWebCoordinate = await GeoWebCoordinate.deploy();
     await geoWebCoordinate.deployed();
 
     console.log("GeoWebCoordinate deployed to:", geoWebCoordinate.address);
 
-    const GeoWebCoordinatePath = new GeoWebCoordinatePath__factory(admin);
+    const GeoWebCoordinatePath = await hre.ethers.getContractFactory(
+      "GeoWebCoordinatePath"
+    );
     const geoWebCoordinatePath = await GeoWebCoordinatePath.deploy();
     await geoWebCoordinatePath.deployed();
 
@@ -24,7 +21,7 @@ task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
       geoWebCoordinatePath.address
     );
 
-    const GeoWebParcel = new GeoWebParcel__factory(admin);
+    const GeoWebParcel = await hre.ethers.getContractFactory("GeoWebParcel");
     const geoWebParcel = await GeoWebParcel.deploy();
     await geoWebParcel.deployed();
 

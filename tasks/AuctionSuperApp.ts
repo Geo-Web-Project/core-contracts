@@ -1,5 +1,4 @@
 import { task, types } from "hardhat/config";
-import { AuctionSuperApp__factory } from "../typechain-types";
 
 function perYearToPerSecondRate(annualRate: number) {
   return {
@@ -50,13 +49,11 @@ task("deploy:super-app", "Deploy the AuctionSuperApp")
       },
       hre
     ) => {
-      const [admin] = await hre.ethers.getSigners();
-
       const perSecondFee = perYearToPerSecondRate(annualFeeRate);
       const penaltyNumerator = penaltyRate * 100;
       const penaltyDenominator = 100;
 
-      const factory = new AuctionSuperApp__factory(admin);
+      const factory = await hre.ethers.getContractFactory("AuctionSuperApp");
       const superApp = await factory.deploy(
         host,
         cfa,

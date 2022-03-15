@@ -23,12 +23,6 @@ import "./tasks/ERC721License";
 import "./tasks/AuctionSuperApp";
 import "./tasks/FairLaunchAuction";
 import "./tasks/estimate_minting_gas";
-import {
-  AuctionSuperApp__factory,
-  ERC721License__factory,
-  GeoWebParcel__factory,
-  MockClaimer__factory,
-} from "./typechain-types";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
@@ -45,7 +39,7 @@ task(
   const [admin] = await hre.ethers.getSigners();
 
   // TODO: Replace claimer and reclaimer
-  const mockClaimerFactory = new MockClaimer__factory(admin);
+  const mockClaimerFactory = await hre.ethers.getContractFactory("MockClaimer");
   const mockClaimer = await mockClaimerFactory.deploy();
   await mockClaimer.deployed();
 
@@ -140,21 +134,19 @@ task("roles:set-default", "Set default roles on all deployed contracts")
       },
       hre
     ) => {
-      const [admin] = await hre.ethers.getSigners();
-
-      const licenseContract = ERC721License__factory.connect(
-        licenseAddress,
-        admin
+      const licenseContract = await hre.ethers.getContractAt(
+        "ERC721License",
+        licenseAddress
       );
 
-      const parcelContract = GeoWebParcel__factory.connect(
-        parcelAddress,
-        admin
+      const parcelContract = await hre.ethers.getContractAt(
+        "GeoWebParcel",
+        parcelAddress
       );
 
-      const superAppContract = AuctionSuperApp__factory.connect(
-        superAppAddress,
-        admin
+      const superAppContract = await hre.ethers.getContractAt(
+        "AuctionSuperApp",
+        superAppAddress
       );
 
       // // ERC721License roles
