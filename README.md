@@ -20,7 +20,7 @@ The `deploy` tasks will deploy all core contracts with default parameters and ro
 
 ## Architecture
 
-![](https://mermaid.ink/img/pako:eNqlU8tqwzAQ_BWhUwtJoL0UdCi4iQsG54GdHAqGokibRiDLRo9DCPn3yq7S2HVDDrl4zexoZrSSjphVHDDBTFJjZoJ-aVoiVCjUAmhFNQOJjoUqLNo6IfnDI3rbJOnsM1umcQtzMFZXB9-Yxfk6W36EFjr9ysTZ9OX5KRUMlIGgZugO5kJZv26eLNYXva3TqnXJFhewps6AR1fRJo8vsFP_NTrOkWNWVCp3NeioroN3MpVUlKAbUlP7oIYu3M8uf-pdmd6p0Cl1iu3PjscbTuEY6ra0SJvQW0zTKJnfMSb__TuiyeR1GPEKrxfZc4Zba1irkPtK-7bIeFydZ0B61-8Kt6dIuvdrsIuGPhQhncHiEfZQSQX378SflH8e2O6hhAIT_8thR520BS7UyVNdzamFmAtbaUx2VBoYYepslR8Uw8RqB2dSeG6BdfoGN0Yzzw)
+![](https://mermaid.ink/img/pako:eNqlU1FrwjAQ_ishTxuosL0M8jDotINCtaXVh0FhnM05A21a0uRBxP--tIvTWsUHX3rlu---73KX7GlecaSM5gU0zUzAj4KSkEySDiAxqBwLss9kpsnaiII_PZOPVRDOvpMo9DuYY6NVtbOJmZ8uk-jLpcjhX8ZPpm-vL6HIUTbo1BrY4FxIbevmwWJ50lsbJTuXZHECazANWjT2Vql_go28ljhz9kyuRSVTU6Py6tp5B9MCRImqJbWxDyo8h_u9F3_xoZ4-QagQjMy3R8f9HSe3hroLHdJ1aC2moRfMHxiT_V6OaDJ5H7Z4g9dr2XKGR2tZsev7Rvq-yHhcHWfAetfvBrenyM7v1-AULX0ownqDvVrU3xYjUewn3jJKuho6olamBMHt27LbtU-K6i2WmFFmfzluwBQ6o5k8WKqpOWj0udCVomwDRYMjCkZX6U7mlGll8EhyT9SxDr8HSURz)
 
 <details>
   <summary>Show source code</summary>
@@ -60,4 +60,5 @@ classDiagram
  FairLaunchClaimer --o Parcel : BUILD_ROLE
  FairLaunchClaimer --o ERC721License: MINT_ROLE
  AuctionSuperApp --o FairLaunchClaimer : CLAIM_ROLE
+ AuctionSuperApp --o ERC721License : OPERATOR_ROLE
 ````
