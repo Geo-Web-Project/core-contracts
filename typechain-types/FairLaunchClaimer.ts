@@ -23,7 +23,6 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     "CLAIM_ROLE()": FunctionFragment;
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
     "PAUSE_ROLE()": FunctionFragment;
-    "auctionApp()": FunctionFragment;
     "auctionEnd()": FunctionFragment;
     "auctionStart()": FunctionFragment;
     "claim(address,int96,bytes)": FunctionFragment;
@@ -44,7 +43,6 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     "setLicense(address)": FunctionFragment;
     "setParcel(address)": FunctionFragment;
     "setStartingBid(uint256)": FunctionFragment;
-    "setSuperApp(address)": FunctionFragment;
     "startingBid()": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "unpause()": FunctionFragment;
@@ -60,10 +58,6 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "PAUSE_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "auctionApp",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -125,7 +119,6 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     functionFragment: "setStartingBid",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "setSuperApp", values: [string]): string;
   encodeFunctionData(
     functionFragment: "startingBid",
     values?: undefined
@@ -142,7 +135,6 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "PAUSE_ROLE", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "auctionApp", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "auctionEnd", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "auctionStart",
@@ -185,10 +177,6 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setSuperApp",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "startingBid",
     data: BytesLike
   ): Result;
@@ -199,7 +187,7 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
 
   events: {
-    "ParcelPurchased(uint256,address)": EventFragment;
+    "ParcelClaimed(uint256,address)": EventFragment;
     "Paused(address)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
@@ -207,7 +195,7 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     "Unpaused(address)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "ParcelPurchased"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "ParcelClaimed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
@@ -215,12 +203,12 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
 }
 
-export type ParcelPurchasedEvent = TypedEvent<
+export type ParcelClaimedEvent = TypedEvent<
   [BigNumber, string],
   { parcelId: BigNumber; to: string }
 >;
 
-export type ParcelPurchasedEventFilter = TypedEventFilter<ParcelPurchasedEvent>;
+export type ParcelClaimedEventFilter = TypedEventFilter<ParcelClaimedEvent>;
 
 export type PausedEvent = TypedEvent<[string], { account: string }>;
 
@@ -285,8 +273,6 @@ export interface FairLaunchClaimer extends BaseContract {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
     PAUSE_ROLE(overrides?: CallOverrides): Promise<[string]>;
-
-    auctionApp(overrides?: CallOverrides): Promise<[string]>;
 
     auctionEnd(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -374,11 +360,6 @@ export interface FairLaunchClaimer extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setSuperApp(
-      _superAppAddress: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     startingBid(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     supportsInterface(
@@ -396,8 +377,6 @@ export interface FairLaunchClaimer extends BaseContract {
   DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
   PAUSE_ROLE(overrides?: CallOverrides): Promise<string>;
-
-  auctionApp(overrides?: CallOverrides): Promise<string>;
 
   auctionEnd(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -485,11 +464,6 @@ export interface FairLaunchClaimer extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setSuperApp(
-    _superAppAddress: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   startingBid(overrides?: CallOverrides): Promise<BigNumber>;
 
   supportsInterface(
@@ -507,8 +481,6 @@ export interface FairLaunchClaimer extends BaseContract {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
     PAUSE_ROLE(overrides?: CallOverrides): Promise<string>;
-
-    auctionApp(overrides?: CallOverrides): Promise<string>;
 
     auctionEnd(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -591,11 +563,6 @@ export interface FairLaunchClaimer extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setSuperApp(
-      _superAppAddress: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     startingBid(overrides?: CallOverrides): Promise<BigNumber>;
 
     supportsInterface(
@@ -607,14 +574,14 @@ export interface FairLaunchClaimer extends BaseContract {
   };
 
   filters: {
-    "ParcelPurchased(uint256,address)"(
+    "ParcelClaimed(uint256,address)"(
       parcelId?: BigNumberish | null,
       to?: string | null
-    ): ParcelPurchasedEventFilter;
-    ParcelPurchased(
+    ): ParcelClaimedEventFilter;
+    ParcelClaimed(
       parcelId?: BigNumberish | null,
       to?: string | null
-    ): ParcelPurchasedEventFilter;
+    ): ParcelClaimedEventFilter;
 
     "Paused(address)"(account?: null): PausedEventFilter;
     Paused(account?: null): PausedEventFilter;
@@ -662,8 +629,6 @@ export interface FairLaunchClaimer extends BaseContract {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     PAUSE_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    auctionApp(overrides?: CallOverrides): Promise<BigNumber>;
 
     auctionEnd(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -754,11 +719,6 @@ export interface FairLaunchClaimer extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setSuperApp(
-      _superAppAddress: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     startingBid(overrides?: CallOverrides): Promise<BigNumber>;
 
     supportsInterface(
@@ -779,8 +739,6 @@ export interface FairLaunchClaimer extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     PAUSE_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    auctionApp(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     auctionEnd(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -868,11 +826,6 @@ export interface FairLaunchClaimer extends BaseContract {
 
     setStartingBid(
       _startingBid: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setSuperApp(
-      _superAppAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -71,7 +71,6 @@ describe('FairLaunchClaimer', async function () {
 
   describe('#claim', async() => {
     beforeEach(async() =>  {
-      console.log('claim')
       await setupAuction();
 
       claimData = ethers.utils.defaultAbiCoder.encode(
@@ -141,7 +140,6 @@ describe('FairLaunchClaimer', async function () {
     let nextPrice; BigNumber;
     let today: number;
     let daysFromNow: number;
-
     const fakeAddress = "0x83df3eDa28Ec566740d47F44715C646304C9a113";
 
     beforeEach(async() => {
@@ -249,26 +247,6 @@ describe('FairLaunchClaimer', async function () {
       it('rejects anyone with an ADMIN role', async() => {
         await expect(
           claimer.connect(user).setParcel(fakeParcel.address)
-        ).to.be.rejectedWith(/AccessControl/)
-      })
-    })
-
-    describe('#setSuperApp', async() => {
-      let fakeAuctionApp: FakeContract<AuctionSuperApp>;
-
-      beforeEach(async() => {
-        fakeAuctionApp = await smock.fake('AuctionSuperApp');
-        await fakeAuctionApp.deployed();
-      })
-
-      it('sets the auctionApp', async() => {
-        await claimer.connect(admin).setSuperApp(fakeAuctionApp.address);
-        expect(await claimer.auctionApp()).to.equal(fakeAuctionApp.address);
-      })
-
-      it('rejects anyone with an ADMIN role', async() => {
-        await expect(
-          claimer.connect(user).setSuperApp(fakeAuctionApp.address)
         ).to.be.rejectedWith(/AccessControl/)
       })
     })

@@ -30,17 +30,15 @@ task("config:fair-claimer")
   .addOptionalParam("auctionEnd", "END time of the Dutch auction (seconds)", undefined, types.int)
   .addOptionalParam("parcelAddress", "Address of GeoWebParcel contract", undefined, types.string)
   .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
-  .addOptionalParam("superAppAddress", "Address of SuperFluid Super App", undefined, types.string)
   .setAction(
     async (
-      { contractAddress, auctionStart, auctionEnd, parcelAddress, licenseAddress, superAppAddress }: { contractAddress: string, auctionStart?: number, auctionEnd?: number, parcelAddress?: string, licenseAddress?: string, superAppAddress?: string },
+      { contractAddress, auctionStart, auctionEnd, parcelAddress, licenseAddress }: { contractAddress: string, auctionStart?: number, auctionEnd?: number, parcelAddress?: string, licenseAddress?: string },
       hre
     ) => {
       if (
         !contractAddress &&
         // !auctionStart &&
         // !auctionEnd &&
-        // !superAppAddress &&
         !licenseAddress &&
         !parcelAddress
       ) {
@@ -71,12 +69,6 @@ task("config:fair-claimer")
       const endBid = ethers.utils.parseEther("0");
       const resEndBid = await fairClaimer.setEndingBid(endBid);
       await resEndBid.wait();
-
-      if (superAppAddress) {
-        const res = await fairClaimer.setSuperApp(superAppAddress);
-        await res.wait();
-        console.log("Successfully set FairLaunchClaimer SuperFluid Super App.");
-      }
 
       if (parcelAddress) {
         const res = await fairClaimer.setParcel(parcelAddress);

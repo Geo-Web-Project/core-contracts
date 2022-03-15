@@ -20,7 +20,7 @@
         "type": "address"
       }
     ],
-    "name": "ParcelPurchased",
+    "name": "ParcelClaimed",
     "type": "event"
   },
   {
@@ -158,19 +158,6 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "auctionApp",
-    "outputs": [
-      {
-        "internalType": "contract AuctionSuperApp",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -490,19 +477,6 @@
       }
     ],
     "name": "setStartingBid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_superAppAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setSuperApp",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

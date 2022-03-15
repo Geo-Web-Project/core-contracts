@@ -18,9 +18,6 @@ contract FairLaunchClaimer is Pausable, AccessControl, IClaimer {
     /// @notice Parcel
     GeoWebParcel public parcel;
 
-    /// @notice Auction
-    AuctionSuperApp public auctionApp;
-
     /// @notice start time of the genesis land parcel auction.
     uint256 public auctionStart;
     /// @notice when the required bid amount reaches its minimum value.
@@ -31,7 +28,7 @@ contract FairLaunchClaimer is Pausable, AccessControl, IClaimer {
     uint256 public endingBid;
 
     /// @notice Emitted when a parcel is purchased
-    event ParcelPurchased(uint256 indexed parcelId, address indexed to);
+    event ParcelClaimed(uint256 indexed parcelId, address indexed to);
 
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -61,7 +58,7 @@ contract FairLaunchClaimer is Pausable, AccessControl, IClaimer {
         /// the licenseId is the same as the parcelId returned from parcel.build()
         uint256 licenseId = parcel.build(baseCoordinate, path);
         license.safeMint(user, licenseId);
-        emit ParcelPurchased(licenseId, user);
+        emit ParcelClaimed(licenseId, user);
 
         return licenseId;
     }
@@ -105,15 +102,6 @@ contract FairLaunchClaimer is Pausable, AccessControl, IClaimer {
      */
     function unpause() external onlyRole(PAUSE_ROLE) {
         _unpause();
-    }
-
-    /**
-    * @notice Admin can update the auctionApp.
-    * @param _superAppAddress The parent SuperFluid Super App address
-    * @custom:requires DEFAULT_ADMIN_ROLE
-    */
-    function setSuperApp(address _superAppAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        auctionApp = AuctionSuperApp(_superAppAddress);
     }
 
     /**
