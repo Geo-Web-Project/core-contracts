@@ -38,7 +38,7 @@ task(
 
   const [admin] = await hre.ethers.getSigners();
 
-  // TODO: Replace claimer and reclaimer
+  // TODO: Replace reclaimer
   const mockClaimerFactory = await hre.ethers.getContractFactory("MockClaimer");
   const mockClaimer = await mockClaimerFactory.deploy();
   await mockClaimer.deployed();
@@ -71,7 +71,7 @@ task(
     acceptedToken: sf.tokens.ETHx.address,
     beneficiary: admin.address,
     licenseAddress: licenseAddress,
-    claimerAddress: mockClaimer.address,
+    claimerAddress: fairClaimerAddress,
     reclaimerAddress: mockClaimer.address,
     annualFeeRate: 0.1,
     penaltyRate: 0.1,
@@ -82,6 +82,12 @@ task(
 
   console.log("\nSetting default configuration...");
 
+  await hre.run("config:fair-claimer", {
+    contractAddress: fairClaimerAddress,
+    parcelAddress,
+    licenseAddress,
+  });
+
   console.log("Default configuration set.");
 
   console.log("\nSetting roles...");
@@ -90,6 +96,7 @@ task(
     licenseAddress: licenseAddress,
     parcelAddress: parcelAddress,
     superAppAddress: superAppAddress,
+    claimerAddress: fairClaimerAddress,
   });
   console.log("Default roles set.");
 });
@@ -109,7 +116,7 @@ task("roles:set-default", "Set default roles on all deployed contracts")
   )
   .addOptionalParam(
     "claimerAddress",
-    "Address of FairAuctionClaimer",
+    "Address of FairLaunchClaimer",
     undefined,
     types.string
   )
@@ -149,25 +156,37 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         superAppAddress
       );
 
-      // // ERC721License roles
-      // const res2 = await licenseContract.grantRole(
-      //   await licenseContract.MINT_ROLE(),
-      //   claimerAddress ?? claimer!.address
-      // );
-      // await res2.wait();
+      const claimerContract = await hre.ethers.getContractAt(
+        "FairLaunchClaimer",
+        claimerAddress
+      );
 
-      const res3 = await licenseContract.grantRole(
+      // ERC721License roles
+      let res = await licenseContract.grantRole(
+        await licenseContract.MINT_ROLE(),
+        claimerContract.address
+      );
+      await res.wait();
+
+      res = await licenseContract.grantRole(
         await licenseContract.OPERATOR_ROLE(),
         superAppContract.address
       );
-      await res3.wait();
+      await res.wait();
 
-      // // GeoWebParcel roles
-      // const res6 = await parcelContract.grantRole(
-      //   await parcelContract.BUILD_ROLE(),
-      //   claimerAddress ?? claimer!.address
-      // );
-      // await res6.wait();
+      // GeoWebParcel roles
+      res = await parcelContract.grantRole(
+        await parcelContract.BUILD_ROLE(),
+        claimerContract.address
+      );
+      await res.wait();
+
+      // FairLaunchClaimer roles
+      res = await claimerContract.grantRole(
+        await claimerContract.CLAIM_ROLE(),
+        superAppContract.address
+      );
+      await res.wait();
     }
   );
 
