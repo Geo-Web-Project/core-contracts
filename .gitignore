@@ -26,14 +26,19 @@ typechain-types/factories/*
 !typechain-types/factories/GeoWebCoordinate__factory.ts
 !typechain-types/factories/GeoWebParcel__factory.ts
 !typechain-types/factories/AuctionSuperApp__factory.ts
+!typechain-types/factories/FairLaunchClaimer__factory.ts
 
 # tests-typechain
 !typechain-types/AuctionSuperApp.ts
 !typechain-types/ISuperfluid.ts
 !typechain-types/MockClaimer.ts
+!typechain-types/FairLaunchClaimer.ts
+!typechain-types/ERC721License.ts
+!typechain-types/GeoWebParcel.ts
 
 # solidity-coverage
 coverage/
+
 # abi exporter
 abi/@openzeppelin
 abi/contracts/mock

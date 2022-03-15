@@ -21,6 +21,7 @@ import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/GeoWebParcel";
 import "./tasks/ERC721License";
+import "./tasks/FairLaunchAuction";
 import "./tasks/estimate_minting_gas";
 
 task(
@@ -30,6 +31,7 @@ task(
   console.log("Deploying all contracts...");
   const parcelAddress = await hre.run("deploy:parcel");
   const licenseAddress = await hre.run("deploy:license");
+  const fairClaimerAddress = await hre.run("deploy:fair-claimer")
 
   const accounts = await hre.ethers.getSigners();
 
@@ -78,16 +80,24 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     undefined,
     types.string
   )
+  .addOptionalParam(
+    "claimerAddress",
+    "Address of FairAuctionClaimer",
+    undefined,
+    types.string
+  )
   .setAction(
     async (
       {
         licenseAddress,
         collectorAddress,
         parcelAddress,
+        claimerAddress,
       }: {
         licenseAddress: string;
         collectorAddress: string;
         parcelAddress: string;
+        claimerAddress: string;
       },
       hre
     ) => {
@@ -196,9 +206,9 @@ module.exports = {
       },
       outputSelection: {
         "*": {
-          "*": ["storageLayout"],
-        },
-      },
+          "*": ["storageLayout"]
+        }
+      }
     },
   },
   ovm: {
