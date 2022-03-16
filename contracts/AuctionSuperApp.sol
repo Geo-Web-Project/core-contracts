@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
+    uint256 private constant SECONDS_IN_YEAR = 31540000;
 
     ISuperfluid private host; // host
     IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
@@ -762,6 +763,15 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Set currentOwnerBid
+        require(
+            _checkForSalePrice(
+                forSalePrice,
+                initialContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "AuctionSuperApp: Incorrect for sale price"
+        );
         Bid storage bid = currentOwnerBid[licenseId];
         bid.timestamp = block.timestamp;
         bid.bidder = user;
@@ -1058,6 +1068,19 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             depositAmount
         );
         require(success, "AuctionSuperApp: Bid deposit failed");
+    }
+
+    function _checkForSalePrice(
+        uint256 forSalePrice,
+        int96 contributionRate,
+        uint256 _perSecondFeeNumerator,
+        uint256 _perSecondFeeDenominator
+    ) private pure returns (bool) {
+        uint256 annualFee = (forSalePrice * _perSecondFeeNumerator) /
+            _perSecondFeeDenominator;
+        uint256 calculatedContributionRate = annualFee / SECONDS_IN_YEAR;
+
+        return calculatedContributionRate == uint96(contributionRate);
     }
 
     /**************************************************************************
