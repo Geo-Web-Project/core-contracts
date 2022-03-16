@@ -2,7 +2,7 @@ export { default as ERC721LicenseABI } from "../abi/contracts/ERC721License.sol/
 export { default as GeoWebCoordinateABI } from "../abi/contracts/GeoWebCoordinate.sol/GeoWebCoordinate.json";
 export { default as GeoWebParcelABI } from "../abi/contracts/GeoWebParcel.sol/GeoWebParcel.json";
 export { default as AuctionSuperAppABI } from "../abi/contracts/AuctionSuperApp.sol/AuctionSuperApp.json";
-export { default as FairLaunchClaimeryarnABI } from "../abi/contracts/FairLaunchClaimer.sol/FairLaunchClaimer.json";
+export { default as FairLaunchClaimerABI } from "../abi/contracts/FairLaunchClaimer.sol/FairLaunchClaimer.json";
 
 export { ERC721License__factory as ERC721LicenseFactory } from "../typechain-types/factories/ERC721License__factory";
 export { GeoWebCoordinate__factory as GeoWebCoordinateFactory } from "../typechain-types/factories/GeoWebCoordinate__factory";
