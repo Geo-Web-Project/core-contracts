@@ -495,12 +495,13 @@ export interface AuctionSuperApp extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
         timestamp: BigNumber;
         bidder: string;
         contributionRate: BigNumber;
         perSecondFeeNumerator: BigNumber;
         perSecondFeeDenominator: BigNumber;
+        forSalePrice: BigNumber;
       }
     >;
 
@@ -536,12 +537,13 @@ export interface AuctionSuperApp extends BaseContract {
       arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
         timestamp: BigNumber;
         bidder: string;
         contributionRate: BigNumber;
         perSecondFeeNumerator: BigNumber;
         perSecondFeeDenominator: BigNumber;
+        forSalePrice: BigNumber;
       }
     >;
 
@@ -549,12 +551,13 @@ export interface AuctionSuperApp extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
         timestamp: BigNumber;
         bidder: string;
         contributionRate: BigNumber;
         perSecondFeeNumerator: BigNumber;
         perSecondFeeDenominator: BigNumber;
+        forSalePrice: BigNumber;
       }
     >;
 
@@ -724,12 +727,13 @@ export interface AuctionSuperApp extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+    [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
       timestamp: BigNumber;
       bidder: string;
       contributionRate: BigNumber;
       perSecondFeeNumerator: BigNumber;
       perSecondFeeDenominator: BigNumber;
+      forSalePrice: BigNumber;
     }
   >;
 
@@ -765,12 +769,13 @@ export interface AuctionSuperApp extends BaseContract {
     arg1: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+    [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
       timestamp: BigNumber;
       bidder: string;
       contributionRate: BigNumber;
       perSecondFeeNumerator: BigNumber;
       perSecondFeeDenominator: BigNumber;
+      forSalePrice: BigNumber;
     }
   >;
 
@@ -778,12 +783,13 @@ export interface AuctionSuperApp extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+    [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
       timestamp: BigNumber;
       bidder: string;
       contributionRate: BigNumber;
       perSecondFeeNumerator: BigNumber;
       perSecondFeeDenominator: BigNumber;
+      forSalePrice: BigNumber;
     }
   >;
 
@@ -953,12 +959,13 @@ export interface AuctionSuperApp extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
         timestamp: BigNumber;
         bidder: string;
         contributionRate: BigNumber;
         perSecondFeeNumerator: BigNumber;
         perSecondFeeDenominator: BigNumber;
+        forSalePrice: BigNumber;
       }
     >;
 
@@ -994,12 +1001,13 @@ export interface AuctionSuperApp extends BaseContract {
       arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
         timestamp: BigNumber;
         bidder: string;
         contributionRate: BigNumber;
         perSecondFeeNumerator: BigNumber;
         perSecondFeeDenominator: BigNumber;
+        forSalePrice: BigNumber;
       }
     >;
 
@@ -1007,12 +1015,13 @@ export interface AuctionSuperApp extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, string, BigNumber, BigNumber, BigNumber, BigNumber] & {
         timestamp: BigNumber;
         bidder: string;
         contributionRate: BigNumber;
         perSecondFeeNumerator: BigNumber;
         perSecondFeeDenominator: BigNumber;
+        forSalePrice: BigNumber;
       }
     >;
 

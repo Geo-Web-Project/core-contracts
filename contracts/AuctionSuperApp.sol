@@ -62,6 +62,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 contributionRate;
         uint256 perSecondFeeNumerator;
         uint256 perSecondFeeDenominator;
+        uint256 forSalePrice;
     }
 
     constructor(
@@ -725,8 +726,13 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address user,
         int96 initialContributionRate,
-        bytes memory claimData
+        bytes memory actionData
     ) private returns (bytes memory newCtx) {
+        (uint256 forSalePrice, bytes memory claimData) = abi.decode(
+            actionData,
+            (uint256, bytes)
+        );
+
         // Get claim price
         uint256 claimPrice = claimer.claimPrice(
             user,
@@ -762,6 +768,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.contributionRate = initialContributionRate;
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = forSalePrice;
     }
 
     function _reclaim(
