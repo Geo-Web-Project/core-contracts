@@ -1137,6 +1137,52 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow("100");
     });
 
+    it("should claim on flow create with rounded for sale price", async () => {
+      const contributionRate = BigNumber.from(3170979198);
+      const forSalePrice = ethers.utils.parseEther("1.0");
+
+      const approveOp = ethx.approve({
+        receiver: superApp.address,
+        amount: "1000",
+      });
+
+      const claimData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
+      const actionData = ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "bytes"],
+        [forSalePrice, claimData]
+      );
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [Action.CLAIM, actionData]
+      );
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: contributionRate.toString(),
+        superToken: ethx.address,
+        userData: userData,
+      });
+
+      const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+      const txn = await batchCall.exec(user);
+
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user.address, admin.address, 100);
+
+      const receipt = await txn.wait();
+
+      await checkJailed(receipt);
+      await checkClaimCallCount(1);
+      await checkClaimLastContribution(
+        user.address,
+        contributionRate.toNumber()
+      );
+      await checkAppNetFlow();
+      await checkUserToAppFlow(contributionRate.toString());
+      await checkAppToBeneficiaryFlow(contributionRate.toString());
+    });
+
     it("should claim on flow increase", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
