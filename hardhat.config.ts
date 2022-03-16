@@ -15,14 +15,17 @@ import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-waffle";
 import { task, types } from "hardhat/config";
 import "@openzeppelin/hardhat-upgrades";
-import "@eth-optimism/hardhat-ovm";
 import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/GeoWebParcel";
 import "./tasks/ERC721License";
+import "./tasks/AuctionSuperApp";
 import "./tasks/FairLaunchAuction";
 import "./tasks/estimate_minting_gas";
+const SuperfluidSDK = require("@superfluid-finance/js-sdk");
+const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
+const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 
 task(
   "deploy",
@@ -31,21 +34,59 @@ task(
   console.log("Deploying all contracts...");
   const parcelAddress = await hre.run("deploy:parcel");
   const licenseAddress = await hre.run("deploy:license");
-  const fairClaimerAddress = await hre.run("deploy:fair-claimer")
+  const fairClaimerAddress = await hre.run("deploy:fair-claimer");
 
-  const accounts = await hre.ethers.getSigners();
+  const [admin] = await hre.ethers.getSigners();
 
-  // CollectorSuperApp default config
-  const collectorAddress = await hre.run("deploy:collector", {
-    host: "0xeD5B5b32110c3Ded02a07c8b8e97513FAfb883B6",
-    cfa: "0xF4C5310E51F6079F601a5fb7120bC72a70b96e2A",
-    acceptedToken: "0xa623b2DD931C5162b7a0B25852f4024Db48bb1A0",
-    receiver: accounts[0].address,
+  // TODO: Replace reclaimer
+  const mockClaimerFactory = await hre.ethers.getContractFactory("MockClaimer");
+  const mockClaimer = await mockClaimerFactory.deploy();
+  await mockClaimer.deployed();
+
+  const errorHandler = (err: any) => {
+    if (err) throw err;
+  };
+
+  await deployFramework(errorHandler, {
+    web3: hre.web3,
+    from: admin.address,
+  });
+
+  await deploySuperToken(errorHandler, [":", "ETH"], {
+    web3: hre.web3,
+    from: admin.address,
+  });
+
+  const sf = new SuperfluidSDK.Framework({
+    web3: hre.web3,
+    version: "test",
+    tokens: ["ETH"],
+  });
+  await sf.initialize();
+
+  // AuctionSuperApp default config
+  const superAppAddress = await hre.run("deploy:super-app", {
+    host: sf.host.address,
+    cfa: sf.agreements.cfa.address,
+    acceptedToken: sf.tokens.ETHx.address,
+    beneficiary: admin.address,
+    licenseAddress: licenseAddress,
+    claimerAddress: fairClaimerAddress,
+    reclaimerAddress: mockClaimer.address,
+    annualFeeRate: 0.1,
+    penaltyRate: 0.1,
+    bidPeriodLengthInSeconds: 60 * 60 * 24 * 7, // 7 days
   });
 
   console.log("Contracts deployed.");
 
   console.log("\nSetting default configuration...");
+
+  await hre.run("config:fair-claimer", {
+    contractAddress: fairClaimerAddress,
+    parcelAddress,
+    licenseAddress,
+  });
 
   console.log("Default configuration set.");
 
@@ -54,18 +95,11 @@ task(
   await hre.run("roles:set-default", {
     licenseAddress: licenseAddress,
     parcelAddress: parcelAddress,
-    collectorAddress: collectorAddress,
+    superAppAddress: superAppAddress,
+    claimerAddress: fairClaimerAddress,
   });
   console.log("Default roles set.");
 });
-
-task("deploy:contracts-only", "Deploy the set of bare contracts").setAction(
-  async (args, hre) => {
-    await hre.run("deploy:parcel");
-    await hre.run("deploy:license");
-    await hre.run("deploy:collector");
-  }
-);
 
 task("roles:set-default", "Set default roles on all deployed contracts")
   .addOptionalParam(
@@ -82,7 +116,13 @@ task("roles:set-default", "Set default roles on all deployed contracts")
   )
   .addOptionalParam(
     "claimerAddress",
-    "Address of FairAuctionClaimer",
+    "Address of FairLaunchClaimer",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "superAppAddress",
+    "Address of AuctionSuperApp",
     undefined,
     types.string
   )
@@ -90,12 +130,12 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     async (
       {
         licenseAddress,
-        collectorAddress,
+        superAppAddress,
         parcelAddress,
         claimerAddress,
       }: {
         licenseAddress: string;
-        collectorAddress: string;
+        superAppAddress: string;
         parcelAddress: string;
         claimerAddress: string;
       },
@@ -111,25 +151,42 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         parcelAddress
       );
 
-      // // ERC721License roles
-      // const res2 = await licenseContract.grantRole(
-      //   await licenseContract.MINT_ROLE(),
-      //   claimerAddress ?? claimer!.address
-      // );
-      // await res2.wait();
+      const superAppContract = await hre.ethers.getContractAt(
+        "AuctionSuperApp",
+        superAppAddress
+      );
 
-      // const res3 = await licenseContract.grantRole(
-      //   await licenseContract.OPERATOR_ROLE(),
-      //   purchaserAddress ?? purchaser!.address
-      // );
-      // await res3.wait();
+      const claimerContract = await hre.ethers.getContractAt(
+        "FairLaunchClaimer",
+        claimerAddress
+      );
 
-      // // GeoWebParcel roles
-      // const res6 = await parcelContract.grantRole(
-      //   await parcelContract.BUILD_ROLE(),
-      //   claimerAddress ?? claimer!.address
-      // );
-      // await res6.wait();
+      // ERC721License roles
+      let res = await licenseContract.grantRole(
+        await licenseContract.MINT_ROLE(),
+        claimerContract.address
+      );
+      await res.wait();
+
+      res = await licenseContract.grantRole(
+        await licenseContract.OPERATOR_ROLE(),
+        superAppContract.address
+      );
+      await res.wait();
+
+      // GeoWebParcel roles
+      res = await parcelContract.grantRole(
+        await parcelContract.BUILD_ROLE(),
+        claimerContract.address
+      );
+      await res.wait();
+
+      // FairLaunchClaimer roles
+      res = await claimerContract.grantRole(
+        await claimerContract.CLAIM_ROLE(),
+        superAppContract.address
+      );
+      await res.wait();
     }
   );
 
@@ -137,26 +194,6 @@ const networks: any = {
   local: {
     gasPrice: 1000000000,
     url: `http://localhost:8545`,
-  },
-  sokul: {
-    url: "https://sokol.poa.network",
-    chainId: 77,
-    gasPrice: 1000000000,
-  },
-  xdai: {
-    url: "https://xdai.poanetwork.dev",
-    network_id: 100,
-    gasPrice: 1000000000,
-  },
-  arbitrumRinkeby: {
-    url: "https://rinkeby.arbitrum.io/rpc",
-    chainId: 421611,
-    gasPrice: 0,
-  },
-  optimisticKovan: {
-    url: "https://kovan.optimism.io",
-    gasPrice: 15000000,
-    ovm: true, // This sets the network as using the ovm and ensure contract will be compiled against that.
   },
 };
 
@@ -206,13 +243,10 @@ module.exports = {
       },
       outputSelection: {
         "*": {
-          "*": ["storageLayout"]
-        }
-      }
+          "*": ["storageLayout"],
+        },
+      },
     },
-  },
-  ovm: {
-    solcVersion: "0.6.12",
   },
   abiExporter: {
     path: "./abi",
