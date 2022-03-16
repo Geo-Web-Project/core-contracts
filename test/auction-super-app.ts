@@ -1536,7 +1536,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("BID Action", async () => {
+  xdescribe("BID Action", async () => {
     describe("New highest bidder", async () => {
       it("should place bid on flow create", async () => {
         let existingLicenseId = 1;
@@ -4113,7 +4113,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Claim Outstanding Bid", async () => {
+  xdescribe("Claim Outstanding Bid", async () => {
     it("should claim bid after bidding period has elapsed", async () => {
       const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
       const txn = await claimCreate(user, 1);
