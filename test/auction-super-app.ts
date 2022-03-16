@@ -1336,6 +1336,38 @@ describe("AuctionSuperApp", async function () {
       await expect(txn).to.be.rejected;
     });
 
+    it("should revert on flow create with incorrectly rounded for sale price", async () => {
+      const contributionRate = BigNumber.from(3170979198);
+      const forSalePrice = ethers.utils.parseEther("1.1");
+
+      const approveOp = ethx.approve({
+        receiver: superApp.address,
+        amount: "1000",
+      });
+
+      const claimData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
+      const actionData = ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "bytes"],
+        [forSalePrice, claimData]
+      );
+      const userData = ethers.utils.defaultAbiCoder.encode(
+        ["uint8", "bytes"],
+        [Action.CLAIM, actionData]
+      );
+      const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+        sender: user.address,
+        receiver: superApp.address,
+        flowRate: contributionRate.toString(),
+        superToken: ethx.address,
+        userData: userData,
+      });
+
+      const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+      const txn = batchCall.exec(user);
+
+      await expect(txn).to.be.rejected;
+    });
+
     it("should claim on flow create with rounded for sale price", async () => {
       const contributionRate = BigNumber.from(3170979198);
       const forSalePrice = ethers.utils.parseEther("1.0");
