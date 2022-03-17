@@ -784,7 +784,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address user,
         int96 initialContributionRate,
-        uint256 licenseId
+        uint256 licenseId,
+        uint256 forSalePrice
     ) private returns (bytes memory newCtx) {
         // Get claim price
         uint256 claimPrice = reclaimer.claimPrice(
@@ -808,12 +809,22 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Set currentOwnerBid
+        require(
+            _checkForSalePrice(
+                forSalePrice,
+                initialContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "AuctionSuperApp: Incorrect for sale price"
+        );
         Bid storage bid = currentOwnerBid[licenseId];
         bid.timestamp = block.timestamp;
         bid.bidder = user;
         bid.contributionRate = initialContributionRate;
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = forSalePrice;
 
         // Transfer license
         license.safeTransferFrom(oldOwner, user, licenseId);
@@ -825,13 +836,31 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 increasedFlowRate,
         bytes memory actionData
     ) private returns (bytes memory newCtx) {
-        uint256 licenseId = abi.decode(actionData, (uint256));
+        (uint256 forSalePrice, bytes memory bidData) = abi.decode(
+            actionData,
+            (uint256, bytes)
+        );
+
+        uint256 licenseId = abi.decode(bidData, (uint256));
 
         if (license.ownerOf(licenseId) == bidder) {
             return
-                _increaseOwnerBid(_ctx, bidder, increasedFlowRate, licenseId);
+                _increaseOwnerBid(
+                    _ctx,
+                    bidder,
+                    increasedFlowRate,
+                    licenseId,
+                    forSalePrice
+                );
         } else {
-            return _placeNewBid(_ctx, bidder, increasedFlowRate, licenseId);
+            return
+                _placeNewBid(
+                    _ctx,
+                    bidder,
+                    increasedFlowRate,
+                    licenseId,
+                    forSalePrice
+                );
         }
     }
 
@@ -839,7 +868,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address user,
         int96 increasedFlowRate,
-        uint256 licenseId
+        uint256 licenseId,
+        uint256 forSalePrice
     ) private returns (bytes memory newCtx) {
         Bid storage bidOutstanding = outstandingBid[licenseId];
         Bid storage bid = currentOwnerBid[licenseId];
@@ -878,11 +908,21 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         newCtx = _increaseAppToBeneficiaryFlowWithCtx(_ctx, increasedFlowRate);
 
         // Update currentOwnerBid
+        require(
+            _checkForSalePrice(
+                forSalePrice,
+                newBidAmount,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "AuctionSuperApp: Incorrect for sale price"
+        );
         bid.timestamp = block.timestamp;
         bid.bidder = user;
         bid.contributionRate = newBidAmount;
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = forSalePrice;
     }
 
     function _decreaseBid(
@@ -891,17 +931,36 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 decreasedFlowRate,
         bytes memory actionData
     ) private returns (bytes memory newCtx) {
-        uint256 licenseId = abi.decode(actionData, (uint256));
+        (uint256 forSalePrice, bytes memory bidData) = abi.decode(
+            actionData,
+            (uint256, bytes)
+        );
+
+        uint256 licenseId = abi.decode(bidData, (uint256));
         Bid storage bidOutstanding = outstandingBid[licenseId];
 
         if (license.ownerOf(licenseId) == user) {
-            return _decreaseOwnerBid(_ctx, user, decreasedFlowRate, licenseId);
+            return
+                _decreaseOwnerBid(
+                    _ctx,
+                    user,
+                    decreasedFlowRate,
+                    licenseId,
+                    forSalePrice
+                );
         } else if (
             bidOutstanding.contributionRate > 0 && bidOutstanding.bidder == user
         ) {
             revert("AuctionSuperApp: Cannot decrease outstanding bid");
         } else {
-            return _decreaseOldBid(_ctx, user, decreasedFlowRate, licenseId);
+            return
+                _decreaseOldBid(
+                    _ctx,
+                    user,
+                    decreasedFlowRate,
+                    licenseId,
+                    forSalePrice
+                );
         }
     }
 
@@ -909,7 +968,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address user,
         int96 decreasedFlowRate,
-        uint256 licenseId
+        uint256 licenseId,
+        uint256 forSalePrice
     ) private returns (bytes memory newCtx) {
         Bid storage bidOutstanding = outstandingBid[licenseId];
         Bid storage bid = currentOwnerBid[licenseId];
@@ -937,18 +997,29 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         newCtx = _decreaseAppToBeneficiaryFlow(_ctx, decreasedFlowRate);
 
         // Update currentOwnerBid
+        require(
+            _checkForSalePrice(
+                forSalePrice,
+                newBidAmount,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "AuctionSuperApp: Incorrect for sale price"
+        );
         bid.timestamp = block.timestamp;
         bid.bidder = user;
         bid.contributionRate = newBidAmount;
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = forSalePrice;
     }
 
     function _decreaseOldBid(
         bytes memory _ctx,
         address user,
         int96 decreasedFlowRate,
-        uint256 licenseId
+        uint256 licenseId,
+        uint256 forSalePrice
     ) private returns (bytes memory newCtx) {
         Bid storage oldBid = oldBids[user][licenseId];
 
@@ -960,7 +1031,17 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         int96 newBidAmount = oldBid.contributionRate - decreasedFlowRate;
 
         // Update oldBid
+        require(
+            _checkForSalePrice(
+                forSalePrice,
+                newBidAmount,
+                oldBid.perSecondFeeNumerator,
+                oldBid.perSecondFeeDenominator
+            ),
+            "AuctionSuperApp: Incorrect for sale price"
+        );
         oldBid.contributionRate = newBidAmount;
+        oldBid.forSalePrice = forSalePrice;
 
         // Decrease app -> user flow
         newCtx = _decreaseAppToUserFlowWithCtx(_ctx, user, decreasedFlowRate);
@@ -970,7 +1051,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address bidder,
         int96 bidContributionRate,
-        uint256 licenseId
+        uint256 licenseId,
+        uint256 forSalePrice
     ) private returns (bytes memory newCtx) {
         if (license.ownerOf(licenseId) == address(0x0)) {
             revert("AuctionSuperApp: Cannot place bid on non-existent license");
@@ -987,7 +1069,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         if (ownerBidContributionRate(licenseId) == 0) {
             // Reclaim
-            return _reclaim(_ctx, bidder, bidContributionRate, licenseId);
+            return
+                _reclaim(
+                    _ctx,
+                    bidder,
+                    bidContributionRate,
+                    licenseId,
+                    forSalePrice
+                );
         }
 
         if (bidContributionRate > currentOwnerBid[licenseId].contributionRate) {
@@ -996,7 +1085,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                     _ctx,
                     bidder,
                     bidContributionRate,
-                    licenseId
+                    licenseId,
+                    forSalePrice
                 );
         } else {
             revert(
@@ -1044,14 +1134,26 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory _ctx,
         address bidder,
         int96 bidContributionRate,
-        uint256 licenseId
+        uint256 licenseId,
+        uint256 forSalePrice
     ) private returns (bytes memory newCtx) {
+        require(
+            _checkForSalePrice(
+                forSalePrice,
+                bidContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "AuctionSuperApp: Incorrect for sale price"
+        );
+
         Bid storage bid = outstandingBid[licenseId];
         bid.timestamp = block.timestamp;
         bid.bidder = bidder;
         bid.contributionRate = bidContributionRate;
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = forSalePrice;
 
         newCtx = _increaseAppToUserFlowWithCtx(
             _ctx,

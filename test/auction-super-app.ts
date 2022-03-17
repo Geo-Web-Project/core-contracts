@@ -229,9 +229,13 @@ describe("AuctionSuperApp", async function () {
       amount: purchasePrice.toString(),
     });
 
-    const actionData = ethers.utils.defaultAbiCoder.encode(
+    const bidData = ethers.utils.defaultAbiCoder.encode(
       ["uint256"],
       [mockLicenseId ?? 1]
+    );
+    const actionData = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "bytes"],
+      [await rateToPurchasePrice(BigNumber.from(200)), bidData]
     );
     const userData = ethers.utils.defaultAbiCoder.encode(
       ["uint8", "bytes"],
@@ -268,9 +272,13 @@ describe("AuctionSuperApp", async function () {
       amount: purchasePrice.toString(),
     });
 
-    const actionData = ethers.utils.defaultAbiCoder.encode(
+    const bidData = ethers.utils.defaultAbiCoder.encode(
       ["uint256"],
       [mockLicenseId ?? 1]
+    );
+    const actionData = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "bytes"],
+      [await rateToPurchasePrice(BigNumber.from(200)), bidData]
     );
     const userData = ethers.utils.defaultAbiCoder.encode(
       ["uint8", "bytes"],
@@ -298,9 +306,13 @@ describe("AuctionSuperApp", async function () {
       amount: penaltyAmount.toString(),
     });
 
-    const actionData = ethers.utils.defaultAbiCoder.encode(
+    const bidData = ethers.utils.defaultAbiCoder.encode(
       ["uint256"],
       [mockLicenseId ?? 1]
+    );
+    const actionData = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "bytes"],
+      [await rateToPurchasePrice(BigNumber.from(200)), bidData]
     );
     const userData = ethers.utils.defaultAbiCoder.encode(
       ["uint8", "bytes"],
@@ -818,7 +830,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(100);
   });
 
-  describe("No user data", async () => {
+  xdescribe("No user data", async () => {
     it("should revert on flow create", async () => {
       const createFlowOp = await ethersjsSf.cfaV1.createFlow({
         sender: user.address,
@@ -902,7 +914,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Unknown Action", async () => {
+  xdescribe("Unknown Action", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["uint8", "bytes"],
@@ -1011,7 +1023,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Random user data", async () => {
+  xdescribe("Random user data", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["bytes"],
@@ -1120,7 +1132,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("CLAIM Action", async () => {
+  xdescribe("CLAIM Action", async () => {
     it("should claim on flow create", async () => {
       const txn = await claimCreate(user);
       await expect(txn)
@@ -1285,7 +1297,10 @@ describe("AuctionSuperApp", async function () {
       await checkJailed(receipt);
 
       await checkClaimCallCount(2);
-      await checkClaimLastContribution(user.address, contributionRate.toNumber());
+      await checkClaimLastContribution(
+        user.address,
+        contributionRate.toNumber()
+      );
       await checkAppNetFlow();
       await checkUserToAppFlow(contributionRate.add(100).toString());
       await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
@@ -1403,8 +1418,8 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("BID Action", async () => {
-    describe("New highest bidder", async () => {
+  describe("BID Action", async () => {
+    xdescribe("New highest bidder", async () => {
       it("should place bid on flow create", async () => {
         let existingLicenseId = 1;
 
@@ -1418,9 +1433,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1450,6 +1469,97 @@ describe("AuctionSuperApp", async function () {
         await checkAppToBeneficiaryFlow("100");
       });
 
+      it("should place bid on flow create with rounded for sale price", async () => {
+        let existingLicenseId = 1;
+        const contributionRate = BigNumber.from(3170979198);
+        const forSalePrice = ethers.utils.parseEther("1.0");
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const bidData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [forSalePrice, bidData]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: contributionRate.toString(),
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn1 = await batchCall.exec(bidder);
+        const receipt = await txn1.wait();
+
+        await expect(txn1)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, superApp.address, purchasePrice);
+
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow(contributionRate.toString(), bidder);
+        await checkAppToUserFlow(contributionRate.toString(), bidder);
+        await checkUserToAppFlow("100", user);
+        await checkAppToBeneficiaryFlow("100");
+      });
+
+      it("should revert on flow create with incorrect rounded for sale price", async () => {
+        let existingLicenseId = 1;
+        const contributionRate = BigNumber.from(3170979198);
+        const forSalePrice = ethers.utils.parseEther("0.9");
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const bidData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [forSalePrice, bidData]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: contributionRate.toString(),
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+        const txn1 = batchCall.exec(bidder);
+        await expect(txn1).to.be.rejected;
+      });
+
       it("should place bid on flow increase", async () => {
         let existingLicenseId = 1;
 
@@ -1467,9 +1577,13 @@ describe("AuctionSuperApp", async function () {
         const txn1 = await claimCreate(bidder, 2);
         await txn1.wait();
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1498,6 +1612,104 @@ describe("AuctionSuperApp", async function () {
         await checkAppToBeneficiaryFlow("200");
       });
 
+      it("should place bid on flow increase with rounded for sale price", async () => {
+        let existingLicenseId = 1;
+        const contributionRate = BigNumber.from(3170979198);
+        const forSalePrice = ethers.utils.parseEther("1.0");
+
+        // User 1 claim
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        // User 2 claim
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const bidData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [forSalePrice, bidData]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: contributionRate.add(100).toString(),
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn2 = await batchCall.exec(bidder);
+        const receipt = await txn2.wait();
+
+        await expect(txn2)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, superApp.address, purchasePrice);
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow(contributionRate.add(100).toString(), bidder);
+        await checkAppToUserFlow(contributionRate.toString(), bidder);
+        await checkUserToAppFlow("100", user);
+        await checkAppToBeneficiaryFlow("200");
+      });
+
+      it("should revert on flow increase with incorrect rounded for sale price", async () => {
+        let existingLicenseId = 1;
+        const contributionRate = BigNumber.from(3170979198);
+        const forSalePrice = ethers.utils.parseEther("1.1");
+
+        // User 1 claim
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        // User 2 claim
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const bidData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [forSalePrice, bidData]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: contributionRate.add(100).toString(),
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn2 = batchCall.exec(bidder);
+        await expect(txn2).to.be.rejected;
+      });
+
       it("should revert on flow create when license does not exist", async () => {
         let existingLicenseId = 1;
 
@@ -1508,9 +1720,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1541,9 +1757,13 @@ describe("AuctionSuperApp", async function () {
         const txn1 = await claimCreate(bidder, 2);
         await txn1.wait();
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1578,9 +1798,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(300)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1618,9 +1842,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1667,9 +1895,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1701,9 +1933,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(100)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1738,9 +1974,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(100)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1784,9 +2024,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1859,9 +2103,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1907,7 +2155,7 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    describe("Outstanding bidder", async () => {
+    xdescribe("Outstanding bidder", async () => {
       it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
         let existingLicenseId = 1;
         const txn = await claimCreate(user, existingLicenseId);
@@ -1953,9 +2201,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(300)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -1990,9 +2242,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(200)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -2027,9 +2283,13 @@ describe("AuctionSuperApp", async function () {
           amount: purchasePrice.toString(),
         });
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(150)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -2087,9 +2347,13 @@ describe("AuctionSuperApp", async function () {
           const txn = await claimCreate(user, existingLicenseId);
           await txn.wait();
 
-          const actionData = ethers.utils.defaultAbiCoder.encode(
+          const bidData = ethers.utils.defaultAbiCoder.encode(
             ["uint256"],
             [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2121,9 +2385,13 @@ describe("AuctionSuperApp", async function () {
           const txn = await claimCreate(user, existingLicenseId);
           await txn.wait();
 
-          const actionData = ethers.utils.defaultAbiCoder.encode(
+          const bidData = ethers.utils.defaultAbiCoder.encode(
             ["uint256"],
             [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(50)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2156,9 +2424,10 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await claimUpdate(user, 2);
           await txn1.wait();
 
+          const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [2]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
-            ["uint256"],
-            [2]
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(50)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2193,9 +2462,10 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await claimUpdate(user, 2);
           await txn1.wait();
 
+          const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [2]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
-            ["uint256"],
-            [2]
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(0)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2360,9 +2630,10 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await claimUpdate(user, 2);
           await txn1.wait();
 
+          const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [2]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
-            ["uint256"],
-            [2]
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(0)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2399,9 +2670,13 @@ describe("AuctionSuperApp", async function () {
             amount: penaltyAmount.toString(),
           });
 
-          const actionData = ethers.utils.defaultAbiCoder.encode(
+          const bidData = ethers.utils.defaultAbiCoder.encode(
             ["uint256"],
             [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2442,9 +2717,13 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await placeBidCreate(bidder, existingLicenseId);
           await txn1.wait();
 
-          const actionData = ethers.utils.defaultAbiCoder.encode(
+          const bidData = ethers.utils.defaultAbiCoder.encode(
             ["uint256"],
             [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(150)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2481,9 +2760,13 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await placeBidCreate(bidder, existingLicenseId);
           await txn1.wait();
 
-          const actionData = ethers.utils.defaultAbiCoder.encode(
+          const bidData = ethers.utils.defaultAbiCoder.encode(
             ["uint256"],
             [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2511,9 +2794,10 @@ describe("AuctionSuperApp", async function () {
 
           const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
 
+          const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
-            ["uint256"],
-            [1]
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(0)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2564,9 +2848,10 @@ describe("AuctionSuperApp", async function () {
           const txn2 = await placeBidCreate(bidder, 1); // 200
           await txn2.wait();
 
+          const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
-            ["uint256"],
-            [1]
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(50)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2639,9 +2924,10 @@ describe("AuctionSuperApp", async function () {
             amount: penaltyAmount.toString(),
           });
 
+          const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
-            ["uint256"],
-            [1]
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2696,9 +2982,13 @@ describe("AuctionSuperApp", async function () {
             amount: penaltyAmount.toString(),
           });
 
-          const actionData = ethers.utils.defaultAbiCoder.encode(
+          const bidData = ethers.utils.defaultAbiCoder.encode(
             ["uint256"],
             [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2732,9 +3022,10 @@ describe("AuctionSuperApp", async function () {
 
           const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
 
+          const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
-            ["uint256"],
-            [1]
+            ["uint256", "bytes"],
+            [await rateToPurchasePrice(BigNumber.from(0)), bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -2836,7 +3127,7 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    describe("Not outstanding bidder or owner", async () => {
+    xdescribe("Not outstanding bidder or owner", async () => {
       it("should decrease partial bid on flow decrease", async () => {
         let existingLicenseId = 2;
 
@@ -2849,9 +3140,13 @@ describe("AuctionSuperApp", async function () {
         const txn2 = await rejectBid(user, existingLicenseId);
         await txn2.wait();
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(150)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -2889,9 +3184,10 @@ describe("AuctionSuperApp", async function () {
         const txn3 = await rejectBid(user, 1); // 200
         await txn3.wait();
 
+        const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
         const actionData = ethers.utils.defaultAbiCoder.encode(
-          ["uint256"],
-          [1]
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(50)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -2929,9 +3225,10 @@ describe("AuctionSuperApp", async function () {
         const txn3 = await rejectBid(user, 1); // 200
         await txn3.wait();
 
+        const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
         const actionData = ethers.utils.defaultAbiCoder.encode(
-          ["uint256"],
-          [1]
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(0)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -2969,9 +3266,10 @@ describe("AuctionSuperApp", async function () {
         const txn3 = await rejectBid(user, 1);
         await txn3.wait();
 
+        const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
         const actionData = ethers.utils.defaultAbiCoder.encode(
-          ["uint256"],
-          [1]
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(0)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
@@ -3000,9 +3298,13 @@ describe("AuctionSuperApp", async function () {
         const txn2 = await rejectBid(user, existingLicenseId);
         await txn2.wait();
 
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [await rateToPurchasePrice(BigNumber.from(0)), bidData]
         );
         const userData = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
