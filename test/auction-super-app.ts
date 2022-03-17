@@ -3513,7 +3513,7 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      describe("Outstanding bid has not elapsed", async () => {
+      xdescribe("Outstanding bid has not elapsed", async () => {
         it("should pay penalty and increase bid on flow increase", async () => {
           let existingLicenseId = 2;
 
@@ -3945,7 +3945,7 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      describe("Outstanding bid has elapsed", async () => {
+      xdescribe("Outstanding bid has elapsed", async () => {
         it("should revert on flow increase", async () => {
           let existingLicenseId = 2;
 
