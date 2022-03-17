@@ -281,13 +281,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      */
     function calculatePurchasePrice(uint256 id) public view returns (uint256) {
         Bid storage bid = currentOwnerBid[id];
-        uint96 contributionRate = uint96(ownerBidContributionRate(id));
-
-        // Value * Per Second Fee = Contribution Rate
-        uint256 value = (contributionRate * bid.perSecondFeeDenominator) /
-            bid.perSecondFeeNumerator;
-
-        return value;
+        return bid.forSalePrice;
     }
 
     /**

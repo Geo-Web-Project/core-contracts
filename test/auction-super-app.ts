@@ -166,6 +166,48 @@ describe("AuctionSuperApp", async function () {
     return txn;
   }
 
+  async function claimMediumCreate(
+    _user: SignerWithAddress,
+    mockLicenseId?: number,
+    approveAmount?: BigNumber
+  ) {
+    const contributionRate = BigNumber.from(317097919);
+    const forSalePrice = ethers.utils.parseEther("0.1");
+
+    const approveOp = ethx.approve({
+      receiver: superApp.address,
+      amount: approveAmount?.toString() ?? "1000",
+    });
+
+    const claimData = ethers.utils.defaultAbiCoder.encode(
+      ["uint256"],
+      [mockLicenseId ?? 1]
+    );
+    const actionData = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "bytes"],
+      [forSalePrice, claimData]
+    );
+    const userData = ethers.utils.defaultAbiCoder.encode(
+      ["uint8", "bytes"],
+      [Action.CLAIM, actionData]
+    );
+    const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+      sender: _user.address,
+      receiver: superApp.address,
+      flowRate: contributionRate.toString(),
+      superToken: ethx.address,
+      userData: userData,
+    });
+
+    const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+    const txn = await batchCall.exec(_user);
+
+    mockLicense.ownerOf
+      .whenCalledWith(mockLicenseId ?? 1)
+      .returns(_user.address);
+    return txn;
+  }
+
   async function claimUpdate(
     _user: SignerWithAddress,
     mockLicenseId?: number,
@@ -240,6 +282,43 @@ describe("AuctionSuperApp", async function () {
       sender: _bidder.address,
       receiver: superApp.address,
       flowRate: "200",
+      superToken: ethx.address,
+      userData: userData,
+    });
+
+    const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
+    const txn1 = await batchCall.exec(_bidder);
+    return txn1;
+  }
+
+  async function placeLargeBidCreate(
+    _bidder: SignerWithAddress,
+    mockLicenseId?: number
+  ) {
+    const contributionRate = BigNumber.from(3170979198);
+    const forSalePrice = ethers.utils.parseEther("1.0");
+
+    const approveOp = ethx.approve({
+      receiver: superApp.address,
+      amount: ethers.utils.parseEther("1.0").toString(),
+    });
+
+    const bidData = ethers.utils.defaultAbiCoder.encode(
+      ["uint256"],
+      [mockLicenseId ?? 1]
+    );
+    const actionData = ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "bytes"],
+      [forSalePrice, bidData]
+    );
+    const userData = ethers.utils.defaultAbiCoder.encode(
+      ["uint8", "bytes"],
+      [Action.BID, actionData]
+    );
+    const createFlowOp = await ethersjsSf.cfaV1.createFlow({
+      sender: _bidder.address,
+      receiver: superApp.address,
+      flowRate: contributionRate.toString(),
       superToken: ethx.address,
       userData: userData,
     });
@@ -1470,53 +1549,26 @@ describe("AuctionSuperApp", async function () {
 
       it("should place bid on flow create with rounded for sale price", async () => {
         let existingLicenseId = 1;
-        const contributionRate = BigNumber.from(3170979198);
-        const forSalePrice = ethers.utils.parseEther("1.0");
-
-        const txn = await claimCreate(user, existingLicenseId);
+        const txn = await claimMediumCreate(user, existingLicenseId);
         await txn.wait();
 
-        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
-        const approveOp = ethx.approve({
-          receiver: superApp.address,
-          amount: purchasePrice.toString(),
-        });
-
-        const bidData = ethers.utils.defaultAbiCoder.encode(
-          ["uint256"],
-          [existingLicenseId]
-        );
-        const actionData = ethers.utils.defaultAbiCoder.encode(
-          ["uint256", "bytes"],
-          [forSalePrice, bidData]
-        );
-        const userData = ethers.utils.defaultAbiCoder.encode(
-          ["uint8", "bytes"],
-          [Action.BID, actionData]
-        );
-        const createFlowOp = await ethersjsSf.cfaV1.createFlow({
-          sender: bidder.address,
-          receiver: superApp.address,
-          flowRate: contributionRate.toString(),
-          superToken: ethx.address,
-          userData: userData,
-        });
-
-        const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
-        const txn1 = await batchCall.exec(bidder);
+        const txn1 = await placeLargeBidCreate(user, existingLicenseId);
         const receipt = await txn1.wait();
+
+        const contributionRate = BigNumber.from(317097919);
+        const contributionRate1 = BigNumber.from(3170979198);
+        const forSalePrice = ethers.utils.parseEther("0.1");
 
         await expect(txn1)
           .to.emit(ethx_erc20, "Transfer")
-          .withArgs(bidder.address, superApp.address, purchasePrice);
+          .withArgs(bidder.address, superApp.address, forSalePrice);
 
         await checkJailed(receipt);
         await checkAppNetFlow();
-        await checkUserToAppFlow(contributionRate.toString(), bidder);
-        await checkAppToUserFlow(contributionRate.toString(), bidder);
-        await checkUserToAppFlow("100", user);
-        await checkAppToBeneficiaryFlow("100");
+        await checkUserToAppFlow(contributionRate1.toString(), bidder);
+        await checkAppToUserFlow(contributionRate1.toString(), bidder);
+        await checkUserToAppFlow(contributionRate.toString(), user);
+        await checkAppToBeneficiaryFlow(contributionRate.toString());
       });
 
       it("should revert on flow create with incorrect rounded for sale price", async () => {
@@ -1613,56 +1665,58 @@ describe("AuctionSuperApp", async function () {
 
       it("should place bid on flow increase with rounded for sale price", async () => {
         let existingLicenseId = 1;
-        const contributionRate = BigNumber.from(3170979198);
-        const forSalePrice = ethers.utils.parseEther("1.0");
 
         // User 1 claim
-        const txn = await claimCreate(user, existingLicenseId);
+        const contributionRate = BigNumber.from(317097919);
+        const txn = await claimMediumCreate(user, existingLicenseId);
         await txn.wait();
+        const forSalePrice = ethers.utils.parseEther("0.1");
 
         // User 2 claim
-        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-        const approveOp = ethx.approve({
+        const contributionRate1 = BigNumber.from(3170979198);
+        const forSalePrice1 = ethers.utils.parseEther("1.0");
+
+        const approveOp1 = ethx.approve({
           receiver: superApp.address,
-          amount: purchasePrice.toString(),
+          amount: forSalePrice.toString(),
         });
 
         const txn1 = await claimCreate(bidder, 2);
         await txn1.wait();
 
-        const bidData = ethers.utils.defaultAbiCoder.encode(
+        const bidData1 = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
         );
-        const actionData = ethers.utils.defaultAbiCoder.encode(
+        const actionData1 = ethers.utils.defaultAbiCoder.encode(
           ["uint256", "bytes"],
-          [forSalePrice, bidData]
+          [forSalePrice1, bidData1]
         );
-        const userData = ethers.utils.defaultAbiCoder.encode(
+        const userData1 = ethers.utils.defaultAbiCoder.encode(
           ["uint8", "bytes"],
-          [Action.BID, actionData]
+          [Action.BID, actionData1]
         );
         const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
           sender: bidder.address,
           receiver: superApp.address,
           flowRate: contributionRate.add(100).toString(),
           superToken: ethx.address,
-          userData: userData,
+          userData: userData1,
         });
 
-        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
-        const txn2 = await batchCall.exec(bidder);
+        const batchCall1 = ethersjsSf.batchCall([approveOp1, updateFlowOp]);
+        const txn2 = await batchCall1.exec(bidder);
         const receipt = await txn2.wait();
 
         await expect(txn2)
           .to.emit(ethx_erc20, "Transfer")
-          .withArgs(bidder.address, superApp.address, purchasePrice);
+          .withArgs(bidder.address, superApp.address, forSalePrice);
         await checkJailed(receipt);
         await checkAppNetFlow();
-        await checkUserToAppFlow(contributionRate.add(100).toString(), bidder);
-        await checkAppToUserFlow(contributionRate.toString(), bidder);
-        await checkUserToAppFlow("100", user);
-        await checkAppToBeneficiaryFlow("200");
+        await checkUserToAppFlow(contributionRate1.add(100).toString(), bidder);
+        await checkAppToUserFlow(contributionRate1.toString(), bidder);
+        await checkUserToAppFlow(contributionRate.toString(), user);
+        await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
       });
 
       it("should revert on flow increase with incorrect rounded for sale price", async () => {
@@ -3390,16 +3444,16 @@ describe("AuctionSuperApp", async function () {
         });
 
         it("should accept bid on flow decrease", async () => {
-          const txn = await claimCreate(user, 1); // 100
+          const forSalePrice = ethers.utils.parseEther("0.1");
+          const txn = await claimMediumCreate(user, 1);
           await txn.wait();
 
-          const txn1 = await claimUpdate(user, 2); // 100
+          const txn1 = await claimUpdate(user, 2);
           await txn1.wait();
 
-          const txn2 = await placeBidCreate(bidder, 1); // 200
+          const contributionRate = BigNumber.from(3170979198);
+          const txn2 = await placeLargeBidCreate(bidder, 1);
           await txn2.wait();
-
-          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
 
           const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
@@ -3422,15 +3476,15 @@ describe("AuctionSuperApp", async function () {
 
           await expect(txn3)
             .to.emit(ethx_erc20, "Transfer")
-            .withArgs(superApp.address, user.address, purchasePrice);
+            .withArgs(superApp.address, user.address, forSalePrice);
           await checkJailed(receipt);
-          await checkUserToAppFlow("200", bidder);
+          await checkUserToAppFlow(contributionRate.toString(), bidder);
           await checkAppToUserFlow("0", bidder);
           await checkUserToAppFlow("100", user);
           await checkAppToUserFlow("0", user);
-          await checkAppToBeneficiaryFlow("300");
-          await checkCurrentOwnerBid(1, 200);
-          await checkOwnerBidContributionRate(1, 200);
+          await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
+          await checkCurrentOwnerBid(1, contributionRate.toNumber());
+          await checkOwnerBidContributionRate(1, contributionRate.toNumber());
           await checkOutstandingBid(1, 0);
           await checkCurrentOwnerBid(2, 100);
           await checkOwnerBidContributionRate(2, 100);
@@ -3614,20 +3668,20 @@ describe("AuctionSuperApp", async function () {
         });
 
         it("should accept bid on flow decrease", async () => {
-          const txn = await claimCreate(user, 1); // 100
+          const forSalePrice = ethers.utils.parseEther("0.1");
+          const txn = await claimMediumCreate(user, 1);
           await txn.wait();
 
           const txn1 = await claimUpdate(user, 2); // 100
           await txn1.wait();
 
-          const txn2 = await placeBidCreate(bidder, 1); // 200
+          const contributionRate = BigNumber.from(3170979198);
+          const txn2 = await placeLargeBidCreate(bidder, 1);
           await txn2.wait();
 
           // Advance time
           await network.provider.send("evm_increaseTime", [700000]);
           await network.provider.send("evm_mine");
-
-          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
 
           const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
@@ -3650,15 +3704,15 @@ describe("AuctionSuperApp", async function () {
 
           await expect(txn3)
             .to.emit(ethx_erc20, "Transfer")
-            .withArgs(superApp.address, user.address, purchasePrice);
+            .withArgs(superApp.address, user.address, forSalePrice);
           await checkJailed(receipt);
-          await checkUserToAppFlow("200", bidder);
+          await checkUserToAppFlow(contributionRate.toString(), bidder);
           await checkAppToUserFlow("0", bidder);
           await checkUserToAppFlow("100", user);
           await checkAppToUserFlow("0", user);
-          await checkAppToBeneficiaryFlow("300");
-          await checkCurrentOwnerBid(1, 200);
-          await checkOwnerBidContributionRate(1, 200);
+          await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
+          await checkCurrentOwnerBid(1, contributionRate.toNumber());
+          await checkOwnerBidContributionRate(1, contributionRate.toNumber());
           await checkOutstandingBid(1, 0);
           await checkCurrentOwnerBid(2, 100);
           await checkOwnerBidContributionRate(2, 100);
