@@ -189,12 +189,7 @@ describe("AuctionSuperApp", async function () {
     );
     const actionData = ethers.utils.defaultAbiCoder.encode(
       ["uint256", "bytes"],
-      [
-        await rateToPurchasePrice(
-          BigNumber.from(existingFlow.flowRate).add(100)
-        ),
-        claimData,
-      ]
+      [await rateToPurchasePrice(BigNumber.from(100)), claimData]
     );
     const userData = ethers.utils.defaultAbiCoder.encode(
       ["uint8", "bytes"],
@@ -267,6 +262,10 @@ describe("AuctionSuperApp", async function () {
       providerOrSigner: _bidder,
     });
 
+    const existingContributionRate = await superApp.ownerBidContributionRate(
+      mockLicenseId ?? 1
+    );
+
     const approveOp = ethx.approve({
       receiver: superApp.address,
       amount: purchasePrice.toString(),
@@ -278,7 +277,7 @@ describe("AuctionSuperApp", async function () {
     );
     const actionData = ethers.utils.defaultAbiCoder.encode(
       ["uint256", "bytes"],
-      [await rateToPurchasePrice(BigNumber.from(200)), bidData]
+      [await rateToPurchasePrice(existingContributionRate.add(200)), bidData]
     );
     const userData = ethers.utils.defaultAbiCoder.encode(
       ["uint8", "bytes"],
