@@ -924,7 +924,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(100);
   });
 
-  xdescribe("No user data", async () => {
+  describe("No user data", async () => {
     it("should revert on flow create", async () => {
       const createFlowOp = await ethersjsSf.cfaV1.createFlow({
         sender: user.address,
@@ -1011,7 +1011,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("Unknown Action", async () => {
+  describe("Unknown Action", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["uint8", "bytes"],
@@ -1123,7 +1123,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("Random user data", async () => {
+  describe("Random user data", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["bytes"],
@@ -1235,7 +1235,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("CLAIM Action", async () => {
+  describe("CLAIM Action", async () => {
     it("should claim on flow create", async () => {
       const txn = await claimCreate(user);
       await expect(txn)
@@ -1687,7 +1687,7 @@ describe("AuctionSuperApp", async function () {
   });
 
   describe("BID Action", async () => {
-    xdescribe("New highest bidder", async () => {
+    describe("New highest bidder", async () => {
       it("should place bid on flow create", async () => {
         let existingLicenseId = 1;
 
@@ -2757,6 +2757,148 @@ describe("AuctionSuperApp", async function () {
         const txn3 = batchCall.exec(bidder);
         await expect(txn3).to.be.rejected;
       });
+
+      it("should reclaim on flow increase with rounded for sale price after owner deleted bid", async () => {
+        let existingLicenseId = 1;
+        const contributionRate = BigNumber.from(3170979198);
+        const forSalePrice = ethers.utils.parseEther("1.0");
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn2 = await deleteFlowOp.exec(user);
+        await txn2.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        mockReclaimer.claimPrice.returns(purchasePrice);
+        mockReclaimer.claim.returns(existingLicenseId);
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const bidData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [forSalePrice, bidData]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: contributionRate.add(100).toString(),
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn3 = await batchCall.exec(bidder);
+        const receipt = await txn3.wait();
+
+        mockLicense.ownerOf
+          .whenCalledWith(existingLicenseId)
+          .returns(bidder.address);
+
+        await expect(txn3)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, user.address, purchasePrice);
+
+        await checkJailed(receipt);
+        await checkUserToAppFlow(contributionRate.add(100).toString(), bidder);
+        await checkAppToUserFlow("0", bidder);
+        await checkUserToAppFlow("0", user);
+        await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
+        await checkCurrentOwnerBid(
+          existingLicenseId,
+          contributionRate.toNumber()
+        );
+        await checkOwnerBidContributionRate(
+          existingLicenseId,
+          contributionRate.toNumber()
+        );
+        await checkOutstandingBid(existingLicenseId, 0);
+        await checkAppNetFlow();
+
+        expect(
+          mockLicense["safeTransferFrom(address,address,uint256)"]
+        ).to.have.been.calledWith(
+          user.address,
+          bidder.address,
+          BigNumber.from(existingLicenseId)
+        );
+      });
+
+      it("should revert on flow increase with rounded for sale price after owner deleted bid", async () => {
+        let existingLicenseId = 1;
+        const contributionRate = BigNumber.from(3170979198);
+        const forSalePrice = ethers.utils.parseEther("1.1");
+
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+          sender: user.address,
+          receiver: superApp.address,
+          superToken: ethx.address,
+        });
+
+        const txn2 = await deleteFlowOp.exec(user);
+        await txn2.wait();
+
+        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
+
+        mockReclaimer.claimPrice.returns(purchasePrice);
+        mockReclaimer.claim.returns(existingLicenseId);
+
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: purchasePrice.toString(),
+        });
+
+        const bidData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [forSalePrice, bidData]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: contributionRate.add(100).toString(),
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn3 = batchCall.exec(bidder);
+        await expect(txn3).to.be.rejected;
+      });
     });
 
     describe("Outstanding bidder", async () => {
@@ -3513,7 +3655,7 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      xdescribe("Outstanding bid has not elapsed", async () => {
+      describe("Outstanding bid has not elapsed", async () => {
         it("should pay penalty and increase bid on flow increase", async () => {
           let existingLicenseId = 2;
 
@@ -3945,7 +4087,7 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      xdescribe("Outstanding bid has elapsed", async () => {
+      describe("Outstanding bid has elapsed", async () => {
         it("should revert on flow increase", async () => {
           let existingLicenseId = 2;
 
@@ -4115,7 +4257,7 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    xdescribe("Not outstanding bidder or owner", async () => {
+    describe("Not outstanding bidder or owner", async () => {
       it("should decrease partial bid on flow decrease", async () => {
         let existingLicenseId = 2;
 
@@ -4323,7 +4465,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("Claim Outstanding Bid", async () => {
+  describe("Claim Outstanding Bid", async () => {
     it("should claim bid after bidding period has elapsed", async () => {
       const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
       const txn = await claimCreate(user, 1);
