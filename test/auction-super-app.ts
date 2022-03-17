@@ -2378,6 +2378,84 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(existingLicenseId, 200);
         });
 
+        it("should increase bid on flow increase with rounded for sale price", async () => {
+          let existingLicenseId = 1;
+          const contributionRate = BigNumber.from(3170979198);
+          const forSalePrice = ethers.utils.parseEther("1.0");
+
+          const txn = await claimCreate(user, existingLicenseId);
+          await txn.wait();
+
+          const bidData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [forSalePrice, bidData]
+          );
+          const userData = ethers.utils.defaultAbiCoder.encode(
+            ["uint8", "bytes"],
+            [Action.BID, actionData]
+          );
+
+          const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+            receiver: superApp.address,
+            flowRate: contributionRate.toString(),
+            superToken: ethx.address,
+            userData: userData,
+          });
+
+          const txn2 = await updateFlowOp.exec(user);
+          const receipt = await txn2.wait();
+
+          await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await checkJailed(receipt);
+          await checkAppNetFlow();
+          await checkUserToAppFlow(contributionRate.toString(), user);
+          await checkAppToBeneficiaryFlow(contributionRate.toString());
+          await checkCurrentOwnerBid(
+            existingLicenseId,
+            contributionRate.toNumber()
+          );
+          await checkOwnerBidContributionRate(
+            existingLicenseId,
+            contributionRate.toNumber()
+          );
+        });
+
+        it("should revert on flow increase with incorrect for sale price", async () => {
+          let existingLicenseId = 1;
+          const contributionRate = BigNumber.from(3170979198);
+          const forSalePrice = ethers.utils.parseEther("1.1");
+
+          const txn = await claimCreate(user, existingLicenseId);
+          await txn.wait();
+
+          const bidData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [forSalePrice, bidData]
+          );
+          const userData = ethers.utils.defaultAbiCoder.encode(
+            ["uint8", "bytes"],
+            [Action.BID, actionData]
+          );
+
+          const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+            receiver: superApp.address,
+            flowRate: contributionRate.toString(),
+            superToken: ethx.address,
+            userData: userData,
+          });
+
+          const txn2 = updateFlowOp.exec(user);
+          await expect(txn2).to.be.rejected;
+        });
+
         it("should decrease bid on flow decrease", async () => {
           let existingLicenseId = 1;
 
@@ -2651,7 +2729,7 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      describe("Outstanding bid has not elapsed", async () => {
+      xdescribe("Outstanding bid has not elapsed", async () => {
         it("should pay penalty and increase bid on flow increase", async () => {
           let existingLicenseId = 2;
 
@@ -2705,6 +2783,112 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(existingLicenseId, 200);
           await checkOutstandingBid(existingLicenseId, 0);
           await checkOldBid(bidder, existingLicenseId, 200);
+        });
+
+        it("should pay penalty and increase bid on flow increase with rounded for sale price", async () => {
+          let existingLicenseId = 2;
+          const contributionRate = BigNumber.from(3170979198);
+          const forSalePrice = ethers.utils.parseEther("1.0");
+
+          const txn = await claimCreate(user, existingLicenseId);
+          await txn.wait();
+
+          const txn1 = await placeBidCreate(bidder, existingLicenseId);
+          await txn1.wait();
+
+          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
+          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+
+          const approveOp = ethx.approve({
+            receiver: superApp.address,
+            amount: penaltyAmount.toString(),
+          });
+
+          const bidData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [forSalePrice, bidData]
+          );
+          const userData = ethers.utils.defaultAbiCoder.encode(
+            ["uint8", "bytes"],
+            [Action.BID, actionData]
+          );
+          const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+            receiver: superApp.address,
+            flowRate: contributionRate.toString(),
+            superToken: ethx.address,
+            userData: userData,
+          });
+          const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+
+          const txn2 = await batchCall.exec(user);
+          const receipt = await txn2.wait();
+
+          await expect(txn2)
+            .to.emit(ethx_erc20, "Transfer")
+            .withArgs(user.address, admin.address, penaltyAmount);
+          await checkJailed(receipt);
+          await checkAppNetFlow();
+          await checkUserToAppFlow("200", bidder);
+          await checkAppToUserFlow("200", bidder);
+          await checkUserToAppFlow(contributionRate.toString(), user);
+          await checkAppToBeneficiaryFlow(contributionRate.toString());
+          await checkCurrentOwnerBid(
+            existingLicenseId,
+            contributionRate.toNumber()
+          );
+          await checkOwnerBidContributionRate(
+            existingLicenseId,
+            contributionRate.toNumber()
+          );
+          await checkOutstandingBid(existingLicenseId, 0);
+          await checkOldBid(bidder, existingLicenseId, 200);
+        });
+
+        it("should revert on flow increase with rounded for sale price", async () => {
+          let existingLicenseId = 2;
+          const contributionRate = BigNumber.from(3170979198);
+          const forSalePrice = ethers.utils.parseEther("1.1");
+
+          const txn = await claimCreate(user, existingLicenseId);
+          await txn.wait();
+
+          const txn1 = await placeBidCreate(bidder, existingLicenseId);
+          await txn1.wait();
+
+          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
+          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+
+          const approveOp = ethx.approve({
+            receiver: superApp.address,
+            amount: penaltyAmount.toString(),
+          });
+
+          const bidData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            [existingLicenseId]
+          );
+          const actionData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes"],
+            [forSalePrice, bidData]
+          );
+          const userData = ethers.utils.defaultAbiCoder.encode(
+            ["uint8", "bytes"],
+            [Action.BID, actionData]
+          );
+          const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+            receiver: superApp.address,
+            flowRate: contributionRate.toString(),
+            superToken: ethx.address,
+            userData: userData,
+          });
+          const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+
+          const txn2 = batchCall.exec(user);
+          await expect(txn2).to.be.rejected;
         });
 
         it("should not clear outstanding bid if flow increase is not high enough", async () => {
@@ -2959,7 +3143,7 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      describe("Outstanding bid has elapsed", async () => {
+      xdescribe("Outstanding bid has elapsed", async () => {
         it("should revert on flow increase", async () => {
           let existingLicenseId = 2;
 
