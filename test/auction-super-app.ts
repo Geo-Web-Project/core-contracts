@@ -924,7 +924,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(100);
   });
 
-  describe("No user data", async () => {
+  xdescribe("No user data", async () => {
     it("should revert on flow create", async () => {
       const createFlowOp = await ethersjsSf.cfaV1.createFlow({
         sender: user.address,
@@ -1011,7 +1011,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Unknown Action", async () => {
+  xdescribe("Unknown Action", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["uint8", "bytes"],
@@ -1123,7 +1123,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Random user data", async () => {
+  xdescribe("Random user data", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["bytes"],
@@ -1235,7 +1235,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("CLAIM Action", async () => {
+  xdescribe("CLAIM Action", async () => {
     it("should claim on flow create", async () => {
       const txn = await claimCreate(user);
       await expect(txn)
@@ -1687,7 +1687,7 @@ describe("AuctionSuperApp", async function () {
   });
 
   describe("BID Action", async () => {
-    describe("New highest bidder", async () => {
+    xdescribe("New highest bidder", async () => {
       it("should place bid on flow create", async () => {
         let existingLicenseId = 1;
 
@@ -2901,7 +2901,7 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    describe("Outstanding bidder", async () => {
+    xdescribe("Outstanding bidder", async () => {
       it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
         let existingLicenseId = 1;
         const txn = await claimCreate(user, existingLicenseId);
@@ -3086,7 +3086,7 @@ describe("AuctionSuperApp", async function () {
     });
 
     describe("Current owner", async () => {
-      describe("No outstanding bid", async () => {
+      xdescribe("No outstanding bid", async () => {
         it("should increase bid on flow increase", async () => {
           let existingLicenseId = 1;
 
@@ -4257,7 +4257,7 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    describe("Not outstanding bidder or owner", async () => {
+    xdescribe("Not outstanding bidder or owner", async () => {
       it("should decrease partial bid on flow decrease", async () => {
         let existingLicenseId = 2;
 
@@ -4465,7 +4465,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Claim Outstanding Bid", async () => {
+  xdescribe("Claim Outstanding Bid", async () => {
     it("should claim bid after bidding period has elapsed", async () => {
       const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
       const txn = await claimCreate(user, 1);
