@@ -1112,13 +1112,13 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         // Clear outstanding bid
         bidOutstanding.contributionRate = 0;
 
-        newCtx = _increaseAppToBeneficiaryFlowWithCtx(_ctx, updatedRate);
-
         newCtx = _decreaseAppToUserFlowWithCtx(
-            newCtx,
+            _ctx,
             bidOutstanding.bidder,
             bidContributionRate
         );
+
+        newCtx = _increaseAppToBeneficiaryFlowWithCtx(newCtx, updatedRate);
 
         // Transfer license
         license.safeTransferFrom(oldOwner, bidOutstanding.bidder, licenseId);
