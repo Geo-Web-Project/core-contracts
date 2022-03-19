@@ -2,7 +2,7 @@
 name: Bounty Ticket
 about: Template for open bounties.
 title: "[OPEN BOUNTY]"
-labels: ''
+labels: bounty
 assignees: ''
 
 ---
