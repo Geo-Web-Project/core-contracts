@@ -341,9 +341,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         // Clear outstanding bid
         bidOutstanding.contributionRate = 0;
 
-        _increaseAppToBeneficiaryFlow(updatedRate);
-
         _decreaseAppToUserFlow(bidOutstanding.bidder, bidContributionRate);
+
+        _increaseAppToBeneficiaryFlow(updatedRate);
 
         if (oldOwnerBidContributionRate > 0) {
             _increaseAppToUserFlow(oldOwner, oldOwnerBidContributionRate);

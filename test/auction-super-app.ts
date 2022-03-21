@@ -332,8 +332,6 @@ describe("AuctionSuperApp", async function () {
     _bidder: SignerWithAddress,
     mockLicenseId?: number
   ) {
-    const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
     const existingFlow = await ethersjsSf.cfaV1.getFlow({
       sender: _bidder.address,
       receiver: superApp.address,
@@ -343,6 +341,12 @@ describe("AuctionSuperApp", async function () {
 
     const existingContributionRate = await superApp.ownerBidContributionRate(
       mockLicenseId ?? 1
+    );
+
+    const purchasePrice = await rateToPurchasePrice(existingContributionRate);
+
+    const forSalePrice = await rateToPurchasePrice(
+      existingContributionRate.add(200)
     );
 
     const approveOp = ethx.approve({
@@ -356,7 +360,7 @@ describe("AuctionSuperApp", async function () {
     );
     const actionData = ethers.utils.defaultAbiCoder.encode(
       ["uint256", "bytes"],
-      [await rateToPurchasePrice(existingContributionRate.add(200)), bidData]
+      [forSalePrice, bidData]
     );
     const userData = ethers.utils.defaultAbiCoder.encode(
       ["uint8", "bytes"],
@@ -365,7 +369,10 @@ describe("AuctionSuperApp", async function () {
     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
       sender: _bidder.address,
       receiver: superApp.address,
-      flowRate: BigNumber.from(existingFlow.flowRate).add(200).toString(),
+      flowRate: BigNumber.from(existingFlow.flowRate)
+        .add(existingContributionRate)
+        .add(200)
+        .toString(),
       superToken: ethx.address,
       userData: userData,
     });
@@ -376,8 +383,12 @@ describe("AuctionSuperApp", async function () {
   }
 
   async function rejectBid(_user: SignerWithAddress, mockLicenseId?: number) {
-    const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
+    const existingContributionRate = await superApp.ownerBidContributionRate(
+      mockLicenseId ?? 1
+    );
+    const purchasePrice = await rateToPurchasePrice(existingContributionRate);
     const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+    const outstandingBid = await superApp.outstandingBid(mockLicenseId ?? 1);
 
     const approveOp = ethx.approve({
       receiver: superApp.address,
@@ -390,7 +401,7 @@ describe("AuctionSuperApp", async function () {
     );
     const actionData = ethers.utils.defaultAbiCoder.encode(
       ["uint256", "bytes"],
-      [await rateToPurchasePrice(BigNumber.from(200)), bidData]
+      [outstandingBid.forSalePrice, bidData]
     );
     const userData = ethers.utils.defaultAbiCoder.encode(
       ["uint8", "bytes"],
@@ -398,7 +409,7 @@ describe("AuctionSuperApp", async function () {
     );
     const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
       receiver: superApp.address,
-      flowRate: "200",
+      flowRate: outstandingBid.contributionRate.toString(),
       superToken: ethx.address,
       userData: userData,
     });
@@ -908,7 +919,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(100);
   });
 
-  xdescribe("No user data", async () => {
+  describe("No user data", async () => {
     it("should revert on flow create", async () => {
       const createFlowOp = await ethersjsSf.cfaV1.createFlow({
         sender: user.address,
@@ -992,7 +1003,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("Unknown Action", async () => {
+  describe("Unknown Action", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["uint8", "bytes"],
@@ -1101,7 +1112,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("Random user data", async () => {
+  describe("Random user data", async () => {
     it("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["bytes"],
@@ -1210,7 +1221,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("CLAIM Action", async () => {
+  describe("CLAIM Action", async () => {
     it("should claim on flow create", async () => {
       const txn = await claimCreate(user);
       await expect(txn)
@@ -1497,7 +1508,7 @@ describe("AuctionSuperApp", async function () {
   });
 
   describe("BID Action", async () => {
-    xdescribe("New highest bidder", async () => {
+    describe("New highest bidder", async () => {
       it("should place bid on flow create", async () => {
         let existingLicenseId = 1;
 
@@ -2486,7 +2497,7 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    xdescribe("Outstanding bidder", async () => {
+    describe("Outstanding bidder", async () => {
       it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
         let existingLicenseId = 1;
         const txn = await claimCreate(user, existingLicenseId);
@@ -2671,7 +2682,7 @@ describe("AuctionSuperApp", async function () {
     });
 
     describe("Current owner", async () => {
-      xdescribe("No outstanding bid", async () => {
+      describe("No outstanding bid", async () => {
         it("should increase bid on flow increase", async () => {
           let existingLicenseId = 1;
 
@@ -3788,7 +3799,7 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    xdescribe("Not outstanding bidder or owner", async () => {
+    describe("Not outstanding bidder or owner", async () => {
       it("should decrease partial bid on flow decrease", async () => {
         let existingLicenseId = 2;
 
@@ -3854,6 +3865,7 @@ describe("AuctionSuperApp", async function () {
           ["uint8", "bytes"],
           [Action.BID, actionData]
         );
+
         const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
           receiver: superApp.address,
           flowRate: "150",
@@ -3867,9 +3879,11 @@ describe("AuctionSuperApp", async function () {
         await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
         await checkJailed(receipt);
         await checkAppNetFlow();
+        await checkUserToAppFlow("300", user);
+        await checkAppToUserFlow("0", user);
         await checkUserToAppFlow("150", bidder);
         await checkAppToUserFlow("50", bidder);
-        await checkAppToBeneficiaryFlow("300");
+        await checkAppToBeneficiaryFlow("400");
         await checkOldBid(bidder, 1, 50);
       });
 
@@ -3908,9 +3922,11 @@ describe("AuctionSuperApp", async function () {
         await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
         await checkJailed(receipt);
         await checkAppNetFlow();
+        await checkUserToAppFlow("300", user);
+        await checkAppToUserFlow("0", user);
         await checkUserToAppFlow("100", bidder);
         await checkAppToUserFlow("0", bidder);
-        await checkAppToBeneficiaryFlow("300");
+        await checkAppToBeneficiaryFlow("400");
         await checkOldBid(bidder, 1, 0);
       });
 
@@ -3991,7 +4007,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  xdescribe("Claim Outstanding Bid", async () => {
+  describe("Claim Outstanding Bid", async () => {
     it("should claim bid after bidding period has elapsed", async () => {
       const txn = await claimCreate(user, 1);
       await txn.wait();
@@ -4045,17 +4061,17 @@ describe("AuctionSuperApp", async function () {
       await superApp.connect(bidder).claimOutstandingBid(1);
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
-      await checkUserToAppFlow("300", user);
-      await checkAppToUserFlow("300", user);
-      await checkUserToAppFlow("300", bidder);
+      await checkUserToAppFlow("400", user);
+      await checkAppToUserFlow("400", user);
+      await checkUserToAppFlow("400", bidder);
       await checkAppToUserFlow("0", bidder);
-      await checkAppToBeneficiaryFlow("300");
-      await checkCurrentOwnerBid(1, 200);
-      await checkOwnerBidContributionRate(1, 200);
+      await checkAppToBeneficiaryFlow("400");
+      await checkCurrentOwnerBid(1, 300);
+      await checkOwnerBidContributionRate(1, 300);
       await checkCurrentOwnerBid(2, 100);
       await checkOwnerBidContributionRate(2, 100);
       await checkOutstandingBid(1, 0);
-      await checkOutstandingBid(2, 200);
+      await checkOutstandingBid(2, 300);
       await checkAppNetFlow();
 
       expect(
