@@ -4009,6 +4009,7 @@ describe("AuctionSuperApp", async function () {
 
   describe("Claim Outstanding Bid", async () => {
     it("should claim bid after bidding period has elapsed", async () => {
+      const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
       const txn = await claimCreate(user, 1);
       await txn.wait();
 
@@ -4019,7 +4020,13 @@ describe("AuctionSuperApp", async function () {
       await network.provider.send("evm_increaseTime", [700000]);
       await network.provider.send("evm_mine");
 
-      await superApp.connect(bidder).claimOutstandingBid(1);
+      const txn2 = await superApp.connect(bidder).claimOutstandingBid(1);
+      await txn2.wait();
+
+      await expect(txn2)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(superApp.address, user.address, forSalePrice);
+
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
       await checkUserToAppFlow("100", user);
@@ -4042,6 +4049,7 @@ describe("AuctionSuperApp", async function () {
     });
 
     it("should claim bid after bidding period has elapsed with multiple bids", async () => {
+      const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
       const txn = await claimCreate(user, 1);
       await txn.wait();
 
@@ -4058,7 +4066,13 @@ describe("AuctionSuperApp", async function () {
       await network.provider.send("evm_increaseTime", [700000]);
       await network.provider.send("evm_mine");
 
-      await superApp.connect(bidder).claimOutstandingBid(1);
+      const txn4 = await superApp.connect(bidder).claimOutstandingBid(1);
+      await txn4.wait();
+
+      await expect(txn4)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(superApp.address, user.address, forSalePrice);
+
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
       await checkUserToAppFlow("400", user);
