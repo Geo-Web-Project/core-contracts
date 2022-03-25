@@ -23,7 +23,7 @@ use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe("AuctionSuperApp", async function () {
+xdescribe("AuctionSuperApp", async function () {
   this.timeout(0);
 
   let accounts: SignerWithAddress[];
@@ -617,7 +617,7 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  it("should fail to deploy if host is zero", async () => {
+  xit("should fail to deploy if host is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -638,7 +638,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("host is zero address");
   });
 
-  it("should fail to deploy if cfa is zero", async () => {
+  xit("should fail to deploy if cfa is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -659,7 +659,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("cfa is zero address");
   });
 
-  it("should fail to deploy if acceptedToken is zero", async () => {
+  xit("should fail to deploy if acceptedToken is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -680,7 +680,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("acceptedToken is zero address");
   });
 
-  it("should fail to deploy if beneficiary is zero", async () => {
+  xit("should fail to deploy if beneficiary is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -701,7 +701,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("beneficiary is zero address");
   });
 
-  it("should fail to deploy if license is zero", async () => {
+  xit("should fail to deploy if license is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -722,7 +722,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("license is zero address");
   });
 
-  it("should fail to deploy if claimer is zero", async () => {
+  xit("should fail to deploy if claimer is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -743,7 +743,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("claimer is zero address");
   });
 
-  it("should fail to deploy if reclaimer is zero", async () => {
+  xit("should fail to deploy if reclaimer is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -764,7 +764,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("reclaimer is zero address");
   });
 
-  it("should fail to deploy if beneficiary is an app", async () => {
+  xit("should fail to deploy if beneficiary is an app", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
@@ -785,7 +785,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("beneficiary is an app");
   });
 
-  it("should not allow beneficiary to be an app", async () => {
+  xit("should not allow beneficiary to be an app", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     const superApp1 = await factory.deploy(
@@ -809,7 +809,7 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("beneficiary is an app");
   });
 
-  it("should only allow admin to set beneficiary", async () => {
+  xit("should only allow admin to set beneficiary", async () => {
     expect(
       superApp.connect(user).setBeneficiary(admin.address)
     ).to.be.revertedWith("is missing role");
@@ -820,7 +820,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(admin.address);
   });
 
-  it("should move flow to new beneficiary", async () => {
+  xit("should move flow to new beneficiary", async () => {
     const txn = await claimCreate(user);
     await txn.wait();
 
@@ -833,7 +833,7 @@ describe("AuctionSuperApp", async function () {
     await checkAppNetFlow();
   });
 
-  it("should only allow PAUSE_ROLE to pause and unpause", async () => {
+  xit("should only allow PAUSE_ROLE to pause and unpause", async () => {
     expect(superApp.connect(user).pause()).to.be.revertedWith(
       "is missing role"
     );
@@ -847,7 +847,7 @@ describe("AuctionSuperApp", async function () {
     await superApp.unpause();
   });
 
-  it("should only allow admin to set claimer", async () => {
+  xit("should only allow admin to set claimer", async () => {
     expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
       "is missing role"
     );
@@ -858,7 +858,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(admin.address);
   });
 
-  it("should only allow admin to set fee", async () => {
+  xit("should only allow admin to set fee", async () => {
     expect(superApp.connect(user).setPerSecondFee(1, 2)).to.be.revertedWith(
       "is missing role"
     );
@@ -872,7 +872,7 @@ describe("AuctionSuperApp", async function () {
     expect(denominator).to.equal(2);
   });
 
-  it("should only allow admin to set penalty", async () => {
+  xit("should only allow admin to set penalty", async () => {
     expect(superApp.connect(user).setPenalty(1, 2)).to.be.revertedWith(
       "is missing role"
     );
@@ -886,7 +886,7 @@ describe("AuctionSuperApp", async function () {
     expect(denominator).to.equal(2);
   });
 
-  it("should only allow admin to set license", async () => {
+  xit("should only allow admin to set license", async () => {
     expect(superApp.connect(user).setLicense(admin.address)).to.be.revertedWith(
       "is missing role"
     );
@@ -897,7 +897,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(admin.address);
   });
 
-  it("should only allow admin to set claimer", async () => {
+  xit("should only allow admin to set claimer", async () => {
     expect(superApp.connect(user).setClaimer(admin.address)).to.be.revertedWith(
       "is missing role"
     );
@@ -908,7 +908,7 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(admin.address);
   });
 
-  it("should only allow admin to set bid period", async () => {
+  xit("should only allow admin to set bid period", async () => {
     expect(superApp.connect(user).setBidPeriod(100)).to.be.revertedWith(
       "is missing role"
     );
@@ -919,8 +919,8 @@ describe("AuctionSuperApp", async function () {
     expect(value).to.equal(100);
   });
 
-  describe("No user data", async () => {
-    it("should revert on flow create", async () => {
+  xdescribe("No user data", async () => {
+    xit("should revert on flow create", async () => {
       const createFlowOp = await ethersjsSf.cfaV1.createFlow({
         sender: user.address,
         receiver: superApp.address,
@@ -932,7 +932,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn).to.be.rejected;
     });
 
-    it("should revert on flow increase", async () => {
+    xit("should revert on flow increase", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -946,7 +946,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should revert on flow decrease", async () => {
+    xit("should revert on flow decrease", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -960,7 +960,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should delete Flow(app -> user) on flow delete", async () => {
+    xit("should delete Flow(app -> user) on flow delete", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -978,7 +978,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
     });
 
-    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+    xit("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
       let existingLicenseId = 1;
       const txn = await claimCreate(user, existingLicenseId);
       await txn.wait();
@@ -1003,8 +1003,8 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Unknown Action", async () => {
-    it("should revert on flow create", async () => {
+  xdescribe("Unknown Action", async () => {
+    xit("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["uint8", "bytes"],
         [2, "0x"]
@@ -1021,7 +1021,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn).to.be.rejected;
     });
 
-    it("should revert on flow increase", async () => {
+    xit("should revert on flow increase", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1040,7 +1040,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should revert on flow decrease", async () => {
+    xit("should revert on flow decrease", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1059,7 +1059,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should delete Flow(app -> user) on flow delete", async () => {
+    xit("should delete Flow(app -> user) on flow delete", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1082,7 +1082,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
     });
 
-    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+    xit("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
       let existingLicenseId = 1;
       const txn = await claimCreate(user, existingLicenseId);
       await txn.wait();
@@ -1112,8 +1112,8 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Random user data", async () => {
-    it("should revert on flow create", async () => {
+  xdescribe("Random user data", async () => {
+    xit("should revert on flow create", async () => {
       const userData = ethers.utils.defaultAbiCoder.encode(
         ["bytes"],
         [ethers.utils.randomBytes(8)]
@@ -1130,7 +1130,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn).to.be.rejected;
     });
 
-    it("should revert on flow increase", async () => {
+    xit("should revert on flow increase", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1149,7 +1149,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should revert on flow decrease", async () => {
+    xit("should revert on flow decrease", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1168,7 +1168,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should delete Flow(app -> user) on flow delete", async () => {
+    xit("should delete Flow(app -> user) on flow delete", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1191,7 +1191,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
     });
 
-    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+    xit("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
       let existingLicenseId = 1;
       const txn = await claimCreate(user, existingLicenseId);
       await txn.wait();
@@ -1221,8 +1221,8 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("CLAIM Action", async () => {
-    it("should claim on flow create", async () => {
+  xdescribe("CLAIM Action", async () => {
+    xit("should claim on flow create", async () => {
       const txn = await claimCreate(user);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
@@ -1238,7 +1238,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow("100");
     });
 
-    it("should claim on flow create with rounded for sale price", async () => {
+    xit("should claim on flow create with rounded for sale price", async () => {
       const contributionRate = BigNumber.from(3170979198);
       const forSalePrice = ethers.utils.parseEther("1.0");
 
@@ -1284,7 +1284,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow(contributionRate.toString());
     });
 
-    it("should revert on flow create with incorrectly rounded for sale price", async () => {
+    xit("should revert on flow create with incorrectly rounded for sale price", async () => {
       const contributionRate = BigNumber.from(3170979198);
       const forSalePrice = ethers.utils.parseEther("1.1");
 
@@ -1316,7 +1316,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn).to.be.rejected;
     });
 
-    it("should claim on flow increase", async () => {
+    xit("should claim on flow increase", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1352,7 +1352,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow("300");
     });
 
-    it("should claim on flow increase with rounded for sale price", async () => {
+    xit("should claim on flow increase with rounded for sale price", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1395,7 +1395,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
     });
 
-    it("should revert on flow increase with incorrectly rounded for sale price", async () => {
+    xit("should revert on flow increase with incorrectly rounded for sale price", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1424,7 +1424,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should revert on flow decrease", async () => {
+    xit("should revert on flow decrease", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1449,7 +1449,7 @@ describe("AuctionSuperApp", async function () {
       await expect(txn1).to.be.rejected;
     });
 
-    it("should delete Flow(app -> user) on flow delete", async () => {
+    xit("should delete Flow(app -> user) on flow delete", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
 
@@ -1477,7 +1477,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
     });
 
-    it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+    xit("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
       let existingLicenseId = 1;
       const txn = await claimCreate(user, existingLicenseId);
       await txn.wait();
@@ -1507,9 +1507,9 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("BID Action", async () => {
-    describe("New highest bidder", async () => {
-      it("should place bid on flow create", async () => {
+  xdescribe("BID Action", async () => {
+    xdescribe("New highest bidder", async () => {
+      xit("should place bid on flow create", async () => {
         let existingLicenseId = 1;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -1558,7 +1558,7 @@ describe("AuctionSuperApp", async function () {
         await checkAppToBeneficiaryFlow("100");
       });
 
-      it("should place bid on flow create with rounded for sale price", async () => {
+      xit("should place bid on flow create with rounded for sale price", async () => {
         let existingLicenseId = 1;
         const txn = await claimMediumCreate(user, existingLicenseId);
         await txn.wait();
@@ -1582,7 +1582,7 @@ describe("AuctionSuperApp", async function () {
         await checkAppToBeneficiaryFlow(contributionRate.toString());
       });
 
-      it("should revert on flow create with incorrect rounded for sale price", async () => {
+      xit("should revert on flow create with incorrect rounded for sale price", async () => {
         let existingLicenseId = 1;
         const contributionRate = BigNumber.from(3170979198);
         const forSalePrice = ethers.utils.parseEther("0.9");
@@ -1622,7 +1622,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn1).to.be.rejected;
       });
 
-      it("should place bid on flow increase", async () => {
+      xit("should place bid on flow increase", async () => {
         let existingLicenseId = 1;
 
         // User 1 claim
@@ -1674,7 +1674,7 @@ describe("AuctionSuperApp", async function () {
         await checkAppToBeneficiaryFlow("200");
       });
 
-      it("should place bid on flow increase with rounded for sale price", async () => {
+      xit("should place bid on flow increase with rounded for sale price", async () => {
         let existingLicenseId = 1;
 
         // User 1 claim
@@ -1730,7 +1730,7 @@ describe("AuctionSuperApp", async function () {
         await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
       });
 
-      it("should revert on flow increase with incorrect rounded for sale price", async () => {
+      xit("should revert on flow increase with incorrect rounded for sale price", async () => {
         let existingLicenseId = 1;
         const contributionRate = BigNumber.from(3170979198);
         const forSalePrice = ethers.utils.parseEther("1.1");
@@ -1774,7 +1774,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2).to.be.rejected;
       });
 
-      it("should revert on flow create when license does not exist", async () => {
+      xit("should revert on flow create when license does not exist", async () => {
         let existingLicenseId = 1;
 
         const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
@@ -1809,7 +1809,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2).to.be.rejected;
       });
 
-      it("should revert on flow increase when license does not exist", async () => {
+      xit("should revert on flow increase when license does not exist", async () => {
         let existingLicenseId = 1;
 
         const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
@@ -1846,7 +1846,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2).to.be.rejected;
       });
 
-      it("should revert on flow create when outstanding bid exists", async () => {
+      xit("should revert on flow create when outstanding bid exists", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -1887,7 +1887,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2).to.be.rejected;
       });
 
-      it("should revert on flow increase when outstanding bid exists", async () => {
+      xit("should revert on flow increase when outstanding bid exists", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -1931,7 +1931,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3).to.be.rejected;
       });
 
-      it("should revert on flow increase after owner deleted bid when outstanding bid exists", async () => {
+      xit("should revert on flow increase after owner deleted bid when outstanding bid exists", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -1984,7 +1984,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn4).to.be.rejected;
       });
 
-      it("should revert on flow create when bid is not high enough", async () => {
+      xit("should revert on flow create when bid is not high enough", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2022,7 +2022,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn1).to.be.rejected;
       });
 
-      it("should revert on flow increase when bid is not high enough", async () => {
+      xit("should revert on flow increase when bid is not high enough", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2063,7 +2063,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2).to.be.rejected;
       });
 
-      it("should reclaim on flow create after owner deleted bid", async () => {
+      xit("should reclaim on flow create after owner deleted bid", async () => {
         let existingLicenseId = 1;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2139,7 +2139,7 @@ describe("AuctionSuperApp", async function () {
         );
       });
 
-      it("should reclaim on flow create with rounded for sale price after owner deleted bid", async () => {
+      xit("should reclaim on flow create with rounded for sale price after owner deleted bid", async () => {
         let existingLicenseId = 1;
         const contributionRate = BigNumber.from(3170979198);
         const forSalePrice = ethers.utils.parseEther("1.0");
@@ -2223,7 +2223,7 @@ describe("AuctionSuperApp", async function () {
         );
       });
 
-      it("should revert on flow create with incorrect for sale price after owner deleted bid", async () => {
+      xit("should revert on flow create with incorrect for sale price after owner deleted bid", async () => {
         let existingLicenseId = 1;
         const contributionRate = BigNumber.from(3170979198);
         const forSalePrice = ethers.utils.parseEther("1.1");
@@ -2275,7 +2275,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3).to.be.rejected;
       });
 
-      it("should reclaim on flow increase after owner deleted bid", async () => {
+      xit("should reclaim on flow increase after owner deleted bid", async () => {
         let existingLicenseId = 1;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2354,7 +2354,7 @@ describe("AuctionSuperApp", async function () {
         );
       });
 
-      it("should reclaim on flow increase with rounded for sale price after owner deleted bid", async () => {
+      xit("should reclaim on flow increase with rounded for sale price after owner deleted bid", async () => {
         let existingLicenseId = 1;
         const contributionRate = BigNumber.from(3170979198);
         const forSalePrice = ethers.utils.parseEther("1.0");
@@ -2441,7 +2441,7 @@ describe("AuctionSuperApp", async function () {
         );
       });
 
-      it("should revert on flow increase with rounded for sale price after owner deleted bid", async () => {
+      xit("should revert on flow increase with rounded for sale price after owner deleted bid", async () => {
         let existingLicenseId = 1;
         const contributionRate = BigNumber.from(3170979198);
         const forSalePrice = ethers.utils.parseEther("1.1");
@@ -2497,8 +2497,8 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    describe("Outstanding bidder", async () => {
-      it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
+    xdescribe("Outstanding bidder", async () => {
+      xit("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
         let existingLicenseId = 1;
         const txn = await claimCreate(user, existingLicenseId);
         await txn.wait();
@@ -2527,7 +2527,7 @@ describe("AuctionSuperApp", async function () {
         await checkAppToUserFlow("200", bidder);
       });
 
-      it("should revert on flow create on second bid", async () => {
+      xit("should revert on flow create on second bid", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2568,7 +2568,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2).to.be.rejected;
       });
 
-      it("should revert on flow increase on second bid", async () => {
+      xit("should revert on flow increase on second bid", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2609,7 +2609,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3).to.be.rejected;
       });
 
-      it("should revert on flow decrease on second bid", async () => {
+      xit("should revert on flow decrease on second bid", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2650,7 +2650,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3).to.be.rejected;
       });
 
-      it("should not delete bid on flow delete", async () => {
+      xit("should not delete bid on flow delete", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -2681,9 +2681,9 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    describe("Current owner", async () => {
+    xdescribe("Current owner", async () => {
       describe("No outstanding bid", async () => {
-        it("should increase bid on flow increase", async () => {
+        xit("should increase bid on flow increase", async () => {
           let existingLicenseId = 1;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -2721,7 +2721,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(existingLicenseId, 200);
         });
 
-        it("should increase bid on flow increase with rounded for sale price", async () => {
+        xit("should increase bid on flow increase with rounded for sale price", async () => {
           let existingLicenseId = 1;
           const contributionRate = BigNumber.from(3170979198);
           const forSalePrice = ethers.utils.parseEther("1.0");
@@ -2767,7 +2767,7 @@ describe("AuctionSuperApp", async function () {
           );
         });
 
-        it("should revert on flow increase with incorrect for sale price", async () => {
+        xit("should revert on flow increase with incorrect for sale price", async () => {
           let existingLicenseId = 1;
           const contributionRate = BigNumber.from(3170979198);
           const forSalePrice = ethers.utils.parseEther("1.1");
@@ -2799,7 +2799,7 @@ describe("AuctionSuperApp", async function () {
           await expect(txn2).to.be.rejected;
         });
 
-        it("should decrease bid on flow decrease", async () => {
+        xit("should decrease bid on flow decrease", async () => {
           let existingLicenseId = 1;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -2837,7 +2837,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(existingLicenseId, 50);
         });
 
-        it("should decrease bid on flow decrease with rounded for sale price", async () => {
+        xit("should decrease bid on flow decrease with rounded for sale price", async () => {
           let existingLicenseId = 1;
           const contributionRate = BigNumber.from(3170979198);
           const forSalePrice = ethers.utils.parseEther("1.0");
@@ -2917,7 +2917,7 @@ describe("AuctionSuperApp", async function () {
           );
         });
 
-        it("should revert on flow decrease with incorrect for sale price", async () => {
+        xit("should revert on flow decrease with incorrect for sale price", async () => {
           let existingLicenseId = 1;
           const contributionRate = BigNumber.from(3170979198);
           const forSalePrice = ethers.utils.parseEther("1.0");
@@ -2983,7 +2983,7 @@ describe("AuctionSuperApp", async function () {
           await expect(txn2).to.be.rejected;
         });
 
-        it("should decrease bid on flow decrease and multiple bids", async () => {
+        xit("should decrease bid on flow decrease and multiple bids", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3021,7 +3021,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(2, 50);
         });
 
-        it("should delete bid on flow decrease and multiple bids", async () => {
+        xit("should delete bid on flow decrease and multiple bids", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3059,7 +3059,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(2, 0);
         });
 
-        it("should delete all bids on flow delete and multiple bids", async () => {
+        xit("should delete all bids on flow delete and multiple bids", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3084,7 +3084,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(2, 0);
         });
 
-        it("should delete bid on flow delete and single bid", async () => {
+        xit("should delete bid on flow delete and single bid", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3105,7 +3105,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(1, 0);
         });
 
-        it("should increase bid on flow increase after deleted bid", async () => {
+        xit("should increase bid on flow increase after deleted bid", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3130,7 +3130,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(1, 200);
         });
 
-        it("should increase bid on flow increase after multiple deleted bids", async () => {
+        xit("should increase bid on flow increase after multiple deleted bids", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3189,7 +3189,7 @@ describe("AuctionSuperApp", async function () {
           await checkOwnerBidContributionRate(1, 400);
         });
 
-        it("should revert on flow decrease of more than contribution", async () => {
+        xit("should revert on flow decrease of more than contribution", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3218,8 +3218,8 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      describe("Outstanding bid has not elapsed", async () => {
-        it("should pay penalty and increase bid on flow increase", async () => {
+      xdescribe("Outstanding bid has not elapsed", async () => {
+        xit("should pay penalty and increase bid on flow increase", async () => {
           let existingLicenseId = 2;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -3274,7 +3274,7 @@ describe("AuctionSuperApp", async function () {
           await checkOldBid(bidder, existingLicenseId, 200);
         });
 
-        it("should pay penalty and increase bid on flow increase with rounded for sale price", async () => {
+        xit("should pay penalty and increase bid on flow increase with rounded for sale price", async () => {
           let existingLicenseId = 2;
           const contributionRate = BigNumber.from(3170979198);
           const forSalePrice = ethers.utils.parseEther("1.0");
@@ -3337,7 +3337,7 @@ describe("AuctionSuperApp", async function () {
           await checkOldBid(bidder, existingLicenseId, 200);
         });
 
-        it("should revert on flow increase with rounded for sale price", async () => {
+        xit("should revert on flow increase with rounded for sale price", async () => {
           let existingLicenseId = 2;
           const contributionRate = BigNumber.from(3170979198);
           const forSalePrice = ethers.utils.parseEther("1.1");
@@ -3380,7 +3380,7 @@ describe("AuctionSuperApp", async function () {
           await expect(txn2).to.be.rejected;
         });
 
-        it("should not clear outstanding bid if flow increase is not high enough", async () => {
+        xit("should not clear outstanding bid if flow increase is not high enough", async () => {
           let existingLicenseId = 2;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -3423,7 +3423,7 @@ describe("AuctionSuperApp", async function () {
           await checkOutstandingBid(existingLicenseId, 200);
         });
 
-        it("should revert if penalty is not approved on flow increase", async () => {
+        xit("should revert if penalty is not approved on flow increase", async () => {
           let existingLicenseId = 2;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -3454,7 +3454,7 @@ describe("AuctionSuperApp", async function () {
           await expect(txn2).to.be.rejected;
         });
 
-        it("should accept bid on flow decrease", async () => {
+        xit("should accept bid on flow decrease", async () => {
           const forSalePrice = ethers.utils.parseEther("0.1");
           const txn = await claimMediumCreate(user, 1);
           await txn.wait();
@@ -3510,7 +3510,7 @@ describe("AuctionSuperApp", async function () {
           );
         });
 
-        it("should revert when accepting wrong bid amount on flow decrease", async () => {
+        xit("should revert when accepting wrong bid amount on flow decrease", async () => {
           const txn = await claimCreate(user, 1); // 100
           await txn.wait();
 
@@ -3541,7 +3541,7 @@ describe("AuctionSuperApp", async function () {
           await expect(txn3).to.be.rejected;
         });
 
-        it("should keep outstanding bid open on owner flow delete", async () => {
+        xit("should keep outstanding bid open on owner flow delete", async () => {
           const txn = await claimCreate(user, 1); // 100
           await txn.wait();
 
@@ -3572,7 +3572,7 @@ describe("AuctionSuperApp", async function () {
             .not.have.been.called;
         });
 
-        it("should pay penalty on flow increase after deleted bid", async () => {
+        xit("should pay penalty on flow increase after deleted bid", async () => {
           const txn = await claimCreate(user, 1);
           await txn.wait();
 
@@ -3632,8 +3632,8 @@ describe("AuctionSuperApp", async function () {
         });
       });
 
-      describe("Outstanding bid has elapsed", async () => {
-        it("should revert on flow increase", async () => {
+      xdescribe("Outstanding bid has elapsed", async () => {
+        xit("should revert on flow increase", async () => {
           let existingLicenseId = 2;
 
           const txn = await claimCreate(user, existingLicenseId);
@@ -3678,7 +3678,7 @@ describe("AuctionSuperApp", async function () {
           await expect(txn2).to.be.rejected;
         });
 
-        it("should accept bid on flow decrease", async () => {
+        xit("should accept bid on flow decrease", async () => {
           const forSalePrice = ethers.utils.parseEther("0.1");
           const txn = await claimMediumCreate(user, 1);
           await txn.wait();
@@ -3738,7 +3738,7 @@ describe("AuctionSuperApp", async function () {
           );
         });
 
-        it("should keep outstanding bid open on owner flow delete", async () => {
+        xit("should keep outstanding bid open on owner flow delete", async () => {
           const txn = await claimCreate(user, 1); // 100
           await txn.wait();
 
@@ -3773,7 +3773,7 @@ describe("AuctionSuperApp", async function () {
             .not.have.been.called;
         });
 
-        it("should revert on flow increase after deleted bid", async () => {
+        xit("should revert on flow increase after deleted bid", async () => {
           const txn = await claimCreate(user, 1); // 100
           await txn.wait();
 
@@ -3799,8 +3799,8 @@ describe("AuctionSuperApp", async function () {
       });
     });
 
-    describe("Not outstanding bidder or owner", async () => {
-      it("should decrease partial bid on flow decrease", async () => {
+    xdescribe("Not outstanding bidder or owner", async () => {
+      xit("should decrease partial bid on flow decrease", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -3843,7 +3843,7 @@ describe("AuctionSuperApp", async function () {
         await checkOldBid(bidder, existingLicenseId, 150);
       });
 
-      it("should decrease partial bid on flow decrease and multiple bids", async () => {
+      xit("should decrease partial bid on flow decrease and multiple bids", async () => {
         const txn = await claimCreate(user, 1); // 100
         await txn.wait();
 
@@ -3887,7 +3887,7 @@ describe("AuctionSuperApp", async function () {
         await checkOldBid(bidder, 1, 50);
       });
 
-      it("should decrease entire bid on flow decrease", async () => {
+      xit("should decrease entire bid on flow decrease", async () => {
         const txn = await claimCreate(user, 1); // 100
         await txn.wait();
 
@@ -3930,7 +3930,7 @@ describe("AuctionSuperApp", async function () {
         await checkOldBid(bidder, 1, 0);
       });
 
-      it("should revert if decrease bid on flow decrease is too large", async () => {
+      xit("should revert if decrease bid on flow decrease is too large", async () => {
         const txn = await claimCreate(user, 1);
         await txn.wait();
 
@@ -3963,7 +3963,7 @@ describe("AuctionSuperApp", async function () {
         await expect(txn4).to.be.rejected;
       });
 
-      it("should decrease bid on flow delete", async () => {
+      xit("should decrease bid on flow delete", async () => {
         let existingLicenseId = 2;
 
         const txn = await claimCreate(user, existingLicenseId);
@@ -4007,8 +4007,8 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
-  describe("Claim Outstanding Bid", async () => {
-    it("should claim bid after bidding period has elapsed", async () => {
+  xdescribe("Claim Outstanding Bid", async () => {
+    xit("should claim bid after bidding period has elapsed", async () => {
       const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
       const txn = await claimCreate(user, 1);
       await txn.wait();
@@ -4048,7 +4048,7 @@ describe("AuctionSuperApp", async function () {
       );
     });
 
-    it("should claim bid after bidding period has elapsed with multiple bids", async () => {
+    xit("should claim bid after bidding period has elapsed with multiple bids", async () => {
       const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
       const txn = await claimCreate(user, 1);
       await txn.wait();
@@ -4097,7 +4097,7 @@ describe("AuctionSuperApp", async function () {
       );
     });
 
-    it("should be able to claim bid after owner flow delete", async () => {
+    xit("should be able to claim bid after owner flow delete", async () => {
       const txn = await claimCreate(user, 1); // 100
       await txn.wait();
 
@@ -4135,7 +4135,7 @@ describe("AuctionSuperApp", async function () {
       );
     });
 
-    it("should revert claim bid if bidding period has not elapsed", async () => {
+    xit("should revert claim bid if bidding period has not elapsed", async () => {
       const txn = await claimCreate(user, 1);
       await txn.wait();
 
@@ -4147,7 +4147,7 @@ describe("AuctionSuperApp", async function () {
       ).to.be.revertedWith("Bid period has not elapsed");
     });
 
-    it("should revert claim bid if outstanding bid does not exist", async () => {
+    xit("should revert claim bid if outstanding bid does not exist", async () => {
       const txn = await claimCreate(user, 1);
       await txn.wait();
 
