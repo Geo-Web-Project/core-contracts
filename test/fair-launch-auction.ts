@@ -8,7 +8,6 @@ import { BigNumber, Contract } from 'ethers';
 import * as hre from 'hardhat';
 
 import {
-  AuctionSuperApp,
   ERC721License,
   FairLaunchClaimer,
   FairLaunchClaimer__factory,

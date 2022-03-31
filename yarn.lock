@@ -246,13 +246,6 @@
   resolved "https://registry.yarnpkg.com/@ensdomains/resolver/-/resolver-0.2.4.tgz#c10fe28bf5efbf49bff4666d909aed0265efbc89"
   integrity sha512-bvaTH34PMCbv6anRa9I/0zjLJgY4EuznbEMgbV77JBCQ9KNC46rzi0avuxpOfu+xDjPEtSFGqVEOr5GlUSGudA==
 
-"@eth-optimism/hardhat-ovm@^0.2.3":
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/hardhat-ovm/-/hardhat-ovm-0.2.4.tgz#1ffe114e341296703cce17006e120ea4107fcb97"
-  integrity sha512-lfDADd++qg2F9CLNQ5lctGcPlQB3gDe8BsYXu8B72SOJCzOlnfYiS96N/JErG/YpLoLyT2fVPmXCIIl0ogU9ow==
-  dependencies:
-    node-fetch "^2.6.1"
-
 "@ethereum-waffle/chai@^3.4.0":
   version "3.4.3"
   resolved "https://registry.yarnpkg.com/@ethereum-waffle/chai/-/chai-3.4.3.tgz#a2fbaa583f02164c6a5c755df488f45482f6f382"
