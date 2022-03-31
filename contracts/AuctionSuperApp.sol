@@ -313,13 +313,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      * @return Penalty in wei
      */
     function calculatePenalty(uint256 id) public view returns (uint256) {
-        Bid storage bid = currentOwnerBid[id];
+        Bid storage bidOutstanding = outstandingBid[id];
 
-        // Value * Per Second Fee = Contribution Rate
-        uint256 currentPurchasePrice = (uint96(bid.contributionRate) *
-            bid.perSecondFeeDenominator) / bid.perSecondFeeNumerator;
-
-        uint256 value = (currentPurchasePrice * penaltyNumerator) /
+        uint256 value = (bidOutstanding.forSalePrice * penaltyNumerator) /
             penaltyDenominator;
 
         return value;

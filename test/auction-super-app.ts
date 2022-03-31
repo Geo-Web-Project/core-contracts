@@ -3315,8 +3315,8 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await placeBidCreate(bidder, existingLicenseId);
           await txn1.wait();
 
-          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
-          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+          const newForSalePrice = await rateToPurchasePrice(BigNumber.from(200));
+          const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
             receiver: superApp.address,
@@ -3329,7 +3329,7 @@ describe("AuctionSuperApp", async function () {
           );
           const actionData = ethers.utils.defaultAbiCoder.encode(
             ["uint256", "bytes"],
-            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
+            [newForSalePrice, bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -3375,8 +3375,8 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await placeBidCreate(bidder, existingLicenseId);
           await txn1.wait();
 
-          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
-          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+          const newForSalePrice = await rateToPurchasePrice(BigNumber.from(200));
+          const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
             receiver: superApp.address,
@@ -3684,8 +3684,8 @@ describe("AuctionSuperApp", async function () {
           const txn3 = await deleteFlowOp.exec(user);
           await txn3.wait();
 
-          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
-          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+          const newForSalePrice = await rateToPurchasePrice(BigNumber.from(200));
+          const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
             receiver: superApp.address,
@@ -3695,7 +3695,7 @@ describe("AuctionSuperApp", async function () {
           const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
             ["uint256", "bytes"],
-            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
+            [newForSalePrice, bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
