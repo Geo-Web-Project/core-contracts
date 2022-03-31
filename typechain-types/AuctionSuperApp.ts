@@ -337,13 +337,13 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
 
   events: {
-    "BidAccepted(uint256,address,address)": EventFragment;
-    "BidClaimed(uint256,address,address,address)": EventFragment;
+    "BidAccepted(uint256,address,address,uint256)": EventFragment;
+    "BidClaimed(uint256,address,address,address,uint256)": EventFragment;
     "BidPlaced(uint256,address,address)": EventFragment;
     "BidRejected(uint256,address,address)": EventFragment;
     "OwnerBidUpdated(uint256,address)": EventFragment;
-    "ParcelClaimed(uint256,address)": EventFragment;
-    "ParcelReclaimed(uint256,address)": EventFragment;
+    "ParcelClaimed(uint256,address,uint256)": EventFragment;
+    "ParcelReclaimed(uint256,address,uint256)": EventFragment;
     "Paused(address)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
@@ -368,15 +368,26 @@ export interface AuctionSuperAppInterface extends utils.Interface {
 }
 
 export type BidAcceptedEvent = TypedEvent<
-  [BigNumber, string, string],
-  { _licenseId: BigNumber; _owner: string; _bidder: string }
+  [BigNumber, string, string, BigNumber],
+  {
+    _licenseId: BigNumber;
+    _owner: string;
+    _bidder: string;
+    forSalePrice: BigNumber;
+  }
 >;
 
 export type BidAcceptedEventFilter = TypedEventFilter<BidAcceptedEvent>;
 
 export type BidClaimedEvent = TypedEvent<
-  [BigNumber, string, string, string],
-  { _licenseId: BigNumber; _owner: string; _bidder: string; _claimer: string }
+  [BigNumber, string, string, string, BigNumber],
+  {
+    _licenseId: BigNumber;
+    _owner: string;
+    _bidder: string;
+    _claimer: string;
+    forSalePrice: BigNumber;
+  }
 >;
 
 export type BidClaimedEventFilter = TypedEventFilter<BidClaimedEvent>;
@@ -403,15 +414,15 @@ export type OwnerBidUpdatedEvent = TypedEvent<
 export type OwnerBidUpdatedEventFilter = TypedEventFilter<OwnerBidUpdatedEvent>;
 
 export type ParcelClaimedEvent = TypedEvent<
-  [BigNumber, string],
-  { _licenseId: BigNumber; _bidder: string }
+  [BigNumber, string, BigNumber],
+  { _licenseId: BigNumber; _bidder: string; forSalePrice: BigNumber }
 >;
 
 export type ParcelClaimedEventFilter = TypedEventFilter<ParcelClaimedEvent>;
 
 export type ParcelReclaimedEvent = TypedEvent<
-  [BigNumber, string],
-  { _licenseId: BigNumber; _bidder: string }
+  [BigNumber, string, BigNumber],
+  { _licenseId: BigNumber; _bidder: string; forSalePrice: BigNumber }
 >;
 
 export type ParcelReclaimedEventFilter = TypedEventFilter<ParcelReclaimedEvent>;
@@ -1165,28 +1176,32 @@ export interface AuctionSuperApp extends BaseContract {
   };
 
   filters: {
-    "BidAccepted(uint256,address,address)"(
+    "BidAccepted(uint256,address,address,uint256)"(
       _licenseId?: BigNumberish | null,
       _owner?: string | null,
-      _bidder?: string | null
+      _bidder?: string | null,
+      forSalePrice?: null
     ): BidAcceptedEventFilter;
     BidAccepted(
       _licenseId?: BigNumberish | null,
       _owner?: string | null,
-      _bidder?: string | null
+      _bidder?: string | null,
+      forSalePrice?: null
     ): BidAcceptedEventFilter;
 
-    "BidClaimed(uint256,address,address,address)"(
+    "BidClaimed(uint256,address,address,address,uint256)"(
       _licenseId?: BigNumberish | null,
       _owner?: string | null,
       _bidder?: string | null,
-      _claimer?: null
+      _claimer?: null,
+      forSalePrice?: null
     ): BidClaimedEventFilter;
     BidClaimed(
       _licenseId?: BigNumberish | null,
       _owner?: string | null,
       _bidder?: string | null,
-      _claimer?: null
+      _claimer?: null,
+      forSalePrice?: null
     ): BidClaimedEventFilter;
 
     "BidPlaced(uint256,address,address)"(
@@ -1220,22 +1235,26 @@ export interface AuctionSuperApp extends BaseContract {
       _owner?: string | null
     ): OwnerBidUpdatedEventFilter;
 
-    "ParcelClaimed(uint256,address)"(
+    "ParcelClaimed(uint256,address,uint256)"(
       _licenseId?: BigNumberish | null,
-      _bidder?: string | null
+      _bidder?: string | null,
+      forSalePrice?: null
     ): ParcelClaimedEventFilter;
     ParcelClaimed(
       _licenseId?: BigNumberish | null,
-      _bidder?: string | null
+      _bidder?: string | null,
+      forSalePrice?: null
     ): ParcelClaimedEventFilter;
 
-    "ParcelReclaimed(uint256,address)"(
+    "ParcelReclaimed(uint256,address,uint256)"(
       _licenseId?: BigNumberish | null,
-      _bidder?: string | null
+      _bidder?: string | null,
+      forSalePrice?: null
     ): ParcelReclaimedEventFilter;
     ParcelReclaimed(
       _licenseId?: BigNumberish | null,
-      _bidder?: string | null
+      _bidder?: string | null,
+      forSalePrice?: null
     ): ParcelReclaimedEventFilter;
 
     "Paused(address)"(account?: null): PausedEventFilter;

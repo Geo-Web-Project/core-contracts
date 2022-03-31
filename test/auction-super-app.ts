@@ -1254,7 +1254,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow("100");
       await expect(txn)
         .to.emit(superApp, "ParcelClaimed")
-        .withArgs(1, user.address);
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should claim on flow create with rounded for sale price", async () => {
@@ -1303,7 +1303,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow(contributionRate.toString());
       await expect(txn)
         .to.emit(superApp, "ParcelClaimed")
-        .withArgs(1, user.address);
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should revert on flow create with incorrectly rounded for sale price", async () => {
@@ -1374,7 +1374,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow("300");
       await expect(txn)
         .to.emit(superApp, "ParcelClaimed")
-        .withArgs(1, user.address);
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should claim on flow increase with rounded for sale price", async () => {
@@ -1420,7 +1420,7 @@ describe("AuctionSuperApp", async function () {
       await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
       await expect(txn)
         .to.emit(superApp, "ParcelClaimed")
-        .withArgs(1, user.address);
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should revert on flow increase with incorrectly rounded for sale price", async () => {
@@ -2166,7 +2166,7 @@ describe("AuctionSuperApp", async function () {
           .withArgs(bidder.address, user.address, purchasePrice);
         await expect(txn3)
           .to.emit(superApp, "ParcelReclaimed")
-          .withArgs(existingLicenseId, bidder.address);
+          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow("200", bidder);
@@ -2384,7 +2384,7 @@ describe("AuctionSuperApp", async function () {
           .withArgs(bidder.address, user.address, purchasePrice);
         await expect(txn3)
           .to.emit(superApp, "ParcelReclaimed")
-          .withArgs(existingLicenseId, bidder.address);
+          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow("300", bidder);
@@ -2468,7 +2468,7 @@ describe("AuctionSuperApp", async function () {
           .withArgs(bidder.address, user.address, purchasePrice);
         await expect(txn3)
           .to.emit(superApp, "ParcelReclaimed")
-          .withArgs(existingLicenseId, bidder.address);
+          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow(contributionRate.add(100).toString(), bidder);
@@ -3583,7 +3583,7 @@ describe("AuctionSuperApp", async function () {
             .withArgs(superApp.address, user.address, forSalePrice);
           await expect(txn3)
             .to.emit(superApp, "BidAccepted")
-            .withArgs(1, user.address, bidder.address);
+            .withArgs(1, user.address, bidder.address, forSalePrice);
           await checkJailed(receipt);
           await checkUserToAppFlow(contributionRate.toString(), bidder);
           await checkAppToUserFlow("0", bidder);
@@ -3817,7 +3817,7 @@ describe("AuctionSuperApp", async function () {
             .withArgs(superApp.address, user.address, forSalePrice);
           await expect(txn3)
             .to.emit(superApp, "BidAccepted")
-            .withArgs(1, user.address, bidder.address);
+            .withArgs(1, user.address, bidder.address, forSalePrice);
           await checkJailed(receipt);
           await checkUserToAppFlow(contributionRate.toString(), bidder);
           await checkAppToUserFlow("0", bidder);
@@ -4130,7 +4130,7 @@ describe("AuctionSuperApp", async function () {
         .withArgs(superApp.address, user.address, forSalePrice);
       await expect(txn2)
         .to.emit(superApp, "BidClaimed")
-        .withArgs(1, user.address, bidder.address);
+        .withArgs(1, user.address, bidder.address, bidder.address, forSalePrice);
 
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
@@ -4179,7 +4179,7 @@ describe("AuctionSuperApp", async function () {
         .withArgs(superApp.address, user.address, forSalePrice);
       await expect(txn4)
         .to.emit(superApp, "BidClaimed")
-        .withArgs(1, user.address, bidder.address);
+        .withArgs(1, user.address, bidder.address, bidder.address, forSalePrice);
 
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
@@ -4225,9 +4225,11 @@ describe("AuctionSuperApp", async function () {
       await txn4.wait();
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
+      const purchasePrice = await rateToPurchasePrice(BigNumber.from(100))
+
       await expect(txn4)
         .to.emit(superApp, "BidClaimed")
-        .withArgs(1, user.address, bidder.address);
+        .withArgs(1, user.address, bidder.address, bidder.address, purchasePrice);
 
       await checkUserToAppFlow("0", user);
       await checkAppToUserFlow("0", user);

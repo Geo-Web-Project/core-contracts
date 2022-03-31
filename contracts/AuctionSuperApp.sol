@@ -62,7 +62,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     event BidAccepted(
         uint256 indexed _licenseId,
         address indexed _owner,
-        address indexed _bidder
+        address indexed _bidder,
+        uint256 forSalePrice
     );
 
     /// @notice Emitted when a bid is rejected
@@ -77,7 +78,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         uint256 indexed _licenseId,
         address indexed _owner,
         address indexed _bidder,
-        address _claimer
+        address _claimer,
+        uint256 forSalePrice
     );
 
     /// @notice Emitted when a user is deleted
@@ -87,10 +89,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     event OwnerBidUpdated(uint256 indexed _licenseId, address indexed _owner);
 
     /// @notice Emitted when a parcel is claimed
-    event ParcelClaimed(uint256 indexed _licenseId, address indexed _bidder);
+    event ParcelClaimed(
+        uint256 indexed _licenseId,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
 
     /// @notice Emitted when a parcel is reclaimed
-    event ParcelReclaimed(uint256 indexed _licenseId, address indexed _bidder);
+    event ParcelReclaimed(
+        uint256 indexed _licenseId,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
 
     enum Action {
         CLAIM,
@@ -393,7 +403,13 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         // Transfer license
         license.safeTransferFrom(oldOwner, bidOutstanding.bidder, id);
 
-        emit BidClaimed(id, oldOwner, bidOutstanding.bidder, msg.sender);
+        emit BidClaimed(
+            id,
+            oldOwner,
+            bidOutstanding.bidder,
+            msg.sender,
+            depositAmount
+        );
     }
 
     function _increaseAppToBeneficiaryFlow(int96 amount) private {
@@ -818,7 +834,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
         bid.forSalePrice = forSalePrice;
 
-        emit ParcelClaimed(licenseId, user);
+        emit ParcelClaimed(licenseId, user, claimPrice);
     }
 
     function _reclaim(
@@ -870,7 +886,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         // Transfer license
         license.safeTransferFrom(oldOwner, user, licenseId);
 
-        emit ParcelReclaimed(licenseId, user);
+        emit ParcelReclaimed(licenseId, user, claimPrice);
     }
 
     function _increaseBid(
@@ -1178,7 +1194,12 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         // Transfer license
         license.safeTransferFrom(oldOwner, bidOutstanding.bidder, licenseId);
 
-        emit BidAccepted(licenseId, oldOwner, bidOutstanding.bidder);
+        emit BidAccepted(
+            licenseId,
+            oldOwner,
+            bidOutstanding.bidder,
+            depositAmount
+        );
     }
 
     function _setOutstandingBid(
