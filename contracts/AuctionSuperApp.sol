@@ -51,6 +51,57 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     /// @dev Last deletion of each user
     mapping(address => uint256) private lastUserDeletion;
 
+    /// @notice Emitted when a bid is placed
+    event BidPlaced(
+        uint256 indexed _licenseId,
+        address indexed _owner,
+        address indexed _bidder
+    );
+
+    /// @notice Emitted when a bid is accepted
+    event BidAccepted(
+        uint256 indexed _licenseId,
+        address indexed _owner,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
+
+    /// @notice Emitted when a bid is rejected
+    event BidRejected(
+        uint256 indexed _licenseId,
+        address indexed _owner,
+        address indexed _bidder
+    );
+
+    /// @notice Emitted when a bid is claimed
+    event BidClaimed(
+        uint256 indexed _licenseId,
+        address indexed _owner,
+        address indexed _bidder,
+        address _claimer,
+        uint256 forSalePrice
+    );
+
+    /// @notice Emitted when a user is deleted
+    event UserDeleted(address indexed _user);
+
+    /// @notice Emitted when an owner bid is updated
+    event OwnerBidUpdated(uint256 indexed _licenseId, address indexed _owner);
+
+    /// @notice Emitted when a parcel is claimed
+    event ParcelClaimed(
+        uint256 indexed _licenseId,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
+
+    /// @notice Emitted when a parcel is reclaimed
+    event ParcelReclaimed(
+        uint256 indexed _licenseId,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
+
     enum Action {
         CLAIM,
         BID
@@ -262,13 +313,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
      * @return Penalty in wei
      */
     function calculatePenalty(uint256 id) public view returns (uint256) {
-        Bid storage bid = currentOwnerBid[id];
+        Bid storage bidOutstanding = outstandingBid[id];
 
-        // Value * Per Second Fee = Contribution Rate
-        uint256 currentPurchasePrice = (uint96(bid.contributionRate) *
-            bid.perSecondFeeDenominator) / bid.perSecondFeeNumerator;
-
-        uint256 value = (currentPurchasePrice * penaltyNumerator) /
+        uint256 value = (bidOutstanding.forSalePrice * penaltyNumerator) /
             penaltyDenominator;
 
         return value;
@@ -351,6 +398,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         // Transfer license
         license.safeTransferFrom(oldOwner, bidOutstanding.bidder, id);
+
+        emit BidClaimed(
+            id,
+            oldOwner,
+            bidOutstanding.bidder,
+            msg.sender,
+            depositAmount
+        );
     }
 
     function _increaseAppToBeneficiaryFlow(int96 amount) private {
@@ -714,6 +769,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         // Mark deletion
         lastUserDeletion[user] = block.timestamp;
+
+        emit UserDeleted(user);
     }
 
     function _claim(
@@ -772,6 +829,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
         bid.forSalePrice = forSalePrice;
+
+        emit ParcelClaimed(licenseId, user, claimPrice);
     }
 
     function _reclaim(
@@ -822,6 +881,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         // Transfer license
         license.safeTransferFrom(oldOwner, user, licenseId);
+
+        emit ParcelReclaimed(licenseId, user, claimPrice);
     }
 
     function _increaseBid(
@@ -895,6 +956,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
                 // Clear outstanding bid
                 bidOutstanding.contributionRate = 0;
+
+                emit BidRejected(licenseId, user, bidOutstanding.bidder);
             }
         }
 
@@ -917,6 +980,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
         bid.forSalePrice = forSalePrice;
+
+        emit OwnerBidUpdated(licenseId, user);
     }
 
     function _decreaseBid(
@@ -1006,6 +1071,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
         bid.forSalePrice = forSalePrice;
+
+        emit OwnerBidUpdated(licenseId, user);
     }
 
     function _decreaseOldBid(
@@ -1122,6 +1189,13 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         // Transfer license
         license.safeTransferFrom(oldOwner, bidOutstanding.bidder, licenseId);
+
+        emit BidAccepted(
+            licenseId,
+            oldOwner,
+            bidOutstanding.bidder,
+            depositAmount
+        );
     }
 
     function _setOutstandingBid(
@@ -1163,6 +1237,8 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
             depositAmount
         );
         require(success, "AuctionSuperApp: Bid deposit failed");
+
+        emit BidPlaced(licenseId, currentOwnerBid[licenseId].bidder, bidder);
     }
 
     function _checkForSalePrice(
