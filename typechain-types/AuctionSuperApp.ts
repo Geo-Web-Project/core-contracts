@@ -337,19 +337,95 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
 
   events: {
+    "BidAccepted(uint256,address,address,uint256)": EventFragment;
+    "BidClaimed(uint256,address,address,address,uint256)": EventFragment;
+    "BidPlaced(uint256,address,address)": EventFragment;
+    "BidRejected(uint256,address,address)": EventFragment;
+    "OwnerBidUpdated(uint256,address)": EventFragment;
+    "ParcelClaimed(uint256,address,uint256)": EventFragment;
+    "ParcelReclaimed(uint256,address,uint256)": EventFragment;
     "Paused(address)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
     "RoleRevoked(bytes32,address,address)": EventFragment;
     "Unpaused(address)": EventFragment;
+    "UserDeleted(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "BidAccepted"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BidClaimed"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BidPlaced"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BidRejected"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "OwnerBidUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "ParcelClaimed"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "ParcelReclaimed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UserDeleted"): EventFragment;
 }
+
+export type BidAcceptedEvent = TypedEvent<
+  [BigNumber, string, string, BigNumber],
+  {
+    _licenseId: BigNumber;
+    _owner: string;
+    _bidder: string;
+    forSalePrice: BigNumber;
+  }
+>;
+
+export type BidAcceptedEventFilter = TypedEventFilter<BidAcceptedEvent>;
+
+export type BidClaimedEvent = TypedEvent<
+  [BigNumber, string, string, string, BigNumber],
+  {
+    _licenseId: BigNumber;
+    _owner: string;
+    _bidder: string;
+    _claimer: string;
+    forSalePrice: BigNumber;
+  }
+>;
+
+export type BidClaimedEventFilter = TypedEventFilter<BidClaimedEvent>;
+
+export type BidPlacedEvent = TypedEvent<
+  [BigNumber, string, string],
+  { _licenseId: BigNumber; _owner: string; _bidder: string }
+>;
+
+export type BidPlacedEventFilter = TypedEventFilter<BidPlacedEvent>;
+
+export type BidRejectedEvent = TypedEvent<
+  [BigNumber, string, string],
+  { _licenseId: BigNumber; _owner: string; _bidder: string }
+>;
+
+export type BidRejectedEventFilter = TypedEventFilter<BidRejectedEvent>;
+
+export type OwnerBidUpdatedEvent = TypedEvent<
+  [BigNumber, string],
+  { _licenseId: BigNumber; _owner: string }
+>;
+
+export type OwnerBidUpdatedEventFilter = TypedEventFilter<OwnerBidUpdatedEvent>;
+
+export type ParcelClaimedEvent = TypedEvent<
+  [BigNumber, string, BigNumber],
+  { _licenseId: BigNumber; _bidder: string; forSalePrice: BigNumber }
+>;
+
+export type ParcelClaimedEventFilter = TypedEventFilter<ParcelClaimedEvent>;
+
+export type ParcelReclaimedEvent = TypedEvent<
+  [BigNumber, string, BigNumber],
+  { _licenseId: BigNumber; _bidder: string; forSalePrice: BigNumber }
+>;
+
+export type ParcelReclaimedEventFilter = TypedEventFilter<ParcelReclaimedEvent>;
 
 export type PausedEvent = TypedEvent<[string], { account: string }>;
 
@@ -380,6 +456,10 @@ export type RoleRevokedEventFilter = TypedEventFilter<RoleRevokedEvent>;
 export type UnpausedEvent = TypedEvent<[string], { account: string }>;
 
 export type UnpausedEventFilter = TypedEventFilter<UnpausedEvent>;
+
+export type UserDeletedEvent = TypedEvent<[string], { _user: string }>;
+
+export type UserDeletedEventFilter = TypedEventFilter<UserDeletedEvent>;
 
 export interface AuctionSuperApp extends BaseContract {
   contractName: "AuctionSuperApp";
@@ -1096,6 +1176,87 @@ export interface AuctionSuperApp extends BaseContract {
   };
 
   filters: {
+    "BidAccepted(uint256,address,address,uint256)"(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null,
+      forSalePrice?: null
+    ): BidAcceptedEventFilter;
+    BidAccepted(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null,
+      forSalePrice?: null
+    ): BidAcceptedEventFilter;
+
+    "BidClaimed(uint256,address,address,address,uint256)"(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null,
+      _claimer?: null,
+      forSalePrice?: null
+    ): BidClaimedEventFilter;
+    BidClaimed(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null,
+      _claimer?: null,
+      forSalePrice?: null
+    ): BidClaimedEventFilter;
+
+    "BidPlaced(uint256,address,address)"(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null
+    ): BidPlacedEventFilter;
+    BidPlaced(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null
+    ): BidPlacedEventFilter;
+
+    "BidRejected(uint256,address,address)"(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null
+    ): BidRejectedEventFilter;
+    BidRejected(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null,
+      _bidder?: string | null
+    ): BidRejectedEventFilter;
+
+    "OwnerBidUpdated(uint256,address)"(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null
+    ): OwnerBidUpdatedEventFilter;
+    OwnerBidUpdated(
+      _licenseId?: BigNumberish | null,
+      _owner?: string | null
+    ): OwnerBidUpdatedEventFilter;
+
+    "ParcelClaimed(uint256,address,uint256)"(
+      _licenseId?: BigNumberish | null,
+      _bidder?: string | null,
+      forSalePrice?: null
+    ): ParcelClaimedEventFilter;
+    ParcelClaimed(
+      _licenseId?: BigNumberish | null,
+      _bidder?: string | null,
+      forSalePrice?: null
+    ): ParcelClaimedEventFilter;
+
+    "ParcelReclaimed(uint256,address,uint256)"(
+      _licenseId?: BigNumberish | null,
+      _bidder?: string | null,
+      forSalePrice?: null
+    ): ParcelReclaimedEventFilter;
+    ParcelReclaimed(
+      _licenseId?: BigNumberish | null,
+      _bidder?: string | null,
+      forSalePrice?: null
+    ): ParcelReclaimedEventFilter;
+
     "Paused(address)"(account?: null): PausedEventFilter;
     Paused(account?: null): PausedEventFilter;
 
@@ -1134,6 +1295,9 @@ export interface AuctionSuperApp extends BaseContract {
 
     "Unpaused(address)"(account?: null): UnpausedEventFilter;
     Unpaused(account?: null): UnpausedEventFilter;
+
+    "UserDeleted(address)"(_user?: string | null): UserDeletedEventFilter;
+    UserDeleted(_user?: string | null): UserDeletedEventFilter;
   };
 
   estimateGas: {

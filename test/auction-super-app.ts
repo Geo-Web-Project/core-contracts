@@ -390,12 +390,10 @@ describe("AuctionSuperApp", async function () {
   }
 
   async function rejectBid(_user: SignerWithAddress, mockLicenseId?: number) {
-    const existingContributionRate = await superApp.ownerBidContributionRate(
-      mockLicenseId ?? 1
-    );
-    const purchasePrice = await rateToPurchasePrice(existingContributionRate);
-    const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
     const outstandingBid = await superApp.outstandingBid(mockLicenseId ?? 1);
+    const penaltyAmount = await calculatePenaltyAmount(
+      outstandingBid.forSalePrice
+    );
 
     const approveOp = ethx.approve({
       receiver: superApp.address,
@@ -983,6 +981,9 @@ describe("AuctionSuperApp", async function () {
       await checkUserToAppFlow("0");
       await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
+      await expect(txn1)
+        .to.emit(superApp, "UserDeleted")
+        .withArgs(user.address);
     });
 
     it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
@@ -1087,6 +1088,9 @@ describe("AuctionSuperApp", async function () {
       await checkUserToAppFlow("0");
       await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
+      await expect(txn1)
+        .to.emit(superApp, "UserDeleted")
+        .withArgs(user.address);
     });
 
     it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
@@ -1196,6 +1200,9 @@ describe("AuctionSuperApp", async function () {
       await checkUserToAppFlow("0");
       await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
+      await expect(txn1)
+        .to.emit(superApp, "UserDeleted")
+        .withArgs(user.address);
     });
 
     it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
@@ -1243,6 +1250,9 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
       await checkUserToAppFlow("100");
       await checkAppToBeneficiaryFlow("100");
+      await expect(txn)
+        .to.emit(superApp, "ParcelClaimed")
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should claim on flow create with rounded for sale price", async () => {
@@ -1289,6 +1299,9 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
       await checkUserToAppFlow(contributionRate.toString());
       await checkAppToBeneficiaryFlow(contributionRate.toString());
+      await expect(txn)
+        .to.emit(superApp, "ParcelClaimed")
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should revert on flow create with incorrectly rounded for sale price", async () => {
@@ -1357,6 +1370,9 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
       await checkUserToAppFlow("300");
       await checkAppToBeneficiaryFlow("300");
+      await expect(txn)
+        .to.emit(superApp, "ParcelClaimed")
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should claim on flow increase with rounded for sale price", async () => {
@@ -1400,6 +1416,9 @@ describe("AuctionSuperApp", async function () {
       await checkAppNetFlow();
       await checkUserToAppFlow(contributionRate.add(100).toString());
       await checkAppToBeneficiaryFlow(contributionRate.add(100).toString());
+      await expect(txn)
+        .to.emit(superApp, "ParcelClaimed")
+        .withArgs(1, user.address, BigNumber.from(100));
     });
 
     it("should revert on flow increase with incorrectly rounded for sale price", async () => {
@@ -1482,6 +1501,9 @@ describe("AuctionSuperApp", async function () {
       await checkUserToAppFlow("0");
       await checkAppToBeneficiaryFlow("0");
       await checkAppNetFlow();
+      await expect(txn1)
+        .to.emit(superApp, "UserDeleted")
+        .withArgs(user.address);
     });
 
     it("should recreate Flow(app -> user) on delete Flow(app -> user)", async () => {
@@ -1558,6 +1580,10 @@ describe("AuctionSuperApp", async function () {
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, superApp.address, newForSalePrice);
 
+        await expect(txn1)
+          .to.emit(superApp, "BidPlaced")
+          .withArgs(existingLicenseId, user.address, bidder.address);
+
         await checkJailed(receipt);
         await checkAppNetFlow();
         await checkUserToAppFlow("200", bidder);
@@ -1581,6 +1607,10 @@ describe("AuctionSuperApp", async function () {
         await expect(txn1)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, superApp.address, newForSalePrice);
+
+        await expect(txn1)
+          .to.emit(superApp, "BidPlaced")
+          .withArgs(existingLicenseId, user.address, bidder.address);
 
         await checkJailed(receipt);
         await checkAppNetFlow();
@@ -1676,6 +1706,9 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, superApp.address, newForSalePrice);
+        await expect(txn2)
+          .to.emit(superApp, "BidPlaced")
+          .withArgs(existingLicenseId, user.address, bidder.address);
         await checkJailed(receipt);
         await checkAppNetFlow();
         await checkUserToAppFlow("300", bidder);
@@ -1732,6 +1765,9 @@ describe("AuctionSuperApp", async function () {
         await expect(txn2)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, superApp.address, forSalePrice1);
+        await expect(txn2)
+          .to.emit(superApp, "BidPlaced")
+          .withArgs(existingLicenseId, user.address, bidder.address);
         await checkJailed(receipt);
         await checkAppNetFlow();
         await checkUserToAppFlow(contributionRate1.add(100).toString(), bidder);
@@ -2129,6 +2165,9 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, user.address, purchasePrice);
+        await expect(txn3)
+          .to.emit(superApp, "ParcelReclaimed")
+          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow("200", bidder);
@@ -2344,6 +2383,9 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, user.address, purchasePrice);
+        await expect(txn3)
+          .to.emit(superApp, "ParcelReclaimed")
+          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow("300", bidder);
@@ -2425,6 +2467,9 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, user.address, purchasePrice);
+        await expect(txn3)
+          .to.emit(superApp, "ParcelReclaimed")
+          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow(contributionRate.add(100).toString(), bidder);
@@ -2723,6 +2768,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(existingLicenseId, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("200", user);
@@ -2763,6 +2811,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(existingLicenseId, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow(contributionRate.toString(), user);
@@ -2839,6 +2890,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(existingLicenseId, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("50", user);
@@ -2913,6 +2967,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(existingLicenseId, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow(contributionRate1.toString(), user);
@@ -3021,6 +3078,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(2, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("150", user);
@@ -3059,6 +3119,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(2, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("100", user);
@@ -3086,6 +3149,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "UserDeleted")
+            .withArgs(user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("0", user);
@@ -3108,6 +3174,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "UserDeleted")
+            .withArgs(user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("0", user);
@@ -3132,6 +3201,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn2.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(1, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("200", user);
@@ -3162,7 +3234,10 @@ describe("AuctionSuperApp", async function () {
           const txn4 = await placeBidUpdate(user, 2);
           const receipt = await txn4.wait();
 
-          await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn4).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn4)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(2, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("400", user);
@@ -3191,6 +3266,9 @@ describe("AuctionSuperApp", async function () {
           const receipt = await txn3.wait();
 
           await expect(txn2).to.not.emit(ethx_erc20, "Transfer");
+          await expect(txn2)
+            .to.emit(superApp, "OwnerBidUpdated")
+            .withArgs(1, user.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("400", user);
@@ -3242,7 +3320,7 @@ describe("AuctionSuperApp", async function () {
             BigNumber.from(200)
           );
           const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
-          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+          const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
             receiver: superApp.address,
@@ -3255,7 +3333,7 @@ describe("AuctionSuperApp", async function () {
           );
           const actionData = ethers.utils.defaultAbiCoder.encode(
             ["uint256", "bytes"],
-            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
+            [newForSalePrice, bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -3278,6 +3356,9 @@ describe("AuctionSuperApp", async function () {
           await expect(txn2)
             .to.emit(ethx_erc20, "Transfer")
             .withArgs(superApp.address, bidder.address, newForSalePrice);
+          await expect(txn2)
+            .to.emit(superApp, "BidRejected")
+            .withArgs(existingLicenseId, user.address, bidder.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("200", bidder);
@@ -3305,7 +3386,7 @@ describe("AuctionSuperApp", async function () {
             BigNumber.from(200)
           );
           const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
-          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+          const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
             receiver: superApp.address,
@@ -3341,6 +3422,9 @@ describe("AuctionSuperApp", async function () {
           await expect(txn2)
             .to.emit(ethx_erc20, "Transfer")
             .withArgs(superApp.address, bidder.address, newForSalePrice);
+          await expect(txn2)
+            .to.emit(superApp, "BidRejected")
+            .withArgs(existingLicenseId, user.address, bidder.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("200", bidder);
@@ -3518,6 +3602,9 @@ describe("AuctionSuperApp", async function () {
               bidder.address,
               newForSalePrice.sub(forSalePrice)
             );
+          await expect(txn3)
+            .to.emit(superApp, "BidAccepted")
+            .withArgs(1, user.address, bidder.address, forSalePrice);
           await checkJailed(receipt);
           await checkUserToAppFlow(contributionRate.toString(), bidder);
           await checkAppToUserFlow("0", bidder);
@@ -3621,8 +3708,7 @@ describe("AuctionSuperApp", async function () {
           const txn3 = await deleteFlowOp.exec(user);
           await txn3.wait();
 
-          const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
-          const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
+          const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
             receiver: superApp.address,
@@ -3632,7 +3718,7 @@ describe("AuctionSuperApp", async function () {
           const bidData = ethers.utils.defaultAbiCoder.encode(["uint256"], [1]);
           const actionData = ethers.utils.defaultAbiCoder.encode(
             ["uint256", "bytes"],
-            [await rateToPurchasePrice(BigNumber.from(200)), bidData]
+            [newForSalePrice, bidData]
           );
           const userData = ethers.utils.defaultAbiCoder.encode(
             ["uint8", "bytes"],
@@ -3655,6 +3741,9 @@ describe("AuctionSuperApp", async function () {
           await expect(txn4)
             .to.emit(ethx_erc20, "Transfer")
             .withArgs(superApp.address, bidder.address, newForSalePrice);
+          await expect(txn4)
+            .to.emit(superApp, "BidRejected")
+            .withArgs(1, user.address, bidder.address);
           await checkJailed(receipt);
           await checkAppNetFlow();
           await checkUserToAppFlow("200", bidder);
@@ -3760,6 +3849,9 @@ describe("AuctionSuperApp", async function () {
               bidder.address,
               newForSalePrice.sub(forSalePrice)
             );
+          await expect(txn3)
+            .to.emit(superApp, "BidAccepted")
+            .withArgs(1, user.address, bidder.address, forSalePrice);
           await checkJailed(receipt);
           await checkUserToAppFlow(contributionRate.toString(), bidder);
           await checkAppToUserFlow("0", bidder);
@@ -4078,6 +4170,15 @@ describe("AuctionSuperApp", async function () {
           bidder.address,
           newForSalePrice.sub(forSalePrice)
         );
+      await expect(txn2)
+        .to.emit(superApp, "BidClaimed")
+        .withArgs(
+          1,
+          user.address,
+          bidder.address,
+          bidder.address,
+          forSalePrice
+        );
 
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
@@ -4131,6 +4232,15 @@ describe("AuctionSuperApp", async function () {
           superApp.address,
           bidder.address,
           newForSalePrice.sub(forSalePrice)
+        );
+      await expect(txn4)
+        .to.emit(superApp, "BidClaimed")
+        .withArgs(
+          1,
+          user.address,
+          bidder.address,
+          bidder.address,
+          forSalePrice
         );
 
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
@@ -4188,6 +4298,15 @@ describe("AuctionSuperApp", async function () {
           superApp.address,
           bidder.address,
           newForSalePrice.sub(forSalePrice)
+        );
+      await expect(txn4)
+        .to.emit(superApp, "BidClaimed")
+        .withArgs(
+          1,
+          user.address,
+          bidder.address,
+          bidder.address,
+          forSalePrice
         );
 
       await checkUserToAppFlow("0", user);

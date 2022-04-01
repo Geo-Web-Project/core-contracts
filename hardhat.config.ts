@@ -252,4 +252,7 @@ module.exports = {
     path: "./abi",
     clear: true,
   },
+  mocha: {
+    parallel: true,
+  },
 };
