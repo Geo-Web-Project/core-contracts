@@ -2387,11 +2387,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          BigNumber.from("200"),
+          bidData
         );
       });
 
@@ -2471,11 +2471,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          contributionRate,
+          bidData
         );
       });
 
@@ -2605,11 +2605,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          BigNumber.from("200"),
+          bidData
         );
       });
 
@@ -2837,11 +2837,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          contributionRate,
+          bidData
         );
       });
 

@@ -10,6 +10,7 @@ import * as hre from 'hardhat';
 import { AuctionSuperApp, ERC721License, Reclaimer, Reclaimer__factory } from '../typechain-types';
 
 const ethers = hre.ethers;
+const network = hre.network;
 
 use(solidity);
 use(chaiAsPromised);
@@ -37,7 +38,6 @@ describe('Reclaimer', async function () {
     return reclaimerContract;
   }
 
-
   async function setupAuction() {
     reclaimer = await buildContract();
 
@@ -50,6 +50,18 @@ describe('Reclaimer', async function () {
     await reclaimer.connect(admin).setLicense(fakeLicense.address)
     await reclaimer.connect(admin).setSuperApp(fakeSuperApp.address)
   }
+
+  // hacky solution to try to prevent side effects
+  // from tweaked block times leaking into other tests
+  //
+  // resetting the netowrk after the file runs.
+  before(async () => {
+    await network.provider.send("hardhat_reset");
+  });
+
+  after(async () => {
+    await network.provider.send("hardhat_reset");
+  });
 
   beforeEach(async() => {
     accounts = await ethers.getSigners();
