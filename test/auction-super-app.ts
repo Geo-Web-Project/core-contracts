@@ -390,12 +390,10 @@ describe("AuctionSuperApp", async function () {
   }
 
   async function rejectBid(_user: SignerWithAddress, mockLicenseId?: number) {
-    const existingContributionRate = await superApp.ownerBidContributionRate(
-      mockLicenseId ?? 1
-    );
-    const purchasePrice = await rateToPurchasePrice(existingContributionRate);
-    const penaltyAmount = await calculatePenaltyAmount(purchasePrice);
     const outstandingBid = await superApp.outstandingBid(mockLicenseId ?? 1);
+    const penaltyAmount = await calculatePenaltyAmount(
+      outstandingBid.forSalePrice
+    );
 
     const approveOp = ethx.approve({
       receiver: superApp.address,
@@ -3315,7 +3313,9 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await placeBidCreate(bidder, existingLicenseId);
           await txn1.wait();
 
-          const newForSalePrice = await rateToPurchasePrice(BigNumber.from(200));
+          const newForSalePrice = await rateToPurchasePrice(
+            BigNumber.from(200)
+          );
           const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
@@ -3375,7 +3375,9 @@ describe("AuctionSuperApp", async function () {
           const txn1 = await placeBidCreate(bidder, existingLicenseId);
           await txn1.wait();
 
-          const newForSalePrice = await rateToPurchasePrice(BigNumber.from(200));
+          const newForSalePrice = await rateToPurchasePrice(
+            BigNumber.from(200)
+          );
           const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
@@ -3684,7 +3686,9 @@ describe("AuctionSuperApp", async function () {
           const txn3 = await deleteFlowOp.exec(user);
           await txn3.wait();
 
-          const newForSalePrice = await rateToPurchasePrice(BigNumber.from(200));
+          const newForSalePrice = await rateToPurchasePrice(
+            BigNumber.from(200)
+          );
           const penaltyAmount = await calculatePenaltyAmount(newForSalePrice);
 
           const approveOp = ethx.approve({
@@ -4130,7 +4134,13 @@ describe("AuctionSuperApp", async function () {
         .withArgs(superApp.address, user.address, forSalePrice);
       await expect(txn2)
         .to.emit(superApp, "BidClaimed")
-        .withArgs(1, user.address, bidder.address, bidder.address, forSalePrice);
+        .withArgs(
+          1,
+          user.address,
+          bidder.address,
+          bidder.address,
+          forSalePrice
+        );
 
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
@@ -4179,7 +4189,13 @@ describe("AuctionSuperApp", async function () {
         .withArgs(superApp.address, user.address, forSalePrice);
       await expect(txn4)
         .to.emit(superApp, "BidClaimed")
-        .withArgs(1, user.address, bidder.address, bidder.address, forSalePrice);
+        .withArgs(
+          1,
+          user.address,
+          bidder.address,
+          bidder.address,
+          forSalePrice
+        );
 
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
@@ -4225,11 +4241,17 @@ describe("AuctionSuperApp", async function () {
       await txn4.wait();
       mockLicense.ownerOf.whenCalledWith(1).returns(bidder.address);
 
-      const purchasePrice = await rateToPurchasePrice(BigNumber.from(100))
+      const purchasePrice = await rateToPurchasePrice(BigNumber.from(100));
 
       await expect(txn4)
         .to.emit(superApp, "BidClaimed")
-        .withArgs(1, user.address, bidder.address, bidder.address, purchasePrice);
+        .withArgs(
+          1,
+          user.address,
+          bidder.address,
+          bidder.address,
+          purchasePrice
+        );
 
       await checkUserToAppFlow("0", user);
       await checkAppToUserFlow("0", user);
