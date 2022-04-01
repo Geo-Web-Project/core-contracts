@@ -1270,18 +1270,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         return calculatedContributionRate == uint96(contributionRate);
     }
 
-    function _checkForSalePrice(
-        uint256 forSalePrice,
-        int96 contributionRate,
-        uint256 _perSecondFeeNumerator,
-        uint256 _perSecondFeeDenominator
-    ) private pure returns (bool) {
-        uint256 calculatedContributionRate = (forSalePrice *
-            _perSecondFeeNumerator) / _perSecondFeeDenominator;
-
-        return calculatedContributionRate == uint96(contributionRate);
-    }
-
     /**************************************************************************
      * SuperApp callbacks
      *************************************************************************/
