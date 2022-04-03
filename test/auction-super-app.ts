@@ -1378,10 +1378,8 @@ describe("AuctionSuperApp", async function () {
     it("should claim on flow increase with rounded for sale price", async () => {
       const txn = await claimCreate(user);
       await txn.wait();
-
       const contributionRate = BigNumber.from(3170979198);
       const forSalePrice = ethers.utils.parseEther("1.0");
-
       // Update existing flow
       const claimData = ethers.utils.defaultAbiCoder.encode(["uint256"], [2]);
       const actionData = ethers.utils.defaultAbiCoder.encode(
@@ -1399,15 +1397,12 @@ describe("AuctionSuperApp", async function () {
         superToken: ethx.address,
         userData: userData,
       });
-
       const txn1 = await updateFlowOp.exec(user);
       await expect(txn1)
         .to.emit(ethx_erc20, "Transfer")
         .withArgs(user.address, admin.address, 100);
       const receipt = await txn1.wait();
-
       await checkJailed(receipt);
-
       await checkClaimCallCount(2);
       await checkClaimLastContribution(
         user.address,
@@ -1819,14 +1814,11 @@ describe("AuctionSuperApp", async function () {
 
       it("should revert on flow create when license does not exist", async () => {
         let existingLicenseId = 1;
-
         const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
-
         const approveOp = ethx.approve({
           receiver: superApp.address,
           amount: purchasePrice.toString(),
         });
-
         const bidData = ethers.utils.defaultAbiCoder.encode(
           ["uint256"],
           [existingLicenseId]
@@ -1846,7 +1838,6 @@ describe("AuctionSuperApp", async function () {
           superToken: ethx.address,
           userData: userData,
         });
-
         const batchCall = ethersjsSf.batchCall([approveOp, createFlowOp]);
         const txn2 = batchCall.exec(bidder);
         await expect(txn2).to.be.rejected;
@@ -2162,9 +2153,6 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, user.address, purchasePrice);
-        await expect(txn3)
-          .to.emit(superApp, "ParcelReclaimed")
-          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow("200", bidder);
@@ -2177,11 +2165,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          BigNumber.from("200"),
+          bidData
         );
       });
 
@@ -2261,11 +2249,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          contributionRate,
+          bidData
         );
       });
 
@@ -2380,9 +2368,6 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, user.address, purchasePrice);
-        await expect(txn3)
-          .to.emit(superApp, "ParcelReclaimed")
-          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow("300", bidder);
@@ -2395,11 +2380,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          BigNumber.from("200"),
+          bidData
         );
       });
 
@@ -2464,9 +2449,6 @@ describe("AuctionSuperApp", async function () {
         await expect(txn3)
           .to.emit(ethx_erc20, "Transfer")
           .withArgs(bidder.address, user.address, purchasePrice);
-        await expect(txn3)
-          .to.emit(superApp, "ParcelReclaimed")
-          .withArgs(existingLicenseId, bidder.address, purchasePrice);
 
         await checkJailed(receipt);
         await checkUserToAppFlow(contributionRate.add(100).toString(), bidder);
@@ -2485,11 +2467,11 @@ describe("AuctionSuperApp", async function () {
         await checkAppNetFlow();
 
         expect(
-          mockLicense["safeTransferFrom(address,address,uint256)"]
+          mockReclaimer.claim
         ).to.have.been.calledWith(
-          user.address,
           bidder.address,
-          BigNumber.from(existingLicenseId)
+          contributionRate,
+          bidData
         );
       });
 

@@ -27,6 +27,7 @@ typechain-types/factories/*
 !typechain-types/factories/GeoWebParcel__factory.ts
 !typechain-types/factories/AuctionSuperApp__factory.ts
 !typechain-types/factories/FairLaunchClaimer__factory.ts
+!typechain-types/factories/Reclaimer__factory.ts
 
 # tests-typechain
 !typechain-types/AuctionSuperApp.ts
@@ -35,6 +36,7 @@ typechain-types/factories/*
 !typechain-types/FairLaunchClaimer.ts
 !typechain-types/ERC721License.ts
 !typechain-types/GeoWebParcel.ts
+!typechain-types/Reclaimer.ts
 
 # solidity-coverage
 coverage/
