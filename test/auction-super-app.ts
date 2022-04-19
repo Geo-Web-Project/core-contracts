@@ -354,7 +354,7 @@ describe("AuctionSuperApp", async function () {
 
     const approveOp = ethx.approve({
       receiver: superApp.address,
-      amount: purchasePrice.toString(),
+      amount: forSalePrice.toString(),
     });
 
     const bidData = ethers.utils.defaultAbiCoder.encode(
@@ -4204,7 +4204,11 @@ describe("AuctionSuperApp", async function () {
       const txn1 = await claimCreate(bidder, 2);
       await txn1.wait();
 
-      const newForSalePrice = await rateToPurchasePrice(BigNumber.from(200));
+      let existingContributionRate = await superApp.ownerBidContributionRate(1);
+      const newForSalePrice = await rateToPurchasePrice(
+        existingContributionRate.add(200)
+      );
+
       const txn2 = await placeBidUpdate(bidder, 1);
       await txn2.wait();
 
