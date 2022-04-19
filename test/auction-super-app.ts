@@ -82,7 +82,6 @@ describe("AuctionSuperApp", async function () {
 
   async function buildAuctionSuperApp({
     host,
-    cfa,
     token,
     beneficiary,
     license,
@@ -95,7 +94,6 @@ describe("AuctionSuperApp", async function () {
     bidPeriodLengthInSeconds,
   }: {
     host: string;
-    cfa: string;
     token: string;
     beneficiary: string;
     license: string;
@@ -110,7 +108,6 @@ describe("AuctionSuperApp", async function () {
     const factory = new AuctionSuperApp__factory(admin);
     const superApp: AuctionSuperApp = await factory.deploy(
       host,
-      cfa,
       token,
       beneficiary,
       license,
@@ -608,7 +605,6 @@ describe("AuctionSuperApp", async function () {
 
     superApp = await buildAuctionSuperApp({
       host: sf.host.address,
-      cfa: sf.agreements.cfa.address,
       token: sf.tokens.ETHx.address,
       beneficiary: admin.address,
       claimer: mockClaimer.address,
@@ -628,7 +624,6 @@ describe("AuctionSuperApp", async function () {
     expect(
       factory.deploy(
         ethers.constants.AddressZero,
-        sf.agreements.cfa.address,
         sf.tokens.ETHx.address,
         admin.address,
         mockLicense.address,
@@ -643,34 +638,12 @@ describe("AuctionSuperApp", async function () {
     ).to.be.revertedWith("host is zero address");
   });
 
-  it("should fail to deploy if cfa is zero", async () => {
-    const { numerator, denominator } = perYearToPerSecondRate(0.1);
-    const factory = new AuctionSuperApp__factory(admin);
-    expect(
-      factory.deploy(
-        sf.host.address,
-        ethers.constants.AddressZero,
-        sf.tokens.ETHx.address,
-        admin.address,
-        mockLicense.address,
-        mockLicense.address,
-        mockLicense.address,
-        BigNumber.from(numerator),
-        BigNumber.from(denominator),
-        BigNumber.from(1),
-        BigNumber.from(10),
-        BigNumber.from(604800)
-      )
-    ).to.be.revertedWith("cfa is zero address");
-  });
-
   it("should fail to deploy if acceptedToken is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
       factory.deploy(
         sf.host.address,
-        sf.agreements.cfa.address,
         ethers.constants.AddressZero,
         admin.address,
         mockLicense.address,
@@ -691,7 +664,6 @@ describe("AuctionSuperApp", async function () {
     expect(
       factory.deploy(
         sf.host.address,
-        sf.agreements.cfa.address,
         sf.tokens.ETHx.address,
         ethers.constants.AddressZero,
         mockLicense.address,
@@ -712,7 +684,6 @@ describe("AuctionSuperApp", async function () {
     expect(
       factory.deploy(
         sf.host.address,
-        sf.agreements.cfa.address,
         sf.tokens.ETHx.address,
         admin.address,
         ethers.constants.AddressZero,
@@ -733,7 +704,6 @@ describe("AuctionSuperApp", async function () {
     expect(
       factory.deploy(
         sf.host.address,
-        sf.agreements.cfa.address,
         sf.tokens.ETHx.address,
         admin.address,
         mockLicense.address,
@@ -754,7 +724,6 @@ describe("AuctionSuperApp", async function () {
     expect(
       factory.deploy(
         sf.host.address,
-        sf.agreements.cfa.address,
         sf.tokens.ETHx.address,
         admin.address,
         mockLicense.address,
@@ -775,7 +744,6 @@ describe("AuctionSuperApp", async function () {
     expect(
       factory.deploy(
         sf.host.address,
-        sf.agreements.cfa.address,
         sf.tokens.ETHx.address,
         superApp.address,
         mockLicense.address,
@@ -795,7 +763,6 @@ describe("AuctionSuperApp", async function () {
     const factory = new AuctionSuperApp__factory(admin);
     const superApp1 = await factory.deploy(
       sf.host.address,
-      sf.agreements.cfa.address,
       sf.tokens.ETHx.address,
       admin.address,
       mockLicense.address,
@@ -2164,9 +2131,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           BigNumber.from("200"),
           bidData
@@ -2248,9 +2213,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           contributionRate,
           bidData
@@ -2379,9 +2342,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           BigNumber.from("200"),
           bidData
@@ -2466,9 +2427,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           contributionRate,
           bidData

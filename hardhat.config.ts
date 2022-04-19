@@ -69,7 +69,6 @@ task(
   // AuctionSuperApp default config
   const superAppAddress = await hre.run("deploy:super-app", {
     host: sf.host.address,
-    cfa: sf.agreements.cfa.address,
     acceptedToken: sf.tokens.ETHx.address,
     beneficiary: admin.address,
     licenseAddress: licenseAddress,
@@ -106,7 +105,7 @@ task(
     parcelAddress: parcelAddress,
     superAppAddress: superAppAddress,
     claimerAddress: fairClaimerAddress,
-    reclaimerAddress: reclaimerAddress
+    reclaimerAddress: reclaimerAddress,
   });
   console.log("Default roles set.");
 });
@@ -149,7 +148,7 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         superAppAddress,
         parcelAddress,
         claimerAddress,
-        reclaimerAddress
+        reclaimerAddress,
       }: {
         licenseAddress: string;
         superAppAddress: string;

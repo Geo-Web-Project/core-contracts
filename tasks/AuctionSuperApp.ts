@@ -9,7 +9,6 @@ function perYearToPerSecondRate(annualRate: number) {
 
 task("deploy:super-app", "Deploy the AuctionSuperApp")
   .addParam("host", "Address of Superfluid host")
-  .addParam("cfa", "Address of Superfluid ConstantFlowAgreement")
   .addParam("acceptedToken", "Address of SuperToken to accept for payment")
   .addParam("beneficiary", "Address of beneficiary")
   .addParam("licenseAddress", "Address of ERC721 License")
@@ -37,7 +36,6 @@ task("deploy:super-app", "Deploy the AuctionSuperApp")
     async (
       {
         host,
-        cfa,
         acceptedToken,
         beneficiary,
         licenseAddress,
@@ -56,7 +54,6 @@ task("deploy:super-app", "Deploy the AuctionSuperApp")
       const factory = await hre.ethers.getContractFactory("AuctionSuperApp");
       const superApp = await factory.deploy(
         host,
-        cfa,
         acceptedToken,
         beneficiary,
         licenseAddress,

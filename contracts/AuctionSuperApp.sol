@@ -15,7 +15,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
-    ISuperfluid private host; // host
     CFAv1Library.InitData public cfaV1;
     ISuperToken private acceptedToken; // accepted token
 
@@ -133,7 +132,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         uint256 _bidPeriodLengthInSeconds
     ) {
         require(address(_host) != address(0), "host is zero address");
-        require(address(_cfa) != address(0), "cfa is zero address");
         require(
             address(_acceptedToken) != address(0),
             "acceptedToken is zero address"
@@ -147,12 +145,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         require(address(_license) != address(0), "license is zero address");
         require(!_host.isApp(ISuperApp(_beneficiary)), "beneficiary is an app");
 
-        host = _host;
         cfaV1 = CFAv1Library.InitData(
-            host,
+            _host,
             IConstantFlowAgreementV1(
                 address(
-                    host.getAgreementClass(
+                    _host.getAgreementClass(
                         keccak256(
                             "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
                         )
@@ -175,7 +172,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
             SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP;
 
-        host.registerApp(configWord);
+        cfaV1.host.registerApp(configWord);
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSE_ROLE, msg.sender);
@@ -214,9 +211,12 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(!host.isApp(ISuperApp(_beneficiary)), "beneficiary is an app");
+        require(
+            !cfaV1.host.isApp(ISuperApp(_beneficiary)),
+            "beneficiary is an app"
+        );
 
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             beneficiary
@@ -403,7 +403,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _increaseAppToBeneficiaryFlow(int96 amount) private {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             beneficiary
@@ -420,7 +420,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes memory ctx,
         int96 amount
     ) private returns (bytes memory newCtx) {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             beneficiary
@@ -447,7 +447,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         private
         returns (bytes memory newCtx)
     {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             beneficiary
@@ -471,7 +471,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _increaseAppToUserFlow(address user, int96 amount) private {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             user
@@ -489,7 +489,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         address user,
         int96 amount
     ) private returns (bytes memory newCtx) {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             user
@@ -508,7 +508,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     }
 
     function _decreaseAppToUserFlow(address user, int96 amount) private {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             user
@@ -526,7 +526,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         address user,
         int96 amount
     ) private returns (bytes memory newCtx) {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             user
@@ -553,7 +553,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         private
         returns (bytes memory newCtx, int96 amountDeleted)
     {
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
             acceptedToken,
             address(this),
             user
@@ -577,7 +577,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         address user,
         int96 increasedFlowRate
     ) private returns (bytes memory newCtx) {
-        ISuperfluid.Context memory decompiledContext = host.decodeCtx(_ctx);
+        ISuperfluid.Context memory decompiledContext = cfaV1.host.decodeCtx(
+            _ctx
+        );
         if (decompiledContext.userData.length == 0) {
             revert("AuctionSuperApp: Empty user data");
         }
@@ -600,7 +602,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         address user,
         int96 decreasedFlowRate
     ) private returns (bytes memory newCtx) {
-        ISuperfluid.Context memory decompiledContext = host.decodeCtx(_ctx);
+        ISuperfluid.Context memory decompiledContext = cfaV1.host.decodeCtx(
+            _ctx
+        );
         if (decompiledContext.userData.length == 0) {
             revert("AuctionSuperApp: Empty user data");
         }
@@ -1165,7 +1169,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         returns (bytes memory newCtx)
     {
         (address user, ) = abi.decode(_agreementData, (address, address));
-        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
+            acceptedToken,
+            _agreementId
+        );
 
         return _onIncreaseUserToApp(_ctx, user, flowRate);
     }
@@ -1185,7 +1192,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         whenNotPaused
         returns (bytes memory cbdata)
     {
-        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
+            acceptedToken,
+            _agreementId
+        );
         cbdata = abi.encode(flowRate);
     }
 
@@ -1206,7 +1216,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
     {
         (address user, ) = abi.decode(_agreementData, (address, address));
         int96 originalFlowRate = abi.decode(_cbdata, (int96));
-        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
+            acceptedToken,
+            _agreementId
+        );
 
         if (originalFlowRate < flowRate) {
             return
@@ -1224,7 +1237,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bytes calldata,
         bytes calldata
     ) external view override onlyHost returns (bytes memory cbdata) {
-        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
+            acceptedToken,
+            _agreementId
+        );
         cbdata = abi.encode(flowRate);
     }
 
@@ -1252,7 +1268,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         }
 
         int96 originalFlowRate = abi.decode(_cbdata, (int96));
-        (, int96 flowRate, , ) = cfa.getFlowByID(acceptedToken, _agreementId);
+        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
+            acceptedToken,
+            _agreementId
+        );
 
         if (isUserToApp) {
             return _onDeleteUserToApp(_ctx, user, originalFlowRate - flowRate);
@@ -1276,7 +1295,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
     modifier onlyHost() {
         require(
-            msg.sender == address(host),
+            msg.sender == address(cfaV1.host),
             "AuctionSuperApp: support only one host"
         );
         _;
