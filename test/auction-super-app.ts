@@ -1810,13 +1810,9 @@ describe("AuctionSuperApp", async function () {
 
       it("should revert on flow create when license does not exist", async () => {
         let existingLicenseId = 1;
-<<<<<<< HEAD
 
         const forSalePrice = await rateToPurchasePrice(BigNumber.from(200));
 
-=======
-        const purchasePrice = await rateToPurchasePrice(BigNumber.from("100"));
->>>>>>> ed6c4e807244eeb94d1c9522e1cb7d25d873d184
         const approveOp = ethx.approve({
           receiver: superApp.address,
           amount: forSalePrice.toString(),
@@ -2167,9 +2163,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           BigNumber.from("200"),
           bidData
@@ -2251,9 +2245,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           contributionRate,
           bidData
@@ -2383,9 +2375,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           BigNumber.from("200"),
           bidData
@@ -2470,9 +2460,7 @@ describe("AuctionSuperApp", async function () {
         await checkOutstandingBid(existingLicenseId, 0);
         await checkAppNetFlow();
 
-        expect(
-          mockReclaimer.claim
-        ).to.have.been.calledWith(
+        expect(mockReclaimer.claim).to.have.been.calledWith(
           bidder.address,
           contributionRate,
           bidData
