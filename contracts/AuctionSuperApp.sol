@@ -837,6 +837,27 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         emit ParcelClaimed(licenseId, user, claimPrice);
     }
 
+    /**
+     * @notice get the start time of the reclaimer bid to calculate reclaimer.claimPrice
+     * @param id License id
+     * @return reclaim start time
+     */
+    function _getReclaimerStartTime(uint256 id)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 zeroBidTimestamp = currentOwnerBid[id].timestamp;
+        address owner = license.ownerOf(id);
+        uint256 userDeletedTimestamp = lastUserDeletion[owner];
+
+        if (zeroBidTimestamp > userDeletedTimestamp) {
+            return zeroBidTimestamp;
+        } else {
+            return userDeletedTimestamp;
+        }
+    }
+
     function _reclaim(
         bytes memory _ctx,
         address user,
@@ -844,20 +865,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         uint256 licenseId,
         uint256 forSalePrice
     ) private returns (bytes memory newCtx) {
+        uint256 reclaimStartTime = _getReclaimerStartTime(licenseId);
         // Get claim price
         uint256 claimPrice = reclaimer.claimPrice(
             user,
             initialContributionRate,
-            abi.encode(licenseId)
+            abi.encode(forSalePrice, reclaimStartTime)
         );
 
         // Collect claim payment
         address oldOwner = license.ownerOf(licenseId);
         bool success = acceptedToken.transferFrom(user, oldOwner, claimPrice);
         require(success, "AuctionSuperApp: Claim payment failed");
-
-        // Process claim
-        reclaimer.claim(user, initialContributionRate, abi.encode(licenseId));
 
         // Increase app -> beneficiary flow
         newCtx = _increaseAppToBeneficiaryFlowWithCtx(
@@ -884,9 +903,7 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bid.forSalePrice = forSalePrice;
 
         // Transfer license
-        license.safeTransferFrom(oldOwner, user, licenseId);
-
-        emit ParcelReclaimed(licenseId, user, claimPrice);
+        reclaimer.claim(user, initialContributionRate, abi.encode(licenseId));
     }
 
     function _increaseBid(

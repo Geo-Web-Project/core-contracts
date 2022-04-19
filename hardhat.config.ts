@@ -22,6 +22,7 @@ import "./tasks/GeoWebParcel";
 import "./tasks/ERC721License";
 import "./tasks/AuctionSuperApp";
 import "./tasks/FairLaunchAuction";
+import "./tasks/Reclaimer";
 import "./tasks/estimate_minting_gas";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
@@ -35,6 +36,7 @@ task(
   const parcelAddress = await hre.run("deploy:parcel");
   const licenseAddress = await hre.run("deploy:license");
   const fairClaimerAddress = await hre.run("deploy:fair-claimer");
+  const reclaimerAddress = await hre.run("deploy:reclaimer");
 
   const [admin] = await hre.ethers.getSigners();
 
@@ -88,6 +90,13 @@ task(
     licenseAddress,
   });
 
+  await hre.run("config:reclaimer", {
+    contractAddress: reclaimerAddress,
+    auctionLength: 60 * 60 * 24 * 14, // 2 weeks
+    superAppAddress,
+    licenseAddress,
+  });
+
   console.log("Default configuration set.");
 
   console.log("\nSetting roles...");
@@ -97,6 +106,7 @@ task(
     parcelAddress: parcelAddress,
     superAppAddress: superAppAddress,
     claimerAddress: fairClaimerAddress,
+    reclaimerAddress: reclaimerAddress
   });
   console.log("Default roles set.");
 });
@@ -126,6 +136,12 @@ task("roles:set-default", "Set default roles on all deployed contracts")
     undefined,
     types.string
   )
+  .addOptionalParam(
+    "reclaimerAddress",
+    "Address of Reclaimer",
+    undefined,
+    types.string
+  )
   .setAction(
     async (
       {
@@ -133,11 +149,13 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         superAppAddress,
         parcelAddress,
         claimerAddress,
+        reclaimerAddress
       }: {
         licenseAddress: string;
         superAppAddress: string;
         parcelAddress: string;
         claimerAddress: string;
+        reclaimerAddress: string;
       },
       hre
     ) => {
@@ -156,15 +174,20 @@ task("roles:set-default", "Set default roles on all deployed contracts")
         superAppAddress
       );
 
-      const claimerContract = await hre.ethers.getContractAt(
+      const fairClaimerContract = await hre.ethers.getContractAt(
         "FairLaunchClaimer",
         claimerAddress
+      );
+
+      const reclaimerContract = await hre.ethers.getContractAt(
+        "Reclaimer",
+        reclaimerAddress
       );
 
       // ERC721License roles
       let res = await licenseContract.grantRole(
         await licenseContract.MINT_ROLE(),
-        claimerContract.address
+        fairClaimerContract.address
       );
       await res.wait();
 
@@ -177,13 +200,20 @@ task("roles:set-default", "Set default roles on all deployed contracts")
       // GeoWebParcel roles
       res = await parcelContract.grantRole(
         await parcelContract.BUILD_ROLE(),
-        claimerContract.address
+        fairClaimerContract.address
       );
       await res.wait();
 
       // FairLaunchClaimer roles
-      res = await claimerContract.grantRole(
-        await claimerContract.CLAIM_ROLE(),
+      res = await fairClaimerContract.grantRole(
+        await fairClaimerContract.CLAIM_ROLE(),
+        superAppContract.address
+      );
+      await res.wait();
+
+      // Reclaimer roles
+      res = await reclaimerContract.grantRole(
+        await reclaimerContract.RECLAIM_ROLE(),
         superAppContract.address
       );
       await res.wait();
