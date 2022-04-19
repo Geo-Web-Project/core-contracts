@@ -372,6 +372,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bool success = acceptedToken.transfer(oldOwner, depositAmount);
         require(success, "AuctionSuperApp: Transfer deposit failed");
 
+        // Transfer collateral to bidder
+        bool success1 = acceptedToken.transfer(bidOutstanding.bidder, bidOutstanding.forSalePrice - depositAmount);
+        require(success1, "AuctionSuperApp: Transfer collateral failed");
+
         int96 updatedRate = bidOutstanding.contributionRate -
             oldOwnerBidContributionRate;
         int96 bidContributionRate = bidOutstanding.contributionRate;
@@ -853,6 +857,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 // Clear outstanding bid
                 bidOutstanding.contributionRate = 0;
 
+                // Transfer collateral to bidder
+                bool success1 = acceptedToken.transfer(bidOutstanding.bidder, bidOutstanding.forSalePrice);
+                require(success1, "AuctionSuperApp: Transfer collateral failed");
+
+
                 emit BidRejected(licenseId, user, bidOutstanding.bidder);
             }
         }
@@ -1065,6 +1074,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         bool success = acceptedToken.transfer(oldOwner, depositAmount);
         require(success, "AuctionSuperApp: Transfer deposit failed");
 
+        // Transfer collateral to bidder
+        bool success1 = acceptedToken.transfer(bidOutstanding.bidder, bidOutstanding.forSalePrice - depositAmount);
+        require(success1, "AuctionSuperApp: Transfer collateral failed");
+
         int96 updatedRate = bidOutstanding.contributionRate -
             bid.contributionRate;
         int96 bidContributionRate = bidOutstanding.contributionRate;
@@ -1126,11 +1139,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         // Collect deposit
-        uint256 depositAmount = calculatePurchasePrice(licenseId);
         bool success = acceptedToken.transferFrom(
             bidder,
             address(this),
-            depositAmount
+            forSalePrice
         );
         require(success, "AuctionSuperApp: Bid deposit failed");
 
