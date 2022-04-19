@@ -8,12 +8,15 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/IClaimer.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
 contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
+    using CFAv1Library for CFAv1Library.InitData;
+
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
     ISuperfluid private host; // host
-    IConstantFlowAgreementV1 private cfa; // the stored constant flow agreement class address
+    CFAv1Library.InitData public cfaV1;
     ISuperToken private acceptedToken; // accepted token
 
     /// @notice Beneficiary of funds.
@@ -118,7 +121,6 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
     constructor(
         ISuperfluid _host,
-        IConstantFlowAgreementV1 _cfa,
         ISuperToken _acceptedToken,
         address _beneficiary,
         address _license,
@@ -146,7 +148,19 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         require(!_host.isApp(ISuperApp(_beneficiary)), "beneficiary is an app");
 
         host = _host;
-        cfa = _cfa;
+        cfaV1 = CFAv1Library.InitData(
+            host,
+            IConstantFlowAgreementV1(
+                address(
+                    host.getAgreementClass(
+                        keccak256(
+                            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+                        )
+                    )
+                )
+            )
+        );
+
         acceptedToken = _acceptedToken;
         beneficiary = _beneficiary;
         license = IERC721(_license);
@@ -210,30 +224,10 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
 
         if (flowRate > 0) {
             // Delete flow to old beneficiary
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.deleteFlow.selector,
-                    acceptedToken,
-                    address(this),
-                    beneficiary,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.deleteFlow(address(this), beneficiary, acceptedToken);
 
             // Create flow to new beneficiary
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    _beneficiary,
-                    flowRate,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.createFlow(_beneficiary, acceptedToken, flowRate);
         }
 
         beneficiary = _beneficiary;
@@ -416,29 +410,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > 0) {
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    beneficiary,
-                    flowRate + amount,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.updateFlow(beneficiary, acceptedToken, flowRate + amount);
         } else {
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    beneficiary,
-                    amount,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.createFlow(beneficiary, acceptedToken, amount);
         }
     }
 
@@ -453,30 +427,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > 0) {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    beneficiary,
-                    flowRate + amount,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
+            newCtx = cfaV1.updateFlowWithCtx(
+                ctx,
+                beneficiary,
+                acceptedToken,
+                flowRate + amount
             );
         } else {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    beneficiary,
-                    amount,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
+            newCtx = cfaV1.createFlowWithCtx(
+                ctx,
+                beneficiary,
+                acceptedToken,
+                amount
             );
         }
     }
@@ -492,30 +454,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (amount < flowRate) {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    beneficiary,
-                    flowRate - amount,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
+            newCtx = cfaV1.updateFlowWithCtx(
+                ctx,
+                beneficiary,
+                acceptedToken,
+                flowRate - amount
             );
         } else if (flowRate > 0) {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.deleteFlow.selector,
-                    acceptedToken,
-                    address(this),
-                    beneficiary,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
+            newCtx = cfaV1.deleteFlowWithCtx(
+                ctx,
+                address(this),
+                beneficiary,
+                acceptedToken
             );
         }
     }
@@ -528,29 +478,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > 0) {
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    user,
-                    flowRate + amount,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.updateFlow(user, acceptedToken, flowRate + amount);
         } else {
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    user,
-                    amount,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.createFlow(user, acceptedToken, amount);
         }
     }
 
@@ -566,31 +496,14 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > 0) {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    user,
-                    flowRate + amount,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
+            newCtx = cfaV1.updateFlowWithCtx(
+                ctx,
+                user,
+                acceptedToken,
+                flowRate + amount
             );
         } else {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.createFlow.selector,
-                    acceptedToken,
-                    user,
-                    amount,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
-            );
+            newCtx = cfaV1.createFlowWithCtx(ctx, user, acceptedToken, amount);
         }
     }
 
@@ -602,29 +515,9 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > amount) {
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    user,
-                    flowRate - amount,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.updateFlow(user, acceptedToken, flowRate - amount);
         } else {
-            host.callAgreement(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.deleteFlow.selector,
-                    acceptedToken,
-                    address(this),
-                    user,
-                    new bytes(0)
-                ),
-                "0x"
-            );
+            cfaV1.deleteFlow(address(this), user, acceptedToken);
         }
     }
 
@@ -640,30 +533,18 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         );
 
         if (flowRate > amount) {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.updateFlow.selector,
-                    acceptedToken,
-                    user,
-                    flowRate - amount,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
+            newCtx = cfaV1.updateFlowWithCtx(
+                ctx,
+                user,
+                acceptedToken,
+                flowRate - amount
             );
         } else {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.deleteFlow.selector,
-                    acceptedToken,
-                    address(this),
-                    user,
-                    new bytes(0)
-                ),
-                "0x",
-                ctx
+            newCtx = cfaV1.deleteFlowWithCtx(
+                ctx,
+                address(this),
+                user,
+                acceptedToken
             );
         }
     }
@@ -682,17 +563,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
         amountDeleted = flowRate;
 
         if (flowRate > 0) {
-            (newCtx, ) = host.callAgreementWithContext(
-                cfa,
-                abi.encodeWithSelector(
-                    cfa.deleteFlow.selector,
-                    acceptedToken,
-                    address(this),
-                    user,
-                    new bytes(0)
-                ),
-                "0x",
-                newCtx
+            newCtx = cfaV1.deleteFlowWithCtx(
+                ctx,
+                address(this),
+                user,
+                acceptedToken
             );
         }
     }
