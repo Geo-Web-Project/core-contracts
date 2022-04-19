@@ -961,6 +961,11 @@ contract AuctionSuperApp is SuperAppBase, AccessControlEnumerable, Pausable {
                 // Clear outstanding bid
                 bidOutstanding.contributionRate = 0;
 
+                // Transfer collateral to bidder
+                bool success1 = acceptedToken.transfer(bidOutstanding.bidder, bidOutstanding.forSalePrice);
+                require(success1, "AuctionSuperApp: Transfer collateral failed");
+
+
                 emit BidRejected(licenseId, user, bidOutstanding.bidder);
             }
         }
