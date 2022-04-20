@@ -92,6 +92,7 @@ export interface ISuperfluidInterface extends utils.Interface {
     "getAppLevel(address)": FunctionFragment;
     "getAppManifest(address)": FunctionFragment;
     "getGovernance()": FunctionFragment;
+    "getNow()": FunctionFragment;
     "getSuperTokenFactory()": FunctionFragment;
     "getSuperTokenFactoryLogic()": FunctionFragment;
     "isAgreementClassListed(address)": FunctionFragment;
@@ -182,6 +183,7 @@ export interface ISuperfluidInterface extends utils.Interface {
     functionFragment: "getGovernance",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "getNow", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getSuperTokenFactory",
     values?: undefined
@@ -319,6 +321,7 @@ export interface ISuperfluidInterface extends utils.Interface {
     functionFragment: "getGovernance",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "getNow", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getSuperTokenFactory",
     data: BytesLike
@@ -606,6 +609,8 @@ export interface ISuperfluid extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string] & { governance: string }>;
 
+    getNow(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     getSuperTokenFactory(
       overrides?: CallOverrides
     ): Promise<[string] & { factory: string }>;
@@ -812,6 +817,8 @@ export interface ISuperfluid extends BaseContract {
 
   getGovernance(overrides?: CallOverrides): Promise<string>;
 
+  getNow(overrides?: CallOverrides): Promise<BigNumber>;
+
   getSuperTokenFactory(overrides?: CallOverrides): Promise<string>;
 
   getSuperTokenFactoryLogic(overrides?: CallOverrides): Promise<string>;
@@ -1010,6 +1017,8 @@ export interface ISuperfluid extends BaseContract {
     >;
 
     getGovernance(overrides?: CallOverrides): Promise<string>;
+
+    getNow(overrides?: CallOverrides): Promise<BigNumber>;
 
     getSuperTokenFactory(overrides?: CallOverrides): Promise<string>;
 
@@ -1250,6 +1259,8 @@ export interface ISuperfluid extends BaseContract {
 
     getGovernance(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getNow(overrides?: CallOverrides): Promise<BigNumber>;
+
     getSuperTokenFactory(overrides?: CallOverrides): Promise<BigNumber>;
 
     getSuperTokenFactoryLogic(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1446,6 +1457,8 @@ export interface ISuperfluid extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getGovernance(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getNow(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getSuperTokenFactory(
       overrides?: CallOverrides

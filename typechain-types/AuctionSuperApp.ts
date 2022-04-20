@@ -32,6 +32,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     "bidPeriodLengthInSeconds()": FunctionFragment;
     "calculatePenalty(uint256)": FunctionFragment;
     "calculatePurchasePrice(uint256)": FunctionFragment;
+    "cfaV1()": FunctionFragment;
     "claimOutstandingBid(uint256)": FunctionFragment;
     "claimer()": FunctionFragment;
     "currentOwnerBid(uint256)": FunctionFragment;
@@ -112,6 +113,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     functionFragment: "calculatePurchasePrice",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "cfaV1", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "claimOutstandingBid",
     values: [BigNumberish]
@@ -254,6 +256,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     functionFragment: "calculatePurchasePrice",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "cfaV1", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "claimOutstandingBid",
     data: BytesLike
@@ -564,6 +567,10 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
+    cfaV1(
+      overrides?: CallOverrides
+    ): Promise<[string, string] & { host: string; cfa: string }>;
+
     claimOutstandingBid(
       id: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -796,6 +803,10 @@ export interface AuctionSuperApp extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  cfaV1(
+    overrides?: CallOverrides
+  ): Promise<[string, string] & { host: string; cfa: string }>;
+
   claimOutstandingBid(
     id: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -1027,6 +1038,10 @@ export interface AuctionSuperApp extends BaseContract {
       id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    cfaV1(
+      overrides?: CallOverrides
+    ): Promise<[string, string] & { host: string; cfa: string }>;
 
     claimOutstandingBid(
       id: BigNumberish,
@@ -1376,6 +1391,8 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    cfaV1(overrides?: CallOverrides): Promise<BigNumber>;
+
     claimOutstandingBid(
       id: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1588,6 +1605,8 @@ export interface AuctionSuperApp extends BaseContract {
       id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    cfaV1(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     claimOutstandingBid(
       id: BigNumberish,

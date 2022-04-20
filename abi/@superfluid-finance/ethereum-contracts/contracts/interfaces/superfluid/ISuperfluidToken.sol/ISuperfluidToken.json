@@ -460,39 +460,6 @@
         "type": "bytes32"
       },
       {
-        "internalType": "address",
-        "name": "liquidator",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "penaltyAccount",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "rewardAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "bailoutAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "makeLiquidationPayouts",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "id",
-        "type": "bytes32"
-      },
-      {
         "internalType": "bytes",
         "name": "liquidationTypeData",
         "type": "bytes"

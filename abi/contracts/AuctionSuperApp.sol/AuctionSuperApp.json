@@ -7,11 +7,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract IConstantFlowAgreementV1",
-        "name": "_cfa",
-        "type": "address"
-      },
-      {
         "internalType": "contract ISuperToken",
         "name": "_acceptedToken",
         "type": "address"
@@ -700,6 +695,24 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cfaV1",
+    "outputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IConstantFlowAgreementV1",
+        "name": "cfa",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
