@@ -6,7 +6,7 @@
       "strict": true,
       "resolveJsonModule": true,
       "esModuleInterop": true,
-      "outDir": "dist"
+      "outDir": "dist",
   },
   "include": [
       "./deploy",
