@@ -40,11 +40,6 @@ task(
 
   const [admin] = await hre.ethers.getSigners();
 
-  // TODO: Replace reclaimer
-  const mockClaimerFactory = await hre.ethers.getContractFactory("MockClaimer");
-  const mockClaimer = await mockClaimerFactory.deploy();
-  await mockClaimer.deployed();
-
   const errorHandler = (err: any) => {
     if (err) throw err;
   };
@@ -73,7 +68,7 @@ task(
     beneficiary: admin.address,
     licenseAddress: licenseAddress,
     claimerAddress: fairClaimerAddress,
-    reclaimerAddress: mockClaimer.address,
+    reclaimerAddress: reclaimerAddress,
     annualFeeRate: 0.1,
     penaltyRate: 0.1,
     bidPeriodLengthInSeconds: 60 * 60 * 24 * 7, // 7 days
