@@ -3,7 +3,9 @@ import { task, types } from "hardhat/config";
 
 task("deploy:fair-claimer", "Deploy FairLaunchClaimer").setAction(
   async (args, hre) => {
-    const FairLaunchClaimer = await hre.ethers.getContractFactory("FairLaunchClaimer");
+    const FairLaunchClaimer = await hre.ethers.getContractFactory(
+      "FairLaunchClaimer"
+    );
     const fairClaimer = await FairLaunchClaimer.deploy();
     await fairClaimer.deployed();
 
@@ -25,28 +27,62 @@ task("deploy-zksync:fair-claimer", "Deploy the FairLaunchClaimer").setAction(
 );
 
 task("config:fair-claimer")
-  .addOptionalParam("contractAddress", "Address of deployed FairLaunchClaimer contract", undefined, types.string)
-  .addOptionalParam("auctionStart", "START time of the Dutch auction (seconds)", undefined, types.int)
-  .addOptionalParam("auctionEnd", "END time of the Dutch auction (seconds)", undefined, types.int)
-  .addOptionalParam("parcelAddress", "Address of GeoWebParcel contract", undefined, types.string)
-  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
+  .addOptionalParam(
+    "contractAddress",
+    "Address of deployed FairLaunchClaimer contract",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "auctionStart",
+    "START time of the Dutch auction (seconds)",
+    0,
+    types.int
+  )
+  .addOptionalParam(
+    "auctionEnd",
+    "END time of the Dutch auction (seconds)",
+    0,
+    types.int
+  )
+  .addOptionalParam(
+    "parcelAddress",
+    "Address of GeoWebParcel contract",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "licenseAddress",
+    "Address of ERC721 License used to find owners",
+    undefined,
+    types.string
+  )
   .setAction(
     async (
-      { contractAddress, auctionStart, auctionEnd, parcelAddress, licenseAddress }: { contractAddress: string, auctionStart?: number, auctionEnd?: number, parcelAddress?: string, licenseAddress?: string },
+      {
+        contractAddress,
+        auctionStart,
+        auctionEnd,
+        parcelAddress,
+        licenseAddress,
+      }: {
+        contractAddress: string;
+        auctionStart?: number;
+        auctionEnd?: number;
+        parcelAddress?: string;
+        licenseAddress?: string;
+      },
       hre
     ) => {
-      if (
-        !contractAddress &&
-        // !auctionStart &&
-        // !auctionEnd &&
-        !licenseAddress &&
-        !parcelAddress
-      ) {
+      if (!contractAddress && !licenseAddress && !parcelAddress) {
         console.log("Nothing to configure. See options");
         return;
       }
 
-      const fairClaimer = await hre.ethers.getContractAt("FairLaunchClaimer", contractAddress);
+      const fairClaimer = await hre.ethers.getContractAt(
+        "FairLaunchClaimer",
+        contractAddress
+      );
 
       if (auctionStart && auctionEnd) {
         // set auctionStart
