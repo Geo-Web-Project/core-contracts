@@ -48,7 +48,6 @@ contract FairLaunchClaimer is Pausable, AccessControl, IClaimer {
         bytes calldata claimData
     ) external override onlyRole(CLAIM_ROLE) whenNotPaused returns (uint256 licenseId) {
         require(block.timestamp > auctionStart, "auction has not started yet");
-        require(block.timestamp < auctionEnd, "geneisis is complete");
 
         (uint64 baseCoordinate, uint256[] memory path) = abi.decode(
             claimData,
@@ -82,6 +81,10 @@ contract FairLaunchClaimer is Pausable, AccessControl, IClaimer {
      * @notice the current dutch auction price of a parcel.
      */
     function _requiredBid() internal view returns (uint256) {
+        if (block.timestamp > auctionEnd) {
+            return endingBid;
+        }
+        
         uint256 timeElapsed = block.timestamp - auctionStart;
         uint256 auctionDuration = auctionEnd - auctionStart;
         uint256 priceDecrease = (startingBid * timeElapsed) / auctionDuration;
