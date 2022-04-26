@@ -27,6 +27,7 @@ import "./tasks/estimate_minting_gas";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
+import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 
 task(
   "deploy",
@@ -44,27 +45,47 @@ task(
     if (err) throw err;
   };
 
-  await deployFramework(errorHandler, {
-    web3: hre.web3,
-    from: admin.address,
-  });
+  let sf: Framework;
+  let ethx: SuperToken;
+  if (hre.network.config.chainId == 31337) {
+    await deployFramework(errorHandler, {
+      web3: hre.web3,
+      from: admin.address,
+    });
 
-  await deploySuperToken(errorHandler, [":", "ETH"], {
-    web3: hre.web3,
-    from: admin.address,
-  });
+    await deploySuperToken(errorHandler, [":", "ETH"], {
+      web3: hre.web3,
+      from: admin.address,
+    });
 
-  const sf = new SuperfluidSDK.Framework({
-    web3: hre.web3,
-    version: "test",
-    tokens: ["ETH"],
-  });
-  await sf.initialize();
+    const jsSf = new SuperfluidSDK.Framework({
+      web3: hre.web3,
+      version: "test",
+      tokens: ["ETH"],
+    });
+    await jsSf.initialize();
+
+    sf = await Framework.create({
+      networkName: "custom",
+      provider: hre.web3,
+      dataMode: "WEB3_ONLY",
+      resolverAddress: jsSf.resolver.address,
+      protocolReleaseVersion: "test",
+    });
+
+    ethx = await sf.loadSuperToken(jsSf.tokens.ETHx.address);
+  } else {
+    sf = await Framework.create({
+      networkName: hre.network.name,
+      provider: hre.ethers.provider,
+    });
+    ethx = await sf.loadSuperToken("ETHx");
+  }
 
   // AuctionSuperApp default config
   const superAppAddress = await hre.run("deploy:super-app", {
-    host: sf.host.address,
-    acceptedToken: sf.tokens.ETHx.address,
+    host: sf.host.hostContract.address,
+    acceptedToken: ethx.address,
     beneficiary: admin.address,
     licenseAddress: licenseAddress,
     claimerAddress: fairClaimerAddress,
