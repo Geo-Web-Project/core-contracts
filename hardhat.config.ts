@@ -24,6 +24,7 @@ import "./tasks/AuctionSuperApp";
 import "./tasks/FairLaunchAuction";
 import "./tasks/Reclaimer";
 import "./tasks/estimate_minting_gas";
+import "./tasks/claim_example";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
@@ -252,6 +253,11 @@ if (process.env.INFURA_KEY) {
     networks["rinkeby"] = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 4,
+      accounts: [process.env.DEV_PRIVATE_KEY],
+    };
+    networks["optimism-kovan"] = {
+      url: `https://kovan.optimism.io`,
+      chainId: 69,
       accounts: [process.env.DEV_PRIVATE_KEY],
     };
   } else {
