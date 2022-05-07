@@ -1,6 +1,7 @@
-import { ethers } from "ethers";
+import BN from "bn.js";
+import { BigNumber, ethers } from "ethers";
 import { task, types } from "hardhat/config";
-const BigNumber = ethers.BigNumber;
+const GeoWebCoordinate = require("js-geo-web-coordinate");
 
 function makePathPrefix(length: any) {
   return BigNumber.from(length).shl(256 - 8);
@@ -8,6 +9,14 @@ function makePathPrefix(length: any) {
 
 function makeCoord(x: number, y: number) {
   return BigNumber.from(x).shl(32).or(BigNumber.from(y));
+}
+
+function toBN(value: BigNumber): BN {
+  const hex = BigNumber.from(value).toHexString();
+  if (hex[0] === "-") {
+    return new BN("-" + hex.substring(3), 16);
+  }
+  return new BN(hex.substring(2), 16);
 }
 
 async function traverseSingle(gwCoor: ethers.Contract) {
@@ -61,68 +70,24 @@ async function mintPath(count: any, GW: ethers.Contract) {
   console.log(`Estimated gas for ${count} path mint: ${gas}`);
 }
 
-async function mintSingleWord(count: any, GW: ethers.Contract) {
+async function mintSquare(dim: number, GW: ethers.Contract) {
   // Global(160000, 17) -> Index(100000, 1), Local(0, 1)
-  let coord = BigNumber.from(160000).shl(32).or(BigNumber.from(0));
+  const coord1 = BigNumber.from(160000).shl(32).or(BigNumber.from(0));
+  const coord2 = BigNumber.from(160000 + dim)
+    .shl(32)
+    .or(BigNumber.from(dim));
 
-  var paths = [];
-  var path = BigNumber.from(0);
-  for (let i = 1; i < count; i++) {
-    var direction;
-    if (i % 16 == 0) {
-      // North
-      direction = BigNumber.from(0b00);
-    } else if (Math.floor(i / 16) % 2 == 0) {
-      // East
-      direction = BigNumber.from(0b10);
-    } else {
-      // West
-      direction = BigNumber.from(0b11);
+  const paths = GeoWebCoordinate.make_rect_path(toBN(coord1), toBN(coord2)).map(
+    (v: BN) => {
+      return BigNumber.from(v.toString(10));
     }
-    path = direction.shl(i * 2).or(path.shr(2));
+  );
 
-    if (i % 124 == 0) {
-      paths.push(makePathPrefix(124).or(path));
-      path = BigNumber.from(0);
-    }
-  }
+  const gas = await GW.estimateGas.build(coord1, paths);
 
-  paths.push(makePathPrefix((count % 124) - 1).or(path));
-  let gas = await GW.estimateGas.build(coord, paths);
-
-  console.log(`Estimated gas for 1 word mint of ${count} coordinates: ${gas}`);
-}
-
-async function mintMultipleWord(count: any, GW: ethers.Contract) {
-  // Global(159999, 15) -> Index(99999, 15), Local(15, 15)
-  let coord = BigNumber.from(159999).shl(32).or(BigNumber.from(15));
-
-  var paths = [];
-  var path = BigNumber.from(0);
-  for (let i = 1; i < count; i++) {
-    var direction;
-    if (i % 16 == 0) {
-      // North
-      direction = BigNumber.from(0b00);
-    } else if (Math.floor(i / 16) % 2 == 0) {
-      // East
-      direction = BigNumber.from(0b10);
-    } else {
-      // West
-      direction = BigNumber.from(0b11);
-    }
-    path = direction.shl(i * 2).or(path.shr(2));
-
-    if (i % 124 == 0) {
-      paths.push(makePathPrefix(124).or(path));
-      path = BigNumber.from(0);
-    }
-  }
-
-  paths.push(makePathPrefix((count % 124) - 1).or(path));
-  let gas = await GW.estimateGas.build(coord, paths);
-
-  console.log(`Estimated gas for 4 word mint of ${count} coordinates: ${gas}`);
+  console.log(
+    `Estimated gas mint of ${dim}x${dim} (${dim * dim}) coordinates: ${gas}`
+  );
 }
 
 task("measure:parcel-gas")
@@ -165,11 +130,10 @@ task("measure:parcel-gas")
       await buildSingleCoordinate(GW);
       await mintPath(1, GW);
       await mintPath(2, GW);
-      await mintSingleWord(10, GW);
-      await mintMultipleWord(10, GW);
-      await mintSingleWord(100, GW);
-      await mintMultipleWord(100, GW);
-      //   await mintSingleWord(1000, GW);
-      //   await mintMultipleWord(1000, GW);
+      await mintSquare(Math.sqrt(16), GW);
+      await mintSquare(Math.sqrt(64), GW);
+      await mintSquare(9, GW);
+      await mintSquare(25, GW);
+      await mintSquare(70, GW);
     }
   );

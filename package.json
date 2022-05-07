@@ -49,6 +49,7 @@
     "graphql": "^16.3.0",
     "hardhat": "^2.9.2",
     "hardhat-abi-exporter": "^2.8.0",
+    "js-geo-web-coordinate": "^0.2.0",
     "shx": "^0.3.4",
     "solidity-coverage": "^0.7.17",
     "ts-node": "^10.4.0",
