@@ -132,8 +132,10 @@ task("measure:parcel-gas")
       await mintPath(2, GW);
       await mintSquare(Math.sqrt(16), GW);
       await mintSquare(Math.sqrt(64), GW);
-      await mintSquare(9, GW);
-      await mintSquare(25, GW);
-      await mintSquare(70, GW);
+      await mintSquare(Math.floor(Math.sqrt(26)), GW);
+      await mintSquare(Math.floor(Math.sqrt(208)), GW);
+      await mintSquare(Math.floor(Math.sqrt(416)), GW);
+      await mintSquare(Math.floor(Math.sqrt(833)), GW);
+      await mintSquare(Math.floor(Math.sqrt(1666)), GW);
     }
   );
