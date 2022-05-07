@@ -1,8 +1,8 @@
 import { assert, expect, use } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
-const BigNumber = ethers.BigNumber;
 import { solidity } from "ethereum-waffle";
+import { BigNumber } from "ethers";
 
 use(solidity);
 
@@ -12,8 +12,19 @@ describe("GeoWebParcel", async () => {
   }
 
   let accounts: SignerWithAddress[];
+  let max_x: BigNumber;
+  let max_y: BigNumber;
 
   async function buildContract() {
+    const GeoWebCoordinate = await ethers.getContractFactory(
+      "GeoWebCoordinate"
+    );
+    const geoWebCoordinate = await GeoWebCoordinate.deploy();
+    await geoWebCoordinate.deployed();
+
+    max_x = await geoWebCoordinate.MAX_X();
+    max_y = await geoWebCoordinate.MAX_Y();
+
     const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
     const geoWebParcel = await GeoWebParcel.deploy();
     await geoWebParcel.deployed();
@@ -275,7 +286,10 @@ describe("GeoWebParcel", async () => {
     let buildResult = await buildTx.wait();
 
     let result0 = await geoWebParcel.availabilityIndex(0, 10);
-    let result1 = await geoWebParcel.availabilityIndex(2 ** 19 / 16 - 1, 10);
+    let result1 = await geoWebParcel.availabilityIndex(
+      max_x.add(1).div(16).sub(1),
+      10
+    );
 
     assert.equal(
       result0.toString(),
@@ -300,7 +314,10 @@ describe("GeoWebParcel", async () => {
     await geoWebParcel.destroy(parcelId);
 
     let result0_1 = await geoWebParcel.availabilityIndex(0, 10);
-    let result1_1 = await geoWebParcel.availabilityIndex(2 ** 19 / 16 - 1, 10);
+    let result1_1 = await geoWebParcel.availabilityIndex(
+      max_x.add(1).div(16).sub(1),
+      10
+    );
     assert.equal(
       result0_1.toString(),
       BigNumber.from(0).toString(),
@@ -480,9 +497,7 @@ describe("GeoWebParcel", async () => {
     await geoWebParcel.grantRole(BUILD_ROLE, accounts[0].address);
 
     // Global(16000, MAX) -> Index(1000, MAX/16), Local(0, 15)
-    let coord = BigNumber.from(16000)
-      .shl(32)
-      .or(BigNumber.from(2 ** 18 - 1));
+    let coord = BigNumber.from(16000).shl(32).or(max_y);
 
     var err;
     try {

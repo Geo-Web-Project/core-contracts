@@ -282,10 +282,12 @@ describe("GeoWebCoordinate", async () => {
   it("should traverse meridian east -> west", async () => {
     let direction = BigNumber.from(0b10);
 
+    const max_x = await geoWebCoordinate.MAX_X();
+
     let result = await geoWebCoordinate.traverse(
-      makeCoord(2 ** 19 - 1, 0),
+      makeCoord(max_x, 0),
       direction,
-      BigNumber.from(Math.floor((2 ** 19 - 1) / 16)),
+      BigNumber.from(Math.floor(max_x / 16)),
       BigNumber.from(0),
       BigNumber.from(15)
     );
@@ -306,6 +308,8 @@ describe("GeoWebCoordinate", async () => {
   it("should traverse meridian west -> east", async () => {
     let direction = BigNumber.from(0b11);
 
+    const max_x = await geoWebCoordinate.MAX_X();
+
     let result = await geoWebCoordinate.traverse(
       makeCoord(0, 0),
       direction,
@@ -316,13 +320,13 @@ describe("GeoWebCoordinate", async () => {
 
     assert.equal(
       result.destination.toString(),
-      makeCoord(2 ** 19 - 1, 0).toString(),
+      makeCoord(max_x, 0).toString(),
       "Destination is not correct"
     );
 
     assert.equal(
       result.i_x.toString(),
-      BigNumber.from(Math.floor((2 ** 19 - 1) / 16)).toString(),
+      BigNumber.from(Math.floor(max_x / 16)).toString(),
       "X is not correct"
     );
 
