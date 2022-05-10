@@ -13,8 +13,8 @@ function toBN(value: BigNumber): BN {
 
 async function mintSquare(dim: number, GW: ethers.Contract) {
   // Global(160000, 17) -> Index(100000, 1), Local(0, 1)
-  const coord1 = BigNumber.from(160000).shl(32).or(BigNumber.from(0));
-  const coord2 = BigNumber.from(160000 + dim)
+  const coord1 = BigNumber.from(0).shl(32).or(BigNumber.from(0));
+  const coord2 = BigNumber.from(0 + dim)
     .shl(32)
     .or(BigNumber.from(dim));
 
@@ -70,6 +70,6 @@ task("example:claim")
       const result = await GW.grantRole(buildRole, admin.address);
       await result.wait();
 
-      await mintSquare(Math.sqrt(16), GW);
+      await mintSquare(64, GW);
     }
   );

@@ -260,6 +260,12 @@ if (process.env.INFURA_KEY) {
       chainId: 69,
       accounts: [process.env.DEV_PRIVATE_KEY],
     };
+    networks["arbitrum-rinkeby"] = {
+      url: "https://rinkeby.arbitrum.io/rpc",
+      chainId: 421611,
+      accounts: [process.env.DEV_PRIVATE_KEY],
+      gas: 197440607,
+    };
   } else {
     console.warn("Missing env.DEV_PRIVATE_KEY");
   }
