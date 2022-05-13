@@ -24,8 +24,7 @@ contract GeoWebParcel is AccessControl {
     /// @dev Enum for different actions
     enum Action {
         Build,
-        Destroy,
-        Check
+        Destroy
     }
 
     /// @notice Stores which coordinates are available
@@ -66,7 +65,7 @@ contract GeoWebParcel is AccessControl {
         require(path.length > 0, "Path must have at least one component");
 
         // First, only check availability
-        _updateAvailabilityIndex(Action.Check, baseCoordinate, path);
+        // _updateAvailabilityIndex(Action.Check, baseCoordinate, path);
 
         // Then mark everything as available
         _updateAvailabilityIndex(Action.Build, baseCoordinate, path);
@@ -126,14 +125,14 @@ contract GeoWebParcel is AccessControl {
 
         do {
             if (action == Action.Build) {
+                // Check if coordinate is available
+                require((word & (2**i) == 0), "Coordinate is not available");
+
                 // Mark coordinate as unavailable in memory
                 word = word | (2**i);
             } else if (action == Action.Destroy) {
                 // Mark coordinate as available in memory
                 word = word & ((2**i) ^ MAX_INT);
-            } else if (action == Action.Check) {
-                // Check if coordinate is available
-                require((word & (2**i) == 0), "Coordinate is not available");
             }
 
             // Get next direction
@@ -164,10 +163,8 @@ contract GeoWebParcel is AccessControl {
 
             // If new coordinate is in new word
             if (new_i_x != i_x || new_i_y != i_y) {
-                if (action != Action.Check) {
-                    // Update word in storage
-                    availabilityIndex[i_x][i_y] = word;
-                }
+                // Update word in storage
+                availabilityIndex[i_x][i_y] = word;
 
                 // Advance to next word
                 word = availabilityIndex[new_i_x][new_i_y];
@@ -177,9 +174,7 @@ contract GeoWebParcel is AccessControl {
             i_y = new_i_y;
         } while (true);
 
-        if (action != Action.Check) {
-            // Update last word in storage
-            availabilityIndex[i_x][i_y] = word;
-        }
+        // Update last word in storage
+        availabilityIndex[i_x][i_y] = word;
     }
 }

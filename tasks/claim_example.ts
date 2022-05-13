@@ -70,6 +70,6 @@ task("example:claim")
       const result = await GW.grantRole(buildRole, admin.address);
       await result.wait();
 
-      await mintSquare(64, GW);
+      await mintSquare(40, GW);
     }
   );
