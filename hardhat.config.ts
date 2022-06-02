@@ -25,6 +25,7 @@ import "./tasks/FairLaunchAuction";
 import "./tasks/Reclaimer";
 import "./tasks/estimate_minting_gas";
 import "./tasks/claim_example";
+import "./tasks/bid-example";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
