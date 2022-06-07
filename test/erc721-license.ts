@@ -1,5 +1,5 @@
 import { assert, use, expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 const BigNumber = ethers.BigNumber;
 import { solidity } from "ethereum-waffle";
 import { ERC721License__factory } from "../typechain-types";
@@ -13,8 +13,7 @@ describe("ERC721License", async () => {
 
   async function buildContract() {
     const factory = new ERC721License__factory(admin);
-    const license = await factory.deploy();
-    await license.deployed();
+    const license = await upgrades.deployProxy(factory, []);
 
     return license;
   }
@@ -23,6 +22,12 @@ describe("ERC721License", async () => {
     accounts = await ethers.getSigners();
 
     [admin] = accounts;
+  });
+
+  it("should deploy and upgrade", async () => {
+    const factory = new ERC721License__factory(admin);
+    const instance = await upgrades.deployProxy(factory, []);
+    await upgrades.upgradeProxy(instance.address, factory);
   });
 
   it("should only allow MINT_ROLE to mint license", async () => {

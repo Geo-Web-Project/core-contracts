@@ -1,8 +1,9 @@
 import { assert, expect, use } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { BigNumber } from "ethers";
+import { GeoWebParcel__factory } from "../typechain-types";
 
 use(solidity);
 
@@ -25,15 +26,20 @@ describe("GeoWebParcel", async () => {
     max_x = await geoWebCoordinate.MAX_X();
     max_y = await geoWebCoordinate.MAX_Y();
 
-    const GeoWebParcel = await ethers.getContractFactory("GeoWebParcel");
-    const geoWebParcel = await GeoWebParcel.deploy();
-    await geoWebParcel.deployed();
+    const factory = new GeoWebParcel__factory(accounts[0]);
+    const geoWebParcel = await upgrades.deployProxy(factory, []);
 
     return geoWebParcel;
   }
 
   before(async () => {
     accounts = await ethers.getSigners();
+  });
+
+  it("should deploy and upgrade", async () => {
+    const factory = new GeoWebParcel__factory(accounts[0]);
+    const instance = await upgrades.deployProxy(factory, []);
+    await upgrades.upgradeProxy(instance.address, factory);
   });
 
   it("should build and destroy a parcel of a single coordinate", async () => {
