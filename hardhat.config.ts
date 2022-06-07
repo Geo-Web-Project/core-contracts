@@ -31,6 +31,7 @@ const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 import { addDays, getUnixTime } from "date-fns";
+import "@nomiclabs/hardhat-etherscan";
 
 task(
   "deploy",
@@ -282,6 +283,11 @@ if (process.env.INFURA_KEY) {
 
 module.exports = {
   networks,
+  etherscan: {
+    apiKey: {
+      optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
+    },
+  },
   zksolc: {
     version: "0.1.0",
     compilerSource: "docker",
