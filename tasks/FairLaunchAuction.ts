@@ -74,7 +74,13 @@ task("config:fair-claimer")
       },
       hre
     ) => {
-      if (!contractAddress && !licenseAddress && !parcelAddress) {
+      if (
+        !contractAddress &&
+        !licenseAddress &&
+        !parcelAddress &&
+        !auctionStart &&
+        !auctionEnd
+      ) {
         console.log("Nothing to configure. See options");
         return;
       }
