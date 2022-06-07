@@ -41,6 +41,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     "getRoleMemberCount(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
+    "initialize(address,address,address,address,address,address,uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
     "license()": FunctionFragment;
     "oldBids(address,uint256)": FunctionFragment;
     "outstandingBid(uint256)": FunctionFragment;
@@ -142,6 +143,22 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "hasRole",
     values: [BytesLike, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values: [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ]
   ): string;
   encodeFunctionData(functionFragment: "license", values?: undefined): string;
   encodeFunctionData(
@@ -280,6 +297,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "license", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "oldBids", data: BytesLike): Result;
   decodeFunctionResult(
@@ -344,6 +362,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
     "BidClaimed(uint256,address,address,address,uint256)": EventFragment;
     "BidPlaced(uint256,address,address)": EventFragment;
     "BidRejected(uint256,address,address)": EventFragment;
+    "Initialized(uint8)": EventFragment;
     "OwnerBidUpdated(uint256,address)": EventFragment;
     "ParcelClaimed(uint256,address,uint256)": EventFragment;
     "ParcelReclaimed(uint256,address,uint256)": EventFragment;
@@ -359,6 +378,7 @@ export interface AuctionSuperAppInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "BidClaimed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BidPlaced"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BidRejected"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnerBidUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ParcelClaimed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ParcelReclaimed"): EventFragment;
@@ -408,6 +428,10 @@ export type BidRejectedEvent = TypedEvent<
 >;
 
 export type BidRejectedEventFilter = TypedEventFilter<BidRejectedEvent>;
+
+export type InitializedEvent = TypedEvent<[number], { version: number }>;
+
+export type InitializedEventFilter = TypedEventFilter<InitializedEvent>;
 
 export type OwnerBidUpdatedEvent = TypedEvent<
   [BigNumber, string],
@@ -616,6 +640,21 @@ export interface AuctionSuperApp extends BaseContract {
       account: string,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    initialize(
+      _host: string,
+      _acceptedToken: string,
+      _beneficiary: string,
+      _license: string,
+      _claimer: string,
+      _reclaimer: string,
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     license(overrides?: CallOverrides): Promise<[string]>;
 
@@ -853,6 +892,21 @@ export interface AuctionSuperApp extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  initialize(
+    _host: string,
+    _acceptedToken: string,
+    _beneficiary: string,
+    _license: string,
+    _claimer: string,
+    _reclaimer: string,
+    _perSecondFeeNumerator: BigNumberish,
+    _perSecondFeeDenominator: BigNumberish,
+    _penaltyNumerator: BigNumberish,
+    _penaltyDenominator: BigNumberish,
+    _bidPeriodLengthInSeconds: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   license(overrides?: CallOverrides): Promise<string>;
 
   oldBids(
@@ -1089,6 +1143,21 @@ export interface AuctionSuperApp extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    initialize(
+      _host: string,
+      _acceptedToken: string,
+      _beneficiary: string,
+      _license: string,
+      _claimer: string,
+      _reclaimer: string,
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     license(overrides?: CallOverrides): Promise<string>;
 
     oldBids(
@@ -1240,6 +1309,9 @@ export interface AuctionSuperApp extends BaseContract {
       _owner?: string | null,
       _bidder?: string | null
     ): BidRejectedEventFilter;
+
+    "Initialized(uint8)"(version?: null): InitializedEventFilter;
+    Initialized(version?: null): InitializedEventFilter;
 
     "OwnerBidUpdated(uint256,address)"(
       _licenseId?: BigNumberish | null,
@@ -1431,6 +1503,21 @@ export interface AuctionSuperApp extends BaseContract {
       role: BytesLike,
       account: string,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initialize(
+      _host: string,
+      _acceptedToken: string,
+      _beneficiary: string,
+      _license: string,
+      _claimer: string,
+      _reclaimer: string,
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     license(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1646,6 +1733,21 @@ export interface AuctionSuperApp extends BaseContract {
       role: BytesLike,
       account: string,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initialize(
+      _host: string,
+      _acceptedToken: string,
+      _beneficiary: string,
+      _license: string,
+      _claimer: string,
+      _reclaimer: string,
+      _perSecondFeeNumerator: BigNumberish,
+      _perSecondFeeDenominator: BigNumberish,
+      _penaltyNumerator: BigNumberish,
+      _penaltyDenominator: BigNumberish,
+      _bidPeriodLengthInSeconds: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     license(overrides?: CallOverrides): Promise<PopulatedTransaction>;

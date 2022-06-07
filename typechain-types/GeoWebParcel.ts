@@ -30,6 +30,7 @@ export interface GeoWebParcelInterface extends utils.Interface {
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
+    "initialize()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
@@ -76,6 +77,10 @@ export interface GeoWebParcelInterface extends utils.Interface {
     values: [BytesLike, string]
   ): string;
   encodeFunctionData(
+    functionFragment: "initialize",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "renounceRole",
     values: [BytesLike, string]
   ): string;
@@ -113,6 +118,7 @@ export interface GeoWebParcelInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceRole",
     data: BytesLike
@@ -124,6 +130,7 @@ export interface GeoWebParcelInterface extends utils.Interface {
   ): Result;
 
   events: {
+    "Initialized(uint8)": EventFragment;
     "ParcelBuilt(uint256)": EventFragment;
     "ParcelDestroyed(uint256)": EventFragment;
     "ParcelModified(uint256)": EventFragment;
@@ -132,6 +139,7 @@ export interface GeoWebParcelInterface extends utils.Interface {
     "RoleRevoked(bytes32,address,address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ParcelBuilt"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ParcelDestroyed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ParcelModified"): EventFragment;
@@ -139,6 +147,10 @@ export interface GeoWebParcelInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
 }
+
+export type InitializedEvent = TypedEvent<[number], { version: number }>;
+
+export type InitializedEventFilter = TypedEventFilter<InitializedEvent>;
 
 export type ParcelBuiltEvent = TypedEvent<[BigNumber], { _id: BigNumber }>;
 
@@ -249,6 +261,10 @@ export interface GeoWebParcel extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    initialize(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     renounceRole(
       role: BytesLike,
       account: string,
@@ -310,6 +326,10 @@ export interface GeoWebParcel extends BaseContract {
     account: string,
     overrides?: CallOverrides
   ): Promise<boolean>;
+
+  initialize(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   renounceRole(
     role: BytesLike,
@@ -373,6 +393,8 @@ export interface GeoWebParcel extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    initialize(overrides?: CallOverrides): Promise<void>;
+
     renounceRole(
       role: BytesLike,
       account: string,
@@ -392,6 +414,9 @@ export interface GeoWebParcel extends BaseContract {
   };
 
   filters: {
+    "Initialized(uint8)"(version?: null): InitializedEventFilter;
+    Initialized(version?: null): InitializedEventFilter;
+
     "ParcelBuilt(uint256)"(_id?: BigNumberish | null): ParcelBuiltEventFilter;
     ParcelBuilt(_id?: BigNumberish | null): ParcelBuiltEventFilter;
 
@@ -485,6 +510,10 @@ export interface GeoWebParcel extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    initialize(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     renounceRole(
       role: BytesLike,
       account: string,
@@ -549,6 +578,10 @@ export interface GeoWebParcel extends BaseContract {
       role: BytesLike,
       account: string,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initialize(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     renounceRole(

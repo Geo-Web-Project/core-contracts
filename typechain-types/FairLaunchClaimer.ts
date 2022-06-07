@@ -31,6 +31,7 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
+    "initialize()": FunctionFragment;
     "license()": FunctionFragment;
     "parcel()": FunctionFragment;
     "pause()": FunctionFragment;
@@ -88,6 +89,10 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "hasRole",
     values: [BytesLike, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "license", values?: undefined): string;
   encodeFunctionData(functionFragment: "parcel", values?: undefined): string;
@@ -149,6 +154,7 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "license", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "parcel", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
@@ -187,6 +193,7 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
 
   events: {
+    "Initialized(uint8)": EventFragment;
     "ParcelClaimed(uint256,address)": EventFragment;
     "Paused(address)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
@@ -195,6 +202,7 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
     "Unpaused(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ParcelClaimed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
@@ -202,6 +210,10 @@ export interface FairLaunchClaimerInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
 }
+
+export type InitializedEvent = TypedEvent<[number], { version: number }>;
+
+export type InitializedEventFilter = TypedEventFilter<InitializedEvent>;
 
 export type ParcelClaimedEvent = TypedEvent<
   [BigNumber, string],
@@ -308,6 +320,10 @@ export interface FairLaunchClaimer extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    initialize(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     license(overrides?: CallOverrides): Promise<[string]>;
 
     parcel(overrides?: CallOverrides): Promise<[string]>;
@@ -411,6 +427,10 @@ export interface FairLaunchClaimer extends BaseContract {
     account: string,
     overrides?: CallOverrides
   ): Promise<boolean>;
+
+  initialize(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   license(overrides?: CallOverrides): Promise<string>;
 
@@ -516,6 +536,8 @@ export interface FairLaunchClaimer extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    initialize(overrides?: CallOverrides): Promise<void>;
+
     license(overrides?: CallOverrides): Promise<string>;
 
     parcel(overrides?: CallOverrides): Promise<string>;
@@ -574,6 +596,9 @@ export interface FairLaunchClaimer extends BaseContract {
   };
 
   filters: {
+    "Initialized(uint8)"(version?: null): InitializedEventFilter;
+    Initialized(version?: null): InitializedEventFilter;
+
     "ParcelClaimed(uint256,address)"(
       parcelId?: BigNumberish | null,
       to?: string | null
@@ -665,6 +690,10 @@ export interface FairLaunchClaimer extends BaseContract {
       role: BytesLike,
       account: string,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initialize(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     license(overrides?: CallOverrides): Promise<BigNumber>;
@@ -775,6 +804,10 @@ export interface FairLaunchClaimer extends BaseContract {
       role: BytesLike,
       account: string,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initialize(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     license(overrides?: CallOverrides): Promise<PopulatedTransaction>;
