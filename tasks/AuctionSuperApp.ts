@@ -52,7 +52,7 @@ task("deploy:super-app", "Deploy the AuctionSuperApp")
       const penaltyDenominator = 100;
 
       const factory = await hre.ethers.getContractFactory("AuctionSuperApp");
-      const superApp = await factory.deploy(
+      const superApp = await hre.upgrades.deployProxy(factory, [
         host,
         acceptedToken,
         beneficiary,
@@ -63,8 +63,8 @@ task("deploy:super-app", "Deploy the AuctionSuperApp")
         perSecondFee.denominator,
         penaltyNumerator,
         penaltyDenominator,
-        bidPeriodLengthInSeconds
-      );
+        bidPeriodLengthInSeconds,
+      ]);
       await superApp.deployed();
 
       console.log("AuctionSuperApp deployed to:", superApp.address);

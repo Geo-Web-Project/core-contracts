@@ -22,7 +22,7 @@ task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
     );
 
     const GeoWebParcel = await hre.ethers.getContractFactory("GeoWebParcel");
-    const geoWebParcel = await GeoWebParcel.deploy();
+    const geoWebParcel = await hre.upgrades.deployProxy(GeoWebParcel, []);
     await geoWebParcel.deployed();
 
     console.log("GeoWebParcel deployed to:", geoWebParcel.address);

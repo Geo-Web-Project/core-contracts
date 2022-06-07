@@ -1,16 +1,14 @@
-import { task, types } from 'hardhat/config';
+import { task, types } from "hardhat/config";
 
-task("deploy:reclaimer", "Deploy Reclaimer").setAction(
-  async (args, hre) => {
-    const Reclaimer = await hre.ethers.getContractFactory("Reclaimer");
-    const reclaimer = await Reclaimer.deploy();
-    await reclaimer.deployed();
+task("deploy:reclaimer", "Deploy Reclaimer").setAction(async (args, hre) => {
+  const Reclaimer = await hre.ethers.getContractFactory("Reclaimer");
+  const reclaimer = await hre.upgrades.deployProxy(Reclaimer, []);
+  await reclaimer.deployed();
 
-    console.log("Reclaimer deployed to:", reclaimer.address);
+  console.log("Reclaimer deployed to:", reclaimer.address);
 
-    return reclaimer.address;
-  }
-);
+  return reclaimer.address;
+});
 
 task("deploy-zksync:reclaimer", "Deploy the Reclaimer").setAction(
   async ({ deployer }, hre) => {
@@ -24,13 +22,43 @@ task("deploy-zksync:reclaimer", "Deploy the Reclaimer").setAction(
 );
 
 task("config:reclaimer")
-  .addOptionalParam("contractAddress", "Address of deployed Reclaimer contract", undefined, types.string)
-  .addOptionalParam("auctionLength", "Length of the Reclaimer Dutch auction (seconds)", undefined, types.int)
-  .addOptionalParam("superAppAddress", "Address of Auction Super App contract", undefined, types.string)
-  .addOptionalParam("licenseAddress", "Address of ERC721 License used to find owners", undefined, types.string)
+  .addOptionalParam(
+    "contractAddress",
+    "Address of deployed Reclaimer contract",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "auctionLength",
+    "Length of the Reclaimer Dutch auction (seconds)",
+    undefined,
+    types.int
+  )
+  .addOptionalParam(
+    "superAppAddress",
+    "Address of Auction Super App contract",
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    "licenseAddress",
+    "Address of ERC721 License used to find owners",
+    undefined,
+    types.string
+  )
   .setAction(
     async (
-      { contractAddress, auctionLength, superAppAddress, licenseAddress }: { contractAddress: string, auctionLength?: number, superAppAddress?: string, licenseAddress?: string },
+      {
+        contractAddress,
+        auctionLength,
+        superAppAddress,
+        licenseAddress,
+      }: {
+        contractAddress: string;
+        auctionLength?: number;
+        superAppAddress?: string;
+        licenseAddress?: string;
+      },
       hre
     ) => {
       if (
@@ -43,7 +71,10 @@ task("config:reclaimer")
         return;
       }
 
-      const reclaimer = await hre.ethers.getContractAt("Reclaimer", contractAddress);
+      const reclaimer = await hre.ethers.getContractAt(
+        "Reclaimer",
+        contractAddress
+      );
 
       if (auctionLength) {
         // set auctionLength

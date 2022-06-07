@@ -6,7 +6,7 @@ task("deploy:fair-claimer", "Deploy FairLaunchClaimer").setAction(
     const FairLaunchClaimer = await hre.ethers.getContractFactory(
       "FairLaunchClaimer"
     );
-    const fairClaimer = await FairLaunchClaimer.deploy();
+    const fairClaimer = await hre.upgrades.deployProxy(FairLaunchClaimer, []);
     await fairClaimer.deployed();
 
     console.log("FairLaunchClaimer deployed to:", fairClaimer.address);
