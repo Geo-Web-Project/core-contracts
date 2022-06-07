@@ -30,6 +30,7 @@ const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
+import { addDays, getUnixTime } from "date-fns";
 
 task(
   "deploy",
@@ -101,10 +102,15 @@ task(
 
   console.log("\nSetting default configuration...");
 
+  const auctionStart = getUnixTime(1654646400);
+  const auctionEnd = getUnixTime(addDays(auctionStart, 14));
+
   await hre.run("config:fair-claimer", {
     contractAddress: fairClaimerAddress,
     parcelAddress,
     licenseAddress,
+    auctionStart,
+    auctionEnd,
   });
 
   await hre.run("config:reclaimer", {

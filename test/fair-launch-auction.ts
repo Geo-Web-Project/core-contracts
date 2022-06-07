@@ -6,6 +6,7 @@ import { addDays, endOfToday, getUnixTime, startOfToday } from "date-fns";
 import { solidity } from "ethereum-waffle";
 import { BigNumber, Contract } from "ethers";
 import * as hre from "hardhat";
+import { upgrades } from "hardhat";
 
 import {
   ERC721License,
@@ -34,8 +35,10 @@ describe("FairLaunchClaimer", async function () {
 
   async function buildContract(): Promise<FairLaunchClaimer> {
     const factory = new FairLaunchClaimer__factory(admin);
-    const claimerContract: FairLaunchClaimer = await factory.deploy();
-    await claimerContract.deployed();
+    const claimerContract: FairLaunchClaimer = (await upgrades.deployProxy(
+      factory,
+      []
+    )) as FairLaunchClaimer;
 
     return claimerContract;
   }
@@ -65,6 +68,12 @@ describe("FairLaunchClaimer", async function () {
     accounts = await ethers.getSigners();
 
     [admin, user] = accounts;
+  });
+
+  it("should deploy and upgrade", async () => {
+    const factory = new FairLaunchClaimer__factory(admin);
+    const instance = await upgrades.deployProxy(factory, []);
+    await upgrades.upgradeProxy(instance.address, factory);
   });
 
   describe("#claim", async () => {

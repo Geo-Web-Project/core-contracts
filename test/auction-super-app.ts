@@ -1,7 +1,7 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers, web3, network } from "hardhat";
+import { ethers, web3, network, upgrades } from "hardhat";
 import { Framework, SFError, SuperToken } from "@superfluid-finance/sdk-core";
 import { BigNumber, Contract, ContractReceipt } from "ethers";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
@@ -106,7 +106,7 @@ describe("AuctionSuperApp", async function () {
     bidPeriodLengthInSeconds: BigNumber;
   }) {
     const factory = new AuctionSuperApp__factory(admin);
-    const superApp: AuctionSuperApp = await factory.deploy(
+    const superApp = (await upgrades.deployProxy(factory, [
       host,
       token,
       beneficiary,
@@ -117,9 +117,8 @@ describe("AuctionSuperApp", async function () {
       perSecondFeeDenominator,
       penaltyNumerator,
       penaltyDenominator,
-      bidPeriodLengthInSeconds
-    );
-    await superApp.deployed();
+      bidPeriodLengthInSeconds,
+    ])) as AuctionSuperApp;
 
     return superApp;
   }
@@ -618,11 +617,16 @@ describe("AuctionSuperApp", async function () {
     });
   });
 
+  it("should deploy and upgrade", async () => {
+    const factory = new AuctionSuperApp__factory(admin);
+    await upgrades.upgradeProxy(superApp.address, factory);
+  });
+
   it("should fail to deploy if host is zero", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
-      factory.deploy(
+      upgrades.deployProxy(factory, [
         ethers.constants.AddressZero,
         sf.tokens.ETHx.address,
         admin.address,
@@ -633,8 +637,8 @@ describe("AuctionSuperApp", async function () {
         BigNumber.from(denominator),
         BigNumber.from(1),
         BigNumber.from(10),
-        BigNumber.from(604800)
-      )
+        BigNumber.from(604800),
+      ])
     ).to.be.revertedWith("host is zero address");
   });
 
@@ -642,7 +646,7 @@ describe("AuctionSuperApp", async function () {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
-      factory.deploy(
+      upgrades.deployProxy(factory, [
         sf.host.address,
         ethers.constants.AddressZero,
         admin.address,
@@ -653,8 +657,8 @@ describe("AuctionSuperApp", async function () {
         BigNumber.from(denominator),
         BigNumber.from(1),
         BigNumber.from(10),
-        BigNumber.from(604800)
-      )
+        BigNumber.from(604800),
+      ])
     ).to.be.revertedWith("acceptedToken is zero address");
   });
 
@@ -662,7 +666,7 @@ describe("AuctionSuperApp", async function () {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
-      factory.deploy(
+      upgrades.deployProxy(factory, [
         sf.host.address,
         sf.tokens.ETHx.address,
         ethers.constants.AddressZero,
@@ -673,8 +677,8 @@ describe("AuctionSuperApp", async function () {
         BigNumber.from(denominator),
         BigNumber.from(1),
         BigNumber.from(10),
-        BigNumber.from(604800)
-      )
+        BigNumber.from(604800),
+      ])
     ).to.be.revertedWith("beneficiary is zero address");
   });
 
@@ -682,7 +686,7 @@ describe("AuctionSuperApp", async function () {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
-      factory.deploy(
+      upgrades.deployProxy(factory, [
         sf.host.address,
         sf.tokens.ETHx.address,
         admin.address,
@@ -693,8 +697,8 @@ describe("AuctionSuperApp", async function () {
         BigNumber.from(denominator),
         BigNumber.from(1),
         BigNumber.from(10),
-        BigNumber.from(604800)
-      )
+        BigNumber.from(604800),
+      ])
     ).to.be.revertedWith("license is zero address");
   });
 
@@ -702,7 +706,7 @@ describe("AuctionSuperApp", async function () {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
-      factory.deploy(
+      upgrades.deployProxy(factory, [
         sf.host.address,
         sf.tokens.ETHx.address,
         admin.address,
@@ -713,8 +717,8 @@ describe("AuctionSuperApp", async function () {
         BigNumber.from(denominator),
         BigNumber.from(1),
         BigNumber.from(10),
-        BigNumber.from(604800)
-      )
+        BigNumber.from(604800),
+      ])
     ).to.be.revertedWith("claimer is zero address");
   });
 
@@ -722,7 +726,7 @@ describe("AuctionSuperApp", async function () {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
-      factory.deploy(
+      upgrades.deployProxy(factory, [
         sf.host.address,
         sf.tokens.ETHx.address,
         admin.address,
@@ -733,8 +737,8 @@ describe("AuctionSuperApp", async function () {
         BigNumber.from(denominator),
         BigNumber.from(1),
         BigNumber.from(10),
-        BigNumber.from(604800)
-      )
+        BigNumber.from(604800),
+      ])
     ).to.be.revertedWith("reclaimer is zero address");
   });
 
@@ -742,7 +746,7 @@ describe("AuctionSuperApp", async function () {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
     expect(
-      factory.deploy(
+      upgrades.deployProxy(factory, [
         sf.host.address,
         sf.tokens.ETHx.address,
         superApp.address,
@@ -753,15 +757,15 @@ describe("AuctionSuperApp", async function () {
         BigNumber.from(denominator),
         BigNumber.from(1),
         BigNumber.from(10),
-        BigNumber.from(604800)
-      )
+        BigNumber.from(604800),
+      ])
     ).to.be.revertedWith("beneficiary is an app");
   });
 
   it("should not allow beneficiary to be an app", async () => {
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
     const factory = new AuctionSuperApp__factory(admin);
-    const superApp1 = await factory.deploy(
+    const superApp1 = await upgrades.deployProxy(factory, [
       sf.host.address,
       sf.tokens.ETHx.address,
       admin.address,
@@ -772,9 +776,8 @@ describe("AuctionSuperApp", async function () {
       BigNumber.from(denominator),
       BigNumber.from(1),
       BigNumber.from(10),
-      BigNumber.from(604800)
-    );
-    await superApp1.deployed();
+      BigNumber.from(604800),
+    ]);
 
     expect(
       superApp.connect(admin).setBeneficiary(superApp1.address)

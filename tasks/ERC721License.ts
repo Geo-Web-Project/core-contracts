@@ -3,7 +3,7 @@ import { task } from "hardhat/config";
 task("deploy:license", "Deploy the ERC721License").setAction(
   async (args, hre) => {
     const factory = await hre.ethers.getContractFactory("ERC721License");
-    const license = await factory.deploy();
+    const license = await hre.upgrades.deployProxy(factory, []);
     await license.deployed();
 
     console.log("ERC721License deployed to:", license.address);
