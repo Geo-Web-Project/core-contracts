@@ -97,7 +97,7 @@ task("config:fair-claimer")
       }
 
       // set auction startBid
-      const startBid = ethers.utils.parseEther("10");
+      const startBid = ethers.utils.parseEther("0.25");
       const resStartBid = await fairClaimer.setStartingBid(startBid);
       await resStartBid.wait();
 
