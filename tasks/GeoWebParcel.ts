@@ -1,4 +1,4 @@
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 
 task("deploy:parcel", "Deploy the GeoWebParcel contracts").setAction(
   async (args, hre) => {
@@ -59,3 +59,22 @@ task("deploy-zksync:parcel", "Deploy the GeoWebParcel contracts").setAction(
     return geoWebParcel;
   }
 );
+
+task("upgrade:parcel", "Upgrade GeoWebParcel")
+  .addParam(
+    "contractAddress",
+    "Address of deployed GeoWebParcel contract",
+    undefined,
+    types.string
+  )
+  .setAction(async ({ contractAddress }: { contractAddress: string }, hre) => {
+    const GeoWebParcel = await hre.ethers.getContractFactory("GeoWebParcel");
+    const geoWebParcel = await hre.upgrades.upgradeProxy(
+      contractAddress,
+      GeoWebParcel
+    );
+
+    console.log("GeoWebParcel upgraded to:", geoWebParcel.address);
+
+    return geoWebParcel.address;
+  });
