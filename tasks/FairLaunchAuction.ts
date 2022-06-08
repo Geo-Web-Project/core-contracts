@@ -15,6 +15,27 @@ task("deploy:fair-claimer", "Deploy FairLaunchClaimer").setAction(
   }
 );
 
+task("upgrade:fair-claimer", "Deploy FairLaunchClaimer")
+  .addParam(
+    "contractAddress",
+    "Address of deployed FairLaunchClaimer contract",
+    undefined,
+    types.string
+  )
+  .setAction(async ({ contractAddress }: { contractAddress: string }, hre) => {
+    const FairLaunchClaimer = await hre.ethers.getContractFactory(
+      "FairLaunchClaimer"
+    );
+    const fairClaimer = await hre.upgrades.upgradeProxy(
+      contractAddress,
+      FairLaunchClaimer
+    );
+
+    console.log("FairLaunchClaimer upgraded to:", fairClaimer.address);
+
+    return fairClaimer.address;
+  });
+
 task("deploy-zksync:fair-claimer", "Deploy the FairLaunchClaimer").setAction(
   async ({ deployer }, hre) => {
     const FairLaunchClaimer = await deployer.loadArtifact("FairLaunchClaimer");

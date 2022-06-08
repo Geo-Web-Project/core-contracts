@@ -405,13 +405,13 @@
           {
             "contract": "FairLaunchClaimer",
             "label": "license",
-            "type": "t_contract(ERC721License)11168",
+            "type": "t_contract(ERC721License)9713",
             "src": "contracts/FairLaunchClaimer.sol:22"
           },
           {
             "contract": "FairLaunchClaimer",
             "label": "parcel",
-            "type": "t_contract(GeoWebParcel)12437",
+            "type": "t_contract(GeoWebParcel)10982",
             "src": "contracts/FairLaunchClaimer.sol:25"
           },
           {
@@ -440,10 +440,10 @@
           }
         ],
         "types": {
-          "t_contract(ERC721License)11168": {
+          "t_contract(ERC721License)9713": {
             "label": "contract ERC721License"
           },
-          "t_contract(GeoWebParcel)12437": {
+          "t_contract(GeoWebParcel)10982": {
             "label": "contract GeoWebParcel"
           },
           "t_uint256": {
@@ -901,6 +901,426 @@
           },
           "t_mapping(t_address,t_bool)": {
             "label": "mapping(address => bool)"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "6e99ed175b86ddc8257214e6aea372fa247c10bc6cc1d2ee88edceec7dbdb5e4": {
+      "address": "0x42859BDCAFc9e4a89AF513E4e887E2617E3862FD",
+      "txHash": "0xcf8533d6709f2f397215aa9f4c7bfd1f5d6f51370b161a4f177dac9cdefd3b01",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "_paused",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:102"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)179_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:247"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "license",
+            "type": "t_contract(ERC721License)9713",
+            "src": "contracts/FairLaunchClaimer.sol:22"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "parcel",
+            "type": "t_contract(GeoWebParcel)10999",
+            "src": "contracts/FairLaunchClaimer.sol:25"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "auctionStart",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:28"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "auctionEnd",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:30"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "startingBid",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:32"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "endingBid",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:34"
+          }
+        ],
+        "types": {
+          "t_contract(ERC721License)9713": {
+            "label": "contract ERC721License"
+          },
+          "t_contract(GeoWebParcel)10999": {
+            "label": "contract GeoWebParcel"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)179_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(RoleData)179_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "4f4381f481b1ec2efefa8ec4208e80829c083dc34f99fb8464759ab78a9ad9af": {
+      "address": "0xA18feE4899F35973ce579189E2220C269B97278c",
+      "txHash": "0xb8b3b3c433f3497d761e7ced5f225395e79372ee333c67da19cfc51fd21731be",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "_paused",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:102"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)179_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:247"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "license",
+            "type": "t_contract(ERC721License)9713",
+            "src": "contracts/FairLaunchClaimer.sol:22"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "parcel",
+            "type": "t_contract(GeoWebParcel)11007",
+            "src": "contracts/FairLaunchClaimer.sol:25"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "auctionStart",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:28"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "auctionEnd",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:30"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "startingBid",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:32"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "endingBid",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:34"
+          }
+        ],
+        "types": {
+          "t_contract(ERC721License)9713": {
+            "label": "contract ERC721License"
+          },
+          "t_contract(GeoWebParcel)11007": {
+            "label": "contract GeoWebParcel"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)179_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(RoleData)179_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "d3972dc7e718d04c7423d4c307131088f30eeb0389d6ffbf4953057cecd46533": {
+      "address": "0x28Fa16d893F54578Cb2375409b0DFCE4Cb6a89cA",
+      "txHash": "0xac0483d73815197659088f0438436975e1fd31f48d3babf5a349ff2a36ebc030",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "_paused",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:102"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)179_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:247"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "license",
+            "type": "t_contract(ERC721License)11168",
+            "src": "contracts/FairLaunchClaimer.sol:22"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "parcel",
+            "type": "t_contract(GeoWebParcel)12454",
+            "src": "contracts/FairLaunchClaimer.sol:25"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "auctionStart",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:28"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "auctionEnd",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:30"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "startingBid",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:32"
+          },
+          {
+            "contract": "FairLaunchClaimer",
+            "label": "endingBid",
+            "type": "t_uint256",
+            "src": "contracts/FairLaunchClaimer.sol:34"
+          }
+        ],
+        "types": {
+          "t_contract(ERC721License)11168": {
+            "label": "contract ERC721License"
+          },
+          "t_contract(GeoWebParcel)12454": {
+            "label": "contract GeoWebParcel"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)179_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(RoleData)179_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
           },
           "t_array(t_uint256)50_storage": {
             "label": "uint256[50]"

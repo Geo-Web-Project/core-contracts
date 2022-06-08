@@ -133,20 +133,11 @@ describe("FairLaunchClaimer", async function () {
         );
       });
 
-      it("user must claim after auction has started", async () => {
+      it("user can claim before auction has started", async () => {
         await claimer.connect(admin).setAuctionStart(getUnixTime(endOfToday()));
         await claimer
           .connect(admin)
           .setAuctionEnd(getUnixTime(addDays(startOfToday(), 2)));
-        await expect(
-          claimer
-            .connect(user)
-            .claim(userArg, initialContributionRate, claimData)
-        ).to.be.rejectedWith(/auction has not started yet/);
-
-        await claimer
-          .connect(admin)
-          .setAuctionStart(getUnixTime(startOfToday()));
         await expect(
           claimer
             .connect(user)

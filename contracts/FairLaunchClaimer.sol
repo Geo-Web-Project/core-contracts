@@ -36,6 +36,8 @@ contract FairLaunchClaimer is
   /// @notice Emitted when a parcel is purchased
   event ParcelClaimed(uint256 indexed parcelId, address indexed to);
 
+  error ClaimPriceFailed(uint256 auctionDuration, uint256 blockTimestamp);
+
   function initialize() public initializer {
     __AccessControl_init();
     __Pausable_init();
@@ -61,8 +63,6 @@ contract FairLaunchClaimer is
     whenNotPaused
     returns (uint256 licenseId)
   {
-    require(block.timestamp > auctionStart, "auction has not started yet");
-
     (uint64 baseCoordinate, uint256[] memory path) = abi.decode(
       claimData,
       (uint64, uint256[])
@@ -95,12 +95,19 @@ contract FairLaunchClaimer is
    * @notice the current dutch auction price of a parcel.
    */
   function _requiredBid() internal view returns (uint256) {
-    if (block.timestamp > auctionEnd) {
+    if (block.timestamp >= auctionEnd) {
       return endingBid;
+    }
+
+    if (block.timestamp < auctionStart) {
+      return startingBid;
     }
 
     uint256 timeElapsed = block.timestamp - auctionStart;
     uint256 auctionDuration = auctionEnd - auctionStart;
+    if (auctionDuration == 0) {
+      revert ClaimPriceFailed(auctionDuration, block.timestamp);
+    }
     uint256 priceDecrease = (startingBid * timeElapsed) / auctionDuration;
     return startingBid - priceDecrease;
   }
