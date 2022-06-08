@@ -112,7 +112,7 @@
           {
             "contract": "GeoWebParcel",
             "label": "landParcels",
-            "type": "t_mapping(t_uint256,t_struct(LandParcel)12036_storage)",
+            "type": "t_mapping(t_uint256,t_struct(LandParcel)12053_storage)",
             "src": "contracts/GeoWebParcel.sol:36"
           },
           {
@@ -132,10 +132,10 @@
           "t_mapping(t_uint256,t_uint256)": {
             "label": "mapping(uint256 => uint256)"
           },
-          "t_mapping(t_uint256,t_struct(LandParcel)12036_storage)": {
+          "t_mapping(t_uint256,t_struct(LandParcel)12053_storage)": {
             "label": "mapping(uint256 => struct GeoWebParcel.LandParcel)"
           },
-          "t_struct(LandParcel)12036_storage": {
+          "t_struct(LandParcel)12053_storage": {
             "label": "struct GeoWebParcel.LandParcel",
             "members": [
               {
@@ -1290,6 +1290,138 @@
           },
           "t_uint256": {
             "label": "uint256"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)179_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(RoleData)179_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "bf8d1b6d7da5111a749e31d2e1ec385c5f369aea0ae4659d76d5cfe3dc12fe8c": {
+      "address": "0xad37c4D21AC5C768659ecB900d3a0a60f9D06853",
+      "txHash": "0x06bf20d495786126dc666ce4c26382422f278b336fb7a327752722819debc00f",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)179_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:247"
+          },
+          {
+            "contract": "GeoWebParcel",
+            "label": "availabilityIndex",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))",
+            "src": "contracts/GeoWebParcel.sol:32"
+          },
+          {
+            "contract": "GeoWebParcel",
+            "label": "landParcels",
+            "type": "t_mapping(t_uint256,t_struct(LandParcel)12053_storage)",
+            "src": "contracts/GeoWebParcel.sol:35"
+          },
+          {
+            "contract": "GeoWebParcel",
+            "label": "maxId",
+            "type": "t_uint256",
+            "src": "contracts/GeoWebParcel.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(uint256 => mapping(uint256 => uint256))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_uint256,t_struct(LandParcel)12053_storage)": {
+            "label": "mapping(uint256 => struct GeoWebParcel.LandParcel)"
+          },
+          "t_struct(LandParcel)12053_storage": {
+            "label": "struct GeoWebParcel.LandParcel",
+            "members": [
+              {
+                "label": "baseCoordinate",
+                "type": "t_uint64"
+              },
+              {
+                "label": "path",
+                "type": "t_array(t_uint256)dyn_storage"
+              }
+            ]
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
           },
           "t_mapping(t_bytes32,t_struct(RoleData)179_storage)": {
             "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
