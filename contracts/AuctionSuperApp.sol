@@ -626,15 +626,23 @@ contract AuctionSuperApp is
     address user,
     int96 decreasedFlowRate
   ) private returns (bytes memory newCtx) {
-    // Delete app -> user flow
-    int96 decreasedAmount;
-    (newCtx, decreasedAmount) = _deleteAppToUserFlowWithCtx(_ctx, user);
+    newCtx = _ctx;
 
-    // Decrease app -> beneficiary flow by remaining
-    newCtx = _decreaseAppToBeneficiaryFlow(
-      newCtx,
-      decreasedFlowRate - decreasedAmount
-    );
+    if (user == beneficiary) {
+      // Decrease app -> beneficiary
+      newCtx = _decreaseAppToBeneficiaryFlow(newCtx, decreasedFlowRate);
+    } else {
+      int96 decreasedAmount;
+
+      // Delete app -> user flow
+      (newCtx, decreasedAmount) = _deleteAppToUserFlowWithCtx(newCtx, user);
+
+      // Decrease app -> beneficiary flow by remaining
+      newCtx = _decreaseAppToBeneficiaryFlow(
+        newCtx,
+        decreasedFlowRate - decreasedAmount
+      );
+    }
 
     // Mark deletion
     lastUserDeletion[user] = block.timestamp;

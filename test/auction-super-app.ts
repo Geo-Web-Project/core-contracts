@@ -534,6 +534,9 @@ describe("AuctionSuperApp", async function () {
     );
 
     expect(events, `App was jailed: ${events[0]?.args?.reason}`).to.be.empty;
+
+    const isJailed = await hostContract.isAppJailed(superApp.address);
+    expect(isJailed).to.be.false;
   }
 
   after(async () => {
@@ -574,6 +577,11 @@ describe("AuctionSuperApp", async function () {
     ethx = await ethersjsSf.loadSuperToken(sf.tokens.ETHx.address);
     ethx_erc20 = await ethers.getContractAt("IERC20", sf.tokens.ETHx.address);
     hostContract = await ethers.getContractAt("ISuperfluid", sf.host.address);
+
+    await sf.tokens.ETHx.upgradeByETH({
+      from: admin.address,
+      value: ethers.utils.parseEther("10"),
+    });
 
     await sf.tokens.ETHx.upgradeByETH({
       from: user.address,
@@ -3621,6 +3629,37 @@ describe("AuctionSuperApp", async function () {
           await checkAppToUserFlow("200", bidder);
           await checkUserToAppFlow("0", user);
           await checkAppToUserFlow("0", user);
+          await checkAppToBeneficiaryFlow("0");
+          await checkCurrentOwnerBid(1, 100);
+          await checkOwnerBidContributionRate(1, 0);
+          await checkOutstandingBid(1, 200);
+          await checkAppNetFlow();
+          expect(mockLicense["safeTransferFrom(address,address,uint256)"]).to
+            .not.have.been.called;
+        });
+
+        it("should keep outstanding bid open on admin owner flow delete", async () => {
+          const txn = await claimCreate(admin, 1); // 100
+          await txn.wait();
+
+          const txn2 = await placeBidCreate(bidder, 1); // 200
+          await txn2.wait();
+
+          const deleteFlowOp = await ethersjsSf.cfaV1.deleteFlow({
+            sender: admin.address,
+            receiver: superApp.address,
+            superToken: ethx.address,
+          });
+
+          const txn3 = await deleteFlowOp.exec(admin);
+          const receipt = await txn3.wait();
+
+          await expect(txn3).to.not.emit(ethx_erc20, "Transfer");
+          await checkJailed(receipt);
+          await checkUserToAppFlow("200", bidder);
+          await checkAppToUserFlow("200", bidder);
+          await checkUserToAppFlow("0", admin);
+          await checkAppToUserFlow("0", admin);
           await checkAppToBeneficiaryFlow("0");
           await checkCurrentOwnerBid(1, 100);
           await checkOwnerBidContributionRate(1, 0);
