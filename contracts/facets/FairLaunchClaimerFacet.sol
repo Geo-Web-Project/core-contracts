@@ -1,39 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./AuctionSuperApp.sol";
-import "./GeoWebParcel.sol";
-import "./ERC721License.sol";
-import "./interfaces/IClaimer.sol";
+import "../../GeoWebParcel.sol";
+import "../../ERC721License.sol";
+import "../interfaces/IClaimer.sol";
 
-contract FairLaunchClaimer is Pausable, AccessControl, IClaimer {
-    bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
-    bytes32 public constant CLAIM_ROLE = keccak256("CLAIM_ROLE");
-
+contract FairLaunchClaimer is IClaimer {
     /// @notice License
     ERC721License public license;
 
     /// @notice Parcel
     GeoWebParcel public parcel;
 
-    /// @notice start time of the genesis land parcel auction.
-    uint256 public auctionStart;
-    /// @notice when the required bid amount reaches its minimum value.
-    uint256 public auctionEnd;
-    /// @notice start price of the genesis land auction. Decreases to endingBid between auctionStart and auctionEnd.
-    uint256 public startingBid;
-    /// @notice the final/minimum required bid reached and maintained at the end of the auction.
-    uint256 public endingBid;
-
     /// @notice Emitted when a parcel is purchased
     event ParcelClaimed(uint256 indexed parcelId, address indexed to);
-
-    constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(PAUSE_ROLE, msg.sender);
-    }
 
     /**
      * @notice Admin can update the parcel.

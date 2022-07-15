@@ -13,6 +13,7 @@ if (process.env.NODE_ENV !== "production") {
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-waffle";
+import "hardhat-deploy";
 import { task, types } from "hardhat/config";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
