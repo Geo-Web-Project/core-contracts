@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @title GeoWebCoordinate is an unsigned 64-bit integer that contains x and y coordinates in the upper and lower 32 bits, respectively
-library GeoWebCoordinate {
+/// @title LibGeoWebCoordinate is an unsigned 64-bit integer that contains x and y coordinates in the upper and lower 32 bits, respectively
+library LibGeoWebCoordinate {
     // Fixed grid size is 2^19 longitude by 2^18 latitude, roughly 10 square meters of area at the equator
     uint64 public constant MAX_X = ((2**19) - 1);
     uint64 public constant MAX_Y = ((2**18) - 1);
@@ -159,8 +159,8 @@ library GeoWebCoordinate {
     }
 }
 
-/// @notice GeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
-library GeoWebCoordinatePath {
+/// @notice LibGeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
+library LibGeoWebCoordinatePath {
     uint256 constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
     uint256 constant PATH_SEGMENT_MASK = (2**2) - 1;
 

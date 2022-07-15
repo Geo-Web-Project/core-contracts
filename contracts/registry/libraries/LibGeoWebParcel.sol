@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./GeoWebCoordinate.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./LibGeoWebCoordinate.sol";
 
-/// @title A smart contract that stores what area makes up a parcel and defines the rules for mutating a parcel.
-contract GeoWebParcel is AccessControl {
-    using GeoWebCoordinate for uint64;
-    using GeoWebCoordinatePath for uint256;
+library LibGeoWebParcel {
+    using LibGeoWebCoordinate for uint64;
+    using LibGeoWebCoordinatePath for uint256;
 
-    bytes32 public constant BUILD_ROLE = keccak256("BUILD_ROLE");
-    bytes32 public constant DESTROY_ROLE = keccak256("DESTROY_ROLE");
-
-    /// @dev Maxmium uint256 stored as a constant to use for masking
-    uint256 constant MAX_INT = 2**256 - 1;
+    bytes32 constant STORAGE_POSITION =
+        keccak256("diamond.standard.diamond.storage.LibGeoWebParcel");
 
     /// @dev Structure of a land parcel
     struct LandParcel {
@@ -28,14 +23,8 @@ contract GeoWebParcel is AccessControl {
         Check
     }
 
-    /// @notice Stores which coordinates are available
-    mapping(uint256 => mapping(uint256 => uint256)) public availabilityIndex;
-
-    /// @notice Stores which coordinates belong to a parcel
-    mapping(uint256 => LandParcel) landParcels;
-
-    /// @dev The next ID to assign to a parcel
-    uint256 maxId;
+    /// @dev Maxmium uint256 stored as a constant to use for masking
+    uint256 constant MAX_INT = 2**256 - 1;
 
     /// @notice Emitted when a parcel is built
     event ParcelBuilt(uint256 indexed _id);
@@ -46,24 +35,37 @@ contract GeoWebParcel is AccessControl {
     /// @notice Emitted when a parcel is modified
     event ParcelModified(uint256 indexed _id);
 
-    constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    struct DiamondStorage {
+        /// @notice Stores which coordinates are available
+        mapping(uint256 => mapping(uint256 => uint256)) availabilityIndex;
+        /// @notice Stores which coordinates belong to a parcel
+        mapping(uint256 => LandParcel) landParcels;
+    }
 
-        maxId = 0;
+    function diamondStorage()
+        internal
+        pure
+        returns (DiamondStorage storage ds)
+    {
+        bytes32 position = STORAGE_POSITION;
+        assembly {
+            ds.slot := position
+        }
     }
 
     /**
      * @notice Build a new parcel. All coordinates along the path must be available. All coordinates are marked unavailable after creation.
      * @param baseCoordinate Base coordinate of new parcel
      * @param path Path of new parcel
-     * @custom:requires BUILD_ROLE
      */
-    function build(uint64 baseCoordinate, uint256[] calldata path)
-        external
-        onlyRole(BUILD_ROLE)
-        returns (uint256 newParcelId)
-    {
+    function build(
+        uint256 newParcelId,
+        uint64 baseCoordinate,
+        uint256[] calldata path
+    ) internal {
         require(path.length > 0, "Path must have at least one component");
+
+        DiamondStorage storage ds = diamondStorage();
 
         // First, only check availability
         _updateAvailabilityIndex(Action.Check, baseCoordinate, path);
@@ -71,43 +73,27 @@ contract GeoWebParcel is AccessControl {
         // Then mark everything as available
         _updateAvailabilityIndex(Action.Build, baseCoordinate, path);
 
-        LandParcel storage p = landParcels[maxId];
+        LandParcel storage p = ds.landParcels[newParcelId];
         p.baseCoordinate = baseCoordinate;
         p.path = path;
 
-        emit ParcelBuilt(maxId);
-
-        newParcelId = maxId;
-
-        maxId += 1;
+        emit ParcelBuilt(newParcelId);
     }
 
     /**
      * @notice Destroy an existing parcel. All coordinates along the path are marked as available.
      * @param id ID of land parcel
-     * @custom:requires DESTROY_ROLE
      */
-    function destroy(uint256 id) external onlyRole(DESTROY_ROLE) {
-        LandParcel storage p = landParcels[id];
+    function destroy(uint256 id) internal {
+        DiamondStorage storage ds = diamondStorage();
+
+        LandParcel storage p = ds.landParcels[id];
 
         _updateAvailabilityIndex(Action.Destroy, p.baseCoordinate, p.path);
 
-        delete landParcels[id];
+        delete ds.landParcels[id];
 
         emit ParcelDestroyed(id);
-    }
-
-    /**
-     * @notice Get a land parcel
-     * @param id ID of land parcel
-     */
-    function getLandParcel(uint256 id)
-        public
-        view
-        returns (uint64 baseCoordinate, uint256[] memory path)
-    {
-        LandParcel storage p = landParcels[id];
-        return (p.baseCoordinate, p.path);
     }
 
     /// @dev Update availability index by traversing a path and marking everything as available or unavailable
@@ -116,13 +102,15 @@ contract GeoWebParcel is AccessControl {
         uint64 baseCoordinate,
         uint256[] memory path
     ) internal {
+        DiamondStorage storage ds = diamondStorage();
+
         uint64 currentCoord = baseCoordinate;
 
         uint256 p_i = 0;
         uint256 currentPath = path[p_i];
 
         (uint256 i_x, uint256 i_y, uint256 i) = currentCoord._toWordIndex();
-        uint256 word = availabilityIndex[i_x][i_y];
+        uint256 word = ds.availabilityIndex[i_x][i_y];
 
         do {
             if (action == Action.Build) {
@@ -166,11 +154,11 @@ contract GeoWebParcel is AccessControl {
             if (new_i_x != i_x || new_i_y != i_y) {
                 if (action != Action.Check) {
                     // Update word in storage
-                    availabilityIndex[i_x][i_y] = word;
+                    ds.availabilityIndex[i_x][i_y] = word;
                 }
 
                 // Advance to next word
-                word = availabilityIndex[new_i_x][new_i_y];
+                word = ds.availabilityIndex[new_i_x][new_i_y];
             }
 
             i_x = new_i_x;
@@ -179,7 +167,7 @@ contract GeoWebParcel is AccessControl {
 
         if (action != Action.Check) {
             // Update last word in storage
-            availabilityIndex[i_x][i_y] = word;
+            ds.availabilityIndex[i_x][i_y] = word;
         }
     }
 }
