@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import "./LibGeoWebParcel.sol";
 import "./LibERC721.sol";
 
-library LibPCOLicenseClaimer {
+library LibBasePCOLicenseClaimer {
     bytes32 constant STORAGE_POSITION =
-        keccak256("diamond.standard.diamond.storage.LibPCOLicenseClaimer");
+        keccak256("diamond.standard.diamond.storage.LibBasePCOLicenseClaimer");
 
     /// @notice Emitted when a parcel is purchased
     event ParcelClaimed(uint256 indexed parcelId, address indexed to);
@@ -39,7 +39,7 @@ library LibPCOLicenseClaimer {
      * @param baseCoordinate Base coordinate of parcel to claim
      * @param path Path of parcel to claim
      */
-    function _claim(
+    function _buildAndMint(
         address user,
         uint64 baseCoordinate,
         uint256[] memory path

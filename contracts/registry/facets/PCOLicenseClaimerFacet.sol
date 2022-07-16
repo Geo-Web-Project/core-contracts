@@ -8,6 +8,6 @@ contract PCOLicenseClaimerFacet {
      * @notice the current dutch auction price of a parcel.
      */
     function requiredBid() internal view returns (uint256) {
-        return LibPCOLicenseClaimer._requiredBid();
+        return LibBasePCOLicenseClaimer._requiredBid();
     }
 }
