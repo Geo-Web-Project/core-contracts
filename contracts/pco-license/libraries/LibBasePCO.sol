@@ -19,6 +19,13 @@ library LibBasePCO {
         uint256 forSalePrice;
     }
 
+    /// @notice Emitted when an owner bid is updated
+    event PayerBidUpdated(
+        address indexed _payer,
+        int96 contributionRate,
+        uint256 forSalePrice
+    );
+
     struct DiamondStorage {
         IPCOLicenseParamsStore paramsStore;
     }
@@ -53,5 +60,17 @@ library LibBasePCO {
         return
             (uint96(contributionRate) * _currentBid.perSecondFeeDenominator) /
             _currentBid.perSecondFeeNumerator;
+    }
+
+    function _checkForSalePrice(
+        uint256 forSalePrice,
+        int96 contributionRate,
+        uint256 _perSecondFeeNumerator,
+        uint256 _perSecondFeeDenominator
+    ) internal pure returns (bool) {
+        uint256 calculatedContributionRate = (forSalePrice *
+            _perSecondFeeNumerator) / _perSecondFeeDenominator;
+
+        return calculatedContributionRate == uint96(contributionRate);
     }
 }

@@ -68,5 +68,58 @@ contract BasePCOFacet {
     function editBid(int96 newContributionRate, uint256 newForSalePrice)
         external
         onlyPayer
-    {}
+    {
+        LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
+
+        uint256 perSecondFeeNumerator = ds
+            .paramsStore
+            .getPerSecondFeeNumerator();
+        uint256 perSecondFeeDenominator = ds
+            .paramsStore
+            .getPerSecondFeeDenominator();
+        require(
+            LibBasePCO._checkForSalePrice(
+                newForSalePrice,
+                newContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "BasePCOFacet: Incorrect for sale price"
+        );
+
+        IConstantFlowAgreementV1 cfa = ds.paramsStore.getCFA();
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        address beneficiary = ds.paramsStore.getBeneficiary();
+
+        // Update flow (payer -> license)
+        cfa.updateFlowByOperator(
+            paymentToken,
+            payer(),
+            address(this),
+            newContributionRate,
+            new bytes(0)
+        );
+
+        // Update flow (license -> beneficiary)
+        cfa.updateFlow(
+            paymentToken,
+            beneficiary,
+            newContributionRate,
+            new bytes(0)
+        );
+
+        LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
+        currentBid.timestamp = block.timestamp;
+        currentBid.bidder = payer();
+        currentBid.contributionRate = newContributionRate;
+        currentBid.perSecondFeeNumerator = perSecondFeeNumerator;
+        currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
+        currentBid.forSalePrice = newForSalePrice;
+
+        emit LibBasePCO.PayerBidUpdated(
+            payer(),
+            newContributionRate,
+            newForSalePrice
+        );
+    }
 }

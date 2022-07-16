@@ -27,6 +27,40 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         return ds.paymentToken;
     }
 
+    /// @notice Beneficiary
+    function getBeneficiary() external view override returns (address) {
+        LibBasePCOLicenseParams.DiamondStorage
+            storage ds = LibBasePCOLicenseParams.diamondStorage();
+
+        return ds.beneficiary;
+    }
+
+    /// @notice The numerator of the network-wide per second contribution fee.
+    function getPerSecondFeeNumerator()
+        external
+        view
+        override
+        returns (uint256)
+    {
+        LibBasePCOLicenseParams.DiamondStorage
+            storage ds = LibBasePCOLicenseParams.diamondStorage();
+
+        return ds.perSecondFeeNumerator;
+    }
+
+    /// @notice The denominator of the network-wide per second contribution fee.
+    function getPerSecondFeeDenominator()
+        external
+        view
+        override
+        returns (uint256)
+    {
+        LibBasePCOLicenseParams.DiamondStorage
+            storage ds = LibBasePCOLicenseParams.diamondStorage();
+
+        return ds.perSecondFeeDenominator;
+    }
+
     /// @notice the final/minimum required bid reached and maintained at the end of the auction.
     function getReclaimAuctionLength()
         external
