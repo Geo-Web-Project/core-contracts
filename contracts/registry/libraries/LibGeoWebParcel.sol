@@ -40,6 +40,8 @@ library LibGeoWebParcel {
         mapping(uint256 => mapping(uint256 => uint256)) availabilityIndex;
         /// @notice Stores which coordinates belong to a parcel
         mapping(uint256 => LandParcel) landParcels;
+        /// @dev The next ID to assign to a parcel
+        uint256 maxId;
     }
 
     function diamondStorage()
@@ -58,26 +60,26 @@ library LibGeoWebParcel {
      * @param baseCoordinate Base coordinate of new parcel
      * @param path Path of new parcel
      */
-    function build(
-        uint256 newParcelId,
-        uint64 baseCoordinate,
-        uint256[] calldata path
-    ) internal {
+    function build(uint64 baseCoordinate, uint256[] memory path)
+        internal
+        returns (uint256 newParcelId)
+    {
         require(path.length > 0, "Path must have at least one component");
 
         DiamondStorage storage ds = diamondStorage();
 
-        // First, only check availability
-        _updateAvailabilityIndex(Action.Check, baseCoordinate, path);
-
-        // Then mark everything as available
+        // Mark everything as available
         _updateAvailabilityIndex(Action.Build, baseCoordinate, path);
 
-        LandParcel storage p = ds.landParcels[newParcelId];
+        LandParcel storage p = ds.landParcels[ds.maxId];
         p.baseCoordinate = baseCoordinate;
         p.path = path;
 
-        emit ParcelBuilt(newParcelId);
+        emit ParcelBuilt(ds.maxId);
+
+        newParcelId = ds.maxId;
+
+        ds.maxId += 1;
     }
 
     /**
