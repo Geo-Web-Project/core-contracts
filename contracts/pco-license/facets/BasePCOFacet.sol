@@ -64,6 +64,8 @@ contract BasePCOFacet {
 
     /**
      * @notice Edit bid. Must be the current payer
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
     function editBid(int96 newContributionRate, uint256 newForSalePrice)
         external
