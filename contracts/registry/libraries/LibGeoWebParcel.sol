@@ -2,6 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "./LibGeoWebCoordinate.sol";
+import "hardhat/console.sol";
 
 library LibGeoWebParcel {
     using LibGeoWebCoordinate for uint64;
@@ -103,7 +104,7 @@ library LibGeoWebParcel {
         Action action,
         uint64 baseCoordinate,
         uint256[] memory path
-    ) internal {
+    ) private {
         DiamondStorage storage ds = diamondStorage();
 
         uint64 currentCoord = baseCoordinate;
@@ -116,14 +117,14 @@ library LibGeoWebParcel {
 
         do {
             if (action == Action.Build) {
+                // Check if coordinate is available
+                require((word & (2**i) == 0), "Coordinate is not available");
+
                 // Mark coordinate as unavailable in memory
                 word = word | (2**i);
             } else if (action == Action.Destroy) {
                 // Mark coordinate as available in memory
                 word = word & ((2**i) ^ MAX_INT);
-            } else if (action == Action.Check) {
-                // Check if coordinate is available
-                require((word & (2**i) == 0), "Coordinate is not available");
             }
 
             // Get next direction
@@ -154,10 +155,8 @@ library LibGeoWebParcel {
 
             // If new coordinate is in new word
             if (new_i_x != i_x || new_i_y != i_y) {
-                if (action != Action.Check) {
-                    // Update word in storage
-                    ds.availabilityIndex[i_x][i_y] = word;
-                }
+                // Update word in storage
+                ds.availabilityIndex[i_x][i_y] = word;
 
                 // Advance to next word
                 word = ds.availabilityIndex[new_i_x][new_i_y];
@@ -167,9 +166,7 @@ library LibGeoWebParcel {
             i_y = new_i_y;
         } while (true);
 
-        if (action != Action.Check) {
-            // Update last word in storage
-            ds.availabilityIndex[i_x][i_y] = word;
-        }
+        // Update last word in storage
+        ds.availabilityIndex[i_x][i_y] = word;
     }
 }

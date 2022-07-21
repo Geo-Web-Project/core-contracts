@@ -4,7 +4,23 @@ pragma solidity ^0.8.14;
 import "../libraries/LibGeoWebParcel.sol";
 
 /// @title Public access to parcel data
-contract GeoWebParcel {
+contract GeoWebParcelFacet {
+    /**
+     * @notice Get availability index for coordinates
+     * @param x X coordinate
+     * @param y Y coordinate
+     */
+    function availabilityIndex(uint256 x, uint256 y)
+        public
+        view
+        returns (uint256)
+    {
+        LibGeoWebParcel.DiamondStorage storage ds = LibGeoWebParcel
+            .diamondStorage();
+
+        return ds.availabilityIndex[x][y];
+    }
+
     /**
      * @notice Get a land parcel
      * @param id ID of land parcel
