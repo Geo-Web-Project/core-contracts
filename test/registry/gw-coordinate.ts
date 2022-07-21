@@ -4,7 +4,7 @@ import { Contract } from "@ethersproject/contracts";
 
 const BigNumber = ethers.BigNumber;
 
-describe("GeoWebCoordinate", async () => {
+describe("LibGeoWebCoordinate", async () => {
   function makeCoord(x: any, y: any) {
     return BigNumber.from(x).shl(32).or(BigNumber.from(y));
   }
@@ -14,13 +14,13 @@ describe("GeoWebCoordinate", async () => {
 
   before(async () => {
     const GeoWebCoordinate = await ethers.getContractFactory(
-      "GeoWebCoordinate"
+      "LibGeoWebCoordinate"
     );
     geoWebCoordinate = await GeoWebCoordinate.deploy();
     await geoWebCoordinate.deployed();
 
     const GeoWebCoordinatePath = await ethers.getContractFactory(
-      "GeoWebCoordinatePath"
+      "LibGeoWebCoordinatePath"
     );
     geoWebCoordinatePath = await GeoWebCoordinatePath.deploy();
     await geoWebCoordinatePath.deployed();

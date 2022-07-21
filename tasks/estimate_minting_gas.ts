@@ -90,29 +90,29 @@ async function mintSquare(dim: number, GW: ethers.Contract) {
   );
 }
 
-task("measure:setup")
-  .addParam("geoWebCoordinate", "GeoWebCoordinate contract address")
-  .addParam("geoWebCoordinatePath", "GeoWebCoordinatePath contract address")
-  .addParam("geoWebParcel", "GeoWebParcel contract address")
-  .setAction(
-    async (
-      {
-        geoWebParcel,
-      }: {
-        geoWebParcel: string;
-      },
-      hre
-    ) => {
-      const [admin] = await hre.ethers.getSigners();
+// task("measure:setup")
+//   .addParam("geoWebCoordinate", "GeoWebCoordinate contract address")
+//   .addParam("geoWebCoordinatePath", "GeoWebCoordinatePath contract address")
+//   .addParam("geoWebParcel", "GeoWebParcel contract address")
+//   .setAction(
+//     async (
+//       {
+//         geoWebParcel,
+//       }: {
+//         geoWebParcel: string;
+//       },
+//       hre
+//     ) => {
+//       const [admin] = await hre.ethers.getSigners();
 
-      const GW = await hre.ethers.getContractAt("GeoWebParcel", geoWebParcel);
+//       const GW = await hre.ethers.getContractAt("GeoWebParcel", geoWebParcel);
 
-      const buildRole = await GW.BUILD_ROLE();
+//       const buildRole = await GW.BUILD_ROLE();
 
-      const result = await GW.grantRole(buildRole, admin.address);
-      await result.wait();
-    }
-  );
+//       const result = await GW.grantRole(buildRole, admin.address);
+//       await result.wait();
+//     }
+//   );
 
 task("measure:parcel-gas")
   .addParam("geoWebCoordinate", "GeoWebCoordinate contract address")
