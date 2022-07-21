@@ -2,6 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "../libraries/LibBasePCO.sol";
+import "../../shared/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
 /// @notice Handles basic PCO functionality
@@ -12,6 +13,61 @@ contract BasePCOFacet {
             "Only payer is allowed to perform this action"
         );
         _;
+    }
+
+    /**
+     * @notice Initialize bid. Must be the contract owner
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     */
+    function initializeBid(address bidder, int96 newContributionRate, uint256 newForSalePrice)
+        external
+    {
+        LibDiamond.enforceIsContractOwner();
+
+        LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
+
+        uint256 perSecondFeeNumerator = ds
+            .paramsStore
+            .getPerSecondFeeNumerator();
+        uint256 perSecondFeeDenominator = ds
+            .paramsStore
+            .getPerSecondFeeDenominator();
+        require(
+            LibBasePCO._checkForSalePrice(
+                newForSalePrice,
+                newContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "BasePCOFacet: Incorrect for sale price"
+        );
+
+        IConstantFlowAgreementV1 cfa = ds.paramsStore.getCFA();
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        address beneficiary = ds.paramsStore.getBeneficiary();
+
+        // Update flow (license -> beneficiary)
+        cfa.updateFlow(
+            paymentToken,
+            beneficiary,
+            newContributionRate,
+            new bytes(0)
+        );
+
+        LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
+        currentBid.timestamp = block.timestamp;
+        currentBid.bidder = bidder;
+        currentBid.contributionRate = newContributionRate;
+        currentBid.perSecondFeeNumerator = perSecondFeeNumerator;
+        currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
+        currentBid.forSalePrice = newForSalePrice;
+
+        emit LibBasePCO.PayerBidUpdated(
+            bidder,
+            newContributionRate,
+            newForSalePrice
+        );
     }
 
     /**
