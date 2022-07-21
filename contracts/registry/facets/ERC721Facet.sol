@@ -2,12 +2,24 @@
 pragma solidity ^0.8.14;
 
 import "../libraries/LibERC721.sol";
+import "../../shared/libraries/LibDiamond.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
+    function initialize(string calldata _name, string calldata _symbol)
+        external
+    {
+        LibDiamond.enforceIsContractOwner();
+
+        LibERC721.DiamondStorage storage ds = LibERC721.diamondStorage();
+
+        ds.name = _name;
+        ds.symbol = _symbol;
+    }
+
     /**
      * @dev See {IERC165-supportsInterface}.
      */
