@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "../libraries/LibERC721.sol";
-import "../../shared/libraries/LibDiamond.sol";
+import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";

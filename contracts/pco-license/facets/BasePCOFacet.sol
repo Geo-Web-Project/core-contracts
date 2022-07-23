@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "../libraries/LibBasePCO.sol";
-import "../../shared/libraries/LibDiamond.sol";
+import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
 /// @notice Handles basic PCO functionality
@@ -20,12 +20,16 @@ contract BasePCOFacet {
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function initializeBid(address bidder, int96 newContributionRate, uint256 newForSalePrice)
-        external
-    {
+    function initializeBid(
+        IPCOLicenseParamsStore paramsStore,
+        address bidder,
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external {
         LibDiamond.enforceIsContractOwner();
 
         LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
+        ds.paramsStore = paramsStore;
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore
