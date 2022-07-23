@@ -10,6 +10,8 @@ const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts
 import { solidity } from "ethereum-waffle";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { deployments, getNamedAccounts } from "hardhat";
+import { ISuperfluid } from "../../typechain-types/ISuperfluid";
+import { toUtf8Bytes } from "@ethersproject/strings";
 
 use(solidity);
 use(chaiAsPromised);
@@ -61,10 +63,6 @@ describe("BasePCOFacet", async function () {
 
       const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-      let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
-      mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
-      mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
-
       const basePCOFacet = await ethers.getContract(
         "TestBasePCO",
         diamondAdmin
@@ -92,9 +90,8 @@ describe("BasePCOFacet", async function () {
       await sf.initialize();
 
       const ethersProvider = admin.provider!;
-      const ethersjsSf = await Framework.create({
-        networkName: "custom",
-        dataMode: "WEB3_ONLY",
+      const ethersjsSf: Framework = await Framework.create({
+        chainId: 31337,
         resolverAddress: sf.resolver.address,
         protocolReleaseVersion: "test",
         provider: ethersProvider,
@@ -105,7 +102,7 @@ describe("BasePCOFacet", async function () {
         "IERC20",
         sf.tokens.ETHx.address
       );
-      const hostContract = await ethers.getContractAt(
+      const hostContract: ISuperfluid = await ethers.getContractAt(
         "ISuperfluid",
         sf.host.address
       );
@@ -125,10 +122,25 @@ describe("BasePCOFacet", async function () {
         value: ethers.utils.parseEther("10"),
       });
 
+      const cfaAddress = await hostContract.getAgreementClass(
+        ethers.utils.keccak256(
+          toUtf8Bytes(
+            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+          )
+        )
+      );
+
+      let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
+      mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
+      mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
+      mockParamsStore.getCFA.returns(cfaAddress);
+      mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
+      mockParamsStore.getBeneficiary.returns(diamondAdmin);
+
       return {
         basePCOFacet,
         mockParamsStore,
-        ethx,
+        paymentToken: ethx,
         ethx_erc20,
         ethersjsSf,
         sf,
@@ -138,7 +150,8 @@ describe("BasePCOFacet", async function () {
   );
 
   it("should initialize bid", async () => {
-    const { basePCOFacet, mockParamsStore } = await setupTest();
+    const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+      await setupTest();
     const { user } = await getNamedAccounts();
 
     const contributionRate = BigNumber.from(100);
@@ -146,6 +159,14 @@ describe("BasePCOFacet", async function () {
       mockParamsStore,
       contributionRate
     );
+
+    // const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    //   superToken: paymentToken.address,
+    //   flowOperator: basePCOFacet.address,
+    //   permissions: 1,
+    //   flowRateAllowance: contributionRate.toString(),
+    // });
+    // await op.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
       mockParamsStore.address,
