@@ -104,4 +104,12 @@ module.exports = {
     path: "./abi",
     clear: true,
   },
+  namedAccounts: {
+    diamondAdmin: {
+      default: 0,
+    },
+    user: {
+      default: 1,
+    },
+  },
 };

@@ -1,6 +1,5 @@
 import { assert, expect, use } from "chai";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "hardhat";
+import { ethers, deployments } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { BigNumber } from "ethers";
 
@@ -11,35 +10,41 @@ describe("GeoWebParcel", async () => {
     return BigNumber.from(length).shl(256 - 8);
   }
 
-  let accounts: SignerWithAddress[];
-  let max_x: BigNumber;
-  let max_y: BigNumber;
+  const setupTest = deployments.createFixture(
+    async ({ deployments, getNamedAccounts, ethers }, options) => {
+      await deployments.fixture();
+      const GeoWebCoordinate = await ethers.getContractFactory(
+        "LibGeoWebCoordinate"
+      );
+      const geoWebCoordinate = await GeoWebCoordinate.deploy();
+      await geoWebCoordinate.deployed();
 
-  async function buildContract() {
-    const GeoWebCoordinate = await ethers.getContractFactory(
-      "LibGeoWebCoordinate"
-    );
-    const geoWebCoordinate = await GeoWebCoordinate.deploy();
-    await geoWebCoordinate.deployed();
+      const max_x = await geoWebCoordinate.MAX_X();
+      const max_y = await geoWebCoordinate.MAX_Y();
 
-    max_x = await geoWebCoordinate.MAX_X();
-    max_y = await geoWebCoordinate.MAX_Y();
+      const { diamondAdmin } = await getNamedAccounts();
+      const { diamond } = deployments;
+      await diamond.deploy("GeoWebParcel", {
+        from: diamondAdmin,
+        owner: diamondAdmin,
+        facets: ["TestableGeoWebParcelFacet"],
+      });
 
-    const GeoWebParcel = await ethers.getContractFactory(
-      "TestableGeoWebParcelFacet"
-    );
-    const geoWebParcel = await GeoWebParcel.deploy();
-    await geoWebParcel.deployed();
+      const geoWebParcel = await ethers.getContract(
+        "GeoWebParcel",
+        diamondAdmin
+      );
 
-    return geoWebParcel;
-  }
-
-  before(async () => {
-    accounts = await ethers.getSigners();
-  });
+      return {
+        geoWebParcel,
+        max_x,
+        max_y,
+      };
+    }
+  );
 
   it("should build and destroy a parcel of a single coordinate", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
@@ -83,7 +88,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should build and destroy parcel within one word", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
@@ -135,7 +140,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should build and destroy parcel that spans multiple words", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
     let coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
@@ -196,7 +201,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should build and destroy parcel with a long path", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(511, 0) -> Index(31, 0), Local(15, 0)
     let coord = BigNumber.from(511).shl(32).or(BigNumber.from(0));
@@ -251,7 +256,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should build and destroy parcel that crosses the meridian", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel, max_x } = await setupTest();
 
     // Global(0, 160) -> Index(0, 10), Local(0, 0)
     let coord = BigNumber.from(0).shl(32).or(BigNumber.from(160));
@@ -315,7 +320,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should not build parcel that repeats coordinates", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
@@ -342,7 +347,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should not build parcel that repeats coordinates across multiple words", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
     let coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
@@ -370,7 +375,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should not build parcel that overlaps with a existing parcel", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
@@ -395,7 +400,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should not build parcel that goes too far north", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel, max_y } = await setupTest();
 
     // Global(16000, MAX) -> Index(1000, MAX/16), Local(0, 15)
     let coord = BigNumber.from(16000).shl(32).or(max_y);
@@ -414,7 +419,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should not build parcel that goes too far south", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
     let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
@@ -433,7 +438,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should not build parcel with empty path", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
     let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
@@ -456,7 +461,7 @@ describe("GeoWebParcel", async () => {
   });
 
   it("should only destroy one parcel within a word", async () => {
-    let geoWebParcel = await buildContract();
+    const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
     let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
