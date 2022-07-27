@@ -11,12 +11,20 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         external
         view
         override
-        returns (IConstantFlowAgreementV1)
+        returns (IConstantFlowAgreementV1 cfa)
     {
         LibBasePCOLicenseParams.DiamondStorage
             storage ds = LibBasePCOLicenseParams.diamondStorage();
 
-        return ds.cfaV1.cfa;
+        cfa = IConstantFlowAgreementV1(
+            address(
+                ds.host.getAgreementClass(
+                    keccak256(
+                        "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+                    )
+                )
+            )
+        );
     }
 
     /// @notice Payment token

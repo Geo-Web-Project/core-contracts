@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
+import {ISuperToken, ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
 library LibBasePCOLicenseParams {
@@ -13,8 +13,8 @@ library LibBasePCOLicenseParams {
         address beneficiary;
         /// @notice Payment token.
         ISuperToken paymentToken;
-        /// @notice CFA data
-        CFAv1Library.InitData cfaV1;
+        /// @notice Superfluid host
+        ISuperfluid host;
         /// @notice The numerator of the network-wide per second contribution fee.
         uint256 perSecondFeeNumerator;
         /// @notice The denominator of the network-wide per second contribution fee.
