@@ -142,6 +142,51 @@ describe("BasePCOFacet", async function () {
     }
   );
 
+  const fixtureInitialized = deployments.createFixture(
+    async ({ deployments, getNamedAccounts, ethers }, options) => {
+      const res = await setupTest();
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
+
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const op1 = await paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet.initializeBid(
+        mockParamsStore.address,
+        user,
+        contributionRate,
+        forSalePrice
+      );
+      await txn.wait();
+
+      return res;
+    }
+  );
+
+  before(async () => {
+    await setupTest();
+  });
+
   describe("initializeBid", async () => {
     it("should initialize bid", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
@@ -281,6 +326,85 @@ describe("BasePCOFacet", async function () {
         forSalePrice
       );
       await expect(txn).to.be.revertedWith("CFA: E_NO_OPERATOR_CREATE_FLOW");
+    });
+
+    it("should fail if for sale price is incorrect rounding", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await setupTest();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const op1 = await paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet.initializeBid(
+        mockParamsStore.address,
+        user,
+        contributionRate.add(10),
+        forSalePrice
+      );
+      await expect(txn).to.be.revertedWith(
+        "BasePCOFacet: Incorrect for sale price"
+      );
+    });
+  });
+
+  describe("editBid", async () => {
+    it("should edit bid", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await fixtureInitialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .editBid(newContributionRate, newForSalePrice);
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerBidUpdated")
+        .withArgs(user, newContributionRate, newForSalePrice);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        newContributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
+      expect(await basePCOFacet.isBidActive()).to.equal(true);
     });
   });
 });
