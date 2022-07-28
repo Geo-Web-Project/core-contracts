@@ -20,7 +20,7 @@ contract BasePCOFacet {
     modifier onlyPayer() {
         require(
             msg.sender == payer(),
-            "Only payer is allowed to perform this action"
+            "BasePCOFacet: Only payer is allowed to perform this action"
         );
         _;
     }

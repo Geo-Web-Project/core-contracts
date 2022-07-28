@@ -257,5 +257,67 @@ describe("BasePCOFacet", async function () {
       expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
       expect(await basePCOFacet.isBidActive()).to.equal(true);
     });
+
+    it("should fail if not payer", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet.editBid(newContributionRate, newForSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "BasePCOFacet: Only payer is allowed to perform this action"
+      );
+    });
+
+    it("should fail if for sale price is incorrect rounding", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .add(10)
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .editBid(newContributionRate.add(10), newForSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "BasePCOFacet: Incorrect for sale price"
+      );
+    });
   });
 });
