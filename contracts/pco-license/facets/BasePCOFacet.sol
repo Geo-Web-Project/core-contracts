@@ -10,6 +10,13 @@ import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/app
 contract BasePCOFacet {
     using CFAv1Library for CFAv1Library.InitData;
 
+    /// @notice Emitted when an owner bid is updated
+    event PayerBidUpdated(
+        address indexed _payer,
+        int96 contributionRate,
+        uint256 forSalePrice
+    );
+
     modifier onlyPayer() {
         require(
             msg.sender == payer(),

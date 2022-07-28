@@ -12,6 +12,7 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import { deployments, getNamedAccounts } from "hardhat";
 import { ISuperfluid } from "../../typechain-types/ISuperfluid";
 import { toUtf8Bytes } from "@ethersproject/strings";
+import { BasePCOFacet } from "../../typechain-types/BasePCOFacet";
 
 use(solidity);
 use(chaiAsPromised);
@@ -63,7 +64,7 @@ describe("BasePCOFacet", async function () {
 
       const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-      const basePCOFacet = await ethers.getContract(
+      const basePCOFacet: BasePCOFacet = await ethers.getContract(
         "TestBasePCO",
         diamondAdmin
       );
@@ -175,5 +176,13 @@ describe("BasePCOFacet", async function () {
       forSalePrice
     );
     await txn.wait();
+
+    await expect(txn)
+      .to.emit(basePCOFacet, "PayerBidUpdated")
+      .withArgs(user, contributionRate, forSalePrice);
+    expect(await basePCOFacet.payer()).to.equal(user);
+    expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
+    expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
+    expect(await basePCOFacet.isBidActive()).to.equal(true);
   });
 });

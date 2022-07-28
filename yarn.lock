@@ -6391,6 +6391,14 @@ hardhat-deploy@^0.11.11:
     qs "^6.9.4"
     zksync-web3 "^0.7.8"
 
+hardhat-diamond-abi@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/hardhat-diamond-abi/-/hardhat-diamond-abi-3.0.1.tgz#bb38f3247752953f5aefaef2bc3aa77d8385cd67"
+  integrity sha512-t+skBGX8lK3qH/YQB8L/QJVIINyuji/2r4q9JcZQ0rX9oEZzgfJMka2ttZ4gyuNcYRT95KyfDSuCCwSQX1cVDA==
+  dependencies:
+    debug "^4.3.3"
+    ethers "^5.5.2"
+
 hardhat@^2.9.2:
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.9.2.tgz#123f3fed6810ef8637b127b73ca44bb9c9efc249"
