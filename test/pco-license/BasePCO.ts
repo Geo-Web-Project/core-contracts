@@ -142,47 +142,145 @@ describe("BasePCOFacet", async function () {
     }
   );
 
-  it("should initialize bid", async () => {
-    const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-      await setupTest();
-    const { user } = await getNamedAccounts();
+  describe("initializeBid", async () => {
+    it("should initialize bid", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await setupTest();
+      const { user } = await getNamedAccounts();
 
-    const contributionRate = BigNumber.from(100);
-    const forSalePrice = await rateToPurchasePrice(
-      mockParamsStore,
-      contributionRate
-    );
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
 
-    // Transfer payment token for buffer
-    const op1 = await paymentToken.transfer({
-      receiver: basePCOFacet.address,
-      amount: forSalePrice.toString(),
+      // Transfer payment token for buffer
+      const op1 = await paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet.initializeBid(
+        mockParamsStore.address,
+        user,
+        contributionRate,
+        forSalePrice
+      );
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerBidUpdated")
+        .withArgs(user, contributionRate, forSalePrice);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
+      expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
+      expect(await basePCOFacet.isBidActive()).to.equal(true);
     });
-    await op1.exec(await ethers.getSigner(user));
 
-    // Approve flow creation
-    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
-      superToken: paymentToken.address,
-      flowOperator: basePCOFacet.address,
-      permissions: 1,
-      flowRateAllowance: contributionRate.toString(),
+    it("should fail if not contract owner", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await setupTest();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const op1 = await paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .initializeBid(
+          mockParamsStore.address,
+          user,
+          contributionRate,
+          forSalePrice
+        );
+      await expect(txn).to.be.revertedWith(
+        "LibDiamond: Must be contract owner"
+      );
     });
-    await op2.exec(await ethers.getSigner(user));
 
-    const txn = await basePCOFacet.initializeBid(
-      mockParamsStore.address,
-      user,
-      contributionRate,
-      forSalePrice
-    );
-    await txn.wait();
+    it("should fail if buffer is missing", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await setupTest();
+      const { user } = await getNamedAccounts();
 
-    await expect(txn)
-      .to.emit(basePCOFacet, "PayerBidUpdated")
-      .withArgs(user, contributionRate, forSalePrice);
-    expect(await basePCOFacet.payer()).to.equal(user);
-    expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
-    expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
-    expect(await basePCOFacet.isBidActive()).to.equal(true);
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Approve flow creation
+      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet.initializeBid(
+        mockParamsStore.address,
+        user,
+        contributionRate,
+        forSalePrice
+      );
+      await expect(txn).to.be.revertedWith("CFA: not enough available balance");
+    });
+
+    it("should fail if flow permissions are missing", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await setupTest();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const op1 = await paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet.initializeBid(
+        mockParamsStore.address,
+        user,
+        contributionRate,
+        forSalePrice
+      );
+      await expect(txn).to.be.revertedWith("CFA: E_NO_OPERATOR_CREATE_FLOW");
+    });
   });
 });
