@@ -3,28 +3,16 @@ pragma solidity ^0.8.14;
 
 import "../libraries/LibPCOLicenseParams.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
+import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 
 /// @title Public access to global Claimer parameters
 contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
-    /// @notice Constant flow agreement
-    function getCFA()
-        external
-        view
-        override
-        returns (IConstantFlowAgreementV1 cfa)
-    {
+    /// @notice Superfluid Host
+    function getHost() external view override returns (ISuperfluid) {
         LibBasePCOLicenseParams.DiamondStorage
             storage ds = LibBasePCOLicenseParams.diamondStorage();
 
-        cfa = IConstantFlowAgreementV1(
-            address(
-                ds.host.getAgreementClass(
-                    keccak256(
-                        "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
-                    )
-                )
-            )
-        );
+        return ds.host;
     }
 
     /// @notice Payment token

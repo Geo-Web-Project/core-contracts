@@ -4,9 +4,12 @@ pragma solidity ^0.8.14;
 import "../libraries/LibBasePCO.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
+import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
 /// @notice Handles basic PCO functionality
 contract BasePCOFacet {
+    using CFAv1Library for CFAv1Library.InitData;
+
     modifier onlyPayer() {
         require(
             msg.sender == payer(),
@@ -47,17 +50,33 @@ contract BasePCOFacet {
             "BasePCOFacet: Incorrect for sale price"
         );
 
-        IConstantFlowAgreementV1 cfa = ds.paramsStore.getCFA();
+        LibBasePCO.DiamondCFAStorage storage cs = LibBasePCO.cfaStorage();
+        ISuperfluid host = ds.paramsStore.getHost();
+        cs.cfaV1 = CFAv1Library.InitData(
+            host,
+            IConstantFlowAgreementV1(
+                address(
+                    host.getAgreementClass(
+                        keccak256(
+                            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+                        )
+                    )
+                )
+            )
+        );
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
-        // Update flow (license -> beneficiary)
-        cfa.updateFlow(
+        // Create flow (payer -> license)
+        cs.cfaV1.createFlowByOperator(
+            bidder,
+            address(this),
             paymentToken,
-            beneficiary,
-            newContributionRate,
-            new bytes(0)
+            newContributionRate
         );
+
+        // Create flow (license -> beneficiary)
+        cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
 
         LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
         currentBid.timestamp = block.timestamp;
@@ -87,10 +106,9 @@ contract BasePCOFacet {
      */
     function contributionRate() public view returns (int96) {
         LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
+        LibBasePCO.DiamondCFAStorage storage cs = LibBasePCO.cfaStorage();
 
-        IConstantFlowAgreementV1 cfa = ds.paramsStore.getCFA();
-
-        (, int96 flowRate, , ) = cfa.getFlow(
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             ds.paramsStore.getPaymentToken(),
             payer(),
             address(this)
@@ -132,6 +150,7 @@ contract BasePCOFacet {
         onlyPayer
     {
         LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
+        LibBasePCO.DiamondCFAStorage storage cs = LibBasePCO.cfaStorage();
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore
@@ -149,26 +168,19 @@ contract BasePCOFacet {
             "BasePCOFacet: Incorrect for sale price"
         );
 
-        IConstantFlowAgreementV1 cfa = ds.paramsStore.getCFA();
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
         // Update flow (payer -> license)
-        cfa.updateFlowByOperator(
-            paymentToken,
+        cs.cfaV1.updateFlowByOperator(
             payer(),
             address(this),
-            newContributionRate,
-            new bytes(0)
+            paymentToken,
+            newContributionRate
         );
 
         // Update flow (license -> beneficiary)
-        cfa.updateFlow(
-            paymentToken,
-            beneficiary,
-            newContributionRate,
-            new bytes(0)
-        );
+        cs.cfaV1.updateFlow(beneficiary, paymentToken, newContributionRate);
 
         LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
         currentBid.timestamp = block.timestamp;

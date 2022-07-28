@@ -122,18 +122,10 @@ describe("BasePCOFacet", async function () {
         value: ethers.utils.parseEther("10"),
       });
 
-      const cfaAddress = await hostContract.getAgreementClass(
-        ethers.utils.keccak256(
-          toUtf8Bytes(
-            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
-          )
-        )
-      );
-
       let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
       mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
       mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
-      mockParamsStore.getCFA.returns(cfaAddress);
+      mockParamsStore.getHost.returns(sf.host.address);
       mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
       mockParamsStore.getBeneficiary.returns(diamondAdmin);
 
@@ -160,13 +152,21 @@ describe("BasePCOFacet", async function () {
       contributionRate
     );
 
-    // const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
-    //   superToken: paymentToken.address,
-    //   flowOperator: basePCOFacet.address,
-    //   permissions: 1,
-    //   flowRateAllowance: contributionRate.toString(),
-    // });
-    // await op.exec(await ethers.getSigner(user));
+    // Transfer payment token for buffer
+    const op1 = await paymentToken.transfer({
+      receiver: basePCOFacet.address,
+      amount: forSalePrice.toString(),
+    });
+    await op1.exec(await ethers.getSigner(user));
+
+    // Approve flow creation
+    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: contributionRate.toString(),
+    });
+    await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
       mockParamsStore.address,

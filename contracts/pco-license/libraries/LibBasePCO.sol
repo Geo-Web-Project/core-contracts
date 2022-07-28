@@ -2,6 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
+import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
 library LibBasePCO {
     bytes32 constant STORAGE_POSITION =
@@ -9,6 +10,9 @@ library LibBasePCO {
 
     bytes32 constant STORAGE_POSITION_CUR_BID =
         keccak256("diamond.standard.diamond.storage.LibBasePCO.currentBid");
+
+    bytes32 constant STORAGE_POSITION_CFA =
+        keccak256("diamond.standard.diamond.storage.LibBasePCO.cfa");
 
     struct Bid {
         uint256 timestamp;
@@ -30,6 +34,10 @@ library LibBasePCO {
         IPCOLicenseParamsStore paramsStore;
     }
 
+    struct DiamondCFAStorage {
+        CFAv1Library.InitData cfaV1;
+    }
+
     function diamondStorage()
         internal
         pure
@@ -46,6 +54,14 @@ library LibBasePCO {
         bytes32 position = STORAGE_POSITION_CUR_BID;
         assembly {
             bid.slot := position
+        }
+    }
+
+    /// @dev Store cfa in separate position so struct is upgradeable
+    function cfaStorage() internal pure returns (DiamondCFAStorage storage ds) {
+        bytes32 position = STORAGE_POSITION_CFA;
+        assembly {
+            ds.slot := position
         }
     }
 

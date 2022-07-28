@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperfluid, ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 
 interface IPCOLicenseParamsStore {
-    /// @notice Constant flow agreement
-    function getCFA() external view returns (IConstantFlowAgreementV1);
+    /// @notice Superfluid Host
+    function getHost() external view returns (ISuperfluid);
 
     /// @notice Payment token
     function getPaymentToken() external view returns (ISuperToken);
