@@ -19,7 +19,10 @@ contract BasePCOFacet {
     }
 
     /**
-     * @notice Initialize bid. Must be the contract owner
+     * @notice Initialize bid.
+     *      - Must be the contract owner
+     *      - Must have payment token buffer deposited
+     *      - Must have permissions to create flow for bidder
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
