@@ -20,7 +20,7 @@ contract CFABasePCOFacet is IBasePCO {
     modifier onlyPayer() {
         require(
             msg.sender == payer(),
-            "BasePCOFacet: Only payer is allowed to perform this action"
+            "CFABasePCOFacet: Only payer is allowed to perform this action"
         );
         _;
     }
@@ -58,7 +58,7 @@ contract CFABasePCOFacet is IBasePCO {
                 perSecondFeeNumerator,
                 perSecondFeeDenominator
             ),
-            "BasePCOFacet: Incorrect for sale price"
+            "CFABasePCOFacet: Incorrect for sale price"
         );
 
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
@@ -145,12 +145,14 @@ contract CFABasePCOFacet is IBasePCO {
     /**
      * @notice Is current bid actively being paid
      */
-    function isBidActive() external view returns (bool) {
+    function isPayerBidActive() external view returns (bool) {
         return contributionRate() > 0;
     }
 
     /**
-     * @notice Edit bid. Must be the current payer
+     * @notice Edit bid
+     *      - Must be the current payer
+     *      - Must have permissions to update flow for payer
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
@@ -175,7 +177,7 @@ contract CFABasePCOFacet is IBasePCO {
                 perSecondFeeNumerator,
                 perSecondFeeDenominator
             ),
-            "BasePCOFacet: Incorrect for sale price"
+            "CFABasePCOFacet: Incorrect for sale price"
         );
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();

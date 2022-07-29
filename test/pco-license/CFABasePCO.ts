@@ -83,7 +83,7 @@ describe("CFABasePCOFacet", async function () {
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
       expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
-      expect(await basePCOFacet.isBidActive()).to.equal(true);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
     });
 
     it("should fail if not contract owner", async () => {
@@ -216,7 +216,7 @@ describe("CFABasePCOFacet", async function () {
         forSalePrice
       );
       await expect(txn).to.be.revertedWith(
-        "BasePCOFacet: Incorrect for sale price"
+        "CFABasePCOFacet: Incorrect for sale price"
       );
     });
   });
@@ -261,7 +261,7 @@ describe("CFABasePCOFacet", async function () {
         newContributionRate
       );
       expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
-      expect(await basePCOFacet.isBidActive()).to.equal(true);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
     });
 
     it("should fail if not payer", async () => {
@@ -290,7 +290,7 @@ describe("CFABasePCOFacet", async function () {
       const txn = basePCOFacet.editBid(newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        "BasePCOFacet: Only payer is allowed to perform this action"
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
       );
     });
 
@@ -322,7 +322,7 @@ describe("CFABasePCOFacet", async function () {
         .connect(await ethers.getSigner(user))
         .editBid(newContributionRate.add(10), newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        "BasePCOFacet: Incorrect for sale price"
+        "CFABasePCOFacet: Incorrect for sale price"
       );
     });
   });
