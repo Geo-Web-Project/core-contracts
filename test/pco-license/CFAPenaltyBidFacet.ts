@@ -1,6 +1,6 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ethers } from "hardhat";
+import { ethers, getUnnamedAccounts } from "hardhat";
 import { BigNumber } from "ethers";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
@@ -208,6 +208,50 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn).to.be.revertedWith(
         "CFAPenaltyBidFacet: CREATE_FLOW permission does not have enough allowance"
       );
+    });
+
+    it("should place bid if previous bid was invalidated", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+      const { bidder } = await getNamedAccounts();
+      const accounts = await getUnnamedAccounts();
+
+      // Revoke permissions
+      const op = await ethersjsSf.cfaV1.revokeFlowOperatorWithFullControl({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op1 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op1.exec(await ethers.getSigner(accounts[3]));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(accounts[3]))
+        .placeBid(newContributionRate, newForSalePrice);
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidPlaced")
+        .withArgs(accounts[3], newContributionRate, newForSalePrice);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(await basePCOFacet.isPendingBidValid()).to.equal(true);
+      expect(pendingBid.bidder).to.equal(accounts[3]);
+      expect(pendingBid.contributionRate).to.equal(newContributionRate);
+      expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
     });
   });
 });
