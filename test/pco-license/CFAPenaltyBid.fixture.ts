@@ -16,6 +16,13 @@ const afterPlaceBid = deployments.createFixture(
       newContributionRate
     );
 
+    // Approve payment token
+    const approveOp = await paymentToken.approve({
+      receiver: basePCOFacet.address,
+      amount: newForSalePrice.toString(),
+    });
+    await approveOp.exec(await ethers.getSigner(bidder));
+
     // Approve flow update
     const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,

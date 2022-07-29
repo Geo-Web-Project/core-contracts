@@ -5,7 +5,7 @@ const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { smock } from "@defi-wonderland/smock";
-import { deployments } from "hardhat";
+import { deployments, getUnnamedAccounts } from "hardhat";
 import { ISuperfluid } from "../../typechain-types/ISuperfluid";
 import {
   perYearToPerSecondRate,
@@ -31,6 +31,7 @@ const setup = deployments.createFixture(
     const accounts = await ethers.getSigners();
 
     const [admin, user, bidder, other] = accounts;
+    const uAccounts = await getUnnamedAccounts();
 
     await deployFramework(errorHandler, {
       web3,
@@ -78,7 +79,7 @@ const setup = deployments.createFixture(
     });
 
     await sf.tokens.ETHx.upgradeByETH({
-      from: other.address,
+      from: uAccounts[3],
       value: ethers.utils.parseEther("10"),
     });
 

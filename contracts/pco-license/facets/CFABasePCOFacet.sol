@@ -6,6 +6,7 @@ import "../interfaces/IBasePCO.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
+import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 
 /// @notice Handles basic PCO functionality using Constant Flow Agreement (CFA)
 contract CFABasePCOFacet is IBasePCO {

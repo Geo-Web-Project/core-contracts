@@ -7,6 +7,7 @@ import "../interfaces/ICFABiddable.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
+import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 
 /// @notice Handles bidding using CFAs and penalities
 contract CFAPenaltyBidFacet is ICFABiddable {
@@ -22,41 +23,20 @@ contract CFAPenaltyBidFacet is ICFABiddable {
     }
 
     /**
-     * @notice Checks if a pending bid is valid
-     *      - Bidder must have flowAllowance >= propose contribution rate
+     * @notice Checks if there is a pending bid
      */
-    function isPendingBidValid() external view returns (bool) {
+    function hasPendingBid() external view returns (bool) {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
 
-        if (_pendingBid.contributionRate == 0) {
-            return false;
-        }
-
-        // Check operator permissions
-        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
-            .diamondStorage();
-        (, uint8 permissions, int96 flowRateAllowance) = cs
-            .cfaV1
-            .cfa
-            .getFlowOperatorData(
-                ds.paramsStore.getPaymentToken(),
-                _pendingBid.bidder,
-                address(this)
-            );
-
-        return
-            LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
-                permissions,
-                LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
-            ) && flowRateAllowance >= _pendingBid.contributionRate;
+        return _pendingBid.contributionRate > 0;
     }
 
     /**
      * @notice Place a bid to purchase license as msg.sender
      *      - Pending bid must not exist
      *      - Must have permissions to create flow for bidder
+     *      - Must have ERC-20 approval of payment token
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
@@ -68,7 +48,7 @@ contract CFAPenaltyBidFacet is ICFABiddable {
 
         // Check if pending bid exists
         require(
-            this.isPendingBidValid() == false,
+            this.hasPendingBid() == false,
             "CFAPenaltyBidFacet: Pending bid already exists"
         );
 
@@ -115,6 +95,15 @@ contract CFAPenaltyBidFacet is ICFABiddable {
             flowRateAllowance >= newContributionRate,
             "CFAPenaltyBidFacet: CREATE_FLOW permission does not have enough allowance"
         );
+
+        // Collect deposit
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        bool success = paymentToken.transferFrom(
+            msg.sender,
+            address(this),
+            newForSalePrice
+        );
+        require(success, "CFAPenaltyBidFacet: Bid deposit failed");
 
         // Save pending bid
         _pendingBid.timestamp = block.timestamp;

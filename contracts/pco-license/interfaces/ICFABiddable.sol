@@ -17,10 +17,9 @@ interface ICFABiddable {
     function pendingBid() external view returns (LibCFAPenaltyBid.Bid memory);
 
     /**
-     * @notice Checks if a pending bid is valid
-     *      - Bidder must have flowAllowance >= propose contribution rate
+     * @notice Checks if there is a pending bid
      */
-    function isPendingBidValid() external view returns (bool);
+    function hasPendingBid() external view returns (bool);
 
     /**
      * @notice Place a bid to purchase license as msg.sender

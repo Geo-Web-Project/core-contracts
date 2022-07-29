@@ -18,20 +18,20 @@ describe("CFAPenaltyBidFacet", async function () {
     await BaseFixtures.initialized();
   });
 
-  describe("isPendingBidValid", async () => {
-    it("should be invalid after initialization", async () => {
+  describe("hasPendingBid", async () => {
+    it("should have after initialization", async () => {
       const { basePCOFacet } = await BaseFixtures.initialized();
 
-      expect(await basePCOFacet.isPendingBidValid()).to.equal(false);
+      expect(await basePCOFacet.hasPendingBid()).to.equal(false);
     });
 
-    it("should be valid after place bid", async () => {
+    it("should have after place bid", async () => {
       const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      expect(await basePCOFacet.isPendingBidValid()).to.equal(true);
+      expect(await basePCOFacet.hasPendingBid()).to.equal(true);
     });
 
-    it("should be invalid after decreasing flow allowance", async () => {
+    it("should have after decreasing flow allowance", async () => {
       const { basePCOFacet, ethersjsSf, paymentToken } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
       const { bidder } = await getNamedAccounts();
@@ -45,10 +45,10 @@ describe("CFAPenaltyBidFacet", async function () {
       });
       await op.exec(await ethers.getSigner(bidder));
 
-      expect(await basePCOFacet.isPendingBidValid()).to.equal(false);
+      expect(await basePCOFacet.hasPendingBid()).to.equal(true);
     });
 
-    it("should be invalid after revoking full control", async () => {
+    it("should have after revoking full control", async () => {
       const { basePCOFacet, ethersjsSf, paymentToken } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
       const { bidder } = await getNamedAccounts();
@@ -60,14 +60,19 @@ describe("CFAPenaltyBidFacet", async function () {
       });
       await op.exec(await ethers.getSigner(bidder));
 
-      expect(await basePCOFacet.isPendingBidValid()).to.equal(false);
+      expect(await basePCOFacet.hasPendingBid()).to.equal(true);
     });
   });
 
   describe("placeBid", async () => {
     it("should place bid with create permissions", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await BaseFixtures.initialized();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        ethx_erc20,
+      } = await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
 
       const newContributionRate = BigNumber.from(200);
@@ -75,6 +80,13 @@ describe("CFAPenaltyBidFacet", async function () {
         mockParamsStore,
         newContributionRate
       );
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: newForSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
       const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
@@ -93,9 +105,11 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "BidPlaced")
         .withArgs(bidder, newContributionRate, newForSalePrice);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(bidder, basePCOFacet.address, newForSalePrice);
 
       const pendingBid = await basePCOFacet.pendingBid();
-      expect(await basePCOFacet.isPendingBidValid()).to.equal(true);
       expect(pendingBid.bidder).to.equal(bidder);
       expect(pendingBid.contributionRate).to.equal(newContributionRate);
       expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
@@ -111,6 +125,13 @@ describe("CFAPenaltyBidFacet", async function () {
         mockParamsStore,
         newContributionRate
       );
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: newForSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
       const op = await ethersjsSf.cfaV1.authorizeFlowOperatorWithFullControl({
@@ -129,7 +150,6 @@ describe("CFAPenaltyBidFacet", async function () {
         .withArgs(bidder, newContributionRate, newForSalePrice);
 
       const pendingBid = await basePCOFacet.pendingBid();
-      expect(await basePCOFacet.isPendingBidValid()).to.equal(true);
       expect(pendingBid.bidder).to.equal(bidder);
       expect(pendingBid.contributionRate).to.equal(newContributionRate);
       expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
@@ -145,6 +165,13 @@ describe("CFAPenaltyBidFacet", async function () {
         mockParamsStore,
         newContributionRate
       );
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: newForSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
       const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
@@ -164,7 +191,7 @@ describe("CFAPenaltyBidFacet", async function () {
     });
 
     it("should fail if missing flow permissions", async () => {
-      const { basePCOFacet, mockParamsStore } =
+      const { basePCOFacet, mockParamsStore, paymentToken } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
 
@@ -173,6 +200,13 @@ describe("CFAPenaltyBidFacet", async function () {
         mockParamsStore,
         newContributionRate
       );
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: newForSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(bidder))
@@ -193,6 +227,13 @@ describe("CFAPenaltyBidFacet", async function () {
         newContributionRate
       );
 
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: newForSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
       // Approve flow update
       const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
@@ -210,24 +251,51 @@ describe("CFAPenaltyBidFacet", async function () {
       );
     });
 
-    it("should place bid if previous bid was invalidated", async () => {
+    it("should fail if deposit allowance is not enough", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await CFAPenaltyBidFixtures.afterPlaceBid();
+        await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
-      const accounts = await getUnnamedAccounts();
-
-      // Revoke permissions
-      const op = await ethersjsSf.cfaV1.revokeFlowOperatorWithFullControl({
-        superToken: paymentToken.address,
-        flowOperator: basePCOFacet.address,
-      });
-      await op.exec(await ethers.getSigner(bidder));
 
       const newContributionRate = BigNumber.from(200);
       const newForSalePrice = await rateToPurchasePrice(
         mockParamsStore,
         newContributionRate
       );
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .placeBid(newContributionRate, newForSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "SuperToken: transfer amount exceeds allowance"
+      );
+    });
+
+    it("should fail if pending bid exists", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+      const accounts = await getUnnamedAccounts();
+
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: newForSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(accounts[3]));
 
       // Approve flow update
       const op1 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
@@ -238,20 +306,12 @@ describe("CFAPenaltyBidFacet", async function () {
       });
       await op1.exec(await ethers.getSigner(accounts[3]));
 
-      const txn = await basePCOFacet
+      const txn = basePCOFacet
         .connect(await ethers.getSigner(accounts[3]))
         .placeBid(newContributionRate, newForSalePrice);
-      await txn.wait();
-
-      await expect(txn)
-        .to.emit(basePCOFacet, "BidPlaced")
-        .withArgs(accounts[3], newContributionRate, newForSalePrice);
-
-      const pendingBid = await basePCOFacet.pendingBid();
-      expect(await basePCOFacet.isPendingBidValid()).to.equal(true);
-      expect(pendingBid.bidder).to.equal(accounts[3]);
-      expect(pendingBid.contributionRate).to.equal(newContributionRate);
-      expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Pending bid already exists"
+      );
     });
   });
 });

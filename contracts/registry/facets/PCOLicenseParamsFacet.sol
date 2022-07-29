@@ -4,6 +4,7 @@ pragma solidity ^0.8.14;
 import "../libraries/LibPCOLicenseParams.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
+import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 
 /// @title Public access to global Claimer parameters
 contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
