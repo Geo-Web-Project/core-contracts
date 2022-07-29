@@ -13,13 +13,23 @@ contract CFAPenaltyBidFacet is ICFABiddable {
     using CFAv1Library for CFAv1Library.InitData;
 
     /**
-     * @notice Checks if a pending bid exists
+     * @notice Get pending bid
+     */
+    function pendingBid() external pure returns (LibCFAPenaltyBid.Bid memory) {
+        LibCFAPenaltyBid.Bid storage bid = LibCFAPenaltyBid.pendingBid();
+
+        return bid;
+    }
+
+    /**
+     * @notice Checks if a pending bid is valid
      *      - Bidder must have flowAllowance >= propose contribution rate
      */
-    function hasPendingBid() external view returns (bool) {
-        LibCFAPenaltyBid.Bid storage pendingBid = LibCFAPenaltyBid.pendingBid();
+    function isPendingBidValid() external view returns (bool) {
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
 
-        if (pendingBid.contributionRate == 0) {
+        if (_pendingBid.contributionRate == 0) {
             return false;
         }
 
@@ -32,7 +42,7 @@ contract CFAPenaltyBidFacet is ICFABiddable {
             .cfa
             .getFlowOperatorData(
                 ds.paramsStore.getPaymentToken(),
-                pendingBid.bidder,
+                _pendingBid.bidder,
                 address(this)
             );
 
@@ -40,7 +50,7 @@ contract CFAPenaltyBidFacet is ICFABiddable {
             LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
                 permissions,
                 LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
-            ) && flowRateAllowance >= pendingBid.contributionRate;
+            ) && flowRateAllowance >= _pendingBid.contributionRate;
     }
 
     /**
@@ -53,11 +63,12 @@ contract CFAPenaltyBidFacet is ICFABiddable {
     function placeBid(int96 newContributionRate, uint256 newForSalePrice)
         external
     {
-        LibCFAPenaltyBid.Bid storage pendingBid = LibCFAPenaltyBid.pendingBid();
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
 
         // Check if pending bid exists
         require(
-            this.hasPendingBid() == false,
+            this.isPendingBidValid() == false,
             "CFAPenaltyBidFacet: Pending bid already exists"
         );
 
@@ -106,12 +117,12 @@ contract CFAPenaltyBidFacet is ICFABiddable {
         );
 
         // Save pending bid
-        pendingBid.timestamp = block.timestamp;
-        pendingBid.bidder = msg.sender;
-        pendingBid.contributionRate = newContributionRate;
-        pendingBid.perSecondFeeNumerator = perSecondFeeNumerator;
-        pendingBid.perSecondFeeDenominator = perSecondFeeDenominator;
-        pendingBid.forSalePrice = newForSalePrice;
+        _pendingBid.timestamp = block.timestamp;
+        _pendingBid.bidder = msg.sender;
+        _pendingBid.contributionRate = newContributionRate;
+        _pendingBid.perSecondFeeNumerator = perSecondFeeNumerator;
+        _pendingBid.perSecondFeeDenominator = perSecondFeeDenominator;
+        _pendingBid.forSalePrice = newForSalePrice;
 
         emit BidPlaced(msg.sender, newContributionRate, newForSalePrice);
     }

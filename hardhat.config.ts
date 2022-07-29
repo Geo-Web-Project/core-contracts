@@ -111,5 +111,8 @@ module.exports = {
     user: {
       default: 1,
     },
+    bidder: {
+      default: 2,
+    },
   },
 };

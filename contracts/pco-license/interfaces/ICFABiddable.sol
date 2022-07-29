@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
+import "../libraries/LibCFAPenaltyBid.sol";
+
 interface ICFABiddable {
     /// @notice Emitted when for sale price is updated
     event BidPlaced(
@@ -10,10 +12,15 @@ interface ICFABiddable {
     );
 
     /**
-     * @notice Checks if a pending bid exists
+     * @notice Get pending bid
+     */
+    function pendingBid() external view returns (LibCFAPenaltyBid.Bid memory);
+
+    /**
+     * @notice Checks if a pending bid is valid
      *      - Bidder must have flowAllowance >= propose contribution rate
      */
-    function hasPendingBid() external view returns (bool);
+    function isPendingBidValid() external view returns (bool);
 
     /**
      * @notice Place a bid to purchase license as msg.sender

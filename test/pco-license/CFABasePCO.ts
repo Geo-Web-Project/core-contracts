@@ -1,23 +1,11 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers, web3, network } from "hardhat";
-import { Framework, SFError, SuperToken } from "@superfluid-finance/sdk-core";
-import { BigNumber, Contract, ContractReceipt } from "ethers";
-const SuperfluidSDK = require("@superfluid-finance/js-sdk");
-const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
-const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
+import { ethers } from "hardhat";
+import { BigNumber } from "ethers";
 import { solidity } from "ethereum-waffle";
-import { FakeContract, smock } from "@defi-wonderland/smock";
-import { deployments, getNamedAccounts } from "hardhat";
-import { ISuperfluid } from "../../typechain-types/ISuperfluid";
-import { toUtf8Bytes } from "@ethersproject/strings";
-import { CFABasePCOFacet } from "../../typechain-types/CFABasePCOFacet";
-import {
-  perYearToPerSecondRate,
-  errorHandler,
-  rateToPurchasePrice,
-} from "../shared";
+import { smock } from "@defi-wonderland/smock";
+import { getNamedAccounts } from "hardhat";
+import { rateToPurchasePrice } from "../shared";
 import Fixtures from "./CFABasePCO.fixture";
 
 use(solidity);
@@ -25,8 +13,6 @@ use(chaiAsPromised);
 use(smock.matchers);
 
 describe("CFABasePCOFacet", async function () {
-  this.timeout(0);
-
   //   async function calculatePenaltyAmount(rate: BigNumber) {
   //     const penaltyNumerator = await superApp.penaltyNumerator();
   //     const penaltyDenominator = await superApp.penaltyDenominator();
