@@ -7,7 +7,7 @@ const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts
 import { smock } from "@defi-wonderland/smock";
 import { deployments } from "hardhat";
 import { ISuperfluid } from "../../typechain-types/ISuperfluid";
-import { BasePCOFacet } from "../../typechain-types/BasePCOFacet";
+import { CFABasePCOFacet } from "../../typechain-types/CFABasePCOFacet";
 import {
   perYearToPerSecondRate,
   errorHandler,
@@ -22,12 +22,12 @@ const setup = deployments.createFixture(
     await diamond.deploy("TestBasePCO", {
       from: diamondAdmin,
       owner: diamondAdmin,
-      facets: ["BasePCOFacet"],
+      facets: ["CFABasePCOFacet"],
     });
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-    const basePCOFacet: BasePCOFacet = await ethers.getContract(
+    const basePCOFacet: CFABasePCOFacet = await ethers.getContract(
       "TestBasePCO",
       diamondAdmin
     );

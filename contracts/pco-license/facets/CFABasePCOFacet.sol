@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../libraries/LibBasePCO.sol";
+import "../libraries/LibCFABasePCO.sol";
+import "../interfaces/IBasePCO.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
-/// @notice Handles basic PCO functionality
-contract BasePCOFacet {
+/// @notice Handles basic PCO functionality using Constant Flow Agreement (CFA)
+contract CFABasePCOFacet is IBasePCO {
     using CFAv1Library for CFAv1Library.InitData;
 
     /// @notice Emitted when an owner bid is updated
-    event PayerBidUpdated(
+    event PayerContributionRateUpdated(
         address indexed _payer,
-        int96 contributionRate,
-        uint256 forSalePrice
+        int96 contributionRate
     );
 
     modifier onlyPayer() {
@@ -41,7 +41,8 @@ contract BasePCOFacet {
     ) external {
         LibDiamond.enforceIsContractOwner();
 
-        LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
         ds.paramsStore = paramsStore;
 
         uint256 perSecondFeeNumerator = ds
@@ -51,7 +52,7 @@ contract BasePCOFacet {
             .paramsStore
             .getPerSecondFeeDenominator();
         require(
-            LibBasePCO._checkForSalePrice(
+            LibCFABasePCO._checkForSalePrice(
                 newForSalePrice,
                 newContributionRate,
                 perSecondFeeNumerator,
@@ -60,7 +61,7 @@ contract BasePCOFacet {
             "BasePCOFacet: Incorrect for sale price"
         );
 
-        LibBasePCO.DiamondCFAStorage storage cs = LibBasePCO.cfaStorage();
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
         ISuperfluid host = ds.paramsStore.getHost();
         cs.cfaV1 = CFAv1Library.InitData(
             host,
@@ -88,7 +89,7 @@ contract BasePCOFacet {
         // Create flow (license -> beneficiary)
         cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
 
-        LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
         currentBid.timestamp = block.timestamp;
         currentBid.bidder = bidder;
         currentBid.contributionRate = newContributionRate;
@@ -96,18 +97,15 @@ contract BasePCOFacet {
         currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
         currentBid.forSalePrice = newForSalePrice;
 
-        emit LibBasePCO.PayerBidUpdated(
-            bidder,
-            newContributionRate,
-            newForSalePrice
-        );
+        emit PayerForSalePriceUpdated(bidder, newForSalePrice);
+        emit PayerContributionRateUpdated(bidder, newContributionRate);
     }
 
     /**
      * @notice Current payer of license
      */
     function payer() public view returns (address) {
-        LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
         return currentBid.bidder;
     }
 
@@ -115,8 +113,9 @@ contract BasePCOFacet {
      * @notice Current contribution rate of payer
      */
     function contributionRate() public view returns (int96) {
-        LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
-        LibBasePCO.DiamondCFAStorage storage cs = LibBasePCO.cfaStorage();
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             ds.paramsStore.getPaymentToken(),
@@ -131,7 +130,7 @@ contract BasePCOFacet {
      * @notice Current price needed to purchase license
      */
     function forSalePrice() external view returns (uint256) {
-        LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
         int96 _contributionRate = contributionRate();
 
         if (_contributionRate == currentBid.contributionRate) {
@@ -139,7 +138,7 @@ contract BasePCOFacet {
             return currentBid.forSalePrice;
         } else {
             // Contribution rate was changed, used calculated for sale price
-            return LibBasePCO.calculateForSalePrice(_contributionRate);
+            return LibCFABasePCO.calculateForSalePrice(_contributionRate);
         }
     }
 
@@ -159,8 +158,9 @@ contract BasePCOFacet {
         external
         onlyPayer
     {
-        LibBasePCO.DiamondStorage storage ds = LibBasePCO.diamondStorage();
-        LibBasePCO.DiamondCFAStorage storage cs = LibBasePCO.cfaStorage();
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore
@@ -169,7 +169,7 @@ contract BasePCOFacet {
             .paramsStore
             .getPerSecondFeeDenominator();
         require(
-            LibBasePCO._checkForSalePrice(
+            LibCFABasePCO._checkForSalePrice(
                 newForSalePrice,
                 newContributionRate,
                 perSecondFeeNumerator,
@@ -192,7 +192,7 @@ contract BasePCOFacet {
         // Update flow (license -> beneficiary)
         cs.cfaV1.updateFlow(beneficiary, paymentToken, newContributionRate);
 
-        LibBasePCO.Bid storage currentBid = LibBasePCO.currentBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
         currentBid.timestamp = block.timestamp;
         currentBid.bidder = payer();
         currentBid.contributionRate = newContributionRate;
@@ -200,10 +200,7 @@ contract BasePCOFacet {
         currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
         currentBid.forSalePrice = newForSalePrice;
 
-        emit LibBasePCO.PayerBidUpdated(
-            payer(),
-            newContributionRate,
-            newForSalePrice
-        );
+        emit PayerForSalePriceUpdated(payer(), newForSalePrice);
+        emit PayerContributionRateUpdated(payer(), newContributionRate);
     }
 }

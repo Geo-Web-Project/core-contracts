@@ -4,7 +4,7 @@ pragma solidity ^0.8.14;
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
-library LibBasePCO {
+library LibCFABasePCO {
     bytes32 constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibBasePCO");
 
@@ -22,13 +22,6 @@ library LibBasePCO {
         uint256 perSecondFeeDenominator;
         uint256 forSalePrice;
     }
-
-    /// @notice Emitted when an owner bid is updated
-    event PayerBidUpdated(
-        address indexed _payer,
-        int96 contributionRate,
-        uint256 forSalePrice
-    );
 
     struct DiamondStorage {
         IPCOLicenseParamsStore paramsStore;

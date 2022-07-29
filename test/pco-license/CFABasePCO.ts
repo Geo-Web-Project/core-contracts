@@ -12,19 +12,19 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import { deployments, getNamedAccounts } from "hardhat";
 import { ISuperfluid } from "../../typechain-types/ISuperfluid";
 import { toUtf8Bytes } from "@ethersproject/strings";
-import { BasePCOFacet } from "../../typechain-types/BasePCOFacet";
+import { CFABasePCOFacet } from "../../typechain-types/CFABasePCOFacet";
 import {
   perYearToPerSecondRate,
   errorHandler,
   rateToPurchasePrice,
 } from "../shared";
-import Fixtures from "./BasePCO.fixture";
+import Fixtures from "./CFABasePCO.fixture";
 
 use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe("BasePCOFacet", async function () {
+describe("CFABasePCOFacet", async function () {
   this.timeout(0);
 
   //   async function calculatePenaltyAmount(rate: BigNumber) {
@@ -75,8 +75,11 @@ describe("BasePCOFacet", async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, "PayerBidUpdated")
-        .withArgs(user, contributionRate, forSalePrice);
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, contributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, forSalePrice);
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
       expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
@@ -248,8 +251,11 @@ describe("BasePCOFacet", async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, "PayerBidUpdated")
-        .withArgs(user, newContributionRate, newForSalePrice);
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, newContributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, newForSalePrice);
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
         newContributionRate
