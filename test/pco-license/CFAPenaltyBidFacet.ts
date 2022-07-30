@@ -81,10 +81,18 @@ describe("CFAPenaltyBidFacet", async function () {
         newContributionRate
       );
 
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
       // Approve payment token
       const approveOp = await paymentToken.approve({
         receiver: basePCOFacet.address,
-        amount: newForSalePrice.toString(),
+        amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
@@ -107,7 +115,7 @@ describe("CFAPenaltyBidFacet", async function () {
         .withArgs(bidder, newContributionRate, newForSalePrice);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
-        .withArgs(bidder, basePCOFacet.address, newForSalePrice);
+        .withArgs(bidder, basePCOFacet.address, totalCollateral);
 
       const pendingBid = await basePCOFacet.pendingBid();
       expect(pendingBid.bidder).to.equal(bidder);
@@ -116,8 +124,13 @@ describe("CFAPenaltyBidFacet", async function () {
     });
 
     it("should place bid with full control", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await BaseFixtures.initialized();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        ethx_erc20,
+      } = await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
 
       const newContributionRate = BigNumber.from(200);
@@ -126,10 +139,18 @@ describe("CFAPenaltyBidFacet", async function () {
         newContributionRate
       );
 
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
       // Approve payment token
       const approveOp = await paymentToken.approve({
         receiver: basePCOFacet.address,
-        amount: newForSalePrice.toString(),
+        amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
@@ -148,6 +169,9 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "BidPlaced")
         .withArgs(bidder, newContributionRate, newForSalePrice);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(bidder, basePCOFacet.address, totalCollateral);
 
       const pendingBid = await basePCOFacet.pendingBid();
       expect(pendingBid.bidder).to.equal(bidder);
@@ -166,10 +190,18 @@ describe("CFAPenaltyBidFacet", async function () {
         newContributionRate
       );
 
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
       // Approve payment token
       const approveOp = await paymentToken.approve({
         receiver: basePCOFacet.address,
-        amount: newForSalePrice.toString(),
+        amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
@@ -191,7 +223,7 @@ describe("CFAPenaltyBidFacet", async function () {
     });
 
     it("should fail if missing flow permissions", async () => {
-      const { basePCOFacet, mockParamsStore, paymentToken } =
+      const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
 
@@ -201,10 +233,18 @@ describe("CFAPenaltyBidFacet", async function () {
         newContributionRate
       );
 
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
       // Approve payment token
       const approveOp = await paymentToken.approve({
         receiver: basePCOFacet.address,
-        amount: newForSalePrice.toString(),
+        amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
@@ -227,10 +267,18 @@ describe("CFAPenaltyBidFacet", async function () {
         newContributionRate
       );
 
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
       // Approve payment token
       const approveOp = await paymentToken.approve({
         receiver: basePCOFacet.address,
-        amount: newForSalePrice.toString(),
+        amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
@@ -290,10 +338,18 @@ describe("CFAPenaltyBidFacet", async function () {
         newContributionRate
       );
 
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(accounts[3]))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
       // Approve payment token
       const approveOp = await paymentToken.approve({
         receiver: basePCOFacet.address,
-        amount: newForSalePrice.toString(),
+        amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(accounts[3]));
 

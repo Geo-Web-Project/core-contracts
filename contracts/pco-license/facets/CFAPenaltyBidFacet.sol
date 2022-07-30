@@ -98,10 +98,15 @@ contract CFAPenaltyBidFacet is ICFABiddable {
 
         // Collect deposit
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            newContributionRate
+        );
+        uint256 requiredCollateral = requiredBuffer + newForSalePrice;
         bool success = paymentToken.transferFrom(
             msg.sender,
             address(this),
-            newForSalePrice
+            requiredCollateral
         );
         require(success, "CFAPenaltyBidFacet: Bid deposit failed");
 

@@ -16,10 +16,15 @@ const afterPlaceBid = deployments.createFixture(
       newContributionRate
     );
 
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(bidder))
+      .getDepositRequiredForFlowRate(paymentToken.address, newContributionRate);
+    const totalCollateral = newForSalePrice.add(requiredBuffer);
+
     // Approve payment token
     const approveOp = await paymentToken.approve({
       receiver: basePCOFacet.address,
-      amount: newForSalePrice.toString(),
+      amount: totalCollateral.toString(),
     });
     await approveOp.exec(await ethers.getSigner(bidder));
 
