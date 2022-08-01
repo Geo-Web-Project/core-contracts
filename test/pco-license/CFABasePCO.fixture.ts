@@ -1,6 +1,7 @@
 import { web3 } from "hardhat";
 import { Framework } from "@superfluid-finance/sdk-core";
 import { BigNumber } from "ethers";
+import { expect } from "chai";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
@@ -89,6 +90,48 @@ const setup = deployments.createFixture(
     mockParamsStore.getHost.returns(sf.host.address);
     mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
     mockParamsStore.getBeneficiary.returns(diamondAdmin);
+    mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
+
+    async function checkUserToAppFlow(
+      _user: string,
+      expectedAmount: BigNumber
+    ) {
+      const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
+        superToken: ethx.address,
+        sender: _user,
+        receiver: basePCOFacet.address,
+        providerOrSigner: admin,
+      });
+
+      expect(userToAppFlow.flowRate).to.equal(
+        expectedAmount.toString(),
+        "User -> App flow is incorrect"
+      );
+    }
+
+    async function checkAppToBeneficiaryFlow(expectedAmount: BigNumber) {
+      const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
+        superToken: ethx.address,
+        sender: basePCOFacet.address,
+        receiver: admin.address,
+        providerOrSigner: admin,
+      });
+
+      expect(appToBeneficiaryFlow.flowRate).to.equal(
+        expectedAmount.toString(),
+        "App -> Beneficiary flow is incorrect"
+      );
+    }
+
+    async function checkAppNetFlow() {
+      const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
+        superToken: ethx.address,
+        account: basePCOFacet.address,
+        providerOrSigner: admin,
+      });
+
+      expect(appNetFlow).to.equal("0", "App net flow is incorrect");
+    }
 
     return {
       basePCOFacet,
@@ -98,6 +141,9 @@ const setup = deployments.createFixture(
       ethersjsSf,
       sf,
       hostContract,
+      checkUserToAppFlow,
+      checkAppToBeneficiaryFlow,
+      checkAppNetFlow,
     };
   }
 );

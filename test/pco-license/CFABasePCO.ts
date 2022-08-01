@@ -26,8 +26,15 @@ describe("CFABasePCOFacet", async function () {
 
   describe("initializeBid", async () => {
     it("should initialize bid", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await Fixtures.setup();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppToBeneficiaryFlow,
+        checkAppNetFlow,
+      } = await Fixtures.setup();
       const { user } = await getNamedAccounts();
 
       const contributionRate = BigNumber.from(100);
@@ -70,6 +77,9 @@ describe("CFABasePCOFacet", async function () {
       expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
       expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(user, contributionRate);
+      await checkAppToBeneficiaryFlow(contributionRate);
+      await checkAppNetFlow();
     });
 
     it("should fail if not contract owner", async () => {
@@ -209,8 +219,15 @@ describe("CFABasePCOFacet", async function () {
 
   describe("editBid", async () => {
     it("should edit bid", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await Fixtures.initialized();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
       const existingContributionRate = await basePCOFacet.contributionRate();
@@ -248,6 +265,9 @@ describe("CFABasePCOFacet", async function () {
       );
       expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(user, newContributionRate);
+      await checkAppToBeneficiaryFlow(newContributionRate);
+      await checkAppNetFlow();
     });
 
     it("should fail if not payer", async () => {

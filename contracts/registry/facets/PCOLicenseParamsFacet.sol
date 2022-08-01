@@ -70,4 +70,17 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
 
         return ds.reclaimAuctionLength;
     }
+
+    /// @notice Bid period length in seconds
+    function getBidPeriodLengthInSeconds()
+        external
+        view
+        override
+        returns (uint256)
+    {
+        LibBasePCOLicenseParams.DiamondStorage
+            storage ds = LibBasePCOLicenseParams.diamondStorage();
+
+        return ds.bidPeriodLengthInSeconds;
+    }
 }

@@ -22,4 +22,7 @@ interface IPCOLicenseParamsStore {
 
     /// @notice when the required bid amount reaches its minimum value.
     function getReclaimAuctionLength() external view returns (uint256);
+
+    /// @notice Bid period length in seconds
+    function getBidPeriodLengthInSeconds() external view returns (uint256);
 }

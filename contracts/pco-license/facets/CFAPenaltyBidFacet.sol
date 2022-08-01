@@ -2,6 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "../libraries/LibCFABasePCO.sol";
+import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import "../libraries/LibCFAPenaltyBid.sol";
 import "../interfaces/ICFABiddable.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
@@ -10,8 +11,15 @@ import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/app
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 
 /// @notice Handles bidding using CFAs and penalities
-contract CFAPenaltyBidFacet is ICFABiddable {
+contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
+
+    /// @notice Emitted when a bid is accepted
+    event BidAccepted(
+        address indexed _payer,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
 
     /**
      * @notice Get pending bid
@@ -119,5 +127,43 @@ contract CFAPenaltyBidFacet is ICFABiddable {
         _pendingBid.forSalePrice = newForSalePrice;
 
         emit BidPlaced(msg.sender, newContributionRate, newForSalePrice);
+    }
+
+    /**
+     * @notice Accept a pending bid as the current payer
+     *      - Must be payer
+     *      - Pending bid must exist
+     *      - Must be within bidding period
+     */
+    function acceptBid() external onlyPayer {
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+
+        // Check if pending bid exists
+        require(
+            this.hasPendingBid() == true,
+            "CFAPenaltyBidFacet: Pending bid does not exist"
+        );
+
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+
+        uint256 bidPeriodLengthInSeconds = ds
+            .paramsStore
+            .getBidPeriodLengthInSeconds();
+        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
+        require(
+            elapsedTime < bidPeriodLengthInSeconds,
+            "CFAPenaltyBidFacet: Bid period has elapsed"
+        );
+
+        emit BidAccepted(
+            currentBid.bidder,
+            _pendingBid.bidder,
+            currentBid.forSalePrice
+        );
+
+        LibCFAPenaltyBid._triggerTransfer();
     }
 }

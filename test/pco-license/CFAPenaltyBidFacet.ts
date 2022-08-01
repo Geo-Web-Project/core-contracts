@@ -72,8 +72,11 @@ describe("CFAPenaltyBidFacet", async function () {
         ethersjsSf,
         paymentToken,
         ethx_erc20,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
       } = await BaseFixtures.initialized();
-      const { bidder } = await getNamedAccounts();
+      const { user, bidder } = await getNamedAccounts();
 
       const newContributionRate = BigNumber.from(200);
       const newForSalePrice = await rateToPurchasePrice(
@@ -121,6 +124,9 @@ describe("CFAPenaltyBidFacet", async function () {
       expect(pendingBid.bidder).to.equal(bidder);
       expect(pendingBid.contributionRate).to.equal(newContributionRate);
       expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
+      await checkUserToAppFlow(user, await basePCOFacet.contributionRate());
+      await checkAppToBeneficiaryFlow(await basePCOFacet.contributionRate());
+      await checkAppNetFlow();
     });
 
     it("should place bid with full control", async () => {
@@ -130,8 +136,11 @@ describe("CFAPenaltyBidFacet", async function () {
         ethersjsSf,
         paymentToken,
         ethx_erc20,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
       } = await BaseFixtures.initialized();
-      const { bidder } = await getNamedAccounts();
+      const { user, bidder } = await getNamedAccounts();
 
       const newContributionRate = BigNumber.from(200);
       const newForSalePrice = await rateToPurchasePrice(
@@ -177,6 +186,9 @@ describe("CFAPenaltyBidFacet", async function () {
       expect(pendingBid.bidder).to.equal(bidder);
       expect(pendingBid.contributionRate).to.equal(newContributionRate);
       expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
+      await checkUserToAppFlow(user, await basePCOFacet.contributionRate());
+      await checkAppToBeneficiaryFlow(await basePCOFacet.contributionRate());
+      await checkAppNetFlow();
     });
 
     it("should fail if for sale price is incorrect rounding", async () => {
@@ -368,6 +380,48 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn).to.be.revertedWith(
         "CFAPenaltyBidFacet: Pending bid already exists"
       );
+    });
+  });
+
+  describe("acceptBid", async () => {
+    it("should accept bid", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidAccepted")
+        .withArgs(user, bidder, forSalePrice);
+      // await expect(txn)
+      //   .to.emit(ethx_erc20, "Transfer")
+      //   .withArgs(bidder, basePCOFacet.address, totalCollateral);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
     });
   });
 });

@@ -8,8 +8,19 @@ import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/c
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 
+contract CFABasePCOFacetModifiers {
+    modifier onlyPayer() {
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        require(
+            msg.sender == currentBid.bidder,
+            "CFABasePCOFacet: Only payer is allowed to perform this action"
+        );
+        _;
+    }
+}
+
 /// @notice Handles basic PCO functionality using Constant Flow Agreement (CFA)
-contract CFABasePCOFacet is IBasePCO {
+contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
 
     /// @notice Emitted when an owner bid is updated
@@ -17,14 +28,6 @@ contract CFABasePCOFacet is IBasePCO {
         address indexed _payer,
         int96 contributionRate
     );
-
-    modifier onlyPayer() {
-        require(
-            msg.sender == payer(),
-            "CFABasePCOFacet: Only payer is allowed to perform this action"
-        );
-        _;
-    }
 
     /**
      * @notice Initialize bid.
