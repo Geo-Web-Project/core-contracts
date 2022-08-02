@@ -2,7 +2,7 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/Geo-Web-Project/core-contracts/badge.svg?branch=main)](https://coveralls.io/github/Geo-Web-Project/core-contracts?branch=main)
 
-Live at [http://cadastre.geoweb.eth.link/](http://cadastre.geoweb.eth.link/) or [ipns://cadastre.geoweb.eth](ipns://cadastre.geoweb.eth)
+Live at [http://geoweb.land/](http://geoweb.land/)
 
 ## Setup
 
