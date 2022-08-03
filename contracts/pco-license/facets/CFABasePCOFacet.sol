@@ -7,6 +7,7 @@ import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract CFABasePCOFacetModifiers {
     modifier onlyPayer() {
@@ -34,11 +35,17 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
      *      - Must be the contract owner
      *      - Must have payment token buffer deposited
      *      - Must have permissions to create flow for bidder
+     * @param paramsStore Global store for parameters
+     * @param license Underlying ERC721 license
+     * @param licenseId Token ID of license
+     * @param bidder Initial bidder
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
     function initializeBid(
         IPCOLicenseParamsStore paramsStore,
+        IERC721 license,
+        uint256 licenseId,
         address bidder,
         int96 newContributionRate,
         uint256 newForSalePrice
@@ -48,6 +55,8 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         ds.paramsStore = paramsStore;
+        ds.license = license;
+        ds.licenseId = licenseId;
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore
@@ -144,6 +153,24 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
             // Contribution rate was changed, used calculated for sale price
             return LibCFABasePCO.calculateForSalePrice(_contributionRate);
         }
+    }
+
+    /**
+     * @notice License Id
+     */
+    function licenseId() external view returns (uint256) {
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        return ds.licenseId;
+    }
+
+    /**
+     * @notice License
+     */
+    function license() external view returns (IERC721) {
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        return ds.license;
     }
 
     /**

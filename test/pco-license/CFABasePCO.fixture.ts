@@ -7,7 +7,7 @@ const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { smock } from "@defi-wonderland/smock";
 import { deployments, getUnnamedAccounts } from "hardhat";
-import { ISuperfluid } from "../../typechain-types/ISuperfluid";
+import { IERC721, ISuperfluid } from "../../typechain-types";
 import {
   perYearToPerSecondRate,
   errorHandler,
@@ -92,6 +92,8 @@ const setup = deployments.createFixture(
     mockParamsStore.getBeneficiary.returns(diamondAdmin);
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
 
+    let mockLicense = await smock.fake<IERC721>("IERC721");
+
     async function checkUserToAppFlow(
       _user: string,
       expectedAmount: BigNumber
@@ -136,6 +138,7 @@ const setup = deployments.createFixture(
     return {
       basePCOFacet,
       mockParamsStore,
+      mockLicense,
       paymentToken: ethx,
       ethx_erc20,
       ethersjsSf,
@@ -151,7 +154,13 @@ const setup = deployments.createFixture(
 const initialized = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
     const res = await setup();
-    const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
+    const {
+      basePCOFacet,
+      mockParamsStore,
+      mockLicense,
+      ethersjsSf,
+      paymentToken,
+    } = res;
 
     const { user } = await getNamedAccounts();
 
@@ -179,6 +188,8 @@ const initialized = deployments.createFixture(
 
     const txn = await basePCOFacet.initializeBid(
       mockParamsStore.address,
+      mockLicense.address,
+      1,
       user,
       contributionRate,
       forSalePrice

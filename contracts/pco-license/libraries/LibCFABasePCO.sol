@@ -3,6 +3,7 @@ pragma solidity ^0.8.14;
 
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 library LibCFABasePCO {
     bytes32 constant STORAGE_POSITION =
@@ -25,6 +26,8 @@ library LibCFABasePCO {
 
     struct DiamondStorage {
         IPCOLicenseParamsStore paramsStore;
+        IERC721 license;
+        uint256 licenseId;
     }
 
     struct DiamondCFAStorage {

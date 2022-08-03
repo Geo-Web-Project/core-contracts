@@ -78,7 +78,12 @@ library LibCFAPenaltyBid {
             _pendingBid.contributionRate
         );
 
-        // TODO: Transfer license
+        // Transfer license
+        ds.license.safeTransferFrom(
+            currentBid.bidder,
+            _pendingBid.bidder,
+            ds.licenseId
+        );
 
         // Update current bid
         currentBid.timestamp = _pendingBid.timestamp;

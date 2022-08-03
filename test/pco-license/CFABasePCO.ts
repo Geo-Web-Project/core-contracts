@@ -29,6 +29,7 @@ describe("CFABasePCOFacet", async function () {
       const {
         basePCOFacet,
         mockParamsStore,
+        mockLicense,
         ethersjsSf,
         paymentToken,
         checkUserToAppFlow,
@@ -61,6 +62,8 @@ describe("CFABasePCOFacet", async function () {
 
       const txn = await basePCOFacet.initializeBid(
         mockParamsStore.address,
+        mockLicense.address,
+        1,
         user,
         contributionRate,
         forSalePrice
@@ -73,6 +76,8 @@ describe("CFABasePCOFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, forSalePrice);
+      expect(await basePCOFacet.license()).to.equal(mockLicense.address);
+      expect(await basePCOFacet.licenseId()).to.equal(1);
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
       expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
@@ -83,8 +88,13 @@ describe("CFABasePCOFacet", async function () {
     });
 
     it("should fail if not contract owner", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await Fixtures.setup();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.setup();
       const { user } = await getNamedAccounts();
 
       const contributionRate = BigNumber.from(100);
@@ -113,6 +123,8 @@ describe("CFABasePCOFacet", async function () {
         .connect(await ethers.getSigner(user))
         .initializeBid(
           mockParamsStore.address,
+          mockLicense.address,
+          1,
           user,
           contributionRate,
           forSalePrice
@@ -123,8 +135,13 @@ describe("CFABasePCOFacet", async function () {
     });
 
     it("should fail if buffer is missing", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await Fixtures.setup();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.setup();
       const { user } = await getNamedAccounts();
 
       const contributionRate = BigNumber.from(100);
@@ -144,6 +161,8 @@ describe("CFABasePCOFacet", async function () {
 
       const txn = basePCOFacet.initializeBid(
         mockParamsStore.address,
+        mockLicense.address,
+        1,
         user,
         contributionRate,
         forSalePrice
@@ -152,7 +171,7 @@ describe("CFABasePCOFacet", async function () {
     });
 
     it("should fail if flow permissions are missing", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+      const { basePCOFacet, mockParamsStore, mockLicense, paymentToken } =
         await Fixtures.setup();
       const { user } = await getNamedAccounts();
 
@@ -171,6 +190,8 @@ describe("CFABasePCOFacet", async function () {
 
       const txn = basePCOFacet.initializeBid(
         mockParamsStore.address,
+        mockLicense.address,
+        1,
         user,
         contributionRate,
         forSalePrice
@@ -179,8 +200,13 @@ describe("CFABasePCOFacet", async function () {
     });
 
     it("should fail if for sale price is incorrect rounding", async () => {
-      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
-        await Fixtures.setup();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.setup();
       const { user } = await getNamedAccounts();
 
       const contributionRate = BigNumber.from(100);
@@ -207,6 +233,8 @@ describe("CFABasePCOFacet", async function () {
 
       const txn = basePCOFacet.initializeBid(
         mockParamsStore.address,
+        mockLicense.address,
+        1,
         user,
         contributionRate.add(10),
         forSalePrice

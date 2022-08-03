@@ -387,6 +387,7 @@ describe("CFAPenaltyBidFacet", async function () {
     it("should accept bid", async () => {
       const {
         basePCOFacet,
+        mockLicense,
         checkUserToAppFlow,
         checkAppNetFlow,
         checkAppToBeneficiaryFlow,
@@ -403,9 +404,13 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "BidAccepted")
         .withArgs(user, bidder, forSalePrice);
-      // await expect(txn)
-      //   .to.emit(ethx_erc20, "Transfer")
-      //   .withArgs(bidder, basePCOFacet.address, totalCollateral);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
 
       const pendingBid = await basePCOFacet.pendingBid();
       expect(pendingBid.contributionRate).to.equal(0);
