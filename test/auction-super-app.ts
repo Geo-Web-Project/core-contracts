@@ -2055,7 +2055,7 @@ describe("AuctionSuperApp", async function () {
         const txn = await claimCreate(user, existingLicenseId);
         await txn.wait();
 
-        const forSalePrice = await rateToPurchasePrice(BigNumber.from(100));
+        const forSalePrice = await rateToPurchasePrice(BigNumber.from(99));
 
         const approveOp = ethx.approve({
           receiver: superApp.address,
@@ -2077,7 +2077,7 @@ describe("AuctionSuperApp", async function () {
         const createFlowOp = await ethersjsSf.cfaV1.createFlow({
           sender: bidder.address,
           receiver: superApp.address,
-          flowRate: "100",
+          flowRate: "99",
           superToken: ethx.address,
           userData: userData,
         });
