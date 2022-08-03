@@ -999,7 +999,7 @@ contract AuctionSuperApp is
         _reclaim(_ctx, bidder, bidContributionRate, licenseId, forSalePrice);
     }
 
-    if (bidContributionRate > currentOwnerBid[licenseId].contributionRate) {
+    if (bidContributionRate >= currentOwnerBid[licenseId].contributionRate) {
       return
         _setOutstandingBid(
           _ctx,

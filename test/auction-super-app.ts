@@ -1685,6 +1685,61 @@ describe("AuctionSuperApp", async function () {
         await checkAppToBeneficiaryFlow("200");
       });
 
+      it("should place a bid on flow increase with same price", async () => {
+        let existingLicenseId = 1;
+        const newForSalePrice = await rateToPurchasePrice(BigNumber.from(100));
+
+        // User 1 claim
+        const txn = await claimCreate(user, existingLicenseId);
+        await txn.wait();
+
+        // User 2 claim
+        const approveOp = ethx.approve({
+          receiver: superApp.address,
+          amount: newForSalePrice.toString(),
+        });
+
+        const txn1 = await claimCreate(bidder, 2);
+        await txn1.wait();
+
+        const bidData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256"],
+          [existingLicenseId]
+        );
+        const actionData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "bytes"],
+          [newForSalePrice, bidData]
+        );
+        const userData = ethers.utils.defaultAbiCoder.encode(
+          ["uint8", "bytes"],
+          [Action.BID, actionData]
+        );
+        const updateFlowOp = await ethersjsSf.cfaV1.updateFlow({
+          sender: bidder.address,
+          receiver: superApp.address,
+          flowRate: "200",
+          superToken: ethx.address,
+          userData: userData,
+        });
+
+        const batchCall = ethersjsSf.batchCall([approveOp, updateFlowOp]);
+        const txn2 = await batchCall.exec(bidder);
+        const receipt = await txn2.wait();
+
+        await expect(txn2)
+          .to.emit(ethx_erc20, "Transfer")
+          .withArgs(bidder.address, superApp.address, newForSalePrice);
+        await expect(txn2)
+          .to.emit(superApp, "BidPlaced")
+          .withArgs(existingLicenseId, user.address, bidder.address);
+        await checkJailed(receipt);
+        await checkAppNetFlow();
+        await checkUserToAppFlow("200", bidder);
+        await checkAppToUserFlow("100", bidder);
+        await checkUserToAppFlow("100", user);
+        await checkAppToBeneficiaryFlow("200");
+      });
+
       it("should place bid on flow increase with rounded for sale price", async () => {
         let existingLicenseId = 1;
 
