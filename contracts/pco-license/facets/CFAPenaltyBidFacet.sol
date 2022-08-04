@@ -21,6 +21,13 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         uint256 forSalePrice
     );
 
+    /// @notice Emitted when a bid is rejected
+    event BidRejected(
+        address indexed _payer,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
+
     /// @notice Emitted when a transfer is triggered
     event TransferTriggered(
         address indexed _sender,
@@ -101,6 +108,13 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             .pendingBid();
 
         return _pendingBid.contributionRate > 0;
+    }
+
+    /**
+     * @notice Get penalty payment
+     */
+    function calculatePenalty() external view returns (uint256) {
+        return LibCFAPenaltyBid._calculatePenalty();
     }
 
     /**
@@ -247,12 +261,22 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
 
         LibCFAPenaltyBid._collectPenalty();
+
+        emit BidRejected(
+            currentBid.bidder,
+            _pendingBid.bidder,
+            currentBid.forSalePrice
+        );
+
         LibCFABasePCO._editBid(
             _pendingBid.contributionRate,
             _pendingBid.forSalePrice
         );
+
+        LibCFAPenaltyBid._clearPendingBid();
     }
 
     /**

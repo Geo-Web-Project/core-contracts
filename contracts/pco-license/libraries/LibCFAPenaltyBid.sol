@@ -66,6 +66,11 @@ library LibCFAPenaltyBid {
         return value;
     }
 
+    function _clearPendingBid() internal {
+        Bid storage _pendingBid = pendingBid();
+        _pendingBid.contributionRate = 0;
+    }
+
     /// @notice Trigger transfer of license
     function _triggerTransfer() internal {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
@@ -111,7 +116,7 @@ library LibCFAPenaltyBid {
         currentBid.forSalePrice = _pendingBid.forSalePrice;
 
         // Update pending bid
-        _pendingBid.contributionRate = 0;
+        _clearPendingBid();
     }
 
     /// @notice Collect penalty payment

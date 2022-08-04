@@ -87,6 +87,8 @@ const setup = deployments.createFixture(
     let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
     mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
     mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
+    mockParamsStore.getPenaltyNumerator.returns(numerator);
+    mockParamsStore.getPenaltyDenominator.returns(denominator);
     mockParamsStore.getHost.returns(sf.host.address);
     mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
     mockParamsStore.getBeneficiary.returns(diamondAdmin);

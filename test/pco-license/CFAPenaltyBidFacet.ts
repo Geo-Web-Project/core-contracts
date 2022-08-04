@@ -211,6 +211,24 @@ describe("CFAPenaltyBidFacet", async function () {
         "CFAPenaltyBidFacet: Pending bid exists"
       );
     });
+
+    it("should fail if missing flow permissions", async () => {
+      const { basePCOFacet, mockParamsStore } =
+        await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .editBid(newContributionRate, newForSalePrice);
+
+      await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
+    });
   });
 
   describe("placeBid", async () => {
@@ -621,6 +639,198 @@ describe("CFAPenaltyBidFacet", async function () {
 
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Only payer is allowed to perform this action"
+      );
+    });
+  });
+
+  describe("rejectBid", async () => {
+    it("should reject bid during period", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { bidder, user, diamondAdmin } = await getNamedAccounts();
+
+      const penaltyPayment = await basePCOFacet.calculatePenalty();
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid();
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidRejected")
+        .withArgs(user, bidder, forSalePrice);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, diamondAdmin, penaltyPayment);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(bidder, BigNumber.from(0));
+      await checkUserToAppFlow(user, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should fail if not payer", async () => {
+      const { basePCOFacet, paymentToken, ethersjsSf } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const penaltyPayment = await basePCOFacet.calculatePenalty();
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .rejectBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
+      );
+    });
+
+    it("should fail if no pending bid", async () => {
+      const { basePCOFacet, paymentToken, ethersjsSf } =
+        await CFAPenaltyBidFixtures.afterAcceptBid();
+
+      const { user } = await getNamedAccounts();
+
+      const penaltyPayment = await basePCOFacet.calculatePenalty();
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      const oldPendingBid = await basePCOFacet.pendingBid();
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
+      );
+    });
+
+    it("should fail if missing flow permissions", async () => {
+      const { basePCOFacet, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user } = await getNamedAccounts();
+
+      const penaltyPayment = await basePCOFacet.calculatePenalty();
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid();
+
+      await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
+    });
+
+    it("should fail if penalty payment fails", async () => {
+      const { basePCOFacet, paymentToken, ethersjsSf } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid();
+
+      await expect(txn).to.be.revertedWith(
+        "SuperToken: transfer amount exceeds allowance"
       );
     });
   });
