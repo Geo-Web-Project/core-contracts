@@ -21,6 +21,14 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         uint256 forSalePrice
     );
 
+    /// @notice Emitted when a transfer is triggered
+    event TransferTriggered(
+        address indexed _sender,
+        address indexed _payer,
+        address indexed _bidder,
+        uint256 forSalePrice
+    );
+
     /**
      * @notice Get pending bid
      */
@@ -159,6 +167,44 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         );
 
         emit BidAccepted(
+            currentBid.bidder,
+            _pendingBid.bidder,
+            currentBid.forSalePrice
+        );
+
+        LibCFAPenaltyBid._triggerTransfer();
+    }
+
+    /**
+     * @notice Trigger a transfer after bidding period has elapsed
+     *      - Pending bid must exist
+     *      - Must be after bidding period
+     */
+    function triggerTransfer() external {
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+
+        // Check if pending bid exists
+        require(
+            this.hasPendingBid() == true,
+            "CFAPenaltyBidFacet: Pending bid does not exist"
+        );
+
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+
+        uint256 bidPeriodLengthInSeconds = ds
+            .paramsStore
+            .getBidPeriodLengthInSeconds();
+        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
+        require(
+            elapsedTime >= bidPeriodLengthInSeconds,
+            "CFAPenaltyBidFacet: Bid period has not elapsed"
+        );
+
+        emit TransferTriggered(
+            msg.sender,
             currentBid.bidder,
             _pendingBid.bidder,
             currentBid.forSalePrice

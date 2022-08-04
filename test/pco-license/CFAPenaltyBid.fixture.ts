@@ -46,4 +46,19 @@ const afterPlaceBid = deployments.createFixture(
   }
 );
 
-export default { afterPlaceBid };
+const afterAcceptBid = deployments.createFixture(
+  async ({ deployments, getNamedAccounts, ethers }, options) => {
+    const res = await afterPlaceBid();
+    const { basePCOFacet } = res;
+    const { user } = await getNamedAccounts();
+
+    const txn = await basePCOFacet
+      .connect(await ethers.getSigner(user))
+      .acceptBid();
+    await txn.wait();
+
+    return res;
+  }
+);
+
+export default { afterPlaceBid, afterAcceptBid };
