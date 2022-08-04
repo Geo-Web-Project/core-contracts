@@ -75,19 +75,6 @@ library LibCFABasePCO {
         }
     }
 
-    /// @notice Calculate for sale price from contribution rate
-    function calculateForSalePrice(int96 contributionRate)
-        internal
-        view
-        returns (uint256)
-    {
-        Bid storage _currentBid = currentBid();
-
-        return
-            (uint96(contributionRate) * _currentBid.perSecondFeeDenominator) /
-            _currentBid.perSecondFeeNumerator;
-    }
-
     function _checkForSalePrice(
         uint256 forSalePrice,
         int96 contributionRate,

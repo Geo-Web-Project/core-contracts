@@ -130,10 +130,11 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
+        // Get flow rate (app -> beneficiary)
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             ds.paramsStore.getPaymentToken(),
-            payer(),
-            address(this)
+            address(this),
+            ds.paramsStore.getBeneficiary()
         );
 
         return flowRate;
@@ -143,15 +144,11 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
      * @notice Current price needed to purchase license
      */
     function forSalePrice() external view returns (uint256) {
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
-        int96 _contributionRate = contributionRate();
-
-        if (_contributionRate == currentBid.contributionRate) {
-            // Contribution rate has not been changed, use rounded forSalePrice
+        if (this.isPayerBidActive()) {
+            LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
             return currentBid.forSalePrice;
         } else {
-            // Contribution rate was changed, used calculated for sale price
-            return LibCFABasePCO.calculateForSalePrice(_contributionRate);
+            return 0;
         }
     }
 

@@ -12,14 +12,12 @@ interface ICFABiddable {
     );
 
     /**
-     * @notice Get pending bid
+     * @notice Edit bid
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function pendingBid() external view returns (LibCFAPenaltyBid.Bid memory);
-
-    /**
-     * @notice Checks if there is a pending bid
-     */
-    function hasPendingBid() external view returns (bool);
+    function editBid(int96 newContributionRate, uint256 newForSalePrice)
+        external;
 
     /**
      * @notice Place a bid to purchase license as msg.sender

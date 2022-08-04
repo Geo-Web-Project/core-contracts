@@ -1,10 +1,9 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ethers } from "hardhat";
+import { ethers, network, getNamedAccounts } from "hardhat";
 import { BigNumber } from "ethers";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
-import { getNamedAccounts } from "hardhat";
 import { rateToPurchasePrice } from "../shared";
 import Fixtures from "./CFABasePCO.fixture";
 
@@ -235,6 +234,122 @@ describe("CFABasePCOFacet", async function () {
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Incorrect for sale price"
       );
+    });
+  });
+
+  describe("payer decreases flow", async () => {
+    it("should not update forSalePrice or contributionRate", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = await basePCOFacet.contributionRate();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+
+      const op = await ethersjsSf.cfaV1.updateFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        flowRate: contributionRate.sub(10).toString(),
+        superToken: ethx_erc20.address,
+      });
+
+      await op.exec(await ethers.getSigner(user));
+
+      await expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
+      await expect(await basePCOFacet.contributionRate()).to.equal(
+        contributionRate
+      );
+    });
+
+    it("should deplete buffer", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await Fixtures.initialized();
+      const { user, diamondAdmin } = await getNamedAccounts();
+
+      const contributionRate = await basePCOFacet.contributionRate();
+
+      const op = await ethersjsSf.cfaV1.updateFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        flowRate: contributionRate.sub(99).toString(),
+        superToken: ethx_erc20.address,
+      });
+
+      await op.exec(await ethers.getSigner(user));
+
+      const accountInfo = await ethersjsSf.cfaV1.getAccountFlowInfo({
+        account: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+        providerOrSigner: await ethers.getSigner(diamondAdmin),
+      });
+      expect(Number(accountInfo.flowRate)).to.be.lessThan(0);
+
+      // Close flow
+      const op1 = await ethersjsSf.cfaV1.deleteFlow({
+        sender: basePCOFacet.address,
+        receiver: diamondAdmin,
+        superToken: ethx_erc20.address,
+      });
+
+      await op1.exec(await ethers.getSigner(diamondAdmin));
+
+      expect(await basePCOFacet.contributionRate()).to.equal(0);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(false);
+      expect(await basePCOFacet.forSalePrice()).to.equal(0);
+    });
+  });
+
+  describe("payer increases flow", async () => {
+    it("should not update forSalePrice or contributionRate", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = await basePCOFacet.contributionRate();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+
+      const op = await ethersjsSf.cfaV1.updateFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        flowRate: contributionRate.add(10).toString(),
+        superToken: ethx_erc20.address,
+      });
+
+      await op.exec(await ethers.getSigner(user));
+
+      await expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
+      await expect(await basePCOFacet.contributionRate()).to.equal(
+        contributionRate
+      );
+    });
+
+    it("should accumulate buffer", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await Fixtures.initialized();
+      const { user, diamondAdmin } = await getNamedAccounts();
+
+      const contributionRate = await basePCOFacet.contributionRate();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+
+      const op = await ethersjsSf.cfaV1.updateFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        flowRate: contributionRate.add(100).toString(),
+        superToken: ethx_erc20.address,
+      });
+
+      await op.exec(await ethers.getSigner(user));
+
+      const accountInfo = await ethersjsSf.cfaV1.getAccountFlowInfo({
+        account: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+        providerOrSigner: await ethers.getSigner(diamondAdmin),
+      });
+      expect(Number(accountInfo.flowRate)).to.be.greaterThan(0);
+
+      expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
     });
   });
 });
