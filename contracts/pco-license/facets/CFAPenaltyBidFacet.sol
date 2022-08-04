@@ -29,6 +29,61 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         uint256 forSalePrice
     );
 
+    modifier onlyIfPendingBid() {
+        // Check if pending bid exists
+        require(
+            this.hasPendingBid() == true,
+            "CFAPenaltyBidFacet: Pending bid does not exist"
+        );
+        _;
+    }
+
+    modifier onlyIfNotPendingBid() {
+        // Check if pending bid exists
+        require(
+            this.hasPendingBid() == false,
+            "CFAPenaltyBidFacet: Pending bid exists"
+        );
+        _;
+    }
+
+    modifier onlyAfterBidPeriod() {
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
+
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+
+        uint256 bidPeriodLengthInSeconds = ds
+            .paramsStore
+            .getBidPeriodLengthInSeconds();
+        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
+        require(
+            elapsedTime >= bidPeriodLengthInSeconds,
+            "CFAPenaltyBidFacet: Bid period has not elapsed"
+        );
+        _;
+    }
+
+    modifier onlyDuringBidPeriod() {
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+
+        uint256 bidPeriodLengthInSeconds = ds
+            .paramsStore
+            .getBidPeriodLengthInSeconds();
+        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
+        require(
+            elapsedTime < bidPeriodLengthInSeconds,
+            "CFAPenaltyBidFacet: Bid period has elapsed"
+        );
+        _;
+    }
+
     /**
      * @notice Get pending bid
      */
@@ -46,6 +101,21 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             .pendingBid();
 
         return _pendingBid.contributionRate > 0;
+    }
+
+    /**
+     * @notice Edit bid
+     *      - Must be the current payer
+     *      - Must have permissions to update flow for payer
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     */
+    function editBid(int96 newContributionRate, uint256 newForSalePrice)
+        external
+        onlyPayer
+        onlyIfNotPendingBid
+    {
+        LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
     }
 
     /**
@@ -143,28 +213,15 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
      *      - Pending bid must exist
      *      - Must be within bidding period
      */
-    function acceptBid() external onlyPayer {
+    function acceptBid()
+        external
+        onlyPayer
+        onlyIfPendingBid
+        onlyDuringBidPeriod
+    {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
         LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
-
-        // Check if pending bid exists
-        require(
-            this.hasPendingBid() == true,
-            "CFAPenaltyBidFacet: Pending bid does not exist"
-        );
-
-        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
-            .diamondStorage();
-
-        uint256 bidPeriodLengthInSeconds = ds
-            .paramsStore
-            .getBidPeriodLengthInSeconds();
-        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
-        require(
-            elapsedTime < bidPeriodLengthInSeconds,
-            "CFAPenaltyBidFacet: Bid period has elapsed"
-        );
 
         emit BidAccepted(
             currentBid.bidder,
@@ -176,32 +233,37 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     }
 
     /**
+     * @notice Reject a pending bid as the current payer
+     *      - Must be payer
+     *      - Pending bid must exist
+     *      - Must be within bidding period
+     *      - Must approve penalty amount
+     */
+    function rejectBid()
+        external
+        onlyPayer
+        onlyIfPendingBid
+        onlyDuringBidPeriod
+    {
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
+
+        LibCFAPenaltyBid._collectPenalty();
+        LibCFABasePCO._editBid(
+            _pendingBid.contributionRate,
+            _pendingBid.forSalePrice
+        );
+    }
+
+    /**
      * @notice Trigger a transfer after bidding period has elapsed
      *      - Pending bid must exist
      *      - Must be after bidding period
      */
-    function triggerTransfer() external {
+    function triggerTransfer() external onlyIfPendingBid onlyAfterBidPeriod {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
         LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
-
-        // Check if pending bid exists
-        require(
-            this.hasPendingBid() == true,
-            "CFAPenaltyBidFacet: Pending bid does not exist"
-        );
-
-        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
-            .diamondStorage();
-
-        uint256 bidPeriodLengthInSeconds = ds
-            .paramsStore
-            .getBidPeriodLengthInSeconds();
-        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
-        require(
-            elapsedTime >= bidPeriodLengthInSeconds,
-            "CFAPenaltyBidFacet: Bid period has not elapsed"
-        );
 
         emit TransferTriggered(
             msg.sender,

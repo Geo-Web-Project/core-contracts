@@ -51,6 +51,22 @@ library LibCFAPenaltyBid {
         }
     }
 
+    /// @notice Calculate the penalty needed for the pending bid to be rejected
+    function _calculatePenalty() internal view returns (uint256) {
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        Bid storage _pendingBid = pendingBid();
+
+        uint256 penaltyNumerator = ds.paramsStore.getPenaltyNumerator();
+        uint256 penaltyDenominator = ds.paramsStore.getPenaltyDenominator();
+
+        uint256 value = (_pendingBid.forSalePrice * penaltyNumerator) /
+            penaltyDenominator;
+
+        return value;
+    }
+
+    /// @notice Trigger transfer of license
     function _triggerTransfer() internal {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
@@ -96,5 +112,24 @@ library LibCFAPenaltyBid {
 
         // Update pending bid
         _pendingBid.contributionRate = 0;
+    }
+
+    /// @notice Collect penalty payment
+    function _collectPenalty() internal {
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        address beneficiary = ds.paramsStore.getBeneficiary();
+
+        uint256 penaltyAmount = _calculatePenalty();
+
+        bool success = paymentToken.transferFrom(
+            currentBid.bidder,
+            beneficiary,
+            penaltyAmount
+        );
+        require(success, "LibCFAPenaltyBid: Penalty payment failed");
     }
 }

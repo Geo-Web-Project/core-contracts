@@ -6,6 +6,8 @@ import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/app
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 library LibCFABasePCO {
+    using CFAv1Library for CFAv1Library.InitData;
+
     bytes32 constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibBasePCO");
 
@@ -33,6 +35,18 @@ library LibCFABasePCO {
     struct DiamondCFAStorage {
         CFAv1Library.InitData cfaV1;
     }
+
+    /// @notice Emitted when an owner bid is updated
+    event PayerContributionRateUpdated(
+        address indexed _payer,
+        int96 contributionRate
+    );
+
+    /// @notice Emitted when for sale price is updated
+    event PayerForSalePriceUpdated(
+        address indexed _payer,
+        uint256 forSalePrice
+    );
 
     function diamondStorage()
         internal
@@ -84,5 +98,56 @@ library LibCFABasePCO {
             _perSecondFeeNumerator) / _perSecondFeeDenominator;
 
         return calculatedContributionRate == uint96(contributionRate);
+    }
+
+    function _editBid(int96 newContributionRate, uint256 newForSalePrice)
+        internal
+    {
+        DiamondStorage storage ds = diamondStorage();
+        DiamondCFAStorage storage cs = cfaStorage();
+        Bid storage _currentBid = currentBid();
+
+        uint256 perSecondFeeNumerator = ds
+            .paramsStore
+            .getPerSecondFeeNumerator();
+        uint256 perSecondFeeDenominator = ds
+            .paramsStore
+            .getPerSecondFeeDenominator();
+        require(
+            _checkForSalePrice(
+                newForSalePrice,
+                newContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "LibCFABasePCO: Incorrect for sale price"
+        );
+
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        address beneficiary = ds.paramsStore.getBeneficiary();
+
+        // Update flow (payer -> license)
+        cs.cfaV1.updateFlowByOperator(
+            _currentBid.bidder,
+            address(this),
+            paymentToken,
+            newContributionRate
+        );
+
+        // Update flow (license -> beneficiary)
+        cs.cfaV1.updateFlow(beneficiary, paymentToken, newContributionRate);
+
+        _currentBid.timestamp = block.timestamp;
+        _currentBid.bidder = _currentBid.bidder;
+        _currentBid.contributionRate = newContributionRate;
+        _currentBid.perSecondFeeNumerator = perSecondFeeNumerator;
+        _currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
+        _currentBid.forSalePrice = newForSalePrice;
+
+        emit PayerForSalePriceUpdated(_currentBid.bidder, newForSalePrice);
+        emit PayerContributionRateUpdated(
+            _currentBid.bidder,
+            newContributionRate
+        );
     }
 }

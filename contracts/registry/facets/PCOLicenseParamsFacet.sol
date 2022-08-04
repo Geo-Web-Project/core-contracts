@@ -58,6 +58,22 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         return ds.perSecondFeeDenominator;
     }
 
+    /// @notice The numerator of the penalty rate.
+    function getPenaltyNumerator() external view returns (uint256) {
+        LibBasePCOLicenseParams.DiamondStorage
+            storage ds = LibBasePCOLicenseParams.diamondStorage();
+
+        return ds.penaltyNumerator;
+    }
+
+    /// @notice The denominator of the penalty rate.
+    function getPenaltyDenominator() external view returns (uint256) {
+        LibBasePCOLicenseParams.DiamondStorage
+            storage ds = LibBasePCOLicenseParams.diamondStorage();
+
+        return ds.penaltyDenominator;
+    }
+
     /// @notice the final/minimum required bid reached and maintained at the end of the auction.
     function getReclaimAuctionLength()
         external

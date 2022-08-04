@@ -20,6 +20,12 @@ interface IPCOLicenseParamsStore {
     /// @notice The denominator of the network-wide per second contribution fee.
     function getPerSecondFeeDenominator() external view returns (uint256);
 
+    /// @notice The numerator of the penalty rate.
+    function getPenaltyNumerator() external view returns (uint256);
+
+    /// @notice The denominator of the penalty rate.
+    function getPenaltyDenominator() external view returns (uint256);
+
     /// @notice when the required bid amount reaches its minimum value.
     function getReclaimAuctionLength() external view returns (uint256);
 
