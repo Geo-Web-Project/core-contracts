@@ -1,6 +1,6 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ethers, getUnnamedAccounts } from "hardhat";
+import { ethers, getUnnamedAccounts, network } from "hardhat";
 import { BigNumber } from "ethers";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
@@ -8,6 +8,7 @@ import { getNamedAccounts } from "hardhat";
 import { rateToPurchasePrice } from "../shared";
 import BaseFixtures from "./CFABasePCO.fixture";
 import CFAPenaltyBidFixtures from "./CFAPenaltyBid.fixture";
+import CFABasePCOFixture from "./CFABasePCO.fixture";
 
 use(solidity);
 use(chaiAsPromised);
@@ -427,6 +428,49 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
       await checkAppNetFlow();
+    });
+
+    it("should fail if pending bid does not exist", async () => {
+      const { basePCOFacet } = await CFABasePCOFixture.initialized();
+      const { user } = await getNamedAccounts();
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Pending bid does not exist"
+      );
+    });
+
+    it("should fail if bidding period has elapsed", async () => {
+      const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
+      const { user } = await getNamedAccounts();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
+
+    it("should fail if not payer", async () => {
+      const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
+      const { bidder } = await getNamedAccounts();
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .acceptBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
+      );
     });
   });
 });
