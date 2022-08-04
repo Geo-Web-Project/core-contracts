@@ -87,6 +87,24 @@ library LibCFABasePCO {
         return calculatedContributionRate == uint96(contributionRate);
     }
 
+    function _contributionRate() internal view returns (int96) {
+        DiamondStorage storage ds = diamondStorage();
+        DiamondCFAStorage storage cs = cfaStorage();
+
+        // Get flow rate (app -> beneficiary)
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            ds.paramsStore.getPaymentToken(),
+            address(this),
+            ds.paramsStore.getBeneficiary()
+        );
+
+        return flowRate;
+    }
+
+    function _isPayerBidActive() internal view returns (bool) {
+        return _contributionRate() > 0;
+    }
+
     function _editBid(int96 newContributionRate, uint256 newForSalePrice)
         internal
     {

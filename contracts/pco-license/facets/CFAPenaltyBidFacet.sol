@@ -61,14 +61,17 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
 
-        uint256 bidPeriodLengthInSeconds = ds
-            .paramsStore
-            .getBidPeriodLengthInSeconds();
-        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
-        require(
-            elapsedTime >= bidPeriodLengthInSeconds,
-            "CFAPenaltyBidFacet: Bid period has not elapsed"
-        );
+        // Succeed if payer bid is not active
+        if (LibCFABasePCO._isPayerBidActive() == true) {
+            uint256 bidPeriodLengthInSeconds = ds
+                .paramsStore
+                .getBidPeriodLengthInSeconds();
+            uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
+            require(
+                elapsedTime >= bidPeriodLengthInSeconds,
+                "CFAPenaltyBidFacet: Bid period has not elapsed"
+            );
+        }
         _;
     }
 

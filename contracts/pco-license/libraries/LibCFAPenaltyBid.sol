@@ -93,11 +93,24 @@ library LibCFAPenaltyBid {
 
         // Update beneficiary flow
         address beneficiary = ds.paramsStore.getBeneficiary();
-        cs.cfaV1.updateFlow(
-            beneficiary,
-            paymentToken,
-            _pendingBid.contributionRate
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            ds.paramsStore.getPaymentToken(),
+            address(this),
+            beneficiary
         );
+        if (flowRate > 0) {
+            cs.cfaV1.updateFlow(
+                beneficiary,
+                paymentToken,
+                _pendingBid.contributionRate
+            );
+        } else {
+            cs.cfaV1.createFlow(
+                beneficiary,
+                paymentToken,
+                _pendingBid.contributionRate
+            );
+        }
 
         // Transfer license
         ds.license.safeTransferFrom(
