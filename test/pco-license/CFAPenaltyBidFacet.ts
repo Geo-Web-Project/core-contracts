@@ -833,6 +833,48 @@ describe("CFAPenaltyBidFacet", async function () {
         "SuperToken: transfer amount exceeds allowance"
       );
     });
+
+    it("should fail if bid period has elapsed", async () => {
+      const { basePCOFacet, paymentToken, ethersjsSf } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const penaltyPayment = await basePCOFacet.calculatePenalty();
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
   });
 
   describe("triggerTransfer", async () => {
