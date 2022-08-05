@@ -61,4 +61,27 @@ const afterAcceptBid = deployments.createFixture(
   }
 );
 
-export default { afterPlaceBid, afterAcceptBid };
+const afterPlaceBidAndSurplus = deployments.createFixture(
+  async ({ deployments, getNamedAccounts, ethers }, options) => {
+    const res = await afterPlaceBid();
+    const { basePCOFacet, ethersjsSf, ethx_erc20 } = res;
+    const { user } = await getNamedAccounts();
+
+    const existingContributionRate = await basePCOFacet.contributionRate();
+
+    // User increases flow
+    const op1 = await ethersjsSf.cfaV1.updateFlow({
+      receiver: basePCOFacet.address,
+      flowRate: existingContributionRate.add(100),
+      superToken: ethx_erc20.address,
+    });
+
+    const op1Resp = await op1.exec(await ethers.getSigner(user));
+    const op1Receipt = await op1Resp.wait();
+    const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
+
+    return { ...res, surplusBlock: op1Block };
+  }
+);
+
+export default { afterPlaceBid, afterAcceptBid, afterPlaceBidAndSurplus };
