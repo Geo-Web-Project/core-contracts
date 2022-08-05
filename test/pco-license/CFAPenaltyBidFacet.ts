@@ -1203,6 +1203,45 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkAppNetFlow();
     });
 
+    it("should fail to trigger transfer early if payer deletes and reopens bid", async () => {
+      const { basePCOFacet, mockLicense, ethersjsSf, ethx_erc20 } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldContributionRate = await basePCOFacet.contributionRate();
+
+      // Payer deletes flow
+      const op1 = await ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      // Payer re-opens flow
+      const op2 = await ethersjsSf.cfaV1.createFlow({
+        receiver: basePCOFacet.address,
+        flowRate: oldContributionRate,
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(user));
+      await op2Resp.wait();
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has not elapsed"
+      );
+    });
+
     it("should fail if pending bid does not exist", async () => {
       const { basePCOFacet } = await CFAPenaltyBidFixtures.afterAcceptBid();
       const { bidder } = await getNamedAccounts();
