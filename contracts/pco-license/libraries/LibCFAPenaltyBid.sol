@@ -4,14 +4,13 @@ pragma solidity ^0.8.14;
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "./LibCFABasePCO.sol";
-import "hardhat/console.sol";
 
 library LibCFAPenaltyBid {
     using CFAv1Library for CFAv1Library.InitData;
 
     bytes32 constant STORAGE_POSITION_OUT_BID =
         keccak256(
-            "diamond.standard.diamond.storage.LibCFAPenaltyBid.outstandingBid"
+            "diamond.standard.diamond.storage.LibCFAPenaltyBid.pendingBid"
         );
 
     struct Bid {
