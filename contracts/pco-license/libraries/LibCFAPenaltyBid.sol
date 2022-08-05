@@ -4,6 +4,7 @@ pragma solidity ^0.8.14;
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "./LibCFABasePCO.sol";
+import "hardhat/console.sol";
 
 library LibCFAPenaltyBid {
     using CFAv1Library for CFAv1Library.InitData;
@@ -81,7 +82,14 @@ library LibCFAPenaltyBid {
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
 
         // Delete payer flow
-        cs.cfaV1.deleteFlow(currentBid.bidder, address(this), paymentToken);
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            paymentToken,
+            currentBid.bidder,
+            address(this)
+        );
+        if (flowRate > 0) {
+            cs.cfaV1.deleteFlow(currentBid.bidder, address(this), paymentToken);
+        }
 
         // Create bidder flow
         cs.cfaV1.createFlowByOperator(
@@ -93,8 +101,8 @@ library LibCFAPenaltyBid {
 
         // Update beneficiary flow
         address beneficiary = ds.paramsStore.getBeneficiary();
-        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
-            ds.paramsStore.getPaymentToken(),
+        (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            paymentToken,
             address(this),
             beneficiary
         );
