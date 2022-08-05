@@ -127,14 +127,17 @@ const setup = deployments.createFixture(
       );
     }
 
-    async function checkAppNetFlow() {
+    async function checkAppNetFlow(check?: BigNumberish) {
       const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
         superToken: ethx.address,
         account: basePCOFacet.address,
         providerOrSigner: admin,
       });
 
-      expect(appNetFlow).to.equal("0", "App net flow is incorrect");
+      expect(appNetFlow).to.equal(
+        check?.toString() ?? "0",
+        "App net flow is incorrect"
+      );
     }
 
     async function checkAppBalance(check: BigNumberish) {

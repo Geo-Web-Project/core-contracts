@@ -84,4 +84,26 @@ const afterPlaceBidAndSurplus = deployments.createFixture(
   }
 );
 
-export default { afterPlaceBid, afterAcceptBid, afterPlaceBidAndSurplus };
+const afterPlaceBidAndBidderRevokes = deployments.createFixture(
+  async ({ deployments, getNamedAccounts, ethers }, options) => {
+    const res = await afterPlaceBid();
+    const { basePCOFacet, ethersjsSf, paymentToken } = res;
+    const { bidder } = await getNamedAccounts();
+
+    // Revoke permissions
+    const op = await ethersjsSf.cfaV1.revokeFlowOperatorWithFullControl({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+    });
+    await op.exec(await ethers.getSigner(bidder));
+
+    return res;
+  }
+);
+
+export default {
+  afterPlaceBid,
+  afterAcceptBid,
+  afterPlaceBidAndSurplus,
+  afterPlaceBidAndBidderRevokes,
+};

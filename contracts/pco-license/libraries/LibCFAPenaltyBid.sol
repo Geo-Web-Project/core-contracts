@@ -92,12 +92,22 @@ library LibCFAPenaltyBid {
         }
 
         // Create bidder flow
-        cs.cfaV1.createFlowByOperator(
-            _pendingBid.bidder,
-            address(this),
-            paymentToken,
-            _pendingBid.contributionRate
-        );
+        try
+            cs.cfaV1.host.callAgreement(
+                cs.cfaV1.cfa,
+                abi.encodeCall(
+                    cs.cfaV1.cfa.createFlowByOperator,
+                    (
+                        paymentToken,
+                        _pendingBid.bidder,
+                        address(this),
+                        _pendingBid.contributionRate,
+                        new bytes(0)
+                    )
+                ),
+                new bytes(0)
+            )
+        {} catch {}
 
         // Update beneficiary flow
         address beneficiary = ds.paramsStore.getBeneficiary();
