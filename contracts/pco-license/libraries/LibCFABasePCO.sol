@@ -131,16 +131,42 @@ library LibCFABasePCO {
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
-        // Update flow (payer -> license)
-        cs.cfaV1.updateFlowByOperator(
-            _currentBid.bidder,
-            address(this),
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
-            newContributionRate
+            _currentBid.bidder,
+            address(this)
+        );
+        if (flowRate > 0) {
+            // Update flow (payer -> license)
+            cs.cfaV1.updateFlowByOperator(
+                _currentBid.bidder,
+                address(this),
+                paymentToken,
+                newContributionRate
+            );
+        } else {
+            // Recreate flow (payer -> license)
+            cs.cfaV1.createFlowByOperator(
+                _currentBid.bidder,
+                address(this),
+                paymentToken,
+                newContributionRate
+            );
+        }
+
+        (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            paymentToken,
+            address(this),
+            beneficiary
         );
 
-        // Update flow (license -> beneficiary)
-        cs.cfaV1.updateFlow(beneficiary, paymentToken, newContributionRate);
+        if (flowRate > 0) {
+            // Update flow (license -> beneficiary)
+            cs.cfaV1.updateFlow(beneficiary, paymentToken, newContributionRate);
+        } else {
+            // Recreate flow (license -> beneficiary)
+            cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
+        }
 
         _currentBid.timestamp = block.timestamp;
         _currentBid.bidder = _currentBid.bidder;

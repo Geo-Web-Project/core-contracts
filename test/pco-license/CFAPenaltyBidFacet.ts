@@ -118,6 +118,68 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkAppNetFlow();
     });
 
+    it("should edit bid after payer delete", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await BaseFixtures.afterPayerDelete();
+      const { user } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Transfer payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const op1 = await paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow create
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .editBid(newContributionRate, newForSalePrice);
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, newContributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, newForSalePrice);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        newContributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(user, newContributionRate);
+      await checkAppToBeneficiaryFlow(newContributionRate);
+      await checkAppNetFlow();
+    });
+
     it("should fail if not payer", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
@@ -546,6 +608,49 @@ describe("CFAPenaltyBidFacet", async function () {
         .placeBid(newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
         "CFAPenaltyBidFacet: Pending bid already exists"
+      );
+    });
+
+    it("should fail if payer bid is inactive", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.afterPayerDelete();
+      const accounts = await getUnnamedAccounts();
+
+      const newContributionRate = BigNumber.from(200);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(accounts[3]))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(accounts[3]));
+
+      // Approve flow update
+      const op1 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op1.exec(await ethers.getSigner(accounts[3]));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(accounts[3]))
+        .placeBid(newContributionRate, newForSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Can only perform action when payer bid is active"
       );
     });
   });

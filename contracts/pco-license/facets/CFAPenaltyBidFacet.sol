@@ -145,6 +145,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
      */
     function placeBid(int96 newContributionRate, uint256 newForSalePrice)
         external
+        onlyIfPayerBidActive
     {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();

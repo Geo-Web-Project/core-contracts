@@ -18,6 +18,14 @@ contract CFABasePCOFacetModifiers {
         );
         _;
     }
+
+    modifier onlyIfPayerBidActive() {
+        require(
+            LibCFABasePCO._isPayerBidActive(),
+            "CFABasePCOFacet: Can only perform action when payer bid is active"
+        );
+        _;
+    }
 }
 
 /// @notice Handles basic PCO functionality using Constant Flow Agreement (CFA)

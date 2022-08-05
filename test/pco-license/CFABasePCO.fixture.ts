@@ -218,4 +218,35 @@ const initialized = deployments.createFixture(
   }
 );
 
-export default { setup, initialized };
+const afterPayerDelete = deployments.createFixture(
+  async ({ deployments, getNamedAccounts, ethers }, options) => {
+    const res = await initialized();
+    const { basePCOFacet, ethersjsSf, ethx_erc20 } = res;
+
+    const { user, diamondAdmin } = await getNamedAccounts();
+
+    // Payer deletes flow
+    const op1 = await ethersjsSf.cfaV1.deleteFlow({
+      sender: user,
+      receiver: basePCOFacet.address,
+      superToken: ethx_erc20.address,
+    });
+
+    const op1Resp = await op1.exec(await ethers.getSigner(user));
+    await op1Resp.wait();
+
+    // Simulate closing flow
+    const op2 = await ethersjsSf.cfaV1.deleteFlow({
+      sender: basePCOFacet.address,
+      receiver: diamondAdmin,
+      superToken: ethx_erc20.address,
+    });
+
+    const op2Resp = await op2.exec(await ethers.getSigner(diamondAdmin));
+    await op2Resp.wait();
+
+    return res;
+  }
+);
+
+export default { setup, initialized, afterPayerDelete };
