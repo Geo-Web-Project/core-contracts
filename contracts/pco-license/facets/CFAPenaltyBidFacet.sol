@@ -266,20 +266,13 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             .pendingBid();
         LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
 
-        LibCFAPenaltyBid._collectPenalty();
-
         emit BidRejected(
             currentBid.bidder,
             _pendingBid.bidder,
             currentBid.forSalePrice
         );
 
-        LibCFABasePCO._editBid(
-            _pendingBid.contributionRate,
-            _pendingBid.forSalePrice
-        );
-
-        LibCFAPenaltyBid._clearPendingBid();
+        LibCFAPenaltyBid._rejectBid();
     }
 
     /**

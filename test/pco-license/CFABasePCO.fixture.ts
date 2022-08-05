@@ -1,6 +1,6 @@
 import { web3 } from "hardhat";
 import { Framework } from "@superfluid-finance/sdk-core";
-import { BigNumber } from "ethers";
+import { BigNumber, BigNumberish } from "ethers";
 import { expect } from "chai";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
@@ -137,6 +137,15 @@ const setup = deployments.createFixture(
       expect(appNetFlow).to.equal("0", "App net flow is incorrect");
     }
 
+    async function checkAppBalance(check: BigNumberish) {
+      const appBalance = await ethx.balanceOf({
+        account: basePCOFacet.address,
+        providerOrSigner: admin,
+      });
+
+      expect(appBalance).to.equal(check.toString(), "App balance is incorrect");
+    }
+
     return {
       basePCOFacet,
       mockParamsStore,
@@ -149,6 +158,7 @@ const setup = deployments.createFixture(
       checkUserToAppFlow,
       checkAppToBeneficiaryFlow,
       checkAppNetFlow,
+      checkAppBalance,
     };
   }
 );
@@ -173,9 +183,12 @@ const initialized = deployments.createFixture(
     );
 
     // Transfer payment token for buffer
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(user))
+      .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
     const op1 = await paymentToken.transfer({
       receiver: basePCOFacet.address,
-      amount: forSalePrice.toString(),
+      amount: requiredBuffer.toString(),
     });
     await op1.exec(await ethers.getSigner(user));
 

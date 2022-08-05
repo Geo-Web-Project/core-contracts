@@ -27,6 +27,7 @@ describe("CFABasePCOFacet", async function () {
         checkUserToAppFlow,
         checkAppToBeneficiaryFlow,
         checkAppNetFlow,
+        checkAppBalance,
       } = await Fixtures.setup();
       const { user } = await getNamedAccounts();
 
@@ -37,9 +38,12 @@ describe("CFABasePCOFacet", async function () {
       );
 
       // Transfer payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
       const op1 = await paymentToken.transfer({
         receiver: basePCOFacet.address,
-        amount: forSalePrice.toString(),
+        amount: requiredBuffer.toString(),
       });
       await op1.exec(await ethers.getSigner(user));
 
@@ -77,6 +81,7 @@ describe("CFABasePCOFacet", async function () {
       await checkUserToAppFlow(user, contributionRate);
       await checkAppToBeneficiaryFlow(contributionRate);
       await checkAppNetFlow();
+      await checkAppBalance(0);
     });
 
     it("should fail if not contract owner", async () => {

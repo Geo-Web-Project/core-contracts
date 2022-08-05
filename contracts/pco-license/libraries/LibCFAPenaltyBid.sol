@@ -119,6 +119,35 @@ library LibCFAPenaltyBid {
             ds.licenseId
         );
 
+        // Transfer payments
+        (int256 availableBalance, uint256 deposit, , ) = paymentToken
+            .realtimeBalanceOfNow(address(this));
+        uint256 remainingBalance = 0;
+        if (availableBalance + int256(deposit) >= 0) {
+            remainingBalance = uint256(availableBalance + int256(deposit));
+        }
+        uint256 newBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            _pendingBid.contributionRate
+        );
+        if (remainingBalance > newBuffer) {
+            // Keep full newBuffer
+            remainingBalance -= newBuffer;
+            uint256 bidderPayment = _pendingBid.forSalePrice -
+                currentBid.forSalePrice;
+            if (remainingBalance > bidderPayment) {
+                // Transfer bidder full payment
+                paymentToken.transfer(_pendingBid.bidder, bidderPayment);
+                remainingBalance -= bidderPayment;
+
+                // Transfer remaining to payer
+                paymentToken.transfer(currentBid.bidder, remainingBalance);
+            } else {
+                // Transfer remaining to bidder
+                paymentToken.transfer(_pendingBid.bidder, remainingBalance);
+            }
+        }
+
         // Update current bid
         currentBid.timestamp = _pendingBid.timestamp;
         currentBid.bidder = _pendingBid.bidder;
@@ -132,16 +161,46 @@ library LibCFAPenaltyBid {
         _clearPendingBid();
     }
 
-    /// @notice Collect penalty payment
-    function _collectPenalty() internal {
+    /// @notice Reject Bid
+    function _rejectBid() internal {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
         LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        Bid storage _pendingBid = pendingBid();
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
         uint256 penaltyAmount = _calculatePenalty();
+
+        // Transfer payments
+        (int256 availableBalance, uint256 deposit, , ) = paymentToken
+            .realtimeBalanceOfNow(address(this));
+        uint256 remainingBalance = 0;
+        if (availableBalance + int256(deposit) >= 0) {
+            remainingBalance = uint256(availableBalance + int256(deposit));
+        }
+        uint256 newBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            _pendingBid.contributionRate
+        );
+        if (remainingBalance > deposit) {
+            // Keep full deposit
+            remainingBalance -= deposit;
+            uint256 bidderPayment = _pendingBid.forSalePrice + newBuffer;
+            if (remainingBalance > bidderPayment) {
+                // Transfer bidder full payment
+                paymentToken.transfer(_pendingBid.bidder, bidderPayment);
+                remainingBalance -= bidderPayment;
+
+                // Transfer remaining to payer
+                paymentToken.transfer(currentBid.bidder, remainingBalance);
+            } else {
+                // Transfer remaining to bidder
+                paymentToken.transfer(_pendingBid.bidder, remainingBalance);
+            }
+        }
 
         bool success = paymentToken.transferFrom(
             currentBid.bidder,
@@ -149,5 +208,12 @@ library LibCFAPenaltyBid {
             penaltyAmount
         );
         require(success, "LibCFAPenaltyBid: Penalty payment failed");
+
+        LibCFABasePCO._editBid(
+            _pendingBid.contributionRate,
+            _pendingBid.forSalePrice
+        );
+
+        _clearPendingBid();
     }
 }

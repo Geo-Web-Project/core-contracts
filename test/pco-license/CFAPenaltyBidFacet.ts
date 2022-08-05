@@ -558,6 +558,10 @@ describe("CFAPenaltyBidFacet", async function () {
         checkUserToAppFlow,
         checkAppNetFlow,
         checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+        paymentToken,
       } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
       mockLicense["safeTransferFrom(address,address,uint256)"].reset();
@@ -566,6 +570,19 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const oldPendingBid = await basePCOFacet.pendingBid();
       const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(user))
         .acceptBid();
@@ -581,6 +598,19 @@ describe("CFAPenaltyBidFacet", async function () {
         bidder,
         await basePCOFacet.licenseId()
       );
+
+      // Check payment token transfers
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
+      await checkAppBalance(0);
 
       const pendingBid = await basePCOFacet.pendingBid();
       expect(pendingBid.contributionRate).to.equal(0);
@@ -653,6 +683,7 @@ describe("CFAPenaltyBidFacet", async function () {
         paymentToken,
         ethx_erc20,
         ethersjsSf,
+        checkAppBalance,
       } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
       const { bidder, user, diamondAdmin } = await getNamedAccounts();
@@ -669,6 +700,18 @@ describe("CFAPenaltyBidFacet", async function () {
       const existingContributionRate = await basePCOFacet.contributionRate();
       const oldPendingBid = await basePCOFacet.pendingBid();
       const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
 
       // Approve flow update
       const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
@@ -689,9 +732,19 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "BidRejected")
         .withArgs(user, bidder, forSalePrice);
+
+      // Check payment token transfers
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
         .withArgs(user, diamondAdmin, penaltyPayment);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await checkAppBalance(0);
 
       const pendingBid = await basePCOFacet.pendingBid();
       expect(pendingBid.contributionRate).to.equal(0);
@@ -885,6 +938,10 @@ describe("CFAPenaltyBidFacet", async function () {
         checkUserToAppFlow,
         checkAppNetFlow,
         checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+        paymentToken,
       } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
       mockLicense["safeTransferFrom(address,address,uint256)"].reset();
@@ -893,6 +950,18 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const oldPendingBid = await basePCOFacet.pendingBid();
       const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
 
       // Advance time
       await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
@@ -913,6 +982,19 @@ describe("CFAPenaltyBidFacet", async function () {
         bidder,
         await basePCOFacet.licenseId()
       );
+
+      // Check payment token transfers
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await checkAppBalance(0);
 
       const pendingBid = await basePCOFacet.pendingBid();
       expect(pendingBid.contributionRate).to.equal(0);
