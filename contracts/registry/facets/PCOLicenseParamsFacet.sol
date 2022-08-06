@@ -10,24 +10,24 @@ import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/inte
 contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     /// @notice Superfluid Host
     function getHost() external view override returns (ISuperfluid) {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.host;
     }
 
     /// @notice Payment token
     function getPaymentToken() external view override returns (ISuperToken) {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.paymentToken;
     }
 
     /// @notice Beneficiary
     function getBeneficiary() external view override returns (address) {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.beneficiary;
     }
@@ -39,8 +39,8 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         override
         returns (uint256)
     {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.perSecondFeeNumerator;
     }
@@ -52,24 +52,24 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         override
         returns (uint256)
     {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.perSecondFeeDenominator;
     }
 
     /// @notice The numerator of the penalty rate.
     function getPenaltyNumerator() external view returns (uint256) {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.penaltyNumerator;
     }
 
     /// @notice The denominator of the penalty rate.
     function getPenaltyDenominator() external view returns (uint256) {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.penaltyDenominator;
     }
@@ -81,8 +81,8 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         override
         returns (uint256)
     {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.reclaimAuctionLength;
     }
@@ -94,8 +94,8 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         override
         returns (uint256)
     {
-        LibBasePCOLicenseParams.DiamondStorage
-            storage ds = LibBasePCOLicenseParams.diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
 
         return ds.bidPeriodLengthInSeconds;
     }

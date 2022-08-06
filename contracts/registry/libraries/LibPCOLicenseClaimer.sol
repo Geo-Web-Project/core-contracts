@@ -3,10 +3,11 @@ pragma solidity ^0.8.14;
 
 import "./LibGeoWebParcel.sol";
 import "./LibERC721.sol";
+import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 
-library LibBasePCOLicenseClaimer {
+library LibPCOLicenseClaimer {
     bytes32 constant STORAGE_POSITION =
-        keccak256("diamond.standard.diamond.storage.LibBasePCOLicenseClaimer");
+        keccak256("diamond.standard.diamond.storage.LibPCOLicenseClaimer");
 
     /// @notice Emitted when a parcel is purchased
     event ParcelClaimed(uint256 indexed parcelId, address indexed to);
@@ -20,6 +21,12 @@ library LibBasePCOLicenseClaimer {
         uint256 startingBid;
         /// @notice the final/minimum required bid reached and maintained at the end of the auction.
         uint256 endingBid;
+        /// @notice The beacon contract for PCO licenses
+        IBeacon beacon;
+        /// @notice Beacon proxies for each license
+        mapping(uint256 => address) beaconProxies;
+        /// @notice User salts for deterministic proxy addresses
+        mapping(address => uint256) userSalts;
     }
 
     function diamondStorage()
