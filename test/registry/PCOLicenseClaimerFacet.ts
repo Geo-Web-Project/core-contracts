@@ -7,6 +7,8 @@ import { BigNumber } from "ethers";
 import { rateToPurchasePrice } from "../shared";
 import Fixtures from "./PCOLicenseClaimer.fixture";
 import { getUpgradeableBeaconFactory } from "@openzeppelin/hardhat-upgrades/dist/utils";
+import { addDays, endOfToday, getUnixTime, startOfToday } from "date-fns";
+
 const hre = require("hardhat");
 
 use(solidity);
@@ -163,7 +165,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       const nextAddress = await pcoLicenseClaimer.getNextProxyAddress(user);
 
       let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
-      const contributionRate = BigNumber.from(100);
+      const contributionRate = ethers.utils.parseEther("1");
       const forSalePrice = await rateToPurchasePrice(
         mockParamsStore,
         contributionRate
@@ -192,6 +194,49 @@ describe("PCOLicenseClaimerFacet", async function () {
         nextAddress2,
         "Second next address is not correct"
       );
+    });
+  });
+
+  describe("requiredBid", async () => {
+    it("should decay the price until the auction ends", async () => {
+      const { pcoLicenseClaimer, startBid, endingBid } =
+        await Fixtures.initializedWithAuction();
+
+      const startPrice = await pcoLicenseClaimer.requiredBid();
+
+      expect(startPrice.lt(startBid)).to.be.true;
+
+      let daysFromNow = getUnixTime(addDays(startOfToday(), 2));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
+
+      let prevPrice = await pcoLicenseClaimer.requiredBid();
+      expect(prevPrice.lt(startPrice)).to.be.true;
+
+      daysFromNow = getUnixTime(addDays(startOfToday(), 5));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      let nextPrice = await pcoLicenseClaimer.requiredBid();
+      expect(nextPrice.lt(prevPrice)).to.be.true;
+
+      prevPrice = nextPrice;
+      daysFromNow = getUnixTime(addDays(startOfToday(), 7));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      nextPrice = await pcoLicenseClaimer.requiredBid();
+      expect(nextPrice.lt(prevPrice)).to.be.true;
+
+      prevPrice = nextPrice;
+      daysFromNow = getUnixTime(addDays(startOfToday(), 10));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      nextPrice = await pcoLicenseClaimer.requiredBid();
+
+      expect(nextPrice.lt(prevPrice)).to.be.true;
+      expect(nextPrice).to.be.equal(endingBid);
+
+      prevPrice = nextPrice;
+      daysFromNow = getUnixTime(addDays(startOfToday(), 12));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      nextPrice = await pcoLicenseClaimer.requiredBid();
+
+      expect(nextPrice).to.be.equal(endingBid);
     });
   });
 });
