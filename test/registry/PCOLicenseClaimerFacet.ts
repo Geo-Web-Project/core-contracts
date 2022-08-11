@@ -239,4 +239,93 @@ describe("PCOLicenseClaimerFacet", async function () {
       expect(nextPrice).to.be.equal(endingBid);
     });
   });
+
+  describe("claim", async () => {
+    it("should claim", async () => {
+      const { pcoLicenseClaimer, mockParamsStore } =
+        await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const contributionRate = ethers.utils.parseEther("1");
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      await pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+    });
+
+    it("should claim when payment is required", async () => {
+      const { pcoLicenseClaimer, mockParamsStore, paymentToken } =
+        await Fixtures.initializedWithAuction();
+      const { user } = await getNamedAccounts();
+
+      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const contributionRate = ethers.utils.parseEther("1");
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: forSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      await pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+    });
+
+    it("should fail if buildAndMint fails", async () => {
+      const { pcoLicenseClaimer, mockParamsStore } =
+        await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const contributionRate = ethers.utils.parseEther("1");
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      await pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+
+      const txn = pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+
+      await expect(txn).to.be.revertedWith(
+        "LibGeoWebParcel: Coordinate is not available"
+      );
+    });
+
+    it("should fail if forSalePrice does not meet requirement", async () => {
+      const { pcoLicenseClaimer, mockParamsStore } =
+        await Fixtures.initializedWithAuction();
+      const { user } = await getNamedAccounts();
+
+      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const contributionRate = BigNumber.from(1);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      const txn = pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+
+      await expect(txn).to.be.revertedWith(
+        "PCOLicenseClaimerFacet: Initial for sale price does not meet requirement"
+      );
+    });
+  });
 });

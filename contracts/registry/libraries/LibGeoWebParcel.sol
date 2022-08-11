@@ -65,7 +65,10 @@ library LibGeoWebParcel {
         internal
         returns (uint256 newParcelId)
     {
-        require(path.length > 0, "Path must have at least one component");
+        require(
+            path.length > 0,
+            "LibGeoWebParcel: Path must have at least one component"
+        );
 
         DiamondStorage storage ds = diamondStorage();
 
@@ -118,7 +121,10 @@ library LibGeoWebParcel {
         do {
             if (action == Action.Build) {
                 // Check if coordinate is available
-                require((word & (2**i) == 0), "Coordinate is not available");
+                require(
+                    (word & (2**i) == 0),
+                    "LibGeoWebParcel: Coordinate is not available"
+                );
 
                 // Mark coordinate as unavailable in memory
                 word = word | (2**i);

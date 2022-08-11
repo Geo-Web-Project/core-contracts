@@ -27,7 +27,11 @@ const setup = deployments.createFixture(
     await diamond.deploy("PCOLicenseClaimer", {
       from: diamondAdmin,
       owner: diamondAdmin,
-      facets: ["PCOLicenseClaimerFacet", "GeoWebParcelFacet"],
+      facets: [
+        "PCOLicenseClaimerFacet",
+        "GeoWebParcelFacet",
+        "PCOLicenseParamsFacet",
+      ],
     });
 
     const accounts = await ethers.getSigners();
