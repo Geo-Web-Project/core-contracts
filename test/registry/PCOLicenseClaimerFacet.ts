@@ -146,6 +146,30 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
   });
 
+  describe("setBeacon", async () => {
+    it("should set", async () => {
+      const { pcoLicenseClaimer } = await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      await pcoLicenseClaimer.setBeacon(user);
+
+      expect(await pcoLicenseClaimer.getBeacon()).to.equal(user);
+    });
+
+    it("should fail if not owner", async () => {
+      const { pcoLicenseClaimer } = await Fixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const txn = pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .setBeacon(user);
+
+      await expect(txn).to.be.revertedWith(
+        "LibDiamond: Must be contract owner"
+      );
+    });
+  });
+
   describe("getNextAddress", async () => {
     it("should calculate different address per user", async () => {
       const { pcoLicenseClaimer } = await Fixtures.initialized();

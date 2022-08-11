@@ -48,12 +48,6 @@ library LibPCOLicenseClaimer {
         uint64 baseCoordinate,
         uint256[] memory path
     ) internal returns (uint256 licenseId) {
-        DiamondStorage storage ds = diamondStorage();
-        require(
-            block.timestamp > ds.auctionStart,
-            "auction has not started yet"
-        );
-
         /// the licenseId is the same as the parcelId returned from parcel.build()
         licenseId = LibGeoWebParcel.build(baseCoordinate, path);
         LibERC721._safeMint(user, licenseId);

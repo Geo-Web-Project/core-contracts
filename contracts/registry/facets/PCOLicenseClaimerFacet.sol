@@ -133,6 +133,14 @@ contract PCOLicenseClaimerFacet {
         ds.beacon = _beacon;
     }
 
+    /// @notice Get Beacon
+    function getBeacon() external view returns (IBeacon) {
+        LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
+            .diamondStorage();
+
+        return ds.beacon;
+    }
+
     /**
      * @notice The current dutch auction price of a parcel.
      */
