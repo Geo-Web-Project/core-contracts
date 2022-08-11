@@ -133,7 +133,9 @@ contract PCOLicenseClaimerFacet {
                             abi.encodePacked(
                                 bytes1(0xff),
                                 address(this),
-                                bytes32(ds.userSalts[user]),
+                                keccak256(
+                                    abi.encodePacked(user, ds.userSalts[user])
+                                ),
                                 keccak256(
                                     abi.encodePacked(
                                         type(BeaconProxy).creationCode,
@@ -196,7 +198,9 @@ contract PCOLicenseClaimerFacet {
         );
 
         BeaconProxy proxy = new BeaconProxy{
-            salt: bytes32(ds.userSalts[msg.sender])
+            salt: keccak256(
+                abi.encodePacked(msg.sender, ds.userSalts[msg.sender])
+            )
         }(address(ds.beacon), new bytes(0));
 
         // Increment user salt
