@@ -22,7 +22,7 @@ contract PCOLicenseClaimerFacet {
      * @param endingBid the final/minimum required bid reached and maintained at the end of the auction.
      * @param beacon The beacon contract for PCO licenses
      */
-    function initialize(
+    function initializeClaimer(
         uint256 auctionStart,
         uint256 auctionEnd,
         uint256 startingBid,

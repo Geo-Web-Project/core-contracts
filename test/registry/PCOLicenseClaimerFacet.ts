@@ -16,7 +16,7 @@ use(chaiAsPromised);
 use(smock.matchers);
 
 describe("PCOLicenseClaimerFacet", async function () {
-  describe("initialized", async () => {
+  describe("initialize", async () => {
     it("should initialize", async () => {
       const res = await Fixtures.setup();
       const { pcoLicenseClaimer } = res;
@@ -26,7 +26,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
       const beacon = await UpgradeableBeaconFactory.deploy(mockBeacon.address);
 
-      await pcoLicenseClaimer.initialize(1, 10, 20, 2, beacon.address);
+      await pcoLicenseClaimer.initializeClaimer(1, 10, 20, 2, beacon.address);
 
       expect(await pcoLicenseClaimer.getAuctionStart()).to.equal(1);
       expect(await pcoLicenseClaimer.getAuctionEnd()).to.equal(10);
@@ -46,7 +46,7 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .initialize(1, 10, 20, 2, beacon.address);
+        .initializeClaimer(1, 10, 20, 2, beacon.address);
 
       await expect(txn).to.be.revertedWith(
         "LibDiamond: Must be contract owner"
@@ -253,9 +253,15 @@ describe("PCOLicenseClaimerFacet", async function () {
         contributionRate
       );
 
-      await pcoLicenseClaimer
+      const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
         .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(pcoLicenseClaimer, "ParcelClaimed")
+        .withArgs(0, user);
     });
 
     it("should claim when payment is required", async () => {
@@ -264,11 +270,16 @@ describe("PCOLicenseClaimerFacet", async function () {
       const { user } = await getNamedAccounts();
 
       let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
-      const contributionRate = ethers.utils.parseEther("1");
+      const contributionRate = ethers.utils
+        .parseEther("9")
+        .div(365 * 24 * 60 * 60 * 10);
       const forSalePrice = await rateToPurchasePrice(
         mockParamsStore,
         contributionRate
       );
+
+      const daysFromNow = getUnixTime(addDays(startOfToday(), 7));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
 
       // Approve payment token
       const approveOp = await paymentToken.approve({
@@ -277,9 +288,40 @@ describe("PCOLicenseClaimerFacet", async function () {
       });
       await approveOp.exec(await ethers.getSigner(user));
 
-      await pcoLicenseClaimer
+      const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
         .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(pcoLicenseClaimer, "ParcelClaimed")
+        .withArgs(0, user);
+    });
+
+    it("should fail if payment fails", async () => {
+      const { pcoLicenseClaimer, mockParamsStore } =
+        await Fixtures.initializedWithAuction();
+      const { user } = await getNamedAccounts();
+
+      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const contributionRate = ethers.utils
+        .parseEther("9")
+        .div(365 * 24 * 60 * 60 * 10);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      const daysFromNow = getUnixTime(addDays(startOfToday(), 7));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
+
+      const txn = pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+
+      await expect(txn).to.be.revertedWith(
+        "SuperToken: transfer amount exceeds allowance"
+      );
     });
 
     it("should fail if buildAndMint fails", async () => {

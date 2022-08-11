@@ -37,7 +37,7 @@ describe("PCOLicenseParamsFacet", async function () {
       const { pcoLicenseParams } = await setupTest();
       const { user, bidder, diamondAdmin } = await getNamedAccounts();
 
-      await pcoLicenseParams.initialize(
+      await pcoLicenseParams.initializeParams(
         diamondAdmin,
         user,
         bidder,
@@ -66,7 +66,7 @@ describe("PCOLicenseParamsFacet", async function () {
 
       const txn = pcoLicenseParams
         .connect(await ethers.getSigner(user))
-        .initialize(diamondAdmin, user, bidder, 1, 2, 3, 4, 5, 6);
+        .initializeParams(diamondAdmin, user, bidder, 1, 2, 3, 4, 5, 6);
 
       await expect(txn).to.be.revertedWith(
         "LibDiamond: Must be contract owner"

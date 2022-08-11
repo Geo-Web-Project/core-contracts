@@ -12,11 +12,14 @@ import {
   perYearToPerSecondRate,
   errorHandler,
   rateToPurchasePrice,
+  setupSf,
 } from "../shared";
 
 const setup = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
-    await deployments.fixture();
+    const res = await setupSf();
+    const { sf, ethersjsSf, paymentToken } = res;
+
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
     await diamond.deploy("TestBasePCO", {
@@ -27,62 +30,11 @@ const setup = deployments.createFixture(
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-    const basePCOFacet = await ethers.getContract("TestBasePCO", diamondAdmin);
-
     const accounts = await ethers.getSigners();
 
-    const [admin, user, bidder, other] = accounts;
-    const uAccounts = await getUnnamedAccounts();
+    const [admin] = accounts;
 
-    await deployFramework(errorHandler, {
-      web3,
-      from: admin.address,
-    });
-
-    await deploySuperToken(errorHandler, [":", "ETH"], {
-      web3,
-      from: admin.address,
-    });
-
-    const sf = new SuperfluidSDK.Framework({
-      web3,
-      version: "test",
-      tokens: ["ETH"],
-    });
-    await sf.initialize();
-
-    const ethersProvider = admin.provider!;
-    const ethersjsSf: Framework = await Framework.create({
-      chainId: 31337,
-      resolverAddress: sf.resolver.address,
-      protocolReleaseVersion: "test",
-      provider: ethersProvider,
-    });
-
-    const ethx = await ethersjsSf.loadSuperToken(sf.tokens.ETHx.address);
-    const ethx_erc20 = await ethers.getContractAt(
-      "IERC20",
-      sf.tokens.ETHx.address
-    );
-    const hostContract: ISuperfluid = await ethers.getContractAt(
-      "ISuperfluid",
-      sf.host.address
-    );
-
-    await sf.tokens.ETHx.upgradeByETH({
-      from: user.address,
-      value: ethers.utils.parseEther("10"),
-    });
-
-    await sf.tokens.ETHx.upgradeByETH({
-      from: bidder.address,
-      value: ethers.utils.parseEther("10"),
-    });
-
-    await sf.tokens.ETHx.upgradeByETH({
-      from: uAccounts[3],
-      value: ethers.utils.parseEther("10"),
-    });
+    const basePCOFacet = await ethers.getContract("TestBasePCO", diamondAdmin);
 
     let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
     mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
@@ -101,7 +53,7 @@ const setup = deployments.createFixture(
       expectedAmount: BigNumber
     ) {
       const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
-        superToken: ethx.address,
+        superToken: paymentToken.address,
         sender: _user,
         receiver: basePCOFacet.address,
         providerOrSigner: admin,
@@ -115,7 +67,7 @@ const setup = deployments.createFixture(
 
     async function checkAppToBeneficiaryFlow(expectedAmount: BigNumber) {
       const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
-        superToken: ethx.address,
+        superToken: paymentToken.address,
         sender: basePCOFacet.address,
         receiver: admin.address,
         providerOrSigner: admin,
@@ -129,7 +81,7 @@ const setup = deployments.createFixture(
 
     async function checkAppNetFlow(check?: BigNumberish) {
       const appNetFlow = await ethersjsSf.cfaV1.getNetFlow({
-        superToken: ethx.address,
+        superToken: paymentToken.address,
         account: basePCOFacet.address,
         providerOrSigner: admin,
       });
@@ -141,7 +93,7 @@ const setup = deployments.createFixture(
     }
 
     async function checkAppBalance(check: BigNumberish) {
-      const appBalance = await ethx.balanceOf({
+      const appBalance = await paymentToken.balanceOf({
         account: basePCOFacet.address,
         providerOrSigner: admin,
       });
@@ -153,15 +105,11 @@ const setup = deployments.createFixture(
       basePCOFacet,
       mockParamsStore,
       mockLicense,
-      paymentToken: ethx,
-      ethx_erc20,
-      ethersjsSf,
-      sf,
-      hostContract,
       checkUserToAppFlow,
       checkAppToBeneficiaryFlow,
       checkAppNetFlow,
       checkAppBalance,
+      ...res,
     };
   }
 );

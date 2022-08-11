@@ -22,7 +22,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
      * @param bidPeriodLengthInSeconds Bid period length in seconds
      * @param reclaimAuctionLength when the required bid amount reaches its minimum value.
      */
-    function initialize(
+    function initializeParams(
         address beneficiary,
         ISuperToken paymentToken,
         ISuperfluid host,

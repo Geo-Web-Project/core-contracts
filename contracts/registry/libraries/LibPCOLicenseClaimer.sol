@@ -9,9 +9,6 @@ library LibPCOLicenseClaimer {
     bytes32 constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibPCOLicenseClaimer");
 
-    /// @notice Emitted when a parcel is purchased
-    event ParcelClaimed(uint256 indexed parcelId, address indexed to);
-
     struct DiamondStorage {
         /// @notice start time of the genesis land parcel auction.
         uint256 auctionStart;
@@ -60,8 +57,6 @@ library LibPCOLicenseClaimer {
         /// the licenseId is the same as the parcelId returned from parcel.build()
         licenseId = LibGeoWebParcel.build(baseCoordinate, path);
         LibERC721._safeMint(user, licenseId);
-
-        emit ParcelClaimed(licenseId, user);
     }
 
     /**

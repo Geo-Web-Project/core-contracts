@@ -9,18 +9,16 @@ import {
   PCOLicenseClaimerFacet,
   ISuperfluid,
   CFABasePCOFacet__factory,
+  PCOLicenseParamsFacet,
 } from "../../typechain-types";
-import {
-  perYearToPerSecondRate,
-  errorHandler,
-  rateToPurchasePrice,
-} from "../shared";
+import { perYearToPerSecondRate, errorHandler, setupSf } from "../shared";
 import { getUpgradeableBeaconFactory } from "@openzeppelin/hardhat-upgrades/dist/utils";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
 
 const setup = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
-    await deployments.fixture();
+    const res = await setupSf();
+    const { ethx_erc20, sf } = res;
 
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
@@ -34,67 +32,19 @@ const setup = deployments.createFixture(
       ],
     });
 
-    const accounts = await ethers.getSigners();
-
-    const pcoLicenseClaimer: PCOLicenseClaimerFacet = await ethers.getContract(
+    const pcoLicenseClaimer = await ethers.getContract(
       "PCOLicenseClaimer",
       diamondAdmin
     );
 
-    const [admin, user, bidder, other] = accounts;
-    const uAccounts = await getUnnamedAccounts();
-
-    await deployFramework(errorHandler, {
-      web3,
-      from: admin.address,
-    });
-
-    await deploySuperToken(errorHandler, [":", "ETH"], {
-      web3,
-      from: admin.address,
-    });
-
-    const sf = new SuperfluidSDK.Framework({
-      web3,
-      version: "test",
-      tokens: ["ETH"],
-    });
-    await sf.initialize();
-
-    const ethersProvider = admin.provider!;
-    const ethersjsSf: Framework = await Framework.create({
-      chainId: 31337,
-      resolverAddress: sf.resolver.address,
-      protocolReleaseVersion: "test",
-      provider: ethersProvider,
-    });
-
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-    const ethx = await ethersjsSf.loadSuperToken(sf.tokens.ETHx.address);
-    const ethx_erc20 = await ethers.getContractAt(
-      "IERC20",
-      sf.tokens.ETHx.address
+    await (pcoLicenseClaimer as PCOLicenseParamsFacet).setPaymentToken(
+      ethx_erc20.address
     );
-    const hostContract: ISuperfluid = await ethers.getContractAt(
-      "ISuperfluid",
-      sf.host.address
+    await (pcoLicenseClaimer as PCOLicenseParamsFacet).setBeneficiary(
+      diamondAdmin
     );
-
-    await sf.tokens.ETHx.upgradeByETH({
-      from: user.address,
-      value: ethers.utils.parseEther("10"),
-    });
-
-    await sf.tokens.ETHx.upgradeByETH({
-      from: bidder.address,
-      value: ethers.utils.parseEther("10"),
-    });
-
-    await sf.tokens.ETHx.upgradeByETH({
-      from: uAccounts[3],
-      value: ethers.utils.parseEther("10"),
-    });
 
     let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
     mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
@@ -107,13 +57,10 @@ const setup = deployments.createFixture(
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
 
     return {
-      pcoLicenseClaimer,
+      pcoLicenseClaimer: pcoLicenseClaimer as PCOLicenseClaimerFacet,
+      pcoLicenseParams: pcoLicenseClaimer as PCOLicenseParamsFacet,
       mockParamsStore,
-      paymentToken: ethx,
-      ethx_erc20,
-      ethersjsSf,
-      sf,
-      hostContract,
+      ...res,
     };
   }
 );
@@ -127,7 +74,7 @@ const initialized = deployments.createFixture(async (hre, options) => {
   const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
   const beacon = await UpgradeableBeaconFactory.deploy(mockBeacon.address);
 
-  await pcoLicenseClaimer.initialize(0, 0, 0, 0, beacon.address);
+  await pcoLicenseClaimer.initializeClaimer(0, 0, 0, 0, beacon.address);
 
   return res;
 });
@@ -135,7 +82,7 @@ const initialized = deployments.createFixture(async (hre, options) => {
 const initializedWithAuction = deployments.createFixture(
   async (hre, options) => {
     const res = await setup();
-    const { pcoLicenseClaimer } = res;
+    const { pcoLicenseClaimer, pcoLicenseParams } = res;
 
     const mockBeacon = await smock.fake("CFABasePCOFacet");
 
@@ -148,7 +95,7 @@ const initializedWithAuction = deployments.createFixture(
     const startBid = ethers.utils.parseEther("10");
     const endingBid = ethers.utils.parseEther("0");
 
-    await pcoLicenseClaimer.initialize(
+    await pcoLicenseClaimer.initializeClaimer(
       today,
       tenDaysFromNow,
       startBid,
