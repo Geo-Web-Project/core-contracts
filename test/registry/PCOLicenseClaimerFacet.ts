@@ -1,6 +1,6 @@
 import chaiAsPromised from "chai-as-promised";
 import { expect, use } from "chai";
-import { ethers, getNamedAccounts } from "hardhat";
+import { ethers, getNamedAccounts, deployments } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
 import { BigNumber } from "ethers";
@@ -315,6 +315,49 @@ describe("PCOLicenseClaimerFacet", async function () {
       const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
         .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(pcoLicenseClaimer, "ParcelClaimed")
+        .withArgs(0, user);
+    });
+
+    it("should claim with real PCODiamond", async () => {
+      const { pcoLicenseClaimer, mockParamsStore } = await Fixtures.setup();
+
+      const { diamondAdmin } = await getNamedAccounts();
+      const { diamond } = deployments;
+      await diamond.deploy("TestBasePCO", {
+        from: diamondAdmin,
+        owner: diamondAdmin,
+        facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
+      });
+
+      const basePCOFacet = await ethers.getContract(
+        "TestBasePCO",
+        diamondAdmin
+      );
+
+      const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
+      const beacon = await UpgradeableBeaconFactory.deploy(
+        basePCOFacet.address
+      );
+
+      await pcoLicenseClaimer.initializeClaimer(0, 0, 0, 0, beacon.address);
+
+      const { user } = await getNamedAccounts();
+
+      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const contributionRate = ethers.utils.parseEther("1");
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      const txn = await pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+
       await txn.wait();
 
       await expect(txn)
