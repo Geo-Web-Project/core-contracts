@@ -53,6 +53,14 @@ contract PCOLicenseClaimerFacet {
         ds.startingBid = _startingBid;
     }
 
+    /// @notice Starting bid
+    function getStartingBid() external view returns (uint256) {
+        LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
+            .diamondStorage();
+
+        return ds.startingBid;
+    }
+
     /**
      * @notice Admin can update the ending bid.
      * @param _endingBid The new ending bid
@@ -63,6 +71,14 @@ contract PCOLicenseClaimerFacet {
             .diamondStorage();
 
         ds.endingBid = _endingBid;
+    }
+
+    /// @notice Ending bid
+    function getEndingBid() external view returns (uint256) {
+        LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
+            .diamondStorage();
+
+        return ds.endingBid;
     }
 
     /**
@@ -77,6 +93,14 @@ contract PCOLicenseClaimerFacet {
         ds.auctionStart = _auctionStart;
     }
 
+    /// @notice Auction start
+    function getAuctionStart() external view returns (uint256) {
+        LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
+            .diamondStorage();
+
+        return ds.auctionStart;
+    }
+
     /**
      * @notice Admin can update the end time of the initial Dutch auction.
      * @param _auctionEnd The new end time of the initial Dutch auction
@@ -87,6 +111,14 @@ contract PCOLicenseClaimerFacet {
             .diamondStorage();
 
         ds.auctionEnd = _auctionEnd;
+    }
+
+    /// @notice Auction end
+    function getAuctionEnd() external view returns (uint256) {
+        LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
+            .diamondStorage();
+
+        return ds.auctionEnd;
     }
 
     /**
