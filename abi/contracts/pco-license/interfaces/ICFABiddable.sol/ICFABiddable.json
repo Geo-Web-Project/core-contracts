@@ -25,61 +25,21 @@
     "type": "event"
   },
   {
-    "inputs": [],
-    "name": "hasPendingBid",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
+        "internalType": "int96",
+        "name": "newContributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newForSalePrice",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingBid",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "bidder",
-            "type": "address"
-          },
-          {
-            "internalType": "int96",
-            "name": "contributionRate",
-            "type": "int96"
-          },
-          {
-            "internalType": "uint256",
-            "name": "perSecondFeeNumerator",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "perSecondFeeDenominator",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "forSalePrice",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibCFAPenaltyBid.Bid",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "editBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

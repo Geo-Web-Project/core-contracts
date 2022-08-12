@@ -51,24 +51,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "int96",
-        "name": "newContributionRate",
-        "type": "int96"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newForSalePrice",
-        "type": "uint256"
-      }
-    ],
-    "name": "editBid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "forSalePrice",
     "outputs": [
@@ -87,6 +69,16 @@
         "internalType": "contract IPCOLicenseParamsStore",
         "name": "paramsStore",
         "type": "address"
+      },
+      {
+        "internalType": "contract IERC721",
+        "name": "_license",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_licenseId",
+        "type": "uint256"
       },
       {
         "internalType": "address",
@@ -117,6 +109,32 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "license",
+    "outputs": [
+      {
+        "internalType": "contract IERC721",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "licenseId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

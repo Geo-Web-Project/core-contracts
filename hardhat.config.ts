@@ -70,33 +70,12 @@ if (process.env.INFURA_KEY) {
 
 module.exports = {
   networks,
-  zksolc: {
-    version: "0.1.0",
-    compilerSource: "docker",
-    settings: {
-      optimizer: {
-        enabled: true,
-      },
-      experimental: {
-        dockerImage: "zksyncrobot/test-build",
-      },
-    },
-  },
-  zkSyncDeploy: {
-    zkSyncNetwork: process.env.ZKSYNC_NETWORK,
-    ethNetwork: "rinkeby",
-  },
   solidity: {
     version: "0.8.14",
     settings: {
       optimizer: {
         enabled: true,
         runs: 200,
-      },
-      outputSelection: {
-        "*": {
-          "*": ["storageLayout"],
-        },
       },
     },
   },
