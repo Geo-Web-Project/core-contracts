@@ -1,18 +1,11 @@
-import { web3 } from "hardhat";
-import { Framework } from "@superfluid-finance/sdk-core";
-const SuperfluidSDK = require("@superfluid-finance/js-sdk");
-const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
-const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { smock } from "@defi-wonderland/smock";
-import { deployments, getUnnamedAccounts, ethers } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import {
   PCOLicenseClaimerFacet,
-  ISuperfluid,
-  CFABasePCOFacet__factory,
+  IDiamondLoupe,
   PCOLicenseParamsFacet,
 } from "../../typechain-types";
-import { perYearToPerSecondRate, errorHandler, setupSf } from "../shared";
-import { getUpgradeableBeaconFactory } from "@openzeppelin/hardhat-upgrades/dist/utils";
+import { perYearToPerSecondRate, setupSf } from "../shared";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
 
 const setup = deployments.createFixture(
@@ -69,12 +62,12 @@ const initialized = deployments.createFixture(async (hre, options) => {
   const res = await setup();
   const { pcoLicenseClaimer } = res;
 
-  const mockBeacon = await smock.fake("CFABasePCOFacet");
+  const mockFacet = await smock.fake("CFABasePCOFacet");
+  const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
 
-  const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
-  const beacon = await UpgradeableBeaconFactory.deploy(mockBeacon.address);
+  mockBeacon.facetAddress.returns(mockFacet.address);
 
-  await pcoLicenseClaimer.initializeClaimer(0, 0, 0, 0, beacon.address);
+  await pcoLicenseClaimer.initializeClaimer(0, 0, 0, 0, mockBeacon.address);
 
   return res;
 });
@@ -82,12 +75,12 @@ const initialized = deployments.createFixture(async (hre, options) => {
 const initializedWithAuction = deployments.createFixture(
   async (hre, options) => {
     const res = await setup();
-    const { pcoLicenseClaimer, pcoLicenseParams } = res;
+    const { pcoLicenseClaimer } = res;
 
-    const mockBeacon = await smock.fake("CFABasePCOFacet");
+    const mockFacet = await smock.fake("CFABasePCOFacet");
+    const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
 
-    const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
-    const beacon = await UpgradeableBeaconFactory.deploy(mockBeacon.address);
+    mockBeacon.facetAddress.returns(mockFacet.address);
 
     const today = getUnixTime(startOfToday());
     const tenDaysFromNow = getUnixTime(addDays(startOfToday(), 10));
@@ -100,7 +93,7 @@ const initializedWithAuction = deployments.createFixture(
       tenDaysFromNow,
       startBid,
       endingBid,
-      beacon.address
+      mockBeacon.address
     );
 
     return { ...res, today, tenDaysFromNow, startBid, endingBid };

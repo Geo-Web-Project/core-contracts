@@ -6,8 +6,7 @@ import { smock } from "@defi-wonderland/smock";
 import { BigNumber } from "ethers";
 import { rateToPurchasePrice } from "../shared";
 import Fixtures from "./PCOLicenseClaimer.fixture";
-import { getUpgradeableBeaconFactory } from "@openzeppelin/hardhat-upgrades/dist/utils";
-import { addDays, endOfToday, getUnixTime, startOfToday } from "date-fns";
+import { addDays, getUnixTime, startOfToday } from "date-fns";
 
 const hre = require("hardhat");
 
@@ -23,10 +22,13 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const mockBeacon = await smock.fake("CFABasePCOFacet");
 
-      const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
-      const beacon = await UpgradeableBeaconFactory.deploy(mockBeacon.address);
-
-      await pcoLicenseClaimer.initializeClaimer(1, 10, 20, 2, beacon.address);
+      await pcoLicenseClaimer.initializeClaimer(
+        1,
+        10,
+        20,
+        2,
+        mockBeacon.address
+      );
 
       expect(await pcoLicenseClaimer.getAuctionStart()).to.equal(1);
       expect(await pcoLicenseClaimer.getAuctionEnd()).to.equal(10);
@@ -39,14 +41,11 @@ describe("PCOLicenseClaimerFacet", async function () {
       const { pcoLicenseClaimer } = res;
       const { user } = await getNamedAccounts();
 
-      const mockBeacon = await smock.fake("CFABasePCOFacet");
-
-      const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
-      const beacon = await UpgradeableBeaconFactory.deploy(mockBeacon.address);
+      const mockBeacon = await smock.fake("IDiamondLoupe");
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .initializeClaimer(1, 10, 20, 2, beacon.address);
+        .initializeClaimer(1, 10, 20, 2, mockBeacon.address);
 
       await expect(txn).to.be.revertedWith(
         "LibDiamond: Must be contract owner"
@@ -322,7 +321,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .withArgs(0, user);
     });
 
-    it("should claim with real PCODiamond", async () => {
+    it("should claim with real BeaconDiamond", async () => {
       const { pcoLicenseClaimer, mockParamsStore } = await Fixtures.setup();
 
       const { diamondAdmin } = await getNamedAccounts();
@@ -333,15 +332,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
       });
 
-      const basePCOFacet = await ethers.getContract(
-        "TestBasePCO",
-        diamondAdmin
-      );
-
-      const UpgradeableBeaconFactory = await getUpgradeableBeaconFactory(hre);
-      const beacon = await UpgradeableBeaconFactory.deploy(
-        basePCOFacet.address
-      );
+      const beacon = await ethers.getContract("TestBasePCO", diamondAdmin);
 
       await pcoLicenseClaimer.initializeClaimer(0, 0, 0, 0, beacon.address);
 

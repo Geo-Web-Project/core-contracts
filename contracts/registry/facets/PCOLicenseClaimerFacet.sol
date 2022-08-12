@@ -3,11 +3,12 @@ pragma solidity ^0.8.14;
 
 import "../libraries/LibPCOLicenseClaimer.sol";
 import "../libraries/LibPCOLicenseParams.sol";
-import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "../../pco-license/facets/CFABasePCOFacet.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
+import "../../beacon-diamond/BeaconDiamond.sol";
+import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
 
 contract PCOLicenseClaimerFacet {
     /// @notice Emitted when a parcel is claimed
@@ -27,7 +28,7 @@ contract PCOLicenseClaimerFacet {
         uint256 auctionEnd,
         uint256 startingBid,
         uint256 endingBid,
-        IBeacon beacon
+        address beacon
     ) external {
         LibDiamond.enforceIsContractOwner();
 
@@ -123,9 +124,9 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the beacon contract
-     * @param _beacon The new end time of the initial Dutch auction
+     * @param _beacon The new beacon contract
      */
-    function setBeacon(IBeacon _beacon) external {
+    function setBeacon(address _beacon) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
@@ -134,7 +135,7 @@ contract PCOLicenseClaimerFacet {
     }
 
     /// @notice Get Beacon
-    function getBeacon() external view returns (IBeacon) {
+    function getBeacon() external view returns (address) {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
@@ -178,10 +179,10 @@ contract PCOLicenseClaimerFacet {
                                 ),
                                 keccak256(
                                     abi.encodePacked(
-                                        type(BeaconProxy).creationCode,
+                                        type(BeaconDiamond).creationCode,
                                         abi.encode(
-                                            address(ds.beacon),
-                                            new bytes(0)
+                                            address(this),
+                                            IDiamondLoupe(ds.beacon)
                                         )
                                     )
                                 )
@@ -237,11 +238,11 @@ contract PCOLicenseClaimerFacet {
             path
         );
 
-        BeaconProxy proxy = new BeaconProxy{
+        BeaconDiamond proxy = new BeaconDiamond{
             salt: keccak256(
                 abi.encodePacked(msg.sender, ds.userSalts[msg.sender])
             )
-        }(address(ds.beacon), new bytes(0));
+        }(address(this), IDiamondLoupe(ds.beacon));
 
         // Increment user salt
         ds.userSalts[msg.sender] += 1;

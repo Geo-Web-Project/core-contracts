@@ -3,7 +3,6 @@ pragma solidity ^0.8.14;
 
 import "./LibGeoWebParcel.sol";
 import "./LibERC721.sol";
-import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 
 library LibPCOLicenseClaimer {
     bytes32 constant STORAGE_POSITION =
@@ -19,7 +18,7 @@ library LibPCOLicenseClaimer {
         /// @notice the final/minimum required bid reached and maintained at the end of the auction.
         uint256 endingBid;
         /// @notice The beacon contract for PCO licenses
-        IBeacon beacon;
+        address beacon;
         /// @notice Beacon proxies for each license
         mapping(uint256 => address) beaconProxies;
         /// @notice User salts for deterministic proxy addresses
