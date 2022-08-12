@@ -653,6 +653,50 @@ describe("CFAPenaltyBidFacet", async function () {
         "CFABasePCOFacet: Can only perform action when payer bid is active"
       );
     });
+
+    it("should fail if for sale price is too low", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(50);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .placeBid(newContributionRate, newForSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: New contribution rate is not high enough"
+      );
+    });
   });
 
   describe("acceptBid", async () => {
@@ -1601,6 +1645,72 @@ describe("CFAPenaltyBidFacet", async function () {
           user,
           forSalePrice.add(oldBuffer).sub(depletedBuffer)
         );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer with real license", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+        paymentToken,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidWithRealLicense();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+
+      // Check payment token transfers
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
         .withArgs(

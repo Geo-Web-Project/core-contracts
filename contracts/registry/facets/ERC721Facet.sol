@@ -133,8 +133,6 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
         override
         returns (bool)
     {
-        // TODO: Always approve PCOLicense
-
         return LibERC721.isApprovedForAll(owner, operator);
     }
 

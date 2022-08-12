@@ -168,6 +168,8 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             .getPerSecondFeeDenominator();
 
         // Check for sale price
+        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+
         require(
             LibCFABasePCO._checkForSalePrice(
                 newForSalePrice,
@@ -176,6 +178,11 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
                 perSecondFeeDenominator
             ),
             "CFAPenaltyBidFacet: Incorrect for sale price"
+        );
+
+        require(
+            newContributionRate >= currentBid.contributionRate,
+            "CFAPenaltyBidFacet: New contribution rate is not high enough"
         );
 
         // Check operator permissions

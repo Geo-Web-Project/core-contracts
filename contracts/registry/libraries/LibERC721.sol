@@ -3,6 +3,7 @@ pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "./LibPCOLicenseClaimer.sol";
 
 // Diamond storage implementation of OpenZeppelin ERC721
 library LibERC721 {
@@ -155,8 +156,12 @@ library LibERC721 {
         view
         returns (bool)
     {
+        LibPCOLicenseClaimer.DiamondStorage storage cs = LibPCOLicenseClaimer
+            .diamondStorage();
+
         address owner = ownerOf(tokenId);
         return (spender == owner ||
+            spender == cs.beaconProxies[tokenId] ||
             isApprovedForAll(owner, spender) ||
             getApproved(tokenId) == spender);
     }
