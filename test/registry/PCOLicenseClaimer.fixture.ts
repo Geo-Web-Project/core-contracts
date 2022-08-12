@@ -32,27 +32,21 @@ const setup = deployments.createFixture(
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-    await (pcoLicenseClaimer as PCOLicenseParamsFacet).setPaymentToken(
-      ethx_erc20.address
+    await (pcoLicenseClaimer as PCOLicenseParamsFacet).initializeParams(
+      diamondAdmin,
+      ethx_erc20.address,
+      sf.host.address,
+      numerator,
+      denominator,
+      numerator,
+      denominator,
+      60 * 60 * 24,
+      60 * 60 * 24
     );
-    await (pcoLicenseClaimer as PCOLicenseParamsFacet).setBeneficiary(
-      diamondAdmin
-    );
-
-    let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
-    mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
-    mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
-    mockParamsStore.getPenaltyNumerator.returns(numerator);
-    mockParamsStore.getPenaltyDenominator.returns(denominator);
-    mockParamsStore.getHost.returns(sf.host.address);
-    mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
-    mockParamsStore.getBeneficiary.returns(diamondAdmin);
-    mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
 
     return {
       pcoLicenseClaimer: pcoLicenseClaimer as PCOLicenseClaimerFacet,
       pcoLicenseParams: pcoLicenseClaimer as PCOLicenseParamsFacet,
-      mockParamsStore,
       ...res,
     };
   }

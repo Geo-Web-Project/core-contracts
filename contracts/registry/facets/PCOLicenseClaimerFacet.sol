@@ -9,8 +9,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import "../../beacon-diamond/BeaconDiamond.sol";
 import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
+import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 
 contract PCOLicenseClaimerFacet {
+    using CFAv1Library for CFAv1Library.InitData;
+
     /// @notice Emitted when a parcel is claimed
     event ParcelClaimed(uint256 indexed _licenseId, address indexed _payer);
 
@@ -249,6 +252,32 @@ contract PCOLicenseClaimerFacet {
 
         // Store beacon proxy
         ds.beaconProxies[licenseId] = address(proxy);
+
+        {
+            // Transfer required buffer
+            IConstantFlowAgreementV1 cfa = IConstantFlowAgreementV1(
+                address(
+                    ls.host.getAgreementClass(
+                        keccak256(
+                            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+                        )
+                    )
+                )
+            );
+            uint256 requiredBuffer = cfa.getDepositRequiredForFlowRate(
+                ls.paymentToken,
+                initialContributionRate
+            );
+            bool success1 = ls.paymentToken.transferFrom(
+                msg.sender,
+                address(proxy),
+                requiredBuffer
+            );
+            require(
+                success1,
+                "PCOLicenseClaimerFacet: Required buffer payment failed"
+            );
+        }
 
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(

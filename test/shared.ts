@@ -1,4 +1,3 @@
-import { FakeContract } from "@defi-wonderland/smock";
 import { web3 } from "hardhat";
 import { Framework } from "@superfluid-finance/sdk-core";
 import { BigNumber } from "ethers";
@@ -7,19 +6,16 @@ const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { deployments, getUnnamedAccounts } from "hardhat";
 import { ISuperfluid } from "../typechain-types";
+import { Contract } from "ethers";
 
 export const errorHandler = (err: any) => {
   if (err) throw err;
 };
 
-export async function rateToPurchasePrice(
-  mockParamsStore: FakeContract,
-  rate: BigNumber
-) {
-  const perSecondFeeNumerator =
-    await mockParamsStore.getPerSecondFeeNumerator();
+export async function rateToPurchasePrice(paramsStore: any, rate: BigNumber) {
+  const perSecondFeeNumerator = await paramsStore.getPerSecondFeeNumerator();
   const perSecondFeeDenominator =
-    await mockParamsStore.getPerSecondFeeDenominator();
+    await paramsStore.getPerSecondFeeDenominator();
 
   return rate.mul(perSecondFeeDenominator).div(perSecondFeeNumerator);
 }

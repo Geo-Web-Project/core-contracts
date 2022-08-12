@@ -7,6 +7,7 @@ import { BigNumber } from "ethers";
 import { rateToPurchasePrice } from "../shared";
 import Fixtures from "./PCOLicenseClaimer.fixture";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
+import { IPCOLicenseParamsStore } from "../../typechain-types";
 
 const hre = require("hardhat");
 
@@ -181,18 +182,30 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should calculate next address", async () => {
-      const { pcoLicenseClaimer, mockParamsStore } =
+      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
         await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
       const nextAddress = await pcoLicenseClaimer.getNextProxyAddress(user);
 
       let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
-      const contributionRate = ethers.utils.parseEther("1");
+      const contributionRate = ethers.utils
+        .parseEther("9")
+        .div(365 * 24 * 60 * 60 * 10);
       const forSalePrice = await rateToPurchasePrice(
-        mockParamsStore,
+        pcoLicenseParams,
         contributionRate
       );
+
+      // Approve payment token for buffer
+      let requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      let approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
 
       await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
@@ -206,6 +219,16 @@ describe("PCOLicenseClaimerFacet", async function () {
       );
 
       const nextAddress2 = await pcoLicenseClaimer.getNextProxyAddress(user);
+
+      // Approve payment token for buffer
+      requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
 
       let coord1 = BigNumber.from(5).shl(32).or(BigNumber.from(33));
       await pcoLicenseClaimer
@@ -265,16 +288,28 @@ describe("PCOLicenseClaimerFacet", async function () {
 
   describe("claim", async () => {
     it("should claim", async () => {
-      const { pcoLicenseClaimer, mockParamsStore } =
+      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
         await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
       let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
-      const contributionRate = ethers.utils.parseEther("1");
+      const contributionRate = ethers.utils
+        .parseEther("9")
+        .div(365 * 24 * 60 * 60 * 10);
       const forSalePrice = await rateToPurchasePrice(
-        mockParamsStore,
+        pcoLicenseParams,
         contributionRate
       );
+
+      // Approve payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      const approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
 
       const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
@@ -288,7 +323,7 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should claim when payment is required", async () => {
-      const { pcoLicenseClaimer, mockParamsStore, paymentToken } =
+      const { pcoLicenseClaimer, pcoLicenseParams, paymentToken, ethersjsSf } =
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
@@ -297,7 +332,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
       const forSalePrice = await rateToPurchasePrice(
-        mockParamsStore,
+        pcoLicenseParams,
         contributionRate
       );
 
@@ -305,9 +340,12 @@ describe("PCOLicenseClaimerFacet", async function () {
       await hre.network.provider.send("evm_mine", [daysFromNow]);
 
       // Approve payment token
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
       const approveOp = await paymentToken.approve({
         receiver: pcoLicenseClaimer.address,
-        amount: forSalePrice.toString(),
+        amount: forSalePrice.add(requiredBuffer).toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
@@ -322,7 +360,8 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should claim with real BeaconDiamond", async () => {
-      const { pcoLicenseClaimer, mockParamsStore } = await Fixtures.setup();
+      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
+        await Fixtures.setup();
 
       const { diamondAdmin } = await getNamedAccounts();
       const { diamond } = deployments;
@@ -339,11 +378,33 @@ describe("PCOLicenseClaimerFacet", async function () {
       const { user } = await getNamedAccounts();
 
       let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
-      const contributionRate = ethers.utils.parseEther("1");
+      const contributionRate = ethers.utils
+        .parseEther("9")
+        .div(365 * 24 * 60 * 60 * 10);
       const forSalePrice = await rateToPurchasePrice(
-        mockParamsStore,
+        pcoLicenseParams,
         contributionRate
       );
+
+      // Approve payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      const approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const nextAddress = await pcoLicenseClaimer.getNextProxyAddress(user);
+      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: nextAddress,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
 
       const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
@@ -357,7 +418,7 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if payment fails", async () => {
-      const { pcoLicenseClaimer, mockParamsStore } =
+      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
@@ -366,12 +427,55 @@ describe("PCOLicenseClaimerFacet", async function () {
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
       const forSalePrice = await rateToPurchasePrice(
-        mockParamsStore,
+        pcoLicenseParams,
         contributionRate
       );
 
       const daysFromNow = getUnixTime(addDays(startOfToday(), 7));
       await hre.network.provider.send("evm_mine", [daysFromNow]);
+
+      // Approve payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      const approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      const txn = pcoLicenseClaimer
+        .connect(await ethers.getSigner(user))
+        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+
+      await expect(txn).to.be.revertedWith(
+        "SuperToken: transfer amount exceeds allowance"
+      );
+    });
+
+    it("should fail if payment for buffer fails", async () => {
+      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
+        await Fixtures.initializedWithAuction();
+      const { user } = await getNamedAccounts();
+
+      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const contributionRate = ethers.utils
+        .parseEther("9")
+        .div(365 * 24 * 60 * 60 * 10);
+      const forSalePrice = await rateToPurchasePrice(
+        pcoLicenseParams,
+        contributionRate
+      );
+
+      const daysFromNow = getUnixTime(addDays(startOfToday(), 7));
+      await hre.network.provider.send("evm_mine", [daysFromNow]);
+
+      // Approve payment token
+      const approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: forSalePrice.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
@@ -383,16 +487,28 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if buildAndMint fails", async () => {
-      const { pcoLicenseClaimer, mockParamsStore } =
+      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
         await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
       let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
-      const contributionRate = ethers.utils.parseEther("1");
+      const contributionRate = ethers.utils
+        .parseEther("9")
+        .div(365 * 24 * 60 * 60 * 10);
       const forSalePrice = await rateToPurchasePrice(
-        mockParamsStore,
+        pcoLicenseParams,
         contributionRate
       );
+
+      // Approve payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      const approveOp = await paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
 
       await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
@@ -408,14 +524,14 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if forSalePrice does not meet requirement", async () => {
-      const { pcoLicenseClaimer, mockParamsStore } =
+      const { pcoLicenseClaimer, pcoLicenseParams } =
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
       let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = BigNumber.from(1);
       const forSalePrice = await rateToPurchasePrice(
-        mockParamsStore,
+        pcoLicenseParams,
         contributionRate
       );
 
