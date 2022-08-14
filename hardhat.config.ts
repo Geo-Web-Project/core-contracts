@@ -34,6 +34,11 @@ if (process.env.INFURA_KEY) {
       chainId: 5,
       accounts: [process.env.DEV_PRIVATE_KEY],
       deploy: ["deploy/"],
+      verify: {
+        etherscan: {
+          apiUrl: "https://api-goerli.etherscan.io/",
+        },
+      },
     };
   } else {
     console.warn("Missing env.DEV_PRIVATE_KEY");
