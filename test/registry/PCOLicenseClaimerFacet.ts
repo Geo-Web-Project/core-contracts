@@ -7,7 +7,6 @@ import { BigNumber } from "ethers";
 import { rateToPurchasePrice } from "../shared";
 import Fixtures from "./PCOLicenseClaimer.fixture";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
-import { IPCOLicenseParamsStore } from "../../typechain-types";
 
 const hre = require("hardhat");
 

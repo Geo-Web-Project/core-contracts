@@ -6,7 +6,6 @@ const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { deployments, getUnnamedAccounts } from "hardhat";
 import { ISuperfluid } from "../typechain-types";
-import { Contract } from "ethers";
 
 export const errorHandler = (err: any) => {
   if (err) throw err;

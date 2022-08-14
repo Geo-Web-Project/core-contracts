@@ -2,7 +2,6 @@ import { BigNumber, BigNumberish } from "ethers";
 import { expect } from "chai";
 import { smock } from "@defi-wonderland/smock";
 import { deployments } from "hardhat";
-import { Contract } from "ethers";
 import {
   IERC721,
   PCOLicenseClaimerFacet,

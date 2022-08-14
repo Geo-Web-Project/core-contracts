@@ -1,7 +1,5 @@
 node_modules/
 .envrc
-.openzeppelin/unknown-1337.json
-.openzeppelin/unknown-31337.json
 migrations
 dist/
 
@@ -10,10 +8,6 @@ artifacts/
 cache/
 cache-ovm/
 build/
-deployments/
-
-# zkSync
-contracts/tmp
 
 # dotenv
 .env
@@ -22,21 +16,13 @@ contracts/tmp
 typechain-types/*.js
 typechain-types/*.ts
 typechain-types/factories/*
-!typechain-types/factories/ERC721License__factory.ts
-!typechain-types/factories/GeoWebCoordinate__factory.ts
-!typechain-types/factories/GeoWebParcel__factory.ts
-!typechain-types/factories/AuctionSuperApp__factory.ts
-!typechain-types/factories/FairLaunchClaimer__factory.ts
-!typechain-types/factories/Reclaimer__factory.ts
 
 # tests-typechain
-!typechain-types/AuctionSuperApp.ts
+!typechain-types/IERC721.ts
+!typechain-types/PCOLicenseClaimerFacet.ts
+!typechain-types/IDiamondLoupe.ts
+!typechain-types/PCOLicenseParamsFacet.ts
 !typechain-types/ISuperfluid.ts
-!typechain-types/MockClaimer.ts
-!typechain-types/FairLaunchClaimer.ts
-!typechain-types/ERC721License.ts
-!typechain-types/GeoWebParcel.ts
-!typechain-types/Reclaimer.ts
 
 # solidity-coverage
 coverage/

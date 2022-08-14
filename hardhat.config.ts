@@ -22,14 +22,18 @@ const networks: any = {
     gasPrice: 1000000000,
     url: `http://localhost:8545`,
   },
+  hardhat: {
+    deploy: ["deploy-hardhat/"],
+  },
 };
 
 if (process.env.INFURA_KEY) {
   if (process.env.DEV_PRIVATE_KEY) {
-    networks["optimism-kovan"] = {
-      url: `https://kovan.optimism.io`,
-      chainId: 69,
+    networks["goerli"] = {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+      chainId: 5,
       accounts: [process.env.DEV_PRIVATE_KEY],
+      deploy: ["deploy/"],
     };
   } else {
     console.warn("Missing env.DEV_PRIVATE_KEY");

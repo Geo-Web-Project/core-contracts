@@ -1,6 +1,6 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ethers, network, getNamedAccounts } from "hardhat";
+import { ethers, getNamedAccounts } from "hardhat";
 import { BigNumber } from "ethers";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
