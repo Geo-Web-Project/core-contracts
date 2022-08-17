@@ -140,7 +140,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "rewardAccount",
+        "name": "rewardAmountReceiver",
         "type": "address"
       },
       {

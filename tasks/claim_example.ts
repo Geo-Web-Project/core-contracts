@@ -36,40 +36,40 @@ async function mintSquare(dim: number, GW: ethers.Contract) {
   );
 }
 
-task("example:claim")
-  .addParam("geoWebCoordinate", "GeoWebCoordinate contract address")
-  .addParam("geoWebCoordinatePath", "GeoWebCoordinatePath contract address")
-  .addParam("geoWebParcel", "GeoWebParcel contract address")
-  .setAction(
-    async (
-      {
-        geoWebCoordinate,
-        geoWebCoordinatePath,
-        geoWebParcel,
-      }: {
-        geoWebCoordinate: string;
-        geoWebCoordinatePath: string;
-        geoWebParcel: string;
-      },
-      hre
-    ) => {
-      const [admin] = await hre.ethers.getSigners();
+// task("example:claim")
+//   .addParam("geoWebCoordinate", "GeoWebCoordinate contract address")
+//   .addParam("geoWebCoordinatePath", "GeoWebCoordinatePath contract address")
+//   .addParam("geoWebParcel", "GeoWebParcel contract address")
+//   .setAction(
+//     async (
+//       {
+//         geoWebCoordinate,
+//         geoWebCoordinatePath,
+//         geoWebParcel,
+//       }: {
+//         geoWebCoordinate: string;
+//         geoWebCoordinatePath: string;
+//         geoWebParcel: string;
+//       },
+//       hre
+//     ) => {
+//       const [admin] = await hre.ethers.getSigners();
 
-      const gwCoor = await hre.ethers.getContractAt(
-        "GeoWebCoordinate",
-        geoWebCoordinate
-      );
-      const gwCoorPath = await hre.ethers.getContractAt(
-        "GeoWebCoordinatePath",
-        geoWebCoordinatePath
-      );
-      const GW = await hre.ethers.getContractAt("GeoWebParcel", geoWebParcel);
+//       const gwCoor = await hre.ethers.getContractAt(
+//         "GeoWebCoordinate",
+//         geoWebCoordinate
+//       );
+//       const gwCoorPath = await hre.ethers.getContractAt(
+//         "GeoWebCoordinatePath",
+//         geoWebCoordinatePath
+//       );
+//       const GW = await hre.ethers.getContractAt("GeoWebParcel", geoWebParcel);
 
-      const buildRole = await GW.BUILD_ROLE();
+//       const buildRole = await GW.BUILD_ROLE();
 
-      const result = await GW.grantRole(buildRole, admin.address);
-      await result.wait();
+//       const result = await GW.grantRole(buildRole, admin.address);
+//       await result.wait();
 
-      await mintSquare(64, GW);
-    }
-  );
+//       await mintSquare(64, GW);
+//     }
+//   );

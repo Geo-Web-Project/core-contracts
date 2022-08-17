@@ -213,7 +213,7 @@
     "outputs": [
       {
         "internalType": "bytes",
-        "name": "appCtx",
+        "name": "newCtx",
         "type": "bytes"
       }
     ],
@@ -398,7 +398,7 @@
     "outputs": [
       {
         "internalType": "bytes",
-        "name": "appCtx",
+        "name": "newCtx",
         "type": "bytes"
       }
     ],
