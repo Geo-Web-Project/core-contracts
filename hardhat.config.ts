@@ -13,6 +13,7 @@ import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-deploy";
 import "@openzeppelin/hardhat-upgrades";
+import "hardhat-diamond-abi";
 import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
@@ -73,4 +74,21 @@ module.exports = {
       default: 2,
     },
   },
+  diamondAbi: [
+    {
+      name: "RegistryDiamond",
+      include: [
+        "PCOLicenseClaimerFacet",
+        "GeoWebParcelFacet",
+        "PCOLicenseParamsFacet",
+        "ERC721Facet",
+      ],
+      strict: false,
+    },
+    {
+      name: "PCOLicenseDiamond",
+      include: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
+      strict: true,
+    },
+  ],
 };

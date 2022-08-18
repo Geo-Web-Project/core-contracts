@@ -16,12 +16,8 @@ build/
 typechain-types/*.js
 typechain-types/*.ts
 typechain-types/factories/*
-!typechain-types/factories/ERC721Facet__factory.ts
-!typechain-types/factories/GeoWebParcelFacet__factory.ts
-!typechain-types/factories/PCOLicenseClaimerFacet__factory.ts
-!typechain-types/factories/PCOLicenseParamsFacet__factory.ts
-!typechain-types/factories/CFABasePCOFacet__factory.ts
-!typechain-types/factories/CFAPenaltyBidFacet__factory.ts
+!typechain-types/factories/RegistryDiamond__factory.ts
+!typechain-types/factories/PCOLicenseDiamond__factory.ts
 
 # tests-typechain
 !typechain-types/IERC721.ts
