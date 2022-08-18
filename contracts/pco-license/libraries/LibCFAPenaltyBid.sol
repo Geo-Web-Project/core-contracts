@@ -76,18 +76,22 @@ library LibCFAPenaltyBid {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         Bid storage _pendingBid = pendingBid();
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
 
         // Delete payer flow
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
-            currentBid.bidder,
+            _currentBid.bidder,
             address(this)
         );
         if (flowRate > 0) {
-            cs.cfaV1.deleteFlow(currentBid.bidder, address(this), paymentToken);
+            cs.cfaV1.deleteFlow(
+                _currentBid.bidder,
+                address(this),
+                paymentToken
+            );
         }
 
         // Create bidder flow
@@ -131,7 +135,7 @@ library LibCFAPenaltyBid {
 
         // Transfer license
         ds.license.safeTransferFrom(
-            currentBid.bidder,
+            _currentBid.bidder,
             _pendingBid.bidder,
             ds.licenseId
         );
@@ -151,14 +155,14 @@ library LibCFAPenaltyBid {
             // Keep full newBuffer
             remainingBalance -= newBuffer;
             uint256 bidderPayment = _pendingBid.forSalePrice -
-                currentBid.forSalePrice;
+                _currentBid.forSalePrice;
             if (remainingBalance > bidderPayment) {
                 // Transfer bidder full payment
                 paymentToken.transfer(_pendingBid.bidder, bidderPayment);
                 remainingBalance -= bidderPayment;
 
                 // Transfer remaining to payer
-                paymentToken.transfer(currentBid.bidder, remainingBalance);
+                paymentToken.transfer(_currentBid.bidder, remainingBalance);
             } else {
                 // Transfer remaining to bidder
                 paymentToken.transfer(_pendingBid.bidder, remainingBalance);
@@ -166,13 +170,13 @@ library LibCFAPenaltyBid {
         }
 
         // Update current bid
-        currentBid.timestamp = _pendingBid.timestamp;
-        currentBid.bidder = _pendingBid.bidder;
-        currentBid.contributionRate = _pendingBid.contributionRate;
-        currentBid.perSecondFeeNumerator = _pendingBid.perSecondFeeNumerator;
-        currentBid.perSecondFeeDenominator = _pendingBid
+        _currentBid.timestamp = _pendingBid.timestamp;
+        _currentBid.bidder = _pendingBid.bidder;
+        _currentBid.contributionRate = _pendingBid.contributionRate;
+        _currentBid.perSecondFeeNumerator = _pendingBid.perSecondFeeNumerator;
+        _currentBid.perSecondFeeDenominator = _pendingBid
             .perSecondFeeDenominator;
-        currentBid.forSalePrice = _pendingBid.forSalePrice;
+        _currentBid.forSalePrice = _pendingBid.forSalePrice;
 
         // Update pending bid
         _clearPendingBid();
@@ -183,7 +187,7 @@ library LibCFAPenaltyBid {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         Bid storage _pendingBid = pendingBid();
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
@@ -212,7 +216,7 @@ library LibCFAPenaltyBid {
                 remainingBalance -= bidderPayment;
 
                 // Transfer remaining to payer
-                paymentToken.transfer(currentBid.bidder, remainingBalance);
+                paymentToken.transfer(_currentBid.bidder, remainingBalance);
             } else {
                 // Transfer remaining to bidder
                 paymentToken.transfer(_pendingBid.bidder, remainingBalance);
@@ -220,7 +224,7 @@ library LibCFAPenaltyBid {
         }
 
         bool success = paymentToken.transferFrom(
-            currentBid.bidder,
+            _currentBid.bidder,
             beneficiary,
             penaltyAmount
         );

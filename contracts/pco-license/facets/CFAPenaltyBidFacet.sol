@@ -78,7 +78,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     modifier onlyDuringBidPeriod() {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
@@ -168,7 +168,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             .getPerSecondFeeDenominator();
 
         // Check for sale price
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         require(
             LibCFABasePCO._checkForSalePrice(
@@ -181,7 +181,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         );
 
         require(
-            newContributionRate >= currentBid.contributionRate,
+            newContributionRate >= _currentBid.contributionRate,
             "CFAPenaltyBidFacet: New contribution rate is not high enough"
         );
 
@@ -246,12 +246,12 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         emit BidAccepted(
-            currentBid.bidder,
+            _currentBid.bidder,
             _pendingBid.bidder,
-            currentBid.forSalePrice
+            _currentBid.forSalePrice
         );
 
         LibCFAPenaltyBid._triggerTransfer();
@@ -272,12 +272,12 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         emit BidRejected(
-            currentBid.bidder,
+            _currentBid.bidder,
             _pendingBid.bidder,
-            currentBid.forSalePrice
+            _currentBid.forSalePrice
         );
 
         LibCFAPenaltyBid._rejectBid();
@@ -291,13 +291,13 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     function triggerTransfer() external onlyIfPendingBid onlyAfterBidPeriod {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         emit TransferTriggered(
             msg.sender,
-            currentBid.bidder,
+            _currentBid.bidder,
             _pendingBid.bidder,
-            currentBid.forSalePrice
+            _currentBid.forSalePrice
         );
 
         LibCFAPenaltyBid._triggerTransfer();

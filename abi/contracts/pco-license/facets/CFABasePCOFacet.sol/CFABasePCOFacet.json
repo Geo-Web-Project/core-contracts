@@ -52,6 +52,51 @@
   },
   {
     "inputs": [],
+    "name": "currentBid",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "bidder",
+            "type": "address"
+          },
+          {
+            "internalType": "int96",
+            "name": "contributionRate",
+            "type": "int96"
+          },
+          {
+            "internalType": "uint256",
+            "name": "perSecondFeeNumerator",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "perSecondFeeDenominator",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "forSalePrice",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibCFABasePCO.Bid",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "forSalePrice",
     "outputs": [
       {

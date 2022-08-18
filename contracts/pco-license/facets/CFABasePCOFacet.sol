@@ -11,9 +11,9 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract CFABasePCOFacetModifiers {
     modifier onlyPayer() {
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         require(
-            msg.sender == currentBid.bidder,
+            msg.sender == _currentBid.bidder,
             "CFABasePCOFacet: Only payer is allowed to perform this action"
         );
         _;
@@ -110,13 +110,13 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         // Create flow (license -> beneficiary)
         cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
 
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
-        currentBid.timestamp = block.timestamp;
-        currentBid.bidder = bidder;
-        currentBid.contributionRate = newContributionRate;
-        currentBid.perSecondFeeNumerator = perSecondFeeNumerator;
-        currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
-        currentBid.forSalePrice = newForSalePrice;
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+        _currentBid.timestamp = block.timestamp;
+        _currentBid.bidder = bidder;
+        _currentBid.contributionRate = newContributionRate;
+        _currentBid.perSecondFeeNumerator = perSecondFeeNumerator;
+        _currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
+        _currentBid.forSalePrice = newForSalePrice;
 
         emit PayerForSalePriceUpdated(bidder, newForSalePrice);
         emit PayerContributionRateUpdated(bidder, newContributionRate);
@@ -126,8 +126,8 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
      * @notice Current payer of license
      */
     function payer() public view returns (address) {
-        LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
-        return currentBid.bidder;
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+        return _currentBid.bidder;
     }
 
     /**
@@ -142,8 +142,8 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
      */
     function forSalePrice() external view returns (uint256) {
         if (LibCFABasePCO._isPayerBidActive()) {
-            LibCFABasePCO.Bid storage currentBid = LibCFABasePCO.currentBid();
-            return currentBid.forSalePrice;
+            LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+            return _currentBid.forSalePrice;
         } else {
             return 0;
         }
@@ -172,5 +172,14 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
      */
     function isPayerBidActive() external view returns (bool) {
         return LibCFABasePCO._isPayerBidActive();
+    }
+
+    /**
+     * @notice Get current bid
+     */
+    function currentBid() external pure returns (LibCFABasePCO.Bid memory) {
+        LibCFABasePCO.Bid storage bid = LibCFABasePCO._currentBid();
+
+        return bid;
     }
 }

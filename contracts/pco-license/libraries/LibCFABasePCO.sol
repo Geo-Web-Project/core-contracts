@@ -60,7 +60,7 @@ library LibCFABasePCO {
     }
 
     /// @dev Store currentBid in separate position so struct is upgradeable
-    function currentBid() internal pure returns (Bid storage bid) {
+    function _currentBid() internal pure returns (Bid storage bid) {
         bytes32 position = STORAGE_POSITION_CUR_BID;
         assembly {
             bid.slot := position
@@ -110,7 +110,7 @@ library LibCFABasePCO {
     {
         DiamondStorage storage ds = diamondStorage();
         DiamondCFAStorage storage cs = cfaStorage();
-        Bid storage _currentBid = currentBid();
+        Bid storage bid = _currentBid();
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore
@@ -133,13 +133,13 @@ library LibCFABasePCO {
 
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
-            _currentBid.bidder,
+            bid.bidder,
             address(this)
         );
         if (flowRate > 0) {
             // Update flow (payer -> license)
             cs.cfaV1.updateFlowByOperator(
-                _currentBid.bidder,
+                bid.bidder,
                 address(this),
                 paymentToken,
                 newContributionRate
@@ -147,7 +147,7 @@ library LibCFABasePCO {
         } else {
             // Recreate flow (payer -> license)
             cs.cfaV1.createFlowByOperator(
-                _currentBid.bidder,
+                bid.bidder,
                 address(this),
                 paymentToken,
                 newContributionRate
@@ -168,17 +168,14 @@ library LibCFABasePCO {
             cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
         }
 
-        _currentBid.timestamp = block.timestamp;
-        _currentBid.bidder = _currentBid.bidder;
-        _currentBid.contributionRate = newContributionRate;
-        _currentBid.perSecondFeeNumerator = perSecondFeeNumerator;
-        _currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
-        _currentBid.forSalePrice = newForSalePrice;
+        bid.timestamp = block.timestamp;
+        bid.bidder = bid.bidder;
+        bid.contributionRate = newContributionRate;
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = newForSalePrice;
 
-        emit PayerForSalePriceUpdated(_currentBid.bidder, newForSalePrice);
-        emit PayerContributionRateUpdated(
-            _currentBid.bidder,
-            newContributionRate
-        );
+        emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
+        emit PayerContributionRateUpdated(bid.bidder, newContributionRate);
     }
 }
