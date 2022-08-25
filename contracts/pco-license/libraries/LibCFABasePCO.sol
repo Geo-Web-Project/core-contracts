@@ -131,6 +131,23 @@ library LibCFABasePCO {
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
+        {
+            // Transfer required buffer
+            (, uint256 deposit, , ) = paymentToken.realtimeBalanceOfNow(
+                address(this)
+            );
+            uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+                paymentToken,
+                newContributionRate
+            );
+            bool success1 = paymentToken.transferFrom(
+                msg.sender,
+                address(this),
+                requiredBuffer - deposit
+            );
+            require(success1, "LibCFABasePCO: Required buffer payment failed");
+        }
+
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
             bid.bidder,
