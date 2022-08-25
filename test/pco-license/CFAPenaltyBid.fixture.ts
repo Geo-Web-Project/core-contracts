@@ -10,7 +10,7 @@ const afterPlaceBid = deployments.createFixture(
 
     const { bidder } = await getNamedAccounts();
 
-    const newContributionRate = BigNumber.from(200);
+    const newContributionRate = BigNumber.from(200000000);
     const newForSalePrice = await rateToPurchasePrice(
       mockParamsStore,
       newContributionRate
