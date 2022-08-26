@@ -18,6 +18,10 @@ npx hardhat deploy --network <NETWORK>
 
 The `deploy` tasks will deploy all core contracts with default parameters and roles. Each contract has its own subtask that will be run.
 
+## Deployments
+
+- **Goerli**: [0x6CC6d2ba9668d5F8F5D08A45520E935cD6CDfc6f](https://louper.dev/diamond/0x6CC6d2ba9668d5F8F5D08A45520E935cD6CDfc6f?network=goerli)
+
 ## Architecture
 
 ![](./docs/architecture.png)
