@@ -4,9 +4,11 @@ pragma solidity ^0.8.14;
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "./LibCFABasePCO.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 library LibCFAPenaltyBid {
     using CFAv1Library for CFAv1Library.InitData;
+    using SafeERC20 for ISuperToken;
 
     bytes32 constant STORAGE_POSITION_OUT_BID =
         keccak256(
@@ -158,14 +160,14 @@ library LibCFAPenaltyBid {
                 _currentBid.forSalePrice;
             if (remainingBalance > bidderPayment) {
                 // Transfer bidder full payment
-                paymentToken.transfer(_pendingBid.bidder, bidderPayment);
+                paymentToken.safeTransfer(_pendingBid.bidder, bidderPayment);
                 remainingBalance -= bidderPayment;
 
                 // Transfer remaining to payer
-                paymentToken.transfer(_currentBid.bidder, remainingBalance);
+                paymentToken.safeTransfer(_currentBid.bidder, remainingBalance);
             } else {
                 // Transfer remaining to bidder
-                paymentToken.transfer(_pendingBid.bidder, remainingBalance);
+                paymentToken.safeTransfer(_pendingBid.bidder, remainingBalance);
             }
         }
 
@@ -212,23 +214,22 @@ library LibCFAPenaltyBid {
             uint256 bidderPayment = _pendingBid.forSalePrice + newBuffer;
             if (remainingBalance > bidderPayment) {
                 // Transfer bidder full payment
-                paymentToken.transfer(_pendingBid.bidder, bidderPayment);
+                paymentToken.safeTransfer(_pendingBid.bidder, bidderPayment);
                 remainingBalance -= bidderPayment;
 
                 // Transfer remaining to payer
-                paymentToken.transfer(_currentBid.bidder, remainingBalance);
+                paymentToken.safeTransfer(_currentBid.bidder, remainingBalance);
             } else {
                 // Transfer remaining to bidder
-                paymentToken.transfer(_pendingBid.bidder, remainingBalance);
+                paymentToken.safeTransfer(_pendingBid.bidder, remainingBalance);
             }
         }
 
-        bool success = paymentToken.transferFrom(
+        paymentToken.safeTransferFrom(
             _currentBid.bidder,
             beneficiary,
             penaltyAmount
         );
-        require(success, "LibCFAPenaltyBid: Penalty payment failed");
 
         LibCFABasePCO._editBid(
             _pendingBid.contributionRate,
