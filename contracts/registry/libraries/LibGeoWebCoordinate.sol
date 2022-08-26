@@ -18,7 +18,7 @@ library LibGeoWebCoordinate {
         uint256 _i_y,
         uint256 _i
     )
-        public
+        external
         pure
         returns (
             uint64 destination,
@@ -126,7 +126,7 @@ library LibGeoWebCoordinate {
 
     /// @notice Convert coordinate to word index
     function toWordIndex(uint64 coord)
-        public
+        external
         pure
         returns (
             uint256 i_x,
@@ -170,7 +170,7 @@ library LibGeoWebCoordinatePath {
     /// @return direction The next direction taken from path
     /// @return nextPath The next path with the direction popped from it
     function nextDirection(uint256 path)
-        public
+        external
         pure
         returns (
             bool hasNext,
