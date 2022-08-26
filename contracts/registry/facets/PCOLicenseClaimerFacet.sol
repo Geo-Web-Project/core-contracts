@@ -10,9 +10,11 @@ import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import "../../beacon-diamond/BeaconDiamond.sol";
 import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract PCOLicenseClaimerFacet {
     using CFAv1Library for CFAv1Library.InitData;
+    using SafeERC20 for ISuperToken;
 
     /// @notice Emitted when a parcel is claimed
     event ParcelClaimed(uint256 indexed _licenseId, address indexed _payer);
@@ -224,14 +226,10 @@ contract PCOLicenseClaimerFacet {
 
         if (block.timestamp <= ds.auctionEnd) {
             // Transfer initial payment
-            bool success = ls.paymentToken.transferFrom(
+            ls.paymentToken.safeTransferFrom(
                 msg.sender,
                 ls.beneficiary,
                 initialForSalePrice
-            );
-            require(
-                success,
-                "PCOLicenseClaimerFacet: Initial claim payment failed"
             );
         }
 
@@ -268,14 +266,10 @@ contract PCOLicenseClaimerFacet {
                 ls.paymentToken,
                 initialContributionRate
             );
-            bool success1 = ls.paymentToken.transferFrom(
+            ls.paymentToken.safeTransferFrom(
                 msg.sender,
                 address(proxy),
                 requiredBuffer
-            );
-            require(
-                success1,
-                "PCOLicenseClaimerFacet: Required buffer payment failed"
             );
         }
 

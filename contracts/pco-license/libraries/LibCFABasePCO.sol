@@ -4,9 +4,11 @@ pragma solidity ^0.8.14;
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 library LibCFABasePCO {
     using CFAv1Library for CFAv1Library.InitData;
+    using SafeERC20 for ISuperToken;
 
     bytes32 constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibBasePCO");
@@ -140,12 +142,11 @@ library LibCFABasePCO {
                 paymentToken,
                 newContributionRate
             );
-            bool success1 = paymentToken.transferFrom(
+            paymentToken.safeTransferFrom(
                 msg.sender,
                 address(this),
                 requiredBuffer - deposit
             );
-            require(success1, "LibCFABasePCO: Required buffer payment failed");
         }
 
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
