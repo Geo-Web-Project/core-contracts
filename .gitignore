@@ -36,3 +36,5 @@ abi/contracts/mock
 # solidity-coverage
 coverage.json
 coverage/
+
+shell.nix
