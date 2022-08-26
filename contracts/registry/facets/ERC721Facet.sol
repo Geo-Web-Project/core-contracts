@@ -39,7 +39,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
     /**
      * @dev See {IERC721-balanceOf}.
      */
-    function balanceOf(address owner) public view override returns (uint256) {
+    function balanceOf(address owner) external view override returns (uint256) {
         require(
             owner != address(0),
             "ERC721: address zero is not a valid owner"
@@ -51,14 +51,14 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
     /**
      * @dev See {IERC721-ownerOf}.
      */
-    function ownerOf(uint256 tokenId) public view override returns (address) {
+    function ownerOf(uint256 tokenId) external view override returns (address) {
         return LibERC721.ownerOf(tokenId);
     }
 
     /**
      * @dev See {IERC721Metadata-name}.
      */
-    function name() public view override returns (string memory) {
+    function name() external view override returns (string memory) {
         LibERC721.DiamondStorage storage ds = LibERC721.diamondStorage();
 
         return ds.name;
@@ -67,7 +67,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
-    function symbol() public view override returns (string memory) {
+    function symbol() external view override returns (string memory) {
         LibERC721.DiamondStorage storage ds = LibERC721.diamondStorage();
 
         return ds.symbol;
@@ -77,7 +77,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
      * @dev See {IERC721Metadata-tokenURI}.
      */
     function tokenURI(uint256 tokenId)
-        public
+        external
         view
         override
         returns (string memory)
@@ -90,7 +90,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
     /**
      * @dev See {IERC721-approve}.
      */
-    function approve(address to, uint256 tokenId) public override {
+    function approve(address to, uint256 tokenId) external override {
         address owner = LibERC721.ownerOf(tokenId);
         require(to != owner, "ERC721: approval to current owner");
 
@@ -106,7 +106,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
      * @dev See {IERC721-getApproved}.
      */
     function getApproved(uint256 tokenId)
-        public
+        external
         view
         override
         returns (address)
@@ -118,7 +118,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
      * @dev See {IERC721-setApprovalForAll}.
      */
     function setApprovalForAll(address operator, bool approved)
-        public
+        external
         override
     {
         LibERC721._setApprovalForAll(_msgSender(), operator, approved);
@@ -143,7 +143,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
         address from,
         address to,
         uint256 tokenId
-    ) public override {
+    ) external override {
         //solhint-disable-next-line max-line-length
         require(
             LibERC721._isApprovedOrOwner(_msgSender(), tokenId),
@@ -160,7 +160,7 @@ contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
         address from,
         address to,
         uint256 tokenId
-    ) public override {
+    ) external override {
         safeTransferFrom(from, to, tokenId, "");
     }
 

@@ -11,7 +11,7 @@ contract GeoWebParcelFacet {
      * @param y Y coordinate
      */
     function availabilityIndex(uint256 x, uint256 y)
-        public
+        external
         view
         returns (uint256)
     {
@@ -26,7 +26,7 @@ contract GeoWebParcelFacet {
      * @param id ID of land parcel
      */
     function getLandParcel(uint256 id)
-        public
+        external
         view
         returns (uint64 baseCoordinate, uint256[] memory path)
     {

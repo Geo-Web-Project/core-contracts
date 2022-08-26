@@ -125,7 +125,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice Current payer of license
      */
-    function payer() public view returns (address) {
+    function payer() external view returns (address) {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         return _currentBid.bidder;
     }
@@ -133,7 +133,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice Current contribution rate of payer
      */
-    function contributionRate() public view returns (int96) {
+    function contributionRate() external view returns (int96) {
         return LibCFABasePCO._contributionRate();
     }
 
