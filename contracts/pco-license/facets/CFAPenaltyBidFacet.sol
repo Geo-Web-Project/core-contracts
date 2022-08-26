@@ -9,10 +9,12 @@ import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @notice Handles bidding using CFAs and penalities
 contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
+    using SafeERC20 for ISuperToken;
 
     /// @notice Emitted when a bid is accepted
     event BidAccepted(
@@ -214,12 +216,11 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             newContributionRate
         );
         uint256 requiredCollateral = requiredBuffer + newForSalePrice;
-        bool success = paymentToken.transferFrom(
+        paymentToken.safeTransferFrom(
             msg.sender,
             address(this),
             requiredCollateral
         );
-        require(success, "CFAPenaltyBidFacet: Bid deposit failed");
 
         // Save pending bid
         _pendingBid.timestamp = block.timestamp;
