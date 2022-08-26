@@ -16,7 +16,7 @@ function perYearToPerSecondRate(annualRate: number) {
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
 
-  const { diamondAdmin } = await getNamedAccounts();
+  const { diamondAdmin, treasury } = await getNamedAccounts();
 
   const errorHandler = (err: any) => {
     if (err) throw err;
@@ -94,7 +94,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await registryDiamond.initializeClaimer(0, 0, 0, 0, beacon.address);
   await registryDiamond.initializeParams(
-    diamondAdmin,
+    treasury,
     ethx.address,
     sf.host.contract.address,
     perSecondFee.numerator,
