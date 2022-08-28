@@ -86,8 +86,8 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         );
         require(success, "CFAReclaimerFacet: Deposit failed");
 
-        LibCFAReclaimer._triggerTransfer(newContributionRate, newForSalePrice, perSecondFeeDenominator, perSecondFeeNumerator, paymentToken);
-
         emit LicenseReclaimed(msg.sender, _claimPrice);
+
+        LibCFAReclaimer._triggerTransfer(newContributionRate, newForSalePrice, perSecondFeeDenominator, perSecondFeeNumerator, paymentToken);
     }
 }
