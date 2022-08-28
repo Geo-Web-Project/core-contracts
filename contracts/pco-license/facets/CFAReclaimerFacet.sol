@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "../libraries/LibCFABasePCO.sol";
+import "../libraries/LibCFAReclaimer.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
@@ -28,7 +29,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             address(this),
             ds.paramsStore.getBeneficiary()
         );
-        uint256 _length = ds.paramStore.getReclaimAuctionLength();
+        uint256 _length = ds.paramsStore.getReclaimAuctionLength();
 
         if (block.timestamp > startTime + _length) {
             return 0;
@@ -45,45 +46,48 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
      *      - Must have permissions to create flow for bidder
      *      - Must have ERC-20 approval of payment token for claimPrice amount
      */
-    function claim() external {
+    function claim(int96 newContributionRate, uint256 newForSalePrice)
+        external
+    {
+        require(
+            !LibCFABasePCO._isPayerBidActive(),
+            "CFAReclaimerFacet: Can only perform action when payer bid is active"
+        );
+
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
 
-        require(
-            LibCFABasePCO._isPayerBidActive() == false,
-            "CFAReclaimerFacet: Payer bid must be inactive"
-        );
-
-        /*
-
-        // Check operator permissions
-        (, uint8 permissions, int96 flowRateAllowance) = cs
-            .cfaV1
-            .cfa
-            .getFlowOperatorData(
-                ds.paramsStore.getPaymentToken(),
-                msg.sender,
-                address(this)
-            );
+        uint256 perSecondFeeNumerator = ds
+            .paramsStore
+            .getPerSecondFeeNumerator();
+        uint256 perSecondFeeDenominator = ds
+            .paramsStore
+            .getPerSecondFeeDenominator();
 
         require(
-            LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
-                permissions,
-                LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
+            LibCFABasePCO._checkForSalePrice(
+                newForSalePrice,
+                newContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
             ),
-            "CFAReclaimerFacet: CREATE_FLOW permission not granted"
+            "CFAReclaimerFacet: Incorrect for sale price"
         );
 
         // Collect deposit
+        uint256 _claimPrice = claimPrice();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+        address _bidder = _currentBid.bidder;
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         bool success = paymentToken.transferFrom(
             msg.sender,
-            ds.paramsStore.getBeneficiary(),
-            claimPrice()
+            _bidder,
+            _claimPrice
         );
-        require(success, "CFAPenaltyBidFacet: Bid deposit failed");
+        require(success, "CFAReclaimerFacet: Deposit failed");
 
-        */
-        emit LicenseReclaimed(msg.sender, claimPrice());
+        LibCFAReclaimer._triggerTransfer(newContributionRate, newForSalePrice, perSecondFeeDenominator, perSecondFeeNumerator, paymentToken);
+
+        emit LicenseReclaimed(msg.sender, _claimPrice);
     }
 }
