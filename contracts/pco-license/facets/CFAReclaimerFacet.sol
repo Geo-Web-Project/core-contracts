@@ -17,6 +17,10 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
      * @notice Current price to reclaim
      */
     function claimPrice() public view returns (uint256) {
+        require(
+            !LibCFABasePCO._isPayerBidActive(),
+            "CFAReclaimerFacet: The reclaim auction hasn't started yet"
+        );
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
