@@ -1,7 +1,6 @@
 import BN from "bn.js";
 import { BigNumber, ethers } from "ethers";
 import { task, types } from "hardhat/config";
-import { RegistryDiamond } from "../typechain-types";
 const GeoWebCoordinate = require("js-geo-web-coordinate");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 
@@ -22,7 +21,7 @@ function toBN(value: BigNumber): BN {
 }
 
 async function rateToPurchasePrice(
-  paramsStore: RegistryDiamond,
+  paramsStore: ethers.Contract,
   rate: BigNumber
 ) {
   const perSecondFeeNumerator = await paramsStore.getPerSecondFeeNumerator();
@@ -74,7 +73,7 @@ async function buildSingleCoordinate(GW: ethers.Contract) {
   console.log(`Estimated gas for single coordinate build: ${gas}`);
 }
 
-async function mintPath(count: any, registryDiamond: RegistryDiamond) {
+async function mintPath(count: any, registryDiamond: ethers.Contract) {
   // Global(160000, 17) -> Index(100000, 1), Local(0, 1)
   let coord = BigNumber.from(160000).shl(32).or(BigNumber.from(17));
 
@@ -96,7 +95,7 @@ async function mintPath(count: any, registryDiamond: RegistryDiamond) {
   console.log(`Estimated gas for ${count} path mint: ${gas}`);
 }
 
-async function mintSquare(dim: number, registryDiamond: RegistryDiamond) {
+async function mintSquare(dim: number, registryDiamond: ethers.Contract) {
   // Global(160000, 17) -> Index(100000, 1), Local(0, 1)
   const coord1 = BigNumber.from(160000).shl(32).or(BigNumber.from(0));
   const coord2 = BigNumber.from(160000 + dim)
@@ -158,7 +157,7 @@ task("measure:parcel-gas").setAction(async ({}, hre) => {
 
   const { diamondAdmin } = await getNamedAccounts();
 
-  const registryDiamond: RegistryDiamond = await hre.ethers.getContract(
+  const registryDiamond: ethers.Contract = await hre.ethers.getContract(
     "RegistryDiamond"
   );
 
