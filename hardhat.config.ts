@@ -17,6 +17,7 @@ import "hardhat-diamond-abi";
 import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
+import "./tasks/estimate_minting_gas";
 
 const networks: any = {
   local: {
