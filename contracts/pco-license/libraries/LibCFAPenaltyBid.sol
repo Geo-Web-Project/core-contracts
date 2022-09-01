@@ -10,7 +10,7 @@ library LibCFAPenaltyBid {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
 
-    bytes32 constant STORAGE_POSITION_OUT_BID =
+    bytes32 private constant STORAGE_POSITION_OUT_BID =
         keccak256(
             "diamond.standard.diamond.storage.LibCFAPenaltyBid.pendingBid"
         );
@@ -26,6 +26,7 @@ library LibCFAPenaltyBid {
 
     function pendingBid() internal pure returns (Bid storage ds) {
         bytes32 position = STORAGE_POSITION_OUT_BID;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }
@@ -97,6 +98,7 @@ library LibCFAPenaltyBid {
         }
 
         // Create bidder flow
+        /* solhint-disable no-empty-blocks */
         try
             cs.cfaV1.host.callAgreement(
                 cs.cfaV1.cfa,
@@ -113,6 +115,7 @@ library LibCFAPenaltyBid {
                 new bytes(0)
             )
         {} catch {}
+        /* solhint-enable no-empty-blocks  */
 
         // Update beneficiary flow
         address beneficiary = ds.paramsStore.getBeneficiary();

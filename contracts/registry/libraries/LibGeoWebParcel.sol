@@ -8,7 +8,7 @@ library LibGeoWebParcel {
     using LibGeoWebCoordinate for uint64;
     using LibGeoWebCoordinatePath for uint256;
 
-    bytes32 constant STORAGE_POSITION =
+    bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibGeoWebParcel");
 
     /// @dev Structure of a land parcel
@@ -25,7 +25,7 @@ library LibGeoWebParcel {
     }
 
     /// @dev Maxmium uint256 stored as a constant to use for masking
-    uint256 constant MAX_INT = 2**256 - 1;
+    uint256 private constant MAX_INT = 2**256 - 1;
 
     /// @notice Emitted when a parcel is built
     event ParcelBuilt(uint256 indexed _id);
@@ -51,6 +51,7 @@ library LibGeoWebParcel {
         returns (DiamondStorage storage ds)
     {
         bytes32 position = STORAGE_POSITION;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }
@@ -112,11 +113,11 @@ library LibGeoWebParcel {
 
         uint64 currentCoord = baseCoordinate;
 
-        uint256 p_i = 0;
-        uint256 currentPath = path[p_i];
+        uint256 pI = 0;
+        uint256 currentPath = path[pI];
 
-        (uint256 i_x, uint256 i_y, uint256 i) = currentCoord._toWordIndex();
-        uint256 word = ds.availabilityIndex[i_x][i_y];
+        (uint256 iX, uint256 iY, uint256 i) = currentCoord._toWordIndex();
+        uint256 word = ds.availabilityIndex[iX][iY];
 
         do {
             if (action == Action.Build) {
@@ -140,39 +141,39 @@ library LibGeoWebParcel {
 
             if (!hasNext) {
                 // Try next path
-                p_i += 1;
-                if (p_i >= path.length) {
+                pI += 1;
+                if (pI >= path.length) {
                     break;
                 }
-                currentPath = path[p_i];
+                currentPath = path[pI];
                 (hasNext, direction, currentPath) = currentPath
                     ._nextDirection();
             }
 
             // Traverse to next coordinate
-            uint256 new_i_x;
-            uint256 new_i_y;
-            (currentCoord, new_i_x, new_i_y, i) = currentCoord._traverse(
+            uint256 newIX;
+            uint256 newIY;
+            (currentCoord, newIX, newIY, i) = currentCoord._traverse(
                 direction,
-                i_x,
-                i_y,
+                iX,
+                iY,
                 i
             );
 
             // If new coordinate is in new word
-            if (new_i_x != i_x || new_i_y != i_y) {
+            if (newIX != iX || newIY != iY) {
                 // Update word in storage
-                ds.availabilityIndex[i_x][i_y] = word;
+                ds.availabilityIndex[iX][iY] = word;
 
                 // Advance to next word
-                word = ds.availabilityIndex[new_i_x][new_i_y];
+                word = ds.availabilityIndex[newIX][newIY];
             }
 
-            i_x = new_i_x;
-            i_y = new_i_y;
+            iX = newIX;
+            iY = newIY;
         } while (true);
 
         // Update last word in storage
-        ds.availabilityIndex[i_x][i_y] = word;
+        ds.availabilityIndex[iX][iY] = word;
     }
 }

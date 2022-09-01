@@ -5,7 +5,7 @@ import "./LibGeoWebParcel.sol";
 import "./LibERC721.sol";
 
 library LibPCOLicenseClaimer {
-    bytes32 constant STORAGE_POSITION =
+    bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibPCOLicenseClaimer");
 
     struct DiamondStorage {
@@ -31,6 +31,7 @@ library LibPCOLicenseClaimer {
         returns (DiamondStorage storage ds)
     {
         bytes32 position = STORAGE_POSITION;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }
