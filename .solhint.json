@@ -3,6 +3,6 @@
   "extends": "solhint:recommended",
   "rules": {
     "prettier/prettier": "error",
-    "compiler-version": ["error", "^0.8.7"]
+    "compiler-version": ["error", "^0.8.4"]
   }
 }

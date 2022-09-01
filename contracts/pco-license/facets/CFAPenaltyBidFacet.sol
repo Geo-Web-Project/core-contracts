@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.4;
 
 import "../libraries/LibCFABasePCO.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
@@ -131,6 +131,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
      */
     function editBid(int96 newContributionRate, uint256 newForSalePrice)
         external
+        override
         onlyPayer
         onlyIfNotPendingBid
     {
@@ -147,6 +148,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
      */
     function placeBid(int96 newContributionRate, uint256 newForSalePrice)
         external
+        override
         onlyIfPayerBidActive
     {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.4;
 
 import "../libraries/LibCFABasePCO.sol";
 import "../interfaces/IBasePCO.sol";
@@ -125,7 +125,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice Current payer of license
      */
-    function payer() external view returns (address) {
+    function payer() external view override returns (address) {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         return _currentBid.bidder;
     }
@@ -140,7 +140,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice Current price needed to purchase license
      */
-    function forSalePrice() external view returns (uint256) {
+    function forSalePrice() external view override returns (uint256) {
         if (LibCFABasePCO._isPayerBidActive()) {
             LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
             return _currentBid.forSalePrice;
@@ -152,7 +152,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice License Id
      */
-    function licenseId() external view returns (uint256) {
+    function licenseId() external view override returns (uint256) {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         return ds.licenseId;
@@ -161,7 +161,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice License
      */
-    function license() external view returns (IERC721) {
+    function license() external view override returns (IERC721) {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         return ds.license;
