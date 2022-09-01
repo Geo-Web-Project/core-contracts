@@ -2,6 +2,7 @@ import BN from "bn.js";
 import { BigNumber, ethers } from "ethers";
 import { task, types } from "hardhat/config";
 const GeoWebCoordinate = require("js-geo-web-coordinate");
+import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 
 function makePathPrefix(length: any) {
   return BigNumber.from(length).shl(256 - 8);
@@ -17,6 +18,17 @@ function toBN(value: BigNumber): BN {
     return new BN("-" + hex.substring(3), 16);
   }
   return new BN(hex.substring(2), 16);
+}
+
+async function rateToPurchasePrice(
+  paramsStore: ethers.Contract,
+  rate: BigNumber
+) {
+  const perSecondFeeNumerator = await paramsStore.getPerSecondFeeNumerator();
+  const perSecondFeeDenominator =
+    await paramsStore.getPerSecondFeeDenominator();
+
+  return rate.mul(perSecondFeeDenominator).div(perSecondFeeNumerator);
 }
 
 async function traverseSingle(gwCoor: ethers.Contract) {
@@ -61,16 +73,29 @@ async function buildSingleCoordinate(GW: ethers.Contract) {
   console.log(`Estimated gas for single coordinate build: ${gas}`);
 }
 
-async function mintPath(count: any, GW: ethers.Contract) {
+async function mintPath(count: any, registryDiamond: ethers.Contract) {
   // Global(160000, 17) -> Index(100000, 1), Local(0, 1)
   let coord = BigNumber.from(160000).shl(32).or(BigNumber.from(17));
 
-  let gas = await GW.estimateGas.build(coord, [makePathPrefix(count)]);
+  const contributionRate = ethers.utils
+    .parseEther("9")
+    .div(365 * 24 * 60 * 60 * 10);
+  const forSalePrice = await rateToPurchasePrice(
+    registryDiamond,
+    contributionRate
+  );
+
+  let gas = await registryDiamond.estimateGas.claim(
+    contributionRate,
+    forSalePrice,
+    coord,
+    [makePathPrefix(count)]
+  );
 
   console.log(`Estimated gas for ${count} path mint: ${gas}`);
 }
 
-async function mintSquare(dim: number, GW: ethers.Contract) {
+async function mintSquare(dim: number, registryDiamond: ethers.Contract) {
   // Global(160000, 17) -> Index(100000, 1), Local(0, 1)
   const coord1 = BigNumber.from(160000).shl(32).or(BigNumber.from(0));
   const coord2 = BigNumber.from(160000 + dim)
@@ -83,7 +108,20 @@ async function mintSquare(dim: number, GW: ethers.Contract) {
     }
   );
 
-  const gas = await GW.estimateGas.build(coord1, paths);
+  const contributionRate = ethers.utils
+    .parseEther("9")
+    .div(365 * 24 * 60 * 60 * 10);
+  const forSalePrice = await rateToPurchasePrice(
+    registryDiamond,
+    contributionRate
+  );
+
+  let gas = await registryDiamond.estimateGas.claim(
+    contributionRate,
+    forSalePrice,
+    coord1,
+    paths
+  );
 
   console.log(
     `Estimated gas mint of ${dim}x${dim} (${dim * dim}) coordinates: ${gas}`
@@ -114,47 +152,53 @@ async function mintSquare(dim: number, GW: ethers.Contract) {
 //     }
 //   );
 
-task("measure:parcel-gas")
-  .addParam("geoWebCoordinate", "GeoWebCoordinate contract address")
-  .addParam("geoWebCoordinatePath", "GeoWebCoordinatePath contract address")
-  .addParam("geoWebParcel", "GeoWebParcel contract address")
-  .setAction(
-    async (
-      {
-        geoWebCoordinate,
-        geoWebCoordinatePath,
-        geoWebParcel,
-      }: {
-        geoWebCoordinate: string;
-        geoWebCoordinatePath: string;
-        geoWebParcel: string;
-      },
-      hre
-    ) => {
-      const gwCoor = await hre.ethers.getContractAt(
-        "GeoWebCoordinate",
-        geoWebCoordinate
-      );
-      const gwCoorPath = await hre.ethers.getContractAt(
-        "GeoWebCoordinatePath",
-        geoWebCoordinatePath
-      );
-      const GW = await hre.ethers.getContractAt("GeoWebParcel", geoWebParcel);
+task("measure:parcel-gas").setAction(async ({}, hre) => {
+  const { getNamedAccounts } = hre;
 
-      await traverseSingle(gwCoor);
-      await parseDirection(gwCoorPath);
-      await wordIndex(gwCoor);
-      await buildSingleCoordinate(GW);
-      await mintPath(1, GW);
-      await mintPath(2, GW);
-      await mintSquare(Math.sqrt(16), GW);
-      await mintSquare(Math.sqrt(64), GW);
-      await mintSquare(Math.floor(Math.sqrt(26)), GW);
-      await mintSquare(Math.floor(Math.sqrt(208)), GW);
-      await mintSquare(Math.floor(Math.sqrt(416)), GW);
-      await mintSquare(Math.floor(Math.sqrt(833)), GW);
-      await mintSquare(Math.floor(Math.sqrt(1666)), GW);
-      await mintSquare(50, GW);
-      await mintSquare(64, GW);
-    }
+  const { diamondAdmin } = await getNamedAccounts();
+
+  const registryDiamond: ethers.Contract = await hre.ethers.getContract(
+    "RegistryDiamond"
   );
+
+  let sf: Framework = await Framework.create({
+    chainId: hre.network.config.chainId!,
+    provider: hre.ethers.provider,
+  });
+  let ethx: SuperToken = await sf.loadSuperToken("ETHx");
+
+  // Approve flow creation
+  const nextAddress = await registryDiamond.getNextProxyAddress(diamondAdmin);
+  const flowData = await sf.cfaV1.getFlowOperatorData({
+    superToken: ethx.address,
+    flowOperator: nextAddress,
+    sender: diamondAdmin,
+    providerOrSigner: await hre.ethers.getSigner(diamondAdmin),
+  });
+  console.log(flowData);
+
+  if (flowData.permissions !== "7") {
+    const op = await sf.cfaV1.authorizeFlowOperatorWithFullControl({
+      superToken: ethx.address,
+      flowOperator: nextAddress,
+    });
+    const resp = await op.exec(await hre.ethers.getSigner(diamondAdmin));
+    await resp.wait();
+  }
+
+  // await traverseSingle(gwCoor);
+  // await parseDirection(gwCoorPath);
+  // await wordIndex(gwCoor);
+  // await buildSingleCoordinate(GW);
+  await mintPath(1, registryDiamond);
+  await mintPath(2, registryDiamond);
+  await mintSquare(Math.sqrt(16), registryDiamond);
+  await mintSquare(Math.sqrt(64), registryDiamond);
+  await mintSquare(Math.floor(Math.sqrt(26)), registryDiamond);
+  await mintSquare(Math.floor(Math.sqrt(208)), registryDiamond);
+  await mintSquare(Math.floor(Math.sqrt(416)), registryDiamond);
+  await mintSquare(Math.floor(Math.sqrt(833)), registryDiamond);
+  await mintSquare(Math.floor(Math.sqrt(1666)), registryDiamond);
+  await mintSquare(50, registryDiamond);
+  await mintSquare(64, registryDiamond);
+});

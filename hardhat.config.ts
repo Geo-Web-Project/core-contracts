@@ -17,6 +17,7 @@ import "hardhat-diamond-abi";
 import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
+import "./tasks/estimate_minting_gas";
 
 const networks: any = {
   local: {
@@ -72,6 +73,9 @@ module.exports = {
     },
     bidder: {
       default: 2,
+    },
+    treasury: {
+      5: "0xC8A14DEe867329D54E911e01561B984378c0675C",
     },
   },
   diamondAbi: [
