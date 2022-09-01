@@ -47,9 +47,9 @@ library LibPCOLicenseClaimer {
         address user,
         uint64 baseCoordinate,
         uint256[] memory path
-    ) internal returns (uint256 licenseId) {
-        /// the licenseId is the same as the parcelId returned from parcel.build()
-        licenseId = LibGeoWebParcel.build(baseCoordinate, path);
+    ) internal {
+        uint256 licenseId = LibGeoWebParcel.nextId();
+        LibGeoWebParcel.build(baseCoordinate, path);
         LibERC721._safeMint(user, licenseId);
     }
 
