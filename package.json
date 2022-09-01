@@ -9,7 +9,7 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "prettier": "prettier --write 'contracts/**/*.sol'",
-    "lint": "prettier --list-different 'contracts/**/*.sol'",
+    "lint": "solhint 'contracts/**/*.sol'",
     "build": "yarn build:sol && yarn build:abi && yarn build:ts",
     "build:ts": "npx tsc --build tsconfig.build.json",
     "build:abi": "npx hardhat export-abi",
@@ -55,6 +55,8 @@
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-dev.23",
     "shx": "^0.3.4",
+    "solhint": "^3.3.7",
+    "solhint-plugin-prettier": "^0.0.5",
     "solidity-coverage": "^0.7.17",
     "ts-node": "^10.4.0",
     "typechain": "^7.0.0",
