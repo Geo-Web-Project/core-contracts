@@ -8,7 +8,7 @@ library LibGeoWebParcel {
     using LibGeoWebCoordinate for uint64;
     using LibGeoWebCoordinatePath for uint256;
 
-    bytes32 constant STORAGE_POSITION =
+    bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibGeoWebParcel");
 
     /// @dev Structure of a land parcel
@@ -25,7 +25,7 @@ library LibGeoWebParcel {
     }
 
     /// @dev Maxmium uint256 stored as a constant to use for masking
-    uint256 constant MAX_INT = 2**256 - 1;
+    uint256 private constant MAX_INT = 2**256 - 1;
 
     /// @notice Emitted when a parcel is built
     event ParcelBuilt(uint256 indexed _id);
@@ -51,6 +51,7 @@ library LibGeoWebParcel {
         returns (DiamondStorage storage ds)
     {
         bytes32 position = STORAGE_POSITION;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }

@@ -3,6 +3,9 @@
   "extends": "solhint:recommended",
   "rules": {
     "prettier/prettier": "error",
-    "compiler-version": ["error", "^0.8.4"]
+    "compiler-version": ["error", "^0.8.4"],
+    "not-rely-on-time": "off",
+    "reason-string": ["warn", { "maxLength": 100 }],
+    "func-visibility": ["warn", { "ignoreConstructors": true }]
   }
 }

@@ -134,12 +134,12 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_name",
+        "name": "initName",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "_symbol",
+        "name": "initSymbol",
         "type": "string"
       }
     ],

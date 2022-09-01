@@ -226,12 +226,12 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -288,12 +288,12 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
   requiredBid(overrides?: CallOverrides): Promise<BigNumber>;
 
   setAuctionEnd(
-    _auctionEnd: BigNumberish,
+    auctionEnd: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   setAuctionStart(
-    _auctionStart: BigNumberish,
+    auctionStart: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -353,12 +353,12 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<BigNumber>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -427,12 +427,12 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<BigNumber>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -493,12 +493,12 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

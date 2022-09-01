@@ -691,7 +691,7 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_auctionEnd",
+        name: "auctionEnd",
         type: "uint256",
       },
     ],
@@ -704,7 +704,7 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_auctionStart",
+        name: "auctionStart",
         type: "uint256",
       },
     ],

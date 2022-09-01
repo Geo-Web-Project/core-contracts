@@ -89,14 +89,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the start time of the initial Dutch auction.
-     * @param _auctionStart The new start time of the initial Dutch auction
+     * @param auctionStart The new start time of the initial Dutch auction
      */
-    function setAuctionStart(uint256 _auctionStart) external {
+    function setAuctionStart(uint256 auctionStart) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.auctionStart = _auctionStart;
+        ds.auctionStart = auctionStart;
     }
 
     /// @notice Auction start
@@ -109,14 +109,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the end time of the initial Dutch auction.
-     * @param _auctionEnd The new end time of the initial Dutch auction
+     * @param auctionEnd The new end time of the initial Dutch auction
      */
-    function setAuctionEnd(uint256 _auctionEnd) external {
+    function setAuctionEnd(uint256 auctionEnd) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.auctionEnd = _auctionEnd;
+        ds.auctionEnd = auctionEnd;
     }
 
     /// @notice Auction end

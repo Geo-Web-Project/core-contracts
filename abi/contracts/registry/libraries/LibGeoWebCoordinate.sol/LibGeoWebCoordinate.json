@@ -37,12 +37,12 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "i_x",
+        "name": "iX",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "i_y",
+        "name": "iY",
         "type": "uint256"
       },
       {
@@ -68,17 +68,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "_i_x",
+        "name": "iX",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_i_y",
+        "name": "iY",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_i",
+        "name": "i",
         "type": "uint256"
       }
     ],
@@ -86,22 +86,22 @@
     "outputs": [
       {
         "internalType": "uint64",
-        "name": "destination",
+        "name": "",
         "type": "uint64"
       },
       {
         "internalType": "uint256",
-        "name": "i_x",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "i_y",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "i",
+        "name": "",
         "type": "uint256"
       }
     ],
