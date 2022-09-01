@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.7;
 
 import "../libraries/LibERC721.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";

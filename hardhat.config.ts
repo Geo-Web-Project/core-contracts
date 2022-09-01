@@ -52,7 +52,7 @@ if (process.env.INFURA_KEY) {
 module.exports = {
   networks,
   solidity: {
-    version: "0.8.14",
+    version: "0.8.7",
     settings: {
       optimizer: {
         enabled: true,
