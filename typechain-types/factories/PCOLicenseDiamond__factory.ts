@@ -128,12 +128,12 @@ const _abi = [
       },
       {
         internalType: "contract IERC721",
-        name: "_license",
+        name: "initLicense",
         type: "address",
       },
       {
         internalType: "uint256",
-        name: "_licenseId",
+        name: "initLicenseId",
         type: "uint256",
       },
       {

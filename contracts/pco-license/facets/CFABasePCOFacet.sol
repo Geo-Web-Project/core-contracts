@@ -44,16 +44,16 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
      *      - Must have payment token buffer deposited
      *      - Must have permissions to create flow for bidder
      * @param paramsStore Global store for parameters
-     * @param _license Underlying ERC721 license
-     * @param _licenseId Token ID of license
+     * @param initLicense Underlying ERC721 license
+     * @param initLicenseId Token ID of license
      * @param bidder Initial bidder
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
     function initializeBid(
         IPCOLicenseParamsStore paramsStore,
-        IERC721 _license,
-        uint256 _licenseId,
+        IERC721 initLicense,
+        uint256 initLicenseId,
         address bidder,
         int96 newContributionRate,
         uint256 newForSalePrice
@@ -63,8 +63,8 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         ds.paramsStore = paramsStore;
-        ds.license = _license;
-        ds.licenseId = _licenseId;
+        ds.license = initLicense;
+        ds.licenseId = initLicenseId;
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore

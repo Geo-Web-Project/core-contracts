@@ -49,14 +49,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the starting bid.
-     * @param _startingBid The new starting bid
+     * @param startingBid The new starting bid
      */
-    function setStartingBid(uint256 _startingBid) external {
+    function setStartingBid(uint256 startingBid) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.startingBid = _startingBid;
+        ds.startingBid = startingBid;
     }
 
     /// @notice Starting bid
@@ -69,14 +69,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the ending bid.
-     * @param _endingBid The new ending bid
+     * @param endingBid The new ending bid
      */
-    function setEndingBid(uint256 _endingBid) external {
+    function setEndingBid(uint256 endingBid) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.endingBid = _endingBid;
+        ds.endingBid = endingBid;
     }
 
     /// @notice Ending bid
@@ -129,14 +129,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the beacon contract
-     * @param _beacon The new beacon contract
+     * @param beacon The new beacon contract
      */
-    function setBeacon(address _beacon) external {
+    function setBeacon(address beacon) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.beacon = _beacon;
+        ds.beacon = beacon;
     }
 
     /// @notice Get Beacon

@@ -61,16 +61,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       BigNumber.from(0b1).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "16", "I is not correct");
+    assert.equal(result[3].toString(), "16", "I is not correct");
   });
 
   it("should traverse south", async () => {
@@ -85,16 +85,14 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       BigNumber.from(0b0).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
-
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
-
-    assert.equal(result.i.toString(), "0", "I is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[3].toString(), "0", "I is not correct");
   });
 
   it("should traverse east", async () => {
@@ -109,16 +107,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       BigNumber.from(0b1).shl(32).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "1", "I is not correct");
+    assert.equal(result[3].toString(), "1", "I is not correct");
   });
 
   it("should traverse west", async () => {
@@ -133,16 +131,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       BigNumber.from(0b0).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "0", "I is not correct");
+    assert.equal(result[3].toString(), "0", "I is not correct");
   });
 
   it("should traverse north into new word", async () => {
@@ -157,16 +155,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       makeCoord(8, 16).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "1", "Y is not correct");
+    assert.equal(result[2].toString(), "1", "Y is not correct");
 
-    assert.equal(result.i.toString(), "8", "I is not correct");
+    assert.equal(result[3].toString(), "8", "I is not correct");
   });
 
   it("should traverse south into new word", async () => {
@@ -181,16 +179,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       makeCoord(8, 15).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "248", "I is not correct");
+    assert.equal(result[3].toString(), "248", "I is not correct");
   });
 
   it("should traverse east into new word", async () => {
@@ -205,16 +203,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       makeCoord(16, 8).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "1", "X is not correct");
+    assert.equal(result[1].toString(), "1", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "128", "I is not correct");
+    assert.equal(result[3].toString(), "128", "I is not correct");
   });
 
   it("should traverse west into new word", async () => {
@@ -229,16 +227,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       makeCoord(15, 8).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "143", "I is not correct");
+    assert.equal(result[3].toString(), "143", "I is not correct");
   });
 
   it("should not traverse too far north", async () => {
@@ -293,16 +291,16 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       makeCoord(0, 0).toString(),
       "Destination is not correct"
     );
 
-    assert.equal(result.i_x.toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), "0", "X is not correct");
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "0", "I is not correct");
+    assert.equal(result[3].toString(), "0", "I is not correct");
   });
 
   it("should traverse meridian west -> east", async () => {
@@ -319,20 +317,20 @@ describe("LibGeoWebCoordinate", async () => {
     );
 
     assert.equal(
-      result.destination.toString(),
+      result[0].toString(),
       makeCoord(max_x, 0).toString(),
       "Destination is not correct"
     );
 
     assert.equal(
-      result.i_x.toString(),
+      result[1].toString(),
       BigNumber.from(Math.floor(max_x / 16)).toString(),
       "X is not correct"
     );
 
-    assert.equal(result.i_y.toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), "0", "Y is not correct");
 
-    assert.equal(result.i.toString(), "15", "I is not correct");
+    assert.equal(result[3].toString(), "15", "I is not correct");
   });
 
   it("should convert to a word index", async () => {
@@ -342,13 +340,13 @@ describe("LibGeoWebCoordinate", async () => {
     let result = await geoWebCoordinate.toWordIndex(coord);
 
     assert.equal(
-      result.i_x.toString(),
+      result.iX.toString(),
       BigNumber.from(0).toString(),
       "X coord is incorrect"
     );
 
     assert.equal(
-      result.i_y.toString(),
+      result.iY.toString(),
       BigNumber.from(2).toString(),
       "Y coord is incorrect"
     );
@@ -367,13 +365,13 @@ describe("LibGeoWebCoordinate", async () => {
     let result = await geoWebCoordinate.toWordIndex(coord);
 
     assert.equal(
-      result.i_x.toString(),
+      result.iX.toString(),
       BigNumber.from(0).toString(),
       "X coord is incorrect"
     );
 
     assert.equal(
-      result.i_y.toString(),
+      result.iY.toString(),
       BigNumber.from(2).toString(),
       "Y coord is incorrect"
     );
