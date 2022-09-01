@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.4;
 
 import "../libraries/LibPCOLicenseParams.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
@@ -147,7 +147,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice The numerator of the penalty rate.
-    function getPenaltyNumerator() external view returns (uint256) {
+    function getPenaltyNumerator() external view override returns (uint256) {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -164,7 +164,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice The denominator of the penalty rate.
-    function getPenaltyDenominator() external view returns (uint256) {
+    function getPenaltyDenominator() external view override returns (uint256) {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
