@@ -10,7 +10,7 @@ library LibCFAPenaltyBid {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
 
-    bytes32 constant STORAGE_POSITION_OUT_BID =
+    bytes32 private constant STORAGE_POSITION_OUT_BID =
         keccak256(
             "diamond.standard.diamond.storage.LibCFAPenaltyBid.pendingBid"
         );

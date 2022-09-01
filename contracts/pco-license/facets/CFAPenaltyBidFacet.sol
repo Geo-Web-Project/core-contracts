@@ -41,7 +41,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     modifier onlyIfPendingBid() {
         // Check if pending bid exists
         require(
-            this.hasPendingBid() == true,
+            this.hasPendingBid(),
             "CFAPenaltyBidFacet: Pending bid does not exist"
         );
         _;
@@ -50,7 +50,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     modifier onlyIfNotPendingBid() {
         // Check if pending bid exists
         require(
-            this.hasPendingBid() == false,
+            !this.hasPendingBid(),
             "CFAPenaltyBidFacet: Pending bid exists"
         );
         _;
@@ -64,7 +64,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             .diamondStorage();
 
         // Succeed if payer bid is not active
-        if (LibCFABasePCO._isPayerBidActive() == true) {
+        if (LibCFABasePCO._isPayerBidActive()) {
             uint256 bidPeriodLengthInSeconds = ds
                 .paramsStore
                 .getBidPeriodLengthInSeconds();
@@ -156,7 +156,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
 
         // Check if pending bid exists
         require(
-            this.hasPendingBid() == false,
+            !this.hasPendingBid(),
             "CFAPenaltyBidFacet: Pending bid already exists"
         );
 
