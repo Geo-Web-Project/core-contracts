@@ -146,15 +146,16 @@ library LibCFABasePCO {
         emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
         emit PayerContributionRateUpdated(bid.bidder, newContributionRate);
 
-        {
-            // Transfer required buffer
-            (, uint256 deposit, , ) = paymentToken.realtimeBalanceOfNow(
-                address(this)
-            );
-            uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-                paymentToken,
-                newContributionRate
-            );
+        (, uint256 deposit, , ) = paymentToken.realtimeBalanceOfNow(
+            address(this)
+        );
+        uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            newContributionRate
+        );
+
+        // Transfer required buffer in
+        if (requiredBuffer > deposit) {
             paymentToken.safeTransferFrom(
                 msg.sender,
                 address(this),
@@ -197,6 +198,11 @@ library LibCFABasePCO {
         } else {
             // Recreate flow (license -> beneficiary)
             cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
+        }
+
+        // Refund buffer
+        if (deposit > requiredBuffer) {
+            paymentToken.safeTransfer(msg.sender, deposit - requiredBuffer);
         }
     }
 }

@@ -164,6 +164,58 @@ const initialized = deployments.createFixture(
   }
 );
 
+const initializedLarge = deployments.createFixture(
+  async ({ deployments, getNamedAccounts, ethers }, options) => {
+    const res = await setup();
+    const {
+      basePCOFacet,
+      mockParamsStore,
+      mockLicense,
+      ethersjsSf,
+      paymentToken,
+    } = res;
+
+    const { user } = await getNamedAccounts();
+
+    const contributionRate = BigNumber.from(200000000);
+    const forSalePrice = await rateToPurchasePrice(
+      mockParamsStore,
+      contributionRate
+    );
+
+    // Transfer payment token for buffer
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(user))
+      .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+    const op1 = await paymentToken.transfer({
+      receiver: basePCOFacet.address,
+      amount: requiredBuffer.toString(),
+    });
+    await op1.exec(await ethers.getSigner(user));
+
+    // Approve flow creation
+    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: contributionRate.toString(),
+    });
+    await op2.exec(await ethers.getSigner(user));
+
+    const txn = await basePCOFacet.initializeBid(
+      mockParamsStore.address,
+      mockLicense.address,
+      1,
+      user,
+      contributionRate,
+      forSalePrice
+    );
+    await txn.wait();
+
+    return res;
+  }
+);
+
 const initializedWithRealLicense = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
     const res = await setup();
@@ -349,6 +401,7 @@ const afterPayerDelete = deployments.createFixture(
 export default {
   setup,
   initialized,
+  initializedLarge,
   afterPayerDelete,
   initializedWithRealLicense,
 };
