@@ -42,7 +42,7 @@ library LibGeoWebParcel {
         /// @notice Stores which coordinates belong to a parcel
         mapping(uint256 => LandParcel) landParcels;
         /// @dev The next ID to assign to a parcel
-        uint256 maxId;
+        uint256 nextId;
     }
 
     function diamondStorage()
@@ -62,10 +62,7 @@ library LibGeoWebParcel {
      * @param baseCoordinate Base coordinate of new parcel
      * @param path Path of new parcel
      */
-    function build(uint64 baseCoordinate, uint256[] memory path)
-        internal
-        returns (uint256 newParcelId)
-    {
+    function build(uint64 baseCoordinate, uint256[] memory path) internal {
         require(
             path.length > 0,
             "LibGeoWebParcel: Path must have at least one component"
@@ -76,15 +73,13 @@ library LibGeoWebParcel {
         // Mark everything as available
         _updateAvailabilityIndex(Action.Build, baseCoordinate, path);
 
-        LandParcel storage p = ds.landParcels[ds.maxId];
+        LandParcel storage p = ds.landParcels[ds.nextId];
         p.baseCoordinate = baseCoordinate;
         p.path = path;
 
-        emit ParcelBuilt(ds.maxId);
+        emit ParcelBuilt(ds.nextId);
 
-        newParcelId = ds.maxId;
-
-        ds.maxId += 1;
+        ds.nextId += 1;
     }
 
     /**
@@ -101,6 +96,14 @@ library LibGeoWebParcel {
         delete ds.landParcels[id];
 
         emit ParcelDestroyed(id);
+    }
+
+    /**
+     * @notice The next ID to assign to a parcel
+     */
+    function nextId() internal view returns (uint256) {
+        DiamondStorage storage ds = diamondStorage();
+        return ds.nextId;
     }
 
     /// @dev Update availability index by traversing a path and marking everything as available or unavailable

@@ -444,13 +444,7 @@ const _abi = [
       },
     ],
     name: "build",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "newParcelId",
-        type: "uint256",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },

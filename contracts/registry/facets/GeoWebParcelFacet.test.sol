@@ -5,11 +5,8 @@ import "../libraries/LibGeoWebParcel.sol";
 import "./GeoWebParcelFacet.sol";
 
 contract TestableGeoWebParcelFacet is GeoWebParcelFacet {
-    function build(uint64 baseCoordinate, uint256[] memory path)
-        external
-        returns (uint256 newParcelId)
-    {
-        return LibGeoWebParcel.build(baseCoordinate, path);
+    function build(uint64 baseCoordinate, uint256[] memory path) external {
+        LibGeoWebParcel.build(baseCoordinate, path);
     }
 
     function destroy(uint64 id) external {

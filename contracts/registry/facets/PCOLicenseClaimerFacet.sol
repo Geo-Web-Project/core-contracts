@@ -224,20 +224,7 @@ contract PCOLicenseClaimerFacet {
             "PCOLicenseClaimerFacet: Initial for sale price does not meet requirement"
         );
 
-        if (block.timestamp <= ds.auctionEnd) {
-            // Transfer initial payment
-            ls.paymentToken.safeTransferFrom(
-                msg.sender,
-                ls.beneficiary,
-                initialForSalePrice
-            );
-        }
-
-        uint256 licenseId = LibPCOLicenseClaimer._buildAndMint(
-            msg.sender,
-            baseCoordinate,
-            path
-        );
+        uint256 licenseId = LibGeoWebParcel.nextId();
 
         BeaconDiamond proxy = new BeaconDiamond{
             salt: keccak256(
@@ -250,6 +237,11 @@ contract PCOLicenseClaimerFacet {
 
         // Store beacon proxy
         ds.beaconProxies[licenseId] = address(proxy);
+
+        emit ParcelClaimed(licenseId, msg.sender);
+
+        // Build and mint
+        LibPCOLicenseClaimer._buildAndMint(msg.sender, baseCoordinate, path);
 
         {
             // Transfer required buffer
@@ -273,6 +265,15 @@ contract PCOLicenseClaimerFacet {
             );
         }
 
+        // Transfer initial payment
+        if (block.timestamp <= ds.auctionEnd) {
+            ls.paymentToken.safeTransferFrom(
+                msg.sender,
+                ls.beneficiary,
+                initialForSalePrice
+            );
+        }
+
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(
             IPCOLicenseParamsStore(address(this)),
@@ -282,7 +283,5 @@ contract PCOLicenseClaimerFacet {
             initialContributionRate,
             initialForSalePrice
         );
-
-        emit ParcelClaimed(licenseId, msg.sender);
     }
 }
