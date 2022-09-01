@@ -99,17 +99,6 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
-        // Create flow (payer -> license)
-        cs.cfaV1.createFlowByOperator(
-            bidder,
-            address(this),
-            paymentToken,
-            newContributionRate
-        );
-
-        // Create flow (license -> beneficiary)
-        cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
-
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         _currentBid.timestamp = block.timestamp;
         _currentBid.bidder = bidder;
@@ -120,6 +109,17 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
 
         emit PayerForSalePriceUpdated(bidder, newForSalePrice);
         emit PayerContributionRateUpdated(bidder, newContributionRate);
+
+        // Create flow (payer -> license)
+        cs.cfaV1.createFlowByOperator(
+            bidder,
+            address(this),
+            paymentToken,
+            newContributionRate
+        );
+
+        // Create flow (license -> beneficiary)
+        cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
     }
 
     /**

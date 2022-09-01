@@ -136,6 +136,16 @@ library LibCFABasePCO {
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
+        bid.timestamp = block.timestamp;
+        bid.bidder = bid.bidder;
+        bid.contributionRate = newContributionRate;
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = newForSalePrice;
+
+        emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
+        emit PayerContributionRateUpdated(bid.bidder, newContributionRate);
+
         {
             // Transfer required buffer
             (, uint256 deposit, , ) = paymentToken.realtimeBalanceOfNow(
@@ -188,15 +198,5 @@ library LibCFABasePCO {
             // Recreate flow (license -> beneficiary)
             cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
         }
-
-        bid.timestamp = block.timestamp;
-        bid.bidder = bid.bidder;
-        bid.contributionRate = newContributionRate;
-        bid.perSecondFeeNumerator = perSecondFeeNumerator;
-        bid.perSecondFeeDenominator = perSecondFeeDenominator;
-        bid.forSalePrice = newForSalePrice;
-
-        emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
-        emit PayerContributionRateUpdated(bid.bidder, newContributionRate);
     }
 }

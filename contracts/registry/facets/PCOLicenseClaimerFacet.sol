@@ -224,15 +224,7 @@ contract PCOLicenseClaimerFacet {
             "PCOLicenseClaimerFacet: Initial for sale price does not meet requirement"
         );
 
-        if (block.timestamp <= ds.auctionEnd) {
-            // Transfer initial payment
-            ls.paymentToken.safeTransferFrom(
-                msg.sender,
-                ls.beneficiary,
-                initialForSalePrice
-            );
-        }
-
+        // Build and mint
         uint256 licenseId = LibPCOLicenseClaimer._buildAndMint(
             msg.sender,
             baseCoordinate,
@@ -272,6 +264,16 @@ contract PCOLicenseClaimerFacet {
                 requiredBuffer
             );
         }
+        emit ParcelClaimed(licenseId, msg.sender);
+
+        if (block.timestamp <= ds.auctionEnd) {
+            // Transfer initial payment
+            ls.paymentToken.safeTransferFrom(
+                msg.sender,
+                ls.beneficiary,
+                initialForSalePrice
+            );
+        }
 
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(
@@ -282,7 +284,5 @@ contract PCOLicenseClaimerFacet {
             initialContributionRate,
             initialForSalePrice
         );
-
-        emit ParcelClaimed(licenseId, msg.sender);
     }
 }
