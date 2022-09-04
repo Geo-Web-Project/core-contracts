@@ -19,7 +19,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
     function claimPrice() public view returns (uint256) {
         require(
             !LibCFABasePCO._isPayerBidActive(),
-            "CFAReclaimerFacet: The reclaim auction hasn't started yet"
+            "CFAReclaimerFacet: Can only perform action when payer bid is active"
         );
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
@@ -89,8 +89,6 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         );
         require(success, "CFAReclaimerFacet: Deposit failed");
 
-        emit LicenseReclaimed(msg.sender, _claimPrice);
-
         LibCFAReclaimer._triggerTransfer(
             newContributionRate,
             newForSalePrice,
@@ -98,5 +96,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             perSecondFeeNumerator,
             paymentToken
         );
+
+        emit LicenseReclaimed(msg.sender, _claimPrice);
     }
 }

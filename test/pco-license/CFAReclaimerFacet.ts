@@ -6,38 +6,50 @@ import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
 import BaseFixtures from "./CFABasePCO.fixture";
+import { rateToPurchasePrice } from "../shared";
 
 use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
 describe("CFAReclaimerFaceit", async function () {
-  /*
   describe("claim", async () => {
-    it("reverts if user is the 0x0 address", async () => {
-      const RECLAIM_ROLE = await reclaimer.RECLAIM_ROLE();
-      await reclaimer
-        .connect(admin)
-        .grantRole(RECLAIM_ROLE, await user.getAddress());
-      fakeLicense.ownerOf.returns(ethers.constants.AddressZero);
+      it("emits the licenseReclaimed event", async () => {
+        const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } = await BaseFixtures.afterPayerDelete();
+        const { bidder } = await getNamedAccounts();
 
-      await expect(
-        reclaimer
-          .connect(user)
-          .claim(userArg, initialContributionRate, claimData)
-      ).to.be.revertedWith("Reclaimer: Cannot reclaim non-existent license");
-    });
+        const contributionRate = BigNumber.from(100);
+        const forSalePrice = await rateToPurchasePrice(
+          mockParamsStore,
+          contributionRate
+        );
 
-    describe("success", async () => {
-      it("emits the licenseId", async () => {
-        const tx = await reclaimer
-          .connect(user)
-          .claim(userArg, initialContributionRate, claimData);
-        const receipt = await tx.wait();
-        const retVal = receipt.events![0].topics[1];
-        expect(Number(retVal)).to.be.equal(licenseId);
+        // Transfer payment token for buffer
+        const claimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .claimPrice();
+
+        const op1 = paymentToken.transfer({
+          receiver: bidder,
+          amount: claimPrice.add(forSalePrice).toString(),
+        });
+        await op1.exec(await ethers.getSigner(bidder));
+
+        // Approve flow creation
+        const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+          superToken: paymentToken.address,
+          flowOperator: basePCOFacet.address,
+          permissions: 1,
+          flowRateAllowance: contributionRate.toString(),
+        });
+        await op2.exec(await ethers.getSigner(bidder));
+
+        const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).claim(contributionRate, forSalePrice);
+        await txn.wait()
+        await expect(txn).to.emit(basePCOFacet, "LicenseReclaimed")
       });
 
+      /*
       it("calls license.safeTransferFrom", async () => {
         await reclaimer
           .connect(user)
@@ -46,9 +58,20 @@ describe("CFAReclaimerFaceit", async function () {
           fakeLicense["safeTransferFrom(address,address,uint256)"]
         ).to.have.been.calledWith(fakeAddress, userArg, licenseId);
       });
-    });
+      */
+
+      it("should revert if the player bid is active", async () => {
+
+      });
+
+      it("should revert if the sale price is incorrect", () => {
+
+      });
+
+      it("should revert if the deposit failed", async () => {
+
+      });
   });
-  */
 
   describe("claimPrice", async () => {
     let originalForSalePrice: BigNumber;
@@ -115,12 +138,12 @@ describe("CFAReclaimerFaceit", async function () {
       expect(price.eq(ethers.constants.Zero)).to.be.true;
     });
 
-    it("should revert if the reclaimer auction hasn't started", async () => {
+    it("should revert if the player bid is active", async () => {
       const { basePCOFacet } = await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
 
       await expect(basePCOFacet.connect(await ethers.getSigner(user)).claimPrice()).to.be.revertedWith(
-        "CFAReclaimerFacet: The reclaim auction hasn't started yet"
+        "CFAReclaimerFacet: Can only perform action when payer bid is active"
       );
     });
   });
