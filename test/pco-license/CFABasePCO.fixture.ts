@@ -23,7 +23,7 @@ const setup = deployments.createFixture(
     await diamond.deploy("TestBasePCO", {
       from: diamondAdmin,
       owner: diamondAdmin,
-      facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
+      facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
     });
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
@@ -43,6 +43,7 @@ const setup = deployments.createFixture(
     mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
     mockParamsStore.getBeneficiary.returns(diamondAdmin);
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
+    mockParamsStore.getReclaimAuctionLength.returns(60 * 60 * 24);
 
     let mockLicense = await smock.fake<IERC721>("IERC721");
 
