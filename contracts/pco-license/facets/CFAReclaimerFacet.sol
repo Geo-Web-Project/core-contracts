@@ -28,9 +28,8 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         uint256 originalForSalePrice = _currentBid.forSalePrice;
-        (uint256 startTime, , , ) = cs.cfaV1.cfa.getFlow(
+        (uint256 startTime, , , ) = cs.cfaV1.cfa.getAccountFlowInfo(
             ds.paramsStore.getPaymentToken(),
-            address(this),
             ds.paramsStore.getBeneficiary()
         );
         uint256 _length = ds.paramsStore.getReclaimAuctionLength();

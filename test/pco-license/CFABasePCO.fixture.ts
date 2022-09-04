@@ -43,7 +43,7 @@ const setup = deployments.createFixture(
     mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
     mockParamsStore.getBeneficiary.returns(diamondAdmin);
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
-    mockParamsStore.getReclaimAuctionLength.returns(60 * 60 * 24);
+    mockParamsStore.getReclaimAuctionLength.returns(14 * 60 * 60 * 24);
 
     let mockLicense = await smock.fake<IERC721>("IERC721");
 
