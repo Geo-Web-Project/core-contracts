@@ -92,6 +92,12 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
 
         emit LicenseReclaimed(msg.sender, _claimPrice);
 
-        LibCFAReclaimer._triggerTransfer(newContributionRate, newForSalePrice, perSecondFeeDenominator, perSecondFeeNumerator, paymentToken);
+        LibCFAReclaimer._triggerTransfer(
+            newContributionRate,
+            newForSalePrice,
+            perSecondFeeDenominator,
+            perSecondFeeNumerator,
+            paymentToken
+        );
     }
 }
