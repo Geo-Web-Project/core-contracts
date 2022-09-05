@@ -14,53 +14,7 @@ use(smock.matchers);
 
 describe("CFAReclaimerFacet", async function () {
   describe("reclaim", async () => {
-      it("emits the licenseReclaimed event", async () => {
-        const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } = await BaseFixtures.afterPayerDelete();
-        const { bidder } = await getNamedAccounts();
-
-        const contributionRate = BigNumber.from(100);
-        const forSalePrice = await rateToPurchasePrice(
-          mockParamsStore,
-          contributionRate
-        );
-        const requiredBuffer = await ethersjsSf.cfaV1.contract
-        .connect(await ethers.getSigner(bidder))
-        .getDepositRequiredForFlowRate(
-          paymentToken.address,
-          contributionRate
-        );
-        const totalCollateral = forSalePrice.add(requiredBuffer);
-
-        // Transfer payment token for buffer
-        const reclaimPrice = await basePCOFacet
-        .connect(await ethers.getSigner(bidder))
-        .reclaimPrice();
-
-        const op1 = paymentToken.transfer({
-          receiver: bidder,
-          amount: reclaimPrice.add(totalCollateral).toString(),
-        });
-        await op1.exec(await ethers.getSigner(bidder));
-
-        // Allow spending of reclaimPrice
-        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
-        await op2.exec(await ethers.getSigner(bidder));
-
-        // Approve flow creation
-        const op3 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
-          superToken: paymentToken.address,
-          flowOperator: basePCOFacet.address,
-          permissions: 1,
-          flowRateAllowance: contributionRate.toString(),
-        });
-        await op3.exec(await ethers.getSigner(bidder));
-
-        const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice);
-        await txn.wait();
-        await expect(txn).to.emit(basePCOFacet, "LicenseReclaimed");
-      });
-
-      it("calls license.safeTransferFrom", async () => {
+      it("should emits the licenseReclaimed event and calls license.safeTransferFrom", async () => {
         const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf, mockLicense } = await BaseFixtures.afterPayerDelete();
         const { bidder, user } = await getNamedAccounts();
 
@@ -103,6 +57,7 @@ describe("CFAReclaimerFacet", async function () {
 
         const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice);
         await txn.wait();
+        await expect(txn).to.emit(basePCOFacet, "LicenseReclaimed");
         expect(
           mockLicense["safeTransferFrom(address,address,uint256)"]
         ).to.have.been.calledWith(
