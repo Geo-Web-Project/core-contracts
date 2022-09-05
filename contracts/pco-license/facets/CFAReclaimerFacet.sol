@@ -28,6 +28,8 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         uint256 originalForSalePrice = _currentBid.forSalePrice;
+
+        // TODO This is a temporary solution to get the time when the flow is closed
         (uint256 startTime, , , ) = cs.cfaV1.cfa.getAccountFlowInfo(
             ds.paramsStore.getPaymentToken(),
             ds.paramsStore.getBeneficiary()
