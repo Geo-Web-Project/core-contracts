@@ -12,7 +12,7 @@ use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe("CFAReclaimerFaceit", async function () {
+describe("CFAReclaimerFacet", async function () {
   describe("claim", async () => {
       it("emits the licenseReclaimed event", async () => {
         const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } = await BaseFixtures.afterPayerDelete();
