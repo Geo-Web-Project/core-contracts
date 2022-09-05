@@ -5,10 +5,12 @@ import "../libraries/LibCFABasePCO.sol";
 import "../libraries/LibCFAReclaimer.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @notice Handles reclaiming of licenses that are no longer active
 contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
+    using SafeERC20 for ISuperToken;
 
     /// @notice Emitted when a license is reclaimed
     event LicenseReclaimed(address indexed to, uint256 price);
@@ -87,23 +89,21 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         address _bidder = _currentBid.bidder;
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        bool success = paymentToken.transferFrom(
+        paymentToken.safeTransferFrom(
             msg.sender,
             _bidder,
             _claimPrice
         );
-        require(success, "CFAReclaimerFacet: ClaimPrice Deposit failed");
 
         uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
             paymentToken,
             newContributionRate
         );
-        bool success1 = paymentToken.transferFrom(
+        paymentToken.safeTransferFrom(
             msg.sender,
             address(this),
             requiredBuffer
         );
-        require(success1, "CFAReclaimerFacet: Bid Deposit failed");
 
         LibCFAReclaimer._triggerTransfer(
             newContributionRate,
