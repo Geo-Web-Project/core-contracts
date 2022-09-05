@@ -13,7 +13,7 @@ use(chaiAsPromised);
 use(smock.matchers);
 
 describe("CFAReclaimerFacet", async function () {
-  describe("claim", async () => {
+  describe("reclaim", async () => {
       it("emits the licenseReclaimed event", async () => {
         const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } = await BaseFixtures.afterPayerDelete();
         const { bidder } = await getNamedAccounts();
@@ -32,18 +32,18 @@ describe("CFAReclaimerFacet", async function () {
         const totalCollateral = forSalePrice.add(requiredBuffer);
 
         // Transfer payment token for buffer
-        const claimPrice = await basePCOFacet
+        const reclaimPrice = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .claimPrice();
+        .reclaimPrice();
 
         const op1 = paymentToken.transfer({
           receiver: bidder,
-          amount: claimPrice.add(totalCollateral).toString(),
+          amount: reclaimPrice.add(totalCollateral).toString(),
         });
         await op1.exec(await ethers.getSigner(bidder));
 
-        // Allow spending of claimPrice
-        const op2 = paymentToken.approve({amount: claimPrice.add(totalCollateral), receiver: basePCOFacet.address});
+        // Allow spending of reclaimPrice
+        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
         await op2.exec(await ethers.getSigner(bidder));
 
         // Approve flow creation
@@ -55,7 +55,7 @@ describe("CFAReclaimerFacet", async function () {
         });
         await op3.exec(await ethers.getSigner(bidder));
 
-        const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).claim(contributionRate, forSalePrice);
+        const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice);
         await txn.wait();
         await expect(txn).to.emit(basePCOFacet, "LicenseReclaimed");
       });
@@ -78,18 +78,18 @@ describe("CFAReclaimerFacet", async function () {
         const totalCollateral = forSalePrice.add(requiredBuffer);
 
         // Transfer payment token for buffer
-        const claimPrice = await basePCOFacet
+        const reclaimPrice = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .claimPrice();
+        .reclaimPrice();
 
         const op1 = paymentToken.transfer({
           receiver: bidder,
-          amount: claimPrice.add(totalCollateral).toString(),
+          amount: reclaimPrice.add(totalCollateral).toString(),
         });
         await op1.exec(await ethers.getSigner(bidder));
 
-        // Allow spending of claimPrice
-        const op2 = paymentToken.approve({amount: claimPrice.add(totalCollateral), receiver: basePCOFacet.address});
+        // Allow spending of reclaimPrice
+        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
         await op2.exec(await ethers.getSigner(bidder));
 
         // Approve flow creation
@@ -101,7 +101,7 @@ describe("CFAReclaimerFacet", async function () {
         });
         await op3.exec(await ethers.getSigner(bidder));
 
-        const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).claim(contributionRate, forSalePrice);
+        const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice);
         await txn.wait();
         expect(
           mockLicense["safeTransferFrom(address,address,uint256)"]
@@ -137,7 +137,7 @@ describe("CFAReclaimerFacet", async function () {
         });
         await op1.exec(await ethers.getSigner(bidder));
 
-        // Allow spending of claimPrice
+        // Allow spending of reclaimPrice
         const op2 = paymentToken.approve({amount: totalCollateral.toString(), receiver: basePCOFacet.address});
         await op2.exec(await ethers.getSigner(bidder));
 
@@ -150,7 +150,7 @@ describe("CFAReclaimerFacet", async function () {
         });
         await op3.exec(await ethers.getSigner(bidder));
 
-        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).claim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: Can only perform action when payer bid is active");
+        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: Can only perform action when payer bid is active");
       });
 
       it("should revert if the sale price is incorrect", async () => {
@@ -171,18 +171,18 @@ describe("CFAReclaimerFacet", async function () {
         const totalCollateral = forSalePrice.add(requiredBuffer);
 
         // Transfer payment token for buffer
-        const claimPrice = await basePCOFacet
+        const reclaimPrice = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .claimPrice();
+        .reclaimPrice();
 
         const op1 = paymentToken.transfer({
           receiver: bidder,
-          amount: claimPrice.add(totalCollateral).toString(),
+          amount: reclaimPrice.add(totalCollateral).toString(),
         });
         await op1.exec(await ethers.getSigner(bidder));
 
-        // Allow spending of claimPrice
-        const op2 = paymentToken.approve({amount: claimPrice.add(totalCollateral), receiver: basePCOFacet.address});
+        // Allow spending of reclaimPrice
+        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
         await op2.exec(await ethers.getSigner(bidder));
 
         // Approve flow creation
@@ -194,11 +194,11 @@ describe("CFAReclaimerFacet", async function () {
         });
         await op3.exec(await ethers.getSigner(bidder));
 
-        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).claim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: Incorrect for sale price");
+        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: Incorrect for sale price");
       });
   });
 
-  describe("claimPrice", async () => {
+  describe("reclaimPrice", async () => {
     let originalForSalePrice: BigNumber;
     let prevPrice: BigNumber;
     let nextPrice: BigNumber;
@@ -216,7 +216,7 @@ describe("CFAReclaimerFacet", async function () {
 
       const startPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .claimPrice();
+        .reclaimPrice();
       expect(startPrice.lt(originalForSalePrice)).to.be.true;
 
       daysFromNow = getUnixTime(addDays(startOfToday(), 5));
@@ -224,14 +224,14 @@ describe("CFAReclaimerFacet", async function () {
 
       prevPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .claimPrice();
+        .reclaimPrice();
       expect(prevPrice.lt(startPrice)).to.be.true;
 
       daysFromNow = getUnixTime(addDays(startOfToday(), 7));
       await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .claimPrice();
+        .reclaimPrice();
       expect(nextPrice.lt(prevPrice)).to.be.true;
 
       prevPrice = nextPrice;
@@ -239,7 +239,7 @@ describe("CFAReclaimerFacet", async function () {
       await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .claimPrice();
+        .reclaimPrice();
       expect(nextPrice.lt(prevPrice)).to.be.true;
 
       prevPrice = nextPrice;
@@ -247,7 +247,7 @@ describe("CFAReclaimerFacet", async function () {
       await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .claimPrice();
+        .reclaimPrice();
       expect(nextPrice.lt(prevPrice)).to.be.true;
     });
 
@@ -259,7 +259,7 @@ describe("CFAReclaimerFacet", async function () {
       await network.provider.send("evm_mine", [daysFromNow]);
       const price = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .claimPrice();
+        .reclaimPrice();
       expect(price.eq(ethers.constants.Zero)).to.be.true;
     });
 
@@ -267,7 +267,7 @@ describe("CFAReclaimerFacet", async function () {
       const { basePCOFacet } = await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
 
-      await expect(basePCOFacet.connect(await ethers.getSigner(user)).claimPrice()).to.be.revertedWith(
+      await expect(basePCOFacet.connect(await ethers.getSigner(user)).reclaimPrice()).to.be.revertedWith(
         "CFAReclaimerFacet: Can only perform action when payer bid is active"
       );
     });

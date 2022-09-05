@@ -16,7 +16,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
     /**
      * @notice Current price to reclaim
      */
-    function claimPrice() public view returns (uint256) {
+    function reclaimPrice() public view returns (uint256) {
         require(
             !LibCFABasePCO._isPayerBidActive(),
             "CFAReclaimerFacet: Can only perform action when payer bid is active"
@@ -51,7 +51,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
      * @param newContributionRate New contribution rate for license
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function claim(int96 newContributionRate, uint256 newForSalePrice)
+    function reclaim(int96 newContributionRate, uint256 newForSalePrice)
         external
     {
         require(
@@ -81,7 +81,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         );
 
         // Collect deposit
-        uint256 _claimPrice = claimPrice();
+        uint256 _claimPrice = reclaimPrice();
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         address _bidder = _currentBid.bidder;
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
