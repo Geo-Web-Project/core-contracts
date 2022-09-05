@@ -31,16 +31,9 @@ describe("CFAReclaimerFacet", async function () {
         );
         const totalCollateral = forSalePrice.add(requiredBuffer);
 
-        // Transfer payment token for buffer
         const reclaimPrice = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
         .reclaimPrice();
-
-        const op1 = paymentToken.transfer({
-          receiver: bidder,
-          amount: reclaimPrice.add(totalCollateral).toString(),
-        });
-        await op1.exec(await ethers.getSigner(bidder));
 
         // Allow spending of reclaimPrice
         const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
@@ -84,16 +77,12 @@ describe("CFAReclaimerFacet", async function () {
         );
         const totalCollateral = forSalePrice.add(requiredBuffer);
 
-        // Transfer payment token for buffer
-
-        const op1 = paymentToken.transfer({
-          receiver: bidder,
-          amount: totalCollateral.toString(),
-        });
-        await op1.exec(await ethers.getSigner(bidder));
+        const reclaimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaimPrice();
 
         // Allow spending of reclaimPrice
-        const op2 = paymentToken.approve({amount: totalCollateral.toString(), receiver: basePCOFacet.address});
+        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
         await op2.exec(await ethers.getSigner(bidder));
 
         // Approve flow creation
@@ -125,16 +114,9 @@ describe("CFAReclaimerFacet", async function () {
         );
         const totalCollateral = forSalePrice.add(requiredBuffer);
 
-        // Transfer payment token for buffer
         const reclaimPrice = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
         .reclaimPrice();
-
-        const op1 = paymentToken.transfer({
-          receiver: bidder,
-          amount: reclaimPrice.add(totalCollateral).toString(),
-        });
-        await op1.exec(await ethers.getSigner(bidder));
 
         // Allow spending of reclaimPrice
         const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
