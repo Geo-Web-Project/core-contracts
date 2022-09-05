@@ -48,6 +48,8 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
      *      - Payer bid must be inactive
      *      - Must have permissions to create flow for bidder
      *      - Must have ERC-20 approval of payment token for claimPrice amount
+     * @param newContributionRate New contribution rate for license
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
     function claim(int96 newContributionRate, uint256 newForSalePrice)
         external
