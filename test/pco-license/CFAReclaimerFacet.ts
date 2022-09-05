@@ -35,14 +35,18 @@ describe("CFAReclaimerFaceit", async function () {
         });
         await op1.exec(await ethers.getSigner(bidder));
 
+        // Allow spending of claimPrice
+        const op2 = paymentToken.approve({amount: claimPrice, receiver: basePCOFacet.address});
+        await op2.exec(await ethers.getSigner(bidder));
+
         // Approve flow creation
-        const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        const op3 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
           superToken: paymentToken.address,
           flowOperator: basePCOFacet.address,
           permissions: 1,
           flowRateAllowance: contributionRate.toString(),
         });
-        await op2.exec(await ethers.getSigner(bidder));
+        await op3.exec(await ethers.getSigner(bidder));
 
         const txn = await basePCOFacet.connect(await ethers.getSigner(bidder)).claim(contributionRate, forSalePrice);
         await txn.wait()
