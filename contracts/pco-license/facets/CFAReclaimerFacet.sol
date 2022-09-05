@@ -12,6 +12,15 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
 
+    struct Data {
+        uint256 perSecondFeeNumerator;
+        uint256 perSecondFeeDenominator;
+        uint256 claimPrice;
+        address bidder;
+        uint256 requiredBuffer;
+        address beneficiary;
+    }
+
     /// @notice Emitted when a license is reclaimed
     event LicenseReclaimed(address indexed to, uint256 price);
 
@@ -67,10 +76,10 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
-        uint256 perSecondFeeNumerator = ds
-            .paramsStore
-            .getPerSecondFeeNumerator();
-        uint256 perSecondFeeDenominator = ds
+        Data memory data;
+
+        data.perSecondFeeNumerator = ds.paramsStore.getPerSecondFeeNumerator();
+        data.perSecondFeeDenominator = ds
             .paramsStore
             .getPerSecondFeeDenominator();
 
@@ -78,41 +87,82 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             LibCFABasePCO._checkForSalePrice(
                 newForSalePrice,
                 newContributionRate,
-                perSecondFeeNumerator,
-                perSecondFeeDenominator
+                data.perSecondFeeNumerator,
+                data.perSecondFeeDenominator
             ),
             "CFAReclaimerFacet: Incorrect for sale price"
         );
 
         // Collect deposit
-        uint256 _claimPrice = reclaimPrice();
+        data.claimPrice = reclaimPrice();
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
-        address _bidder = _currentBid.bidder;
+        data.bidder = _currentBid.bidder;
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        paymentToken.safeTransferFrom(
-            msg.sender,
-            _bidder,
-            _claimPrice
-        );
+        paymentToken.safeTransferFrom(msg.sender, data.bidder, data.claimPrice);
 
-        uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+        data.requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
             paymentToken,
             newContributionRate
         );
         paymentToken.safeTransferFrom(
             msg.sender,
             address(this),
-            requiredBuffer
+            data.requiredBuffer
         );
 
-        LibCFAReclaimer._triggerTransfer(
-            newContributionRate,
-            newForSalePrice,
-            perSecondFeeDenominator,
-            perSecondFeeNumerator,
-            paymentToken
+        // Create bidder flow
+        try
+            cs.cfaV1.host.callAgreement(
+                cs.cfaV1.cfa,
+                abi.encodeCall(
+                    cs.cfaV1.cfa.createFlowByOperator,
+                    (
+                        paymentToken,
+                        msg.sender,
+                        address(this),
+                        newContributionRate,
+                        new bytes(0)
+                    )
+                ),
+                new bytes(0)
+            )
+        {} catch {}
+
+        // Update beneficiary flow
+        data.beneficiary = ds.paramsStore.getBeneficiary();
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            paymentToken,
+            address(this),
+            data.beneficiary
+        );
+        if (flowRate > 0) {
+            cs.cfaV1.updateFlow(
+                data.beneficiary,
+                paymentToken,
+                newContributionRate
+            );
+        } else {
+            cs.cfaV1.createFlow(
+                data.beneficiary,
+                paymentToken,
+                newContributionRate
+            );
+        }
+
+        // Transfer license
+        ds.license.safeTransferFrom(
+            _currentBid.bidder,
+            msg.sender,
+            ds.licenseId
         );
 
-        emit LicenseReclaimed(msg.sender, _claimPrice);
+        _currentBid.timestamp = block.timestamp;
+        _currentBid.bidder = msg.sender;
+        _currentBid.contributionRate = newContributionRate;
+        _currentBid.perSecondFeeNumerator = data.perSecondFeeNumerator;
+        _currentBid.perSecondFeeDenominator = data.perSecondFeeDenominator;
+        _currentBid.forSalePrice = newForSalePrice;
+
+        emit LicenseReclaimed(msg.sender, data.claimPrice);
     }
 }
