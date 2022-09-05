@@ -59,6 +59,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
 
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore
@@ -87,7 +88,18 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             _bidder,
             _claimPrice
         );
-        require(success, "CFAReclaimerFacet: Deposit failed");
+        require(success, "CFAReclaimerFacet: ClaimPrice Deposit failed");
+
+        uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            newContributionRate
+        );
+        bool success1 = paymentToken.transferFrom(
+            msg.sender,
+            address(this),
+            requiredBuffer
+        );
+        require(success1, "CFAReclaimerFacet: Bid Deposit failed");
 
         LibCFAReclaimer._triggerTransfer(
             newContributionRate,
