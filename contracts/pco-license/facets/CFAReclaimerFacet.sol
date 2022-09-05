@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import "../libraries/LibCFABasePCO.sol";
 import "../libraries/LibCFAReclaimer.sol";
+import "../libraries/LibCFAPenaltyBid.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -19,6 +20,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         address bidder;
         uint256 requiredBuffer;
         address beneficiary;
+        ISuperToken paymentToken;
     }
 
     /// @notice Emitted when a license is reclaimed
@@ -93,18 +95,60 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             "CFAReclaimerFacet: Incorrect for sale price"
         );
 
-        // Collect deposit
-        data.claimPrice = reclaimPrice();
-        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
-        data.bidder = _currentBid.bidder;
-        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        paymentToken.safeTransferFrom(msg.sender, data.bidder, data.claimPrice);
-
+        data.paymentToken = ds.paramsStore.getPaymentToken();
         data.requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-            paymentToken,
+            data.paymentToken,
             newContributionRate
         );
-        paymentToken.safeTransferFrom(
+
+        require(
+            data.paymentToken.balanceOf(msg.sender) >=
+                newForSalePrice + data.requiredBuffer,
+            "CFAReclaimerFacet: Insufficient balance"
+        );
+
+        // Check operator permissions
+        (, uint8 permissions, int96 flowRateAllowance) = cs
+            .cfaV1
+            .cfa
+            .getFlowOperatorData(
+                ds.paramsStore.getPaymentToken(),
+                msg.sender,
+                address(this)
+            );
+
+        require(
+            LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
+                permissions,
+                LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
+            ),
+            "CFAReclaimerFacet: CREATE_FLOW permission not granted"
+        );
+        require(
+            flowRateAllowance >= newContributionRate,
+            "CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance"
+        );
+
+        data.claimPrice = reclaimPrice();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+
+        _currentBid.timestamp = block.timestamp;
+        _currentBid.bidder = msg.sender;
+        _currentBid.contributionRate = newContributionRate;
+        _currentBid.perSecondFeeNumerator = data.perSecondFeeNumerator;
+        _currentBid.perSecondFeeDenominator = data.perSecondFeeDenominator;
+        _currentBid.forSalePrice = newForSalePrice;
+
+        emit LicenseReclaimed(msg.sender, data.claimPrice);
+
+        // Collect deposit
+        data.bidder = _currentBid.bidder;
+        data.paymentToken.safeTransferFrom(
+            msg.sender,
+            data.bidder,
+            data.claimPrice
+        );
+        data.paymentToken.safeTransferFrom(
             msg.sender,
             address(this),
             data.requiredBuffer
@@ -117,7 +161,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
                 abi.encodeCall(
                     cs.cfaV1.cfa.createFlowByOperator,
                     (
-                        paymentToken,
+                        data.paymentToken,
                         msg.sender,
                         address(this),
                         newContributionRate,
@@ -131,20 +175,20 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         // Update beneficiary flow
         data.beneficiary = ds.paramsStore.getBeneficiary();
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
-            paymentToken,
+            data.paymentToken,
             address(this),
             data.beneficiary
         );
         if (flowRate > 0) {
             cs.cfaV1.updateFlow(
                 data.beneficiary,
-                paymentToken,
+                data.paymentToken,
                 newContributionRate
             );
         } else {
             cs.cfaV1.createFlow(
                 data.beneficiary,
-                paymentToken,
+                data.paymentToken,
                 newContributionRate
             );
         }
@@ -155,14 +199,5 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             msg.sender,
             ds.licenseId
         );
-
-        _currentBid.timestamp = block.timestamp;
-        _currentBid.bidder = msg.sender;
-        _currentBid.contributionRate = newContributionRate;
-        _currentBid.perSecondFeeNumerator = data.perSecondFeeNumerator;
-        _currentBid.perSecondFeeDenominator = data.perSecondFeeDenominator;
-        _currentBid.forSalePrice = newForSalePrice;
-
-        emit LicenseReclaimed(msg.sender, data.claimPrice);
     }
 }
