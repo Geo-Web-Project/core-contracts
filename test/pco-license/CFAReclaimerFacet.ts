@@ -77,12 +77,8 @@ describe("CFAReclaimerFacet", async function () {
         );
         const totalCollateral = forSalePrice.add(requiredBuffer);
 
-        const reclaimPrice = await basePCOFacet
-        .connect(await ethers.getSigner(bidder))
-        .reclaimPrice();
-
         // Allow spending of reclaimPrice
-        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
+        const op2 = paymentToken.approve({amount: totalCollateral.toString(), receiver: basePCOFacet.address});
         await op2.exec(await ethers.getSigner(bidder));
 
         // Approve flow creation
