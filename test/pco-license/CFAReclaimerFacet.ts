@@ -60,6 +60,149 @@ describe("CFAReclaimerFacet", async function () {
         );
       });
 
+      it("should revert if insufficient balance", async () => {
+        const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf, mockLicense } = await BaseFixtures.afterPayerDelete();
+        const { bidder, user } = await getNamedAccounts();
+
+        const contributionRate = BigNumber.from(100);
+        const forSalePrice = await rateToPurchasePrice(
+          mockParamsStore,
+          contributionRate
+        );
+        const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          contributionRate
+        );
+        const totalCollateral = forSalePrice.add(requiredBuffer);
+
+        const reclaimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaimPrice();
+
+        // Allow spending of reclaimPrice
+        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
+        await op2.exec(await ethers.getSigner(bidder));
+
+        // Approve flow creation
+        const op3 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+          superToken: paymentToken.address,
+          flowOperator: basePCOFacet.address,
+          permissions: 1,
+          flowRateAllowance: contributionRate.toString(),
+        });
+        await op3.exec(await ethers.getSigner(bidder));
+
+         // remove all payment tokens
+         const op4 = paymentToken.transfer({amount: await paymentToken.balanceOf({account: bidder, providerOrSigner: await ethers.getSigner(bidder)}), receiver: basePCOFacet.address});
+         await op4.exec(await ethers.getSigner(bidder));
+
+        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: Insufficient balance");
+      });
+
+      it("should revert if insufficient allowance", async () => {
+        const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf, mockLicense } = await BaseFixtures.afterPayerDelete();
+        const { bidder, user } = await getNamedAccounts();
+
+        const contributionRate = BigNumber.from(100);
+        const forSalePrice = await rateToPurchasePrice(
+          mockParamsStore,
+          contributionRate
+        );
+        const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          contributionRate
+        );
+        const totalCollateral = forSalePrice.add(requiredBuffer);
+
+        const reclaimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaimPrice();
+
+        // Allow spending of reclaimPrice
+        const op2 = paymentToken.approve({amount: reclaimPrice, receiver: basePCOFacet.address});
+        await op2.exec(await ethers.getSigner(bidder));
+
+        // Approve flow creation
+        const op3 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+          superToken: paymentToken.address,
+          flowOperator: basePCOFacet.address,
+          permissions: 1,
+          flowRateAllowance: contributionRate.toString(),
+        });
+        await op3.exec(await ethers.getSigner(bidder));
+
+        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: Insufficient allowance");
+      });
+
+      it("should revert if permission not granted to create flow", async () => {
+        const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf, mockLicense } = await BaseFixtures.afterPayerDelete();
+        const { bidder, user } = await getNamedAccounts();
+
+        const contributionRate = BigNumber.from(100);
+        const forSalePrice = await rateToPurchasePrice(
+          mockParamsStore,
+          contributionRate
+        );
+        const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          contributionRate
+        );
+        const totalCollateral = forSalePrice.add(requiredBuffer);
+
+        const reclaimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaimPrice();
+
+        // Allow spending of reclaimPrice
+        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
+        await op2.exec(await ethers.getSigner(bidder));
+
+        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: CREATE_FLOW permission not granted");
+      });
+
+      it("should revert if flow permission doesn't have enough allowance", async () => {
+        const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf, mockLicense } = await BaseFixtures.afterPayerDelete();
+        const { bidder, user } = await getNamedAccounts();
+
+        const contributionRate = BigNumber.from(100);
+        const forSalePrice = await rateToPurchasePrice(
+          mockParamsStore,
+          contributionRate
+        );
+        const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          contributionRate
+        );
+        const totalCollateral = forSalePrice.add(requiredBuffer);
+
+        const reclaimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaimPrice();
+
+        // Allow spending of reclaimPrice
+        const op2 = paymentToken.approve({amount: reclaimPrice.add(totalCollateral), receiver: basePCOFacet.address});
+        await op2.exec(await ethers.getSigner(bidder));
+
+        // Approve flow creation
+        const op3 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+          superToken: paymentToken.address,
+          flowOperator: basePCOFacet.address,
+          permissions: 1,
+          flowRateAllowance: contributionRate.sub(1).toString(),
+        });
+        await op3.exec(await ethers.getSigner(bidder));
+
+        await expect(basePCOFacet.connect(await ethers.getSigner(bidder)).reclaim(contributionRate, forSalePrice)).to.be.revertedWith("CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance");
+      });
+
       it("should revert if the player bid is active", async () => {
         const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } = await BaseFixtures.initialized();
         const { bidder } = await getNamedAccounts();

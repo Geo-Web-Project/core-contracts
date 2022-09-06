@@ -106,6 +106,11 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
                 newForSalePrice + data.requiredBuffer,
             "CFAReclaimerFacet: Insufficient balance"
         );
+        require(
+            data.paymentToken.allowance(msg.sender, address(this)) >=
+                newForSalePrice + data.requiredBuffer,
+            "CFAReclaimerFacet: Insufficient allowance"
+        );
 
         // Check operator permissions
         (, uint8 permissions, int96 flowRateAllowance) = cs
@@ -174,24 +179,11 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
 
         // Update beneficiary flow
         data.beneficiary = ds.paramsStore.getBeneficiary();
-        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
+        cs.cfaV1.createFlow(
+            data.beneficiary,
             data.paymentToken,
-            address(this),
-            data.beneficiary
+            newContributionRate
         );
-        if (flowRate > 0) {
-            cs.cfaV1.updateFlow(
-                data.beneficiary,
-                data.paymentToken,
-                newContributionRate
-            );
-        } else {
-            cs.cfaV1.createFlow(
-                data.beneficiary,
-                data.paymentToken,
-                newContributionRate
-            );
-        }
 
         // Transfer license
         ds.license.safeTransferFrom(
