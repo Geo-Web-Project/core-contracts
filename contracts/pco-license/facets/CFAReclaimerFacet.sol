@@ -12,16 +12,6 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
 
-    struct Data {
-        uint256 perSecondFeeNumerator;
-        uint256 perSecondFeeDenominator;
-        uint256 claimPrice;
-        address bidder;
-        uint256 requiredBuffer;
-        address beneficiary;
-        ISuperToken paymentToken;
-    }
-
     /// @notice Emitted when a license is reclaimed
     event LicenseReclaimed(address indexed to, uint256 price);
 
@@ -77,86 +67,98 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
-        Data memory data;
+        {
+            uint256 perSecondFeeNumerator = ds
+                .paramsStore
+                .getPerSecondFeeNumerator();
+            uint256 perSecondFeeDenominator = ds
+                .paramsStore
+                .getPerSecondFeeDenominator();
 
-        data.perSecondFeeNumerator = ds.paramsStore.getPerSecondFeeNumerator();
-        data.perSecondFeeDenominator = ds
-            .paramsStore
-            .getPerSecondFeeDenominator();
+            require(
+                LibCFABasePCO._checkForSalePrice(
+                    newForSalePrice,
+                    newContributionRate,
+                    perSecondFeeNumerator,
+                    perSecondFeeDenominator
+                ),
+                "CFAReclaimerFacet: Incorrect for sale price"
+            );
+        }
 
-        require(
-            LibCFABasePCO._checkForSalePrice(
-                newForSalePrice,
-                newContributionRate,
-                data.perSecondFeeNumerator,
-                data.perSecondFeeDenominator
-            ),
-            "CFAReclaimerFacet: Incorrect for sale price"
-        );
-
-        data.paymentToken = ds.paramsStore.getPaymentToken();
-        data.requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-            data.paymentToken,
-            newContributionRate
-        );
-
-        require(
-            data.paymentToken.balanceOf(msg.sender) >=
-                newForSalePrice + data.requiredBuffer,
-            "CFAReclaimerFacet: Insufficient balance"
-        );
-        require(
-            data.paymentToken.allowance(msg.sender, address(this)) >=
-                newForSalePrice + data.requiredBuffer,
-            "CFAReclaimerFacet: Insufficient allowance"
-        );
-
-        // Check operator permissions
-        (, uint8 permissions, int96 flowRateAllowance) = cs
-            .cfaV1
-            .cfa
-            .getFlowOperatorData(
-                ds.paramsStore.getPaymentToken(),
-                msg.sender,
-                address(this)
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        {
+            uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+                paymentToken,
+                newContributionRate
             );
 
-        require(
-            LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
-                permissions,
-                LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
-            ),
-            "CFAReclaimerFacet: CREATE_FLOW permission not granted"
-        );
-        require(
-            flowRateAllowance >= newContributionRate,
-            "CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance"
-        );
+            require(
+                paymentToken.balanceOf(msg.sender) >=
+                    newForSalePrice + requiredBuffer,
+                "CFAReclaimerFacet: Insufficient balance"
+            );
+            require(
+                paymentToken.allowance(msg.sender, address(this)) >=
+                    newForSalePrice + requiredBuffer,
+                "CFAReclaimerFacet: Insufficient allowance"
+            );
+        }
 
-        data.claimPrice = reclaimPrice();
+        {
+            // Check operator permissions
+            (, uint8 permissions, int96 flowRateAllowance) = cs
+                .cfaV1
+                .cfa
+                .getFlowOperatorData(
+                    ds.paramsStore.getPaymentToken(),
+                    msg.sender,
+                    address(this)
+                );
+
+            require(
+                LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
+                    permissions,
+                    LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
+                ),
+                "CFAReclaimerFacet: CREATE_FLOW permission not granted"
+            );
+            require(
+                flowRateAllowance >= newContributionRate,
+                "CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance"
+            );
+        }
+
+        uint256 claimPrice = reclaimPrice();
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+        address bidder = _currentBid.bidder;
 
         _currentBid.timestamp = block.timestamp;
         _currentBid.bidder = msg.sender;
         _currentBid.contributionRate = newContributionRate;
-        _currentBid.perSecondFeeNumerator = data.perSecondFeeNumerator;
-        _currentBid.perSecondFeeDenominator = data.perSecondFeeDenominator;
+        _currentBid.perSecondFeeNumerator = ds
+            .paramsStore
+            .getPerSecondFeeNumerator();
+        _currentBid.perSecondFeeDenominator = ds
+            .paramsStore
+            .getPerSecondFeeDenominator();
         _currentBid.forSalePrice = newForSalePrice;
 
-        emit LicenseReclaimed(msg.sender, data.claimPrice);
+        emit LicenseReclaimed(msg.sender, claimPrice);
 
-        // Collect deposit
-        data.bidder = _currentBid.bidder;
-        data.paymentToken.safeTransferFrom(
-            msg.sender,
-            data.bidder,
-            data.claimPrice
-        );
-        data.paymentToken.safeTransferFrom(
-            msg.sender,
-            address(this),
-            data.requiredBuffer
-        );
+        {
+            // Collect deposit
+            uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+                paymentToken,
+                newContributionRate
+            );
+            paymentToken.safeTransferFrom(msg.sender, bidder, claimPrice);
+            paymentToken.safeTransferFrom(
+                msg.sender,
+                address(this),
+                requiredBuffer
+            );
+        }
 
         // Create bidder flow
         try
@@ -165,7 +167,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
                 abi.encodeCall(
                     cs.cfaV1.cfa.createFlowByOperator,
                     (
-                        data.paymentToken,
+                        paymentToken,
                         msg.sender,
                         address(this),
                         newContributionRate,
@@ -177,18 +179,10 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         {} catch {}
 
         // Update beneficiary flow
-        data.beneficiary = ds.paramsStore.getBeneficiary();
-        cs.cfaV1.createFlow(
-            data.beneficiary,
-            data.paymentToken,
-            newContributionRate
-        );
+        address beneficiary = ds.paramsStore.getBeneficiary();
+        cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
 
         // Transfer license
-        ds.license.safeTransferFrom(
-            _currentBid.bidder,
-            msg.sender,
-            ds.licenseId
-        );
+        ds.license.safeTransferFrom(bidder, msg.sender, ds.licenseId);
     }
 }
