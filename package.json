@@ -1,7 +1,7 @@
 {
   "name": "@geo-web/contracts",
   "license": "MIT",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "GeoWeb solidity contracts, artifacts, & types",
   "author": "GeoWebCore",
   "homepage": "https://www.geoweb.network/",

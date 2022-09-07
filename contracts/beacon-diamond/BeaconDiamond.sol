@@ -20,6 +20,7 @@ contract BeaconDiamond {
 
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
         LibBeaconDiamond.DiamondStorage storage ds = LibBeaconDiamond
             .diamondStorage();
@@ -28,6 +29,7 @@ contract BeaconDiamond {
         address facet = ds.beacon.facetAddress(msg.sig);
         require(facet != address(0), "Diamond: Function does not exist");
         // Execute external function from facet using delegatecall and return any value.
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             // copy function selector and any arguments
             calldatacopy(0, 0, calldatasize())
@@ -46,5 +48,6 @@ contract BeaconDiamond {
         }
     }
 
+    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 }

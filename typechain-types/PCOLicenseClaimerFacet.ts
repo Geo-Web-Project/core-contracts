@@ -226,27 +226,27 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     setBeacon(
-      _beacon: string,
+      beacon: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     setEndingBid(
-      _endingBid: BigNumberish,
+      endingBid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     setStartingBid(
-      _startingBid: BigNumberish,
+      startingBid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -288,27 +288,27 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
   requiredBid(overrides?: CallOverrides): Promise<BigNumber>;
 
   setAuctionEnd(
-    _auctionEnd: BigNumberish,
+    auctionEnd: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   setAuctionStart(
-    _auctionStart: BigNumberish,
+    auctionStart: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   setBeacon(
-    _beacon: string,
+    beacon: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   setEndingBid(
-    _endingBid: BigNumberish,
+    endingBid: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   setStartingBid(
-    _startingBid: BigNumberish,
+    startingBid: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -353,24 +353,24 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<BigNumber>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setBeacon(_beacon: string, overrides?: CallOverrides): Promise<void>;
+    setBeacon(beacon: string, overrides?: CallOverrides): Promise<void>;
 
     setEndingBid(
-      _endingBid: BigNumberish,
+      endingBid: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
     setStartingBid(
-      _startingBid: BigNumberish,
+      startingBid: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
   };
@@ -427,27 +427,27 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<BigNumber>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     setBeacon(
-      _beacon: string,
+      beacon: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     setEndingBid(
-      _endingBid: BigNumberish,
+      endingBid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     setStartingBid(
-      _startingBid: BigNumberish,
+      startingBid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -493,27 +493,27 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     requiredBid(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     setAuctionEnd(
-      _auctionEnd: BigNumberish,
+      auctionEnd: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setAuctionStart(
-      _auctionStart: BigNumberish,
+      auctionStart: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setBeacon(
-      _beacon: string,
+      beacon: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setEndingBid(
-      _endingBid: BigNumberish,
+      endingBid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setStartingBid(
-      _startingBid: BigNumberish,
+      startingBid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

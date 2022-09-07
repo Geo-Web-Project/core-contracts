@@ -9,15 +9,15 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 contract ERC721Facet is IERC721, ERC165, IERC721Metadata, Context {
-    function initialize(string calldata _name, string calldata _symbol)
+    function initialize(string calldata initName, string calldata initSymbol)
         external
     {
         LibDiamond.enforceIsContractOwner();
 
         LibERC721.DiamondStorage storage ds = LibERC721.diamondStorage();
 
-        ds.name = _name;
-        ds.symbol = _symbol;
+        ds.name = initName;
+        ds.symbol = initSymbol;
     }
 
     /**

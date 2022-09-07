@@ -49,14 +49,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the starting bid.
-     * @param _startingBid The new starting bid
+     * @param startingBid The new starting bid
      */
-    function setStartingBid(uint256 _startingBid) external {
+    function setStartingBid(uint256 startingBid) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.startingBid = _startingBid;
+        ds.startingBid = startingBid;
     }
 
     /// @notice Starting bid
@@ -69,14 +69,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the ending bid.
-     * @param _endingBid The new ending bid
+     * @param endingBid The new ending bid
      */
-    function setEndingBid(uint256 _endingBid) external {
+    function setEndingBid(uint256 endingBid) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.endingBid = _endingBid;
+        ds.endingBid = endingBid;
     }
 
     /// @notice Ending bid
@@ -89,14 +89,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the start time of the initial Dutch auction.
-     * @param _auctionStart The new start time of the initial Dutch auction
+     * @param auctionStart The new start time of the initial Dutch auction
      */
-    function setAuctionStart(uint256 _auctionStart) external {
+    function setAuctionStart(uint256 auctionStart) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.auctionStart = _auctionStart;
+        ds.auctionStart = auctionStart;
     }
 
     /// @notice Auction start
@@ -109,14 +109,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the end time of the initial Dutch auction.
-     * @param _auctionEnd The new end time of the initial Dutch auction
+     * @param auctionEnd The new end time of the initial Dutch auction
      */
-    function setAuctionEnd(uint256 _auctionEnd) external {
+    function setAuctionEnd(uint256 auctionEnd) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.auctionEnd = _auctionEnd;
+        ds.auctionEnd = auctionEnd;
     }
 
     /// @notice Auction end
@@ -129,14 +129,14 @@ contract PCOLicenseClaimerFacet {
 
     /**
      * @notice Admin can update the beacon contract
-     * @param _beacon The new beacon contract
+     * @param beacon The new beacon contract
      */
-    function setBeacon(address _beacon) external {
+    function setBeacon(address beacon) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
-        ds.beacon = _beacon;
+        ds.beacon = beacon;
     }
 
     /// @notice Get Beacon
@@ -224,20 +224,7 @@ contract PCOLicenseClaimerFacet {
             "PCOLicenseClaimerFacet: Initial for sale price does not meet requirement"
         );
 
-        if (block.timestamp <= ds.auctionEnd) {
-            // Transfer initial payment
-            ls.paymentToken.safeTransferFrom(
-                msg.sender,
-                ls.beneficiary,
-                initialForSalePrice
-            );
-        }
-
-        uint256 licenseId = LibPCOLicenseClaimer._buildAndMint(
-            msg.sender,
-            baseCoordinate,
-            path
-        );
+        uint256 licenseId = LibGeoWebParcel.nextId();
 
         BeaconDiamond proxy = new BeaconDiamond{
             salt: keccak256(
@@ -250,6 +237,11 @@ contract PCOLicenseClaimerFacet {
 
         // Store beacon proxy
         ds.beaconProxies[licenseId] = address(proxy);
+
+        emit ParcelClaimed(licenseId, msg.sender);
+
+        // Build and mint
+        LibPCOLicenseClaimer._buildAndMint(msg.sender, baseCoordinate, path);
 
         {
             // Transfer required buffer
@@ -273,6 +265,15 @@ contract PCOLicenseClaimerFacet {
             );
         }
 
+        // Transfer initial payment
+        if (block.timestamp <= ds.auctionEnd) {
+            ls.paymentToken.safeTransferFrom(
+                msg.sender,
+                ls.beneficiary,
+                initialForSalePrice
+            );
+        }
+
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(
             IPCOLicenseParamsStore(address(this)),
@@ -282,7 +283,5 @@ contract PCOLicenseClaimerFacet {
             initialContributionRate,
             initialForSalePrice
         );
-
-        emit ParcelClaimed(licenseId, msg.sender);
     }
 }

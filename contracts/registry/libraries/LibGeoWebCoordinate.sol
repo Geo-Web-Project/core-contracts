@@ -14,78 +14,74 @@ library LibGeoWebCoordinate {
     function traverse(
         uint64 origin,
         uint256 direction,
-        uint256 _i_x,
-        uint256 _i_y,
-        uint256 _i
+        uint256 iX,
+        uint256 iY,
+        uint256 i
     )
         external
         pure
         returns (
-            uint64 destination,
-            uint256 i_x,
-            uint256 i_y,
-            uint256 i
+            uint64,
+            uint256,
+            uint256,
+            uint256
         )
     {
-        return _traverse(origin, direction, _i_x, _i_y, _i);
+        return _traverse(origin, direction, iX, iY, i);
     }
 
     function _traverse(
         uint64 origin,
         uint256 direction,
-        uint256 _i_x,
-        uint256 _i_y,
-        uint256 _i
+        uint256 iX,
+        uint256 iY,
+        uint256 i
     )
         internal
         pure
         returns (
-            uint64 destination,
-            uint256 i_x,
-            uint256 i_y,
-            uint256 i
+            uint64,
+            uint256,
+            uint256,
+            uint256
         )
     {
-        uint64 origin_x = _getX(origin);
-        uint64 origin_y = _getY(origin);
-
-        i_x = _i_x;
-        i_y = _i_y;
-        i = _i;
+        uint64 originX = _getX(origin);
+        uint64 originY = _getY(origin);
 
         if (direction == 0) {
             // North
-            origin_y += 1;
-            require(origin_y <= MAX_Y, "Direction went too far north!");
+            originY += 1;
+            require(originY <= MAX_Y, "Direction went too far north!");
 
-            if (origin_y % 16 == 0) {
-                i_y += 1;
+            if (originY % 16 == 0) {
+                iY += 1;
                 i -= 240;
             } else {
                 i += 16;
             }
         } else if (direction == 1) {
             // South
-            require(origin_y > 0, "Direction went too far south!");
-            origin_y -= 1;
+            require(originY > 0, "Direction went too far south!");
+            originY -= 1;
 
-            if (origin_y % 16 == 15) {
-                i_y -= 1;
+            if (originY % 16 == 15) {
+                iY -= 1;
                 i += 240;
             } else {
                 i -= 16;
             }
         } else if (direction == 2) {
             // East
-            if (origin_x >= MAX_X) {
+            if (originX >= MAX_X) {
                 // Wrap to west
-                origin_x = 0;
-                i_x = 0;
+                originX = 0;
+                iX = 0;
                 i -= 15;
             } else {
-                origin_x += 1;
-                if (origin_x % 16 == 0) {
-                    i_x += 1;
+                originX += 1;
+                if (originX % 16 == 0) {
+                    iX += 1;
                     i -= 15;
                 } else {
                     i += 1;
@@ -93,15 +89,15 @@ library LibGeoWebCoordinate {
             }
         } else if (direction == 3) {
             // West
-            if (origin_x == 0) {
+            if (originX == 0) {
                 // Wrap to east
-                origin_x = MAX_X;
-                i_x = MAX_X / 16;
+                originX = MAX_X;
+                iX = MAX_X / 16;
                 i += 15;
             } else {
-                origin_x -= 1;
-                if (origin_x % 16 == 15) {
-                    i_x -= 1;
+                originX -= 1;
+                if (originX % 16 == 15) {
+                    iX -= 1;
                     i += 15;
                 } else {
                     i -= 1;
@@ -109,19 +105,21 @@ library LibGeoWebCoordinate {
             }
         }
 
-        destination = (origin_y | (origin_x << 32));
+        uint64 destination = (originY | (originX << 32));
+
+        return (destination, iX, iY, i);
     }
 
     /// @notice Get the X coordinate
-    function _getX(uint64 coord) internal pure returns (uint64 coord_x) {
-        coord_x = (coord >> 32); // Take first 32 bits
-        require(coord_x <= MAX_X, "X coordinate is out of bounds");
+    function _getX(uint64 coord) internal pure returns (uint64 coordX) {
+        coordX = (coord >> 32); // Take first 32 bits
+        require(coordX <= MAX_X, "X coordinate is out of bounds");
     }
 
     /// @notice Get the Y coordinate
-    function _getY(uint64 coord) internal pure returns (uint64 coord_y) {
-        coord_y = (coord & ((2**32) - 1)); // Take last 32 bits
-        require(coord_y <= MAX_Y, "Y coordinate is out of bounds");
+    function _getY(uint64 coord) internal pure returns (uint64 coordY) {
+        coordY = (coord & ((2**32) - 1)); // Take last 32 bits
+        require(coordY <= MAX_Y, "Y coordinate is out of bounds");
     }
 
     /// @notice Convert coordinate to word index
@@ -129,8 +127,8 @@ library LibGeoWebCoordinate {
         external
         pure
         returns (
-            uint256 i_x,
-            uint256 i_y,
+            uint256 iX,
+            uint256 iY,
             uint256 i
         )
     {
@@ -141,28 +139,28 @@ library LibGeoWebCoordinate {
         internal
         pure
         returns (
-            uint256 i_x,
-            uint256 i_y,
+            uint256 iX,
+            uint256 iY,
             uint256 i
         )
     {
-        uint256 coord_x = uint256(_getX(coord));
-        uint256 coord_y = uint256(_getY(coord));
+        uint256 coordX = uint256(_getX(coord));
+        uint256 coordY = uint256(_getY(coord));
 
-        i_x = coord_x / 16;
-        i_y = coord_y / 16;
+        iX = coordX / 16;
+        iY = coordY / 16;
 
-        uint256 l_x = coord_x % 16;
-        uint256 l_y = coord_y % 16;
+        uint256 lX = coordX % 16;
+        uint256 lY = coordY % 16;
 
-        i = l_y * 16 + l_x;
+        i = lY * 16 + lX;
     }
 }
 
 /// @notice LibGeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
 library LibGeoWebCoordinatePath {
-    uint256 constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
-    uint256 constant PATH_SEGMENT_MASK = (2**2) - 1;
+    uint256 private constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
+    uint256 private constant PATH_SEGMENT_MASK = (2**2) - 1;
 
     /// @notice Get next direction from path
     /// @param path The path to get the direction from

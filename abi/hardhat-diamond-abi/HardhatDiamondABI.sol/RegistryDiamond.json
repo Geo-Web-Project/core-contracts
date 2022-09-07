@@ -134,12 +134,12 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_name",
+        "name": "initName",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "_symbol",
+        "name": "initSymbol",
         "type": "string"
       }
     ],
@@ -433,13 +433,7 @@
       }
     ],
     "name": "build",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "newParcelId",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -680,7 +674,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_auctionEnd",
+        "name": "auctionEnd",
         "type": "uint256"
       }
     ],
@@ -693,7 +687,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_auctionStart",
+        "name": "auctionStart",
         "type": "uint256"
       }
     ],
@@ -706,7 +700,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_beacon",
+        "name": "beacon",
         "type": "address"
       }
     ],
@@ -719,7 +713,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_endingBid",
+        "name": "endingBid",
         "type": "uint256"
       }
     ],
@@ -732,7 +726,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_startingBid",
+        "name": "startingBid",
         "type": "uint256"
       }
     ],
