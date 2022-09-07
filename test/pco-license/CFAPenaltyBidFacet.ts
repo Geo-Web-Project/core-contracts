@@ -66,7 +66,7 @@ describe("CFAPenaltyBidFacet", async function () {
   });
 
   describe("editBid", async () => {
-    it("should edit bid", async () => {
+    it("should increase bid", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -105,6 +105,58 @@ describe("CFAPenaltyBidFacet", async function () {
         permissions: 2,
         flowRateAllowance: newContributionRate
           .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .editBid(newContributionRate, newForSalePrice);
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, newContributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, newForSalePrice);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        newContributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(user, newContributionRate);
+      await checkAppToBeneficiaryFlow(newContributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should decrease bid", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await BaseFixtures.initializedLarge();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(100);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: existingContributionRate
+          .sub(newContributionRate)
           .toString(),
       });
       await op.exec(await ethers.getSigner(user));

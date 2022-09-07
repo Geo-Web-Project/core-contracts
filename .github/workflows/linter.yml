@@ -1,4 +1,4 @@
-name: "CI"
+name: "Linter"
 on:
   push:
     branches: [main, develop]
@@ -6,7 +6,7 @@ on:
     branches: [main, develop]
 jobs:
   tests:
-    name: "Tests"
+    name: "Lint"
     runs-on: ubuntu-latest
     needs: []
     steps:

@@ -145,12 +145,12 @@ const _abi = [
     inputs: [
       {
         internalType: "string",
-        name: "_name",
+        name: "initName",
         type: "string",
       },
       {
         internalType: "string",
-        name: "_symbol",
+        name: "initSymbol",
         type: "string",
       },
     ],
@@ -444,13 +444,7 @@ const _abi = [
       },
     ],
     name: "build",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "newParcelId",
-        type: "uint256",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -691,7 +685,7 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_auctionEnd",
+        name: "auctionEnd",
         type: "uint256",
       },
     ],
@@ -704,7 +698,7 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_auctionStart",
+        name: "auctionStart",
         type: "uint256",
       },
     ],
@@ -717,7 +711,7 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "_beacon",
+        name: "beacon",
         type: "address",
       },
     ],
@@ -730,7 +724,7 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_endingBid",
+        name: "endingBid",
         type: "uint256",
       },
     ],
@@ -743,7 +737,7 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_startingBid",
+        name: "startingBid",
         type: "uint256",
       },
     ],

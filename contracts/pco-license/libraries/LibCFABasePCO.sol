@@ -10,13 +10,13 @@ library LibCFABasePCO {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
 
-    bytes32 constant STORAGE_POSITION =
+    bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibBasePCO");
 
-    bytes32 constant STORAGE_POSITION_CUR_BID =
+    bytes32 private constant STORAGE_POSITION_CUR_BID =
         keccak256("diamond.standard.diamond.storage.LibBasePCO.currentBid");
 
-    bytes32 constant STORAGE_POSITION_CFA =
+    bytes32 private constant STORAGE_POSITION_CFA =
         keccak256("diamond.standard.diamond.storage.LibBasePCO.cfa");
 
     struct Bid {
@@ -56,6 +56,7 @@ library LibCFABasePCO {
         returns (DiamondStorage storage ds)
     {
         bytes32 position = STORAGE_POSITION;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }
@@ -64,6 +65,7 @@ library LibCFABasePCO {
     /// @dev Store currentBid in separate position so struct is upgradeable
     function _currentBid() internal pure returns (Bid storage bid) {
         bytes32 position = STORAGE_POSITION_CUR_BID;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             bid.slot := position
         }
@@ -72,6 +74,7 @@ library LibCFABasePCO {
     /// @dev Store cfa in separate position so struct is upgradeable
     function cfaStorage() internal pure returns (DiamondCFAStorage storage ds) {
         bytes32 position = STORAGE_POSITION_CFA;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }
@@ -133,15 +136,26 @@ library LibCFABasePCO {
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
-        {
-            // Transfer required buffer
-            (, uint256 deposit, , ) = paymentToken.realtimeBalanceOfNow(
-                address(this)
-            );
-            uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-                paymentToken,
-                newContributionRate
-            );
+        bid.timestamp = block.timestamp;
+        bid.bidder = bid.bidder;
+        bid.contributionRate = newContributionRate;
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = newForSalePrice;
+
+        emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
+        emit PayerContributionRateUpdated(bid.bidder, newContributionRate);
+
+        (, uint256 deposit, , ) = paymentToken.realtimeBalanceOfNow(
+            address(this)
+        );
+        uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            newContributionRate
+        );
+
+        // Transfer required buffer in
+        if (requiredBuffer > deposit) {
             paymentToken.safeTransferFrom(
                 msg.sender,
                 address(this),
@@ -186,14 +200,9 @@ library LibCFABasePCO {
             cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
         }
 
-        bid.timestamp = block.timestamp;
-        bid.bidder = bid.bidder;
-        bid.contributionRate = newContributionRate;
-        bid.perSecondFeeNumerator = perSecondFeeNumerator;
-        bid.perSecondFeeDenominator = perSecondFeeDenominator;
-        bid.forSalePrice = newForSalePrice;
-
-        emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
-        emit PayerContributionRateUpdated(bid.bidder, newContributionRate);
+        // Refund buffer
+        if (deposit > requiredBuffer) {
+            paymentToken.safeTransfer(msg.sender, deposit - requiredBuffer);
+        }
     }
 }

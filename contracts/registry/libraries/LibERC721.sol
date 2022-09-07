@@ -9,7 +9,7 @@ import "./LibPCOLicenseClaimer.sol";
 library LibERC721 {
     using Address for address;
 
-    bytes32 constant STORAGE_POSITION =
+    bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibERC721License");
 
     /**
@@ -60,6 +60,7 @@ library LibERC721 {
         returns (DiamondStorage storage ds)
     {
         bytes32 position = STORAGE_POSITION;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }
@@ -214,42 +215,10 @@ library LibERC721 {
 
         DiamondStorage storage ds = diamondStorage();
 
-        _beforeTokenTransfer(address(0), to, tokenId);
-
         ds.balances[to] += 1;
         ds.owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
-
-        _afterTokenTransfer(address(0), to, tokenId);
-    }
-
-    /**
-     * @dev Destroys `tokenId`.
-     * The approval is cleared when the token is burned.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     *
-     * Emits a {Transfer} event.
-     */
-    function _burn(uint256 tokenId) internal {
-        DiamondStorage storage ds = diamondStorage();
-
-        address owner = ownerOf(tokenId);
-
-        _beforeTokenTransfer(owner, address(0), tokenId);
-
-        // Clear approvals
-        delete ds.tokenApprovals[tokenId];
-
-        ds.balances[owner] -= 1;
-        delete ds.owners[tokenId];
-
-        emit Transfer(owner, address(0), tokenId);
-
-        _afterTokenTransfer(owner, address(0), tokenId);
     }
 
     /**
@@ -276,8 +245,6 @@ library LibERC721 {
 
         DiamondStorage storage ds = diamondStorage();
 
-        _beforeTokenTransfer(from, to, tokenId);
-
         // Clear approvals from the previous owner
         delete ds.tokenApprovals[tokenId];
 
@@ -286,8 +253,6 @@ library LibERC721 {
         ds.owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
-
-        _afterTokenTransfer(from, to, tokenId);
     }
 
     /**
@@ -360,6 +325,7 @@ library LibERC721 {
                     );
                 } else {
                     /// @solidity memory-safe-assembly
+                    // solhint-disable-next-line no-inline-assembly
                     assembly {
                         revert(add(32, reason), mload(reason))
                     }
@@ -369,43 +335,4 @@ library LibERC721 {
             return true;
         }
     }
-
-    /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` and `to` are never both zero.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal {
-        // TODO: Disable token transfers?
-    }
-
-    /**
-     * @dev Hook that is called after any transfer of tokens. This includes
-     * minting and burning.
-     *
-     * Calling conditions:
-     *
-     * - when `from` and `to` are both non-zero.
-     * - `from` and `to` are never both zero.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal {}
 }

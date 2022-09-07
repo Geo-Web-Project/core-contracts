@@ -41,7 +41,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     modifier onlyIfPendingBid() {
         // Check if pending bid exists
         require(
-            this.hasPendingBid() == true,
+            this.hasPendingBid(),
             "CFAPenaltyBidFacet: Pending bid does not exist"
         );
         _;
@@ -50,7 +50,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     modifier onlyIfNotPendingBid() {
         // Check if pending bid exists
         require(
-            this.hasPendingBid() == false,
+            !this.hasPendingBid(),
             "CFAPenaltyBidFacet: Pending bid exists"
         );
         _;
@@ -64,7 +64,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             .diamondStorage();
 
         // Succeed if payer bid is not active
-        if (LibCFABasePCO._isPayerBidActive() == true) {
+        if (LibCFABasePCO._isPayerBidActive()) {
             uint256 bidPeriodLengthInSeconds = ds
                 .paramsStore
                 .getBidPeriodLengthInSeconds();
@@ -156,7 +156,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
 
         // Check if pending bid exists
         require(
-            this.hasPendingBid() == false,
+            !this.hasPendingBid(),
             "CFAPenaltyBidFacet: Pending bid already exists"
         );
 
@@ -211,6 +211,16 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             "CFAPenaltyBidFacet: CREATE_FLOW permission does not have enough allowance"
         );
 
+        // Save pending bid
+        _pendingBid.timestamp = block.timestamp;
+        _pendingBid.bidder = msg.sender;
+        _pendingBid.contributionRate = newContributionRate;
+        _pendingBid.perSecondFeeNumerator = perSecondFeeNumerator;
+        _pendingBid.perSecondFeeDenominator = perSecondFeeDenominator;
+        _pendingBid.forSalePrice = newForSalePrice;
+
+        emit BidPlaced(msg.sender, newContributionRate, newForSalePrice);
+
         // Collect deposit
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
@@ -223,16 +233,6 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             address(this),
             requiredCollateral
         );
-
-        // Save pending bid
-        _pendingBid.timestamp = block.timestamp;
-        _pendingBid.bidder = msg.sender;
-        _pendingBid.contributionRate = newContributionRate;
-        _pendingBid.perSecondFeeNumerator = perSecondFeeNumerator;
-        _pendingBid.perSecondFeeDenominator = perSecondFeeDenominator;
-        _pendingBid.forSalePrice = newForSalePrice;
-
-        emit BidPlaced(msg.sender, newContributionRate, newForSalePrice);
     }
 
     /**

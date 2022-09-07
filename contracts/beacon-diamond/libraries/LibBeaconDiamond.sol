@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
 
 library LibBeaconDiamond {
-    bytes32 constant STORAGE_POSITION =
+    bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibBeaconDiamond");
 
     struct DiamondStorage {
@@ -18,6 +18,8 @@ library LibBeaconDiamond {
         returns (DiamondStorage storage ds)
     {
         bytes32 position = STORAGE_POSITION;
+
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ds.slot := position
         }
