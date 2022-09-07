@@ -51,6 +51,7 @@
     "hardhat": "^2.9.2",
     "hardhat-abi-exporter": "^2.8.0",
     "hardhat-deploy": "^0.11.11",
+    "hardhat-gas-reporter": "^1.0.9",
     "js-geo-web-coordinate": "^0.2.0",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-dev.23",
