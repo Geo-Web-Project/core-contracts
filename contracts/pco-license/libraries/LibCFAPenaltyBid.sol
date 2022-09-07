@@ -192,7 +192,9 @@ library LibCFAPenaltyBid {
     }
 
     /// @notice Reject Bid
-    function _rejectBid() internal {
+    function _rejectBid(int96 newContributionRate, uint256 newForSalePrice)
+        internal
+    {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
@@ -204,12 +206,14 @@ library LibCFAPenaltyBid {
 
         uint256 penaltyAmount = _calculatePenalty();
 
+        require(
+            newContributionRate >= _pendingBid.contributionRate,
+            "LibCFAPenaltyBid: New contribution rate must be >= pending bid"
+        );
+
         _clearPendingBid();
 
-        LibCFABasePCO._editBid(
-            _pendingBid.contributionRate,
-            _pendingBid.forSalePrice
-        );
+        LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
 
         // Transfer payments
         (int256 availableBalance, uint256 deposit, , ) = paymentToken

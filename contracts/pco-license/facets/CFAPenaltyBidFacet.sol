@@ -266,8 +266,10 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
      *      - Pending bid must exist
      *      - Must be within bidding period
      *      - Must approve penalty amount
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function rejectBid()
+    function rejectBid(int96 newContributionRate, uint256 newForSalePrice)
         external
         onlyPayer
         onlyIfPendingBid
@@ -283,7 +285,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
             _currentBid.forSalePrice
         );
 
-        LibCFAPenaltyBid._rejectBid();
+        LibCFAPenaltyBid._rejectBid(newContributionRate, newForSalePrice);
     }
 
     /**

@@ -38,7 +38,7 @@ describe("CFAPenaltyBidFacet", async function () {
       const { bidder } = await getNamedAccounts();
 
       // Revoke permissions
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -55,7 +55,7 @@ describe("CFAPenaltyBidFacet", async function () {
       const { bidder } = await getNamedAccounts();
 
       // Revoke permissions
-      const op = await ethersjsSf.cfaV1.revokeFlowOperatorWithFullControl({
+      const op = ethersjsSf.cfaV1.revokeFlowOperatorWithFullControl({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
       });
@@ -92,14 +92,14 @@ describe("CFAPenaltyBidFacet", async function () {
           paymentToken.address,
           newContributionRate
         );
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: requiredBuffer.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -151,7 +151,7 @@ describe("CFAPenaltyBidFacet", async function () {
       );
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -208,14 +208,14 @@ describe("CFAPenaltyBidFacet", async function () {
           paymentToken.address,
           newContributionRate
         );
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: requiredBuffer.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow create
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -264,14 +264,14 @@ describe("CFAPenaltyBidFacet", async function () {
           paymentToken.address,
           newContributionRate
         );
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: requiredBuffer.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -307,14 +307,14 @@ describe("CFAPenaltyBidFacet", async function () {
           paymentToken.address,
           newContributionRate
         );
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: requiredBuffer.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -352,14 +352,14 @@ describe("CFAPenaltyBidFacet", async function () {
           paymentToken.address,
           newContributionRate
         );
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: requiredBuffer.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -396,7 +396,7 @@ describe("CFAPenaltyBidFacet", async function () {
           paymentToken.address,
           newContributionRate
         );
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: requiredBuffer.toString(),
       });
@@ -422,7 +422,7 @@ describe("CFAPenaltyBidFacet", async function () {
       );
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -471,14 +471,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -535,14 +535,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.authorizeFlowOperatorWithFullControl({
+      const op = ethersjsSf.cfaV1.authorizeFlowOperatorWithFullControl({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
       });
@@ -589,14 +589,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -632,7 +632,7 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
@@ -666,14 +666,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -701,7 +701,7 @@ describe("CFAPenaltyBidFacet", async function () {
       );
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -737,14 +737,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(accounts[3]));
 
       // Approve flow update
-      const op1 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op1 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -780,14 +780,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(accounts[3]));
 
       // Approve flow update
-      const op1 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op1 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -823,14 +823,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const totalCollateral = newForSalePrice.add(requiredBuffer);
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: totalCollateral.toString(),
       });
       await approveOp.exec(await ethers.getSigner(bidder));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -1158,14 +1158,14 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -1177,7 +1177,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
       await txn.wait();
 
       await expect(txn)
@@ -1217,6 +1217,224 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkAppNetFlow();
     });
 
+    it("should reject bid with higher contribution rate", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+        checkAppBalance,
+        mockParamsStore,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { bidder, user, diamondAdmin } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      const newContributionRate = oldPendingBid.contributionRate.add(10000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(newContributionRate, newForSalePrice);
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidRejected")
+        .withArgs(user, bidder, forSalePrice);
+
+      // Check payment token transfers
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, diamondAdmin, penaltyPayment);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        newContributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(bidder, BigNumber.from(0));
+      await checkUserToAppFlow(user, newContributionRate);
+      await checkAppToBeneficiaryFlow(newContributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should fail if contribution rate is too low", async () => {
+      const { basePCOFacet, paymentToken, ethersjsSf, mockParamsStore } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      const newContributionRate = oldPendingBid.contributionRate.sub(10000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(newContributionRate, newForSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "LibCFAPenaltyBid: New contribution rate must be >= pending bid"
+      );
+    });
+
+    it("should fail if for sale price is incorrect rounding", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+        checkAppBalance,
+        mockParamsStore,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { bidder, user, diamondAdmin } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      const newContributionRate = oldPendingBid.contributionRate.add(1000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        oldPendingBid.contributionRate
+      );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(newContributionRate, newForSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "LibCFABasePCO: Incorrect for sale price"
+      );
+    });
+
     it("should refund surplus", async () => {
       const {
         basePCOFacet,
@@ -1251,14 +1469,14 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -1270,7 +1488,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
       const txnResp = await txn.wait();
       const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
 
@@ -1340,14 +1558,14 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -1359,7 +1577,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Only payer is allowed to perform this action"
@@ -1376,14 +1594,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const oldPendingBid = await basePCOFacet.pendingBid();
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: penaltyPayment.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -1393,7 +1611,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Only payer is allowed to perform this action"
@@ -1423,7 +1641,7 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
       });
@@ -1431,7 +1649,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
     });
@@ -1446,7 +1664,7 @@ describe("CFAPenaltyBidFacet", async function () {
       const oldPendingBid = await basePCOFacet.pendingBid();
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -1458,7 +1676,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -1489,14 +1707,14 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -1512,7 +1730,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "CFAPenaltyBidFacet: Bid period has elapsed"
@@ -1530,14 +1748,14 @@ describe("CFAPenaltyBidFacet", async function () {
       const penaltyPayment = await basePCOFacet.calculatePenalty();
 
       // Approve payment token
-      const approveOp = await paymentToken.approve({
+      const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
         amount: penaltyPayment.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       // Approve flow update
-      const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 2,
@@ -1549,7 +1767,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .rejectBid();
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -1742,7 +1960,7 @@ describe("CFAPenaltyBidFacet", async function () {
       await network.provider.send("evm_mine");
 
       // Payer deletes flow
-      const op1 = await ethersjsSf.cfaV1.deleteFlow({
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
         sender: user,
         receiver: basePCOFacet.address,
         superToken: ethx_erc20.address,
@@ -1833,7 +2051,7 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Payer deletes flow
-      const op1 = await ethersjsSf.cfaV1.deleteFlow({
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
         sender: user,
         receiver: basePCOFacet.address,
         superToken: ethx_erc20.address,
@@ -1844,7 +2062,7 @@ describe("CFAPenaltyBidFacet", async function () {
       const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
 
       // Simulate closing flow
-      const op2 = await ethersjsSf.cfaV1.deleteFlow({
+      const op2 = ethersjsSf.cfaV1.deleteFlow({
         sender: basePCOFacet.address,
         receiver: diamondAdmin,
         superToken: ethx_erc20.address,
@@ -2068,7 +2286,7 @@ describe("CFAPenaltyBidFacet", async function () {
       const oldContributionRate = await basePCOFacet.contributionRate();
 
       // Payer deletes flow
-      const op1 = await ethersjsSf.cfaV1.deleteFlow({
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
         sender: user,
         receiver: basePCOFacet.address,
         superToken: ethx_erc20.address,
@@ -2078,7 +2296,7 @@ describe("CFAPenaltyBidFacet", async function () {
       await op1Resp.wait();
 
       // Payer re-opens flow
-      const op2 = await ethersjsSf.cfaV1.createFlow({
+      const op2 = ethersjsSf.cfaV1.createFlow({
         receiver: basePCOFacet.address,
         flowRate: oldContributionRate,
         superToken: ethx_erc20.address,
