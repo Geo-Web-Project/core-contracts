@@ -1,12 +1,12 @@
-import BN from "bn.js";
-import { BigNumber, ethers } from "ethers";
-import { task, types } from "hardhat/config";
-const GeoWebCoordinate = require("js-geo-web-coordinate");
+import BN from 'bn.js';
+import { BigNumber, ethers } from 'ethers';
+import { task, types } from 'hardhat/config';
+const GeoWebCoordinate = require('js-geo-web-coordinate');
 
 function toBN(value: BigNumber): BN {
   const hex = BigNumber.from(value).toHexString();
-  if (hex[0] === "-") {
-    return new BN("-" + hex.substring(3), 16);
+  if (hex[0] === '-') {
+    return new BN('-' + hex.substring(3), 16);
   }
   return new BN(hex.substring(2), 16);
 }

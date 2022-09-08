@@ -1,23 +1,23 @@
-import { expect, use } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { ethers, getNamedAccounts } from "hardhat";
-import { BigNumber } from "ethers";
-import { solidity } from "ethereum-waffle";
-import { smock } from "@defi-wonderland/smock";
-import { rateToPurchasePrice } from "../shared";
-import Fixtures from "./CFABasePCO.fixture";
+import { expect, use } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import { ethers, getNamedAccounts } from 'hardhat';
+import { BigNumber } from 'ethers';
+import { solidity } from 'ethereum-waffle';
+import { smock } from '@defi-wonderland/smock';
+import { rateToPurchasePrice } from '../shared';
+import Fixtures from './CFABasePCO.fixture';
 
 use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe("CFABasePCOFacet", async function () {
+describe('CFABasePCOFacet', async function () {
   before(async () => {
     await Fixtures.setup();
   });
 
-  describe("initializeBid", async () => {
-    it("should initialize bid", async () => {
+  describe('initializeBid', async () => {
+    it('should initialize bid', async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -67,10 +67,10 @@ describe("CFABasePCOFacet", async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .to.emit(basePCOFacet, 'PayerContributionRateUpdated')
         .withArgs(user, contributionRate);
       await expect(txn)
-        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .to.emit(basePCOFacet, 'PayerForSalePriceUpdated')
         .withArgs(user, forSalePrice);
       expect(await basePCOFacet.license()).to.equal(mockLicense.address);
       expect(await basePCOFacet.licenseId()).to.equal(1);
@@ -84,7 +84,7 @@ describe("CFABasePCOFacet", async function () {
       await checkAppBalance(0);
     });
 
-    it("should fail if not contract owner", async () => {
+    it('should fail if not contract owner', async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -127,11 +127,11 @@ describe("CFABasePCOFacet", async function () {
           forSalePrice
         );
       await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
+        'LibDiamond: Must be contract owner'
       );
     });
 
-    it("should fail if buffer is missing", async () => {
+    it('should fail if buffer is missing', async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -164,10 +164,10 @@ describe("CFABasePCOFacet", async function () {
         contributionRate,
         forSalePrice
       );
-      await expect(txn).to.be.revertedWith("CFA: not enough available balance");
+      await expect(txn).to.be.revertedWith('CFA: not enough available balance');
     });
 
-    it("should fail if flow permissions are missing", async () => {
+    it('should fail if flow permissions are missing', async () => {
       const { basePCOFacet, mockParamsStore, mockLicense, paymentToken } =
         await Fixtures.setup();
       const { user } = await getNamedAccounts();
@@ -193,10 +193,10 @@ describe("CFABasePCOFacet", async function () {
         contributionRate,
         forSalePrice
       );
-      await expect(txn).to.be.revertedWith("CFA: E_NO_OPERATOR_CREATE_FLOW");
+      await expect(txn).to.be.revertedWith('CFA: E_NO_OPERATOR_CREATE_FLOW');
     });
 
-    it("should fail if for sale price is incorrect rounding", async () => {
+    it('should fail if for sale price is incorrect rounding', async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -237,13 +237,13 @@ describe("CFABasePCOFacet", async function () {
         forSalePrice
       );
       await expect(txn).to.be.revertedWith(
-        "CFABasePCOFacet: Incorrect for sale price"
+        'CFABasePCOFacet: Incorrect for sale price'
       );
     });
   });
 
-  describe("payer decreases flow", async () => {
-    it("should not update forSalePrice or contributionRate", async () => {
+  describe('payer decreases flow', async () => {
+    it('should not update forSalePrice or contributionRate', async () => {
       const { basePCOFacet, ethersjsSf, ethx_erc20 } =
         await Fixtures.initialized();
       const { user } = await getNamedAccounts();
@@ -266,7 +266,7 @@ describe("CFABasePCOFacet", async function () {
       );
     });
 
-    it("should deplete buffer", async () => {
+    it('should deplete buffer', async () => {
       const { basePCOFacet, ethersjsSf, ethx_erc20 } =
         await Fixtures.initialized();
       const { user, diamondAdmin } = await getNamedAccounts();
@@ -304,8 +304,8 @@ describe("CFABasePCOFacet", async function () {
     });
   });
 
-  describe("payer increases flow", async () => {
-    it("should not update forSalePrice or contributionRate", async () => {
+  describe('payer increases flow', async () => {
+    it('should not update forSalePrice or contributionRate', async () => {
       const { basePCOFacet, ethersjsSf, ethx_erc20 } =
         await Fixtures.initialized();
       const { user } = await getNamedAccounts();
@@ -328,7 +328,7 @@ describe("CFABasePCOFacet", async function () {
       );
     });
 
-    it("should accumulate buffer", async () => {
+    it('should accumulate buffer', async () => {
       const { basePCOFacet, ethersjsSf, ethx_erc20 } =
         await Fixtures.initialized();
       const { user, diamondAdmin } = await getNamedAccounts();

@@ -1,7 +1,7 @@
-import { BigNumber } from "ethers";
-import { deployments } from "hardhat";
-import { rateToPurchasePrice } from "../shared";
-import BaseFixtures from "./CFABasePCO.fixture";
+import { BigNumber } from 'ethers';
+import { deployments } from 'hardhat';
+import { rateToPurchasePrice } from '../shared';
+import BaseFixtures from './CFABasePCO.fixture';
 
 const afterPlaceBid = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
@@ -109,7 +109,7 @@ const afterPlaceBidWithRealLicense = deployments.createFixture(
     const { bidder } = await getNamedAccounts();
 
     const newContributionRate = ethers.utils
-      .parseEther("9.1")
+      .parseEther('9.1')
       .div(365 * 24 * 60 * 60 * 10);
     const newForSalePrice = await rateToPurchasePrice(
       mockParamsStore,

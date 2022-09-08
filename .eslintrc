@@ -22,6 +22,7 @@
   "rules": {
     "prettier/prettier": "error",
     "mocha/no-exclusive-tests": "error",
-    "mocha/no-pending-tests": "error"
+    "mocha/no-pending-tests": "error",
+    "@typescript-eslint/no-var-requires": "warn"
   }
 }

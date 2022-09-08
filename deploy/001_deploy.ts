@@ -1,10 +1,10 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
-const SuperfluidSDK = require("@superfluid-finance/js-sdk");
-const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
-const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
-import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
-import { ethers } from "hardhat";
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction } from 'hardhat-deploy/types';
+import SuperfluidSDK from '@superfluid-finance/js-sdk';
+const deployFramework = require('@superfluid-finance/ethereum-contracts/scripts/deploy-framework');
+const deploySuperToken = require('@superfluid-finance/ethereum-contracts/scripts/deploy-super-token');
+import { Framework, SuperToken } from '@superfluid-finance/sdk-core';
+import { ethers } from 'hardhat';
 
 function perYearToPerSecondRate(annualRate: number) {
   return {
@@ -30,15 +30,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       from: diamondAdmin,
     });
 
-    await deploySuperToken(errorHandler, [":", "ETH"], {
+    await deploySuperToken(errorHandler, [':', 'ETH'], {
       web3: hre.web3,
       from: diamondAdmin,
     });
 
     const jsSf = new SuperfluidSDK.Framework({
       web3: hre.web3,
-      version: "test",
-      tokens: ["ETH"],
+      version: 'test',
+      tokens: ['ETH'],
     });
     await jsSf.initialize();
 
@@ -46,7 +46,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       chainId: hre.network.config.chainId,
       provider: hre.web3,
       resolverAddress: jsSf.resolver.address,
-      protocolReleaseVersion: "test",
+      protocolReleaseVersion: 'test',
     });
 
     ethx = await sf.loadSuperToken(jsSf.tokens.ETHx.address);
@@ -55,38 +55,38 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       chainId: hre.network.config.chainId!,
       provider: hre.ethers.provider,
     });
-    ethx = await sf.loadSuperToken("ETHx");
+    ethx = await sf.loadSuperToken('ETHx');
   }
 
   const { diamond } = deployments;
 
   // Deploy registry diamond
-  await diamond.deploy("RegistryDiamond", {
+  await diamond.deploy('RegistryDiamond', {
     from: diamondAdmin,
     owner: diamondAdmin,
     facets: [
-      "PCOLicenseClaimerFacet",
-      "GeoWebParcelFacet",
-      "PCOLicenseParamsFacet",
-      "ERC721Facet",
+      'PCOLicenseClaimerFacet',
+      'GeoWebParcelFacet',
+      'PCOLicenseParamsFacet',
+      'ERC721Facet',
     ],
     log: true,
   });
 
   const registryDiamond = await ethers.getContract(
-    "RegistryDiamond",
+    'RegistryDiamond',
     diamondAdmin
   );
 
   // Deploy PCOLicense beacon
-  await diamond.deploy("PCOLicenseBeacon", {
+  await diamond.deploy('PCOLicenseBeacon', {
     from: diamondAdmin,
     owner: diamondAdmin,
-    facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
+    facets: ['CFABasePCOFacet', 'CFAPenaltyBidFacet'],
     log: true,
   });
 
-  const beacon = await ethers.getContract("PCOLicenseBeacon", diamondAdmin);
+  const beacon = await ethers.getContract('PCOLicenseBeacon', diamondAdmin);
 
   // Initialize
   const perSecondFee = perYearToPerSecondRate(0.1);
@@ -106,4 +106,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 };
 export default func;
-func.tags = ["Main"];
+func.tags = ['Main'];

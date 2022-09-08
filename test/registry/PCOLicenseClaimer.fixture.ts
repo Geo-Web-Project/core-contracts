@@ -1,12 +1,12 @@
-import { smock } from "@defi-wonderland/smock";
-import { deployments, ethers } from "hardhat";
+import { smock } from '@defi-wonderland/smock';
+import { deployments, ethers } from 'hardhat';
 import {
   PCOLicenseClaimerFacet,
   IDiamondLoupe,
   PCOLicenseParamsFacet,
-} from "../../typechain-types";
-import { perYearToPerSecondRate, setupSf } from "../shared";
-import { addDays, getUnixTime, startOfToday } from "date-fns";
+} from '../../typechain-types';
+import { perYearToPerSecondRate, setupSf } from '../shared';
+import { addDays, getUnixTime, startOfToday } from 'date-fns';
 
 const setup = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
@@ -15,18 +15,18 @@ const setup = deployments.createFixture(
 
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
-    await diamond.deploy("PCOLicenseClaimer", {
+    await diamond.deploy('PCOLicenseClaimer', {
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
-        "PCOLicenseClaimerFacet",
-        "GeoWebParcelFacet",
-        "PCOLicenseParamsFacet",
+        'PCOLicenseClaimerFacet',
+        'GeoWebParcelFacet',
+        'PCOLicenseParamsFacet',
       ],
     });
 
     const pcoLicenseClaimer = await ethers.getContract(
-      "PCOLicenseClaimer",
+      'PCOLicenseClaimer',
       diamondAdmin
     );
 
@@ -56,8 +56,8 @@ const initialized = deployments.createFixture(async (hre, options) => {
   const res = await setup();
   const { pcoLicenseClaimer } = res;
 
-  const mockFacet = await smock.fake("CFABasePCOFacet");
-  const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
+  const mockFacet = await smock.fake('CFABasePCOFacet');
+  const mockBeacon = await smock.fake<IDiamondLoupe>('IDiamondLoupe');
 
   mockBeacon.facetAddress.returns(mockFacet.address);
 
@@ -71,16 +71,16 @@ const initializedWithAuction = deployments.createFixture(
     const res = await setup();
     const { pcoLicenseClaimer } = res;
 
-    const mockFacet = await smock.fake("CFABasePCOFacet");
-    const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
+    const mockFacet = await smock.fake('CFABasePCOFacet');
+    const mockBeacon = await smock.fake<IDiamondLoupe>('IDiamondLoupe');
 
     mockBeacon.facetAddress.returns(mockFacet.address);
 
     const today = getUnixTime(startOfToday());
     const tenDaysFromNow = getUnixTime(addDays(startOfToday(), 10));
 
-    const startBid = ethers.utils.parseEther("10");
-    const endingBid = ethers.utils.parseEther("0");
+    const startBid = ethers.utils.parseEther('10');
+    const endingBid = ethers.utils.parseEther('0');
 
     await pcoLicenseClaimer.initializeClaimer(
       today,

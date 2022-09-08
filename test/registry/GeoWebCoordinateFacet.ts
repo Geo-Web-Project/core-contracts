@@ -1,10 +1,10 @@
-import { assert } from "chai";
-import { ethers } from "hardhat";
-import { Contract } from "@ethersproject/contracts";
+import { assert } from 'chai';
+import { ethers } from 'hardhat';
+import { Contract } from '@ethersproject/contracts';
 
 const BigNumber = ethers.BigNumber;
 
-describe("LibGeoWebCoordinate", async () => {
+describe('LibGeoWebCoordinate', async () => {
   function makeCoord(x: any, y: any) {
     return BigNumber.from(x).shl(32).or(BigNumber.from(y));
   }
@@ -14,29 +14,29 @@ describe("LibGeoWebCoordinate", async () => {
 
   before(async () => {
     const GeoWebCoordinate = await ethers.getContractFactory(
-      "LibGeoWebCoordinate"
+      'LibGeoWebCoordinate'
     );
     geoWebCoordinate = await GeoWebCoordinate.deploy();
     await geoWebCoordinate.deployed();
 
     const GeoWebCoordinatePath = await ethers.getContractFactory(
-      "LibGeoWebCoordinatePath"
+      'LibGeoWebCoordinatePath'
     );
     geoWebCoordinatePath = await GeoWebCoordinatePath.deploy();
     await geoWebCoordinatePath.deployed();
   });
 
-  it("should parse direction from path", async () => {
-    let path = BigNumber.from(2)
+  it('should parse direction from path', async () => {
+    const path = BigNumber.from(2)
       .shl(256 - 8)
       .or(BigNumber.from(0b1110));
 
-    let result = await geoWebCoordinatePath.nextDirection(path);
+    const result = await geoWebCoordinatePath.nextDirection(path);
 
     assert.equal(
       result.direction.toString(),
       BigNumber.from(0b10).toString(),
-      "Direction is not correct"
+      'Direction is not correct'
     );
 
     assert.equal(
@@ -45,14 +45,14 @@ describe("LibGeoWebCoordinate", async () => {
         .shl(256 - 8)
         .or(BigNumber.from(0b11))
         .toString(),
-      "Next path is not correct"
+      'Next path is not correct'
     );
   });
 
-  it("should traverse north", async () => {
-    let direction = BigNumber.from(0b00);
+  it('should traverse north', async () => {
+    const direction = BigNumber.from(0b00);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 0),
       direction,
       BigNumber.from(0),
@@ -63,20 +63,20 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       BigNumber.from(0b1).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "16", "I is not correct");
+    assert.equal(result[3].toString(), '16', 'I is not correct');
   });
 
-  it("should traverse south", async () => {
-    let direction = BigNumber.from(0b01);
+  it('should traverse south', async () => {
+    const direction = BigNumber.from(0b01);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 1),
       direction,
       BigNumber.from(0),
@@ -87,18 +87,18 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       BigNumber.from(0b0).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
-    assert.equal(result[2].toString(), "0", "Y is not correct");
-    assert.equal(result[3].toString(), "0", "I is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
+    assert.equal(result[3].toString(), '0', 'I is not correct');
   });
 
-  it("should traverse east", async () => {
-    let direction = BigNumber.from(0b10);
+  it('should traverse east', async () => {
+    const direction = BigNumber.from(0b10);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 0),
       direction,
       BigNumber.from(0),
@@ -109,20 +109,20 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       BigNumber.from(0b1).shl(32).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "1", "I is not correct");
+    assert.equal(result[3].toString(), '1', 'I is not correct');
   });
 
-  it("should traverse west", async () => {
-    let direction = BigNumber.from(0b11);
+  it('should traverse west', async () => {
+    const direction = BigNumber.from(0b11);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(1, 0),
       direction,
       BigNumber.from(0),
@@ -133,20 +133,20 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       BigNumber.from(0b0).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "0", "I is not correct");
+    assert.equal(result[3].toString(), '0', 'I is not correct');
   });
 
-  it("should traverse north into new word", async () => {
-    let direction = BigNumber.from(0b00);
+  it('should traverse north into new word', async () => {
+    const direction = BigNumber.from(0b00);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(8, 15),
       direction,
       BigNumber.from(0),
@@ -157,20 +157,20 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       makeCoord(8, 16).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
 
-    assert.equal(result[2].toString(), "1", "Y is not correct");
+    assert.equal(result[2].toString(), '1', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "8", "I is not correct");
+    assert.equal(result[3].toString(), '8', 'I is not correct');
   });
 
-  it("should traverse south into new word", async () => {
-    let direction = BigNumber.from(0b01);
+  it('should traverse south into new word', async () => {
+    const direction = BigNumber.from(0b01);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(8, 16),
       direction,
       BigNumber.from(0),
@@ -181,20 +181,20 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       makeCoord(8, 15).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "248", "I is not correct");
+    assert.equal(result[3].toString(), '248', 'I is not correct');
   });
 
-  it("should traverse east into new word", async () => {
-    let direction = BigNumber.from(0b10);
+  it('should traverse east into new word', async () => {
+    const direction = BigNumber.from(0b10);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(15, 8),
       direction,
       BigNumber.from(0),
@@ -205,20 +205,20 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       makeCoord(16, 8).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "1", "X is not correct");
+    assert.equal(result[1].toString(), '1', 'X is not correct');
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "128", "I is not correct");
+    assert.equal(result[3].toString(), '128', 'I is not correct');
   });
 
-  it("should traverse west into new word", async () => {
-    let direction = BigNumber.from(0b11);
+  it('should traverse west into new word', async () => {
+    const direction = BigNumber.from(0b11);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(16, 8),
       direction,
       BigNumber.from(1),
@@ -229,20 +229,20 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       makeCoord(15, 8).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "143", "I is not correct");
+    assert.equal(result[3].toString(), '143', 'I is not correct');
   });
 
-  it("should not traverse too far north", async () => {
-    let direction = BigNumber.from(0b00);
+  it('should not traverse too far north', async () => {
+    const direction = BigNumber.from(0b00);
 
-    var err;
+    let err;
     try {
       await geoWebCoordinate.traverse(
         makeCoord(0, 2 ** 18 - 1),
@@ -255,13 +255,13 @@ describe("LibGeoWebCoordinate", async () => {
       err = error;
     }
 
-    assert(err, "Expected an error but did not get one");
+    assert(err, 'Expected an error but did not get one');
   });
 
-  it("should not traverse too far south", async () => {
-    let direction = BigNumber.from(0b01);
+  it('should not traverse too far south', async () => {
+    const direction = BigNumber.from(0b01);
 
-    var err;
+    let err;
     try {
       await geoWebCoordinate.traverse(
         makeCoord(0, 0),
@@ -274,15 +274,15 @@ describe("LibGeoWebCoordinate", async () => {
       err = error;
     }
 
-    assert(err, "Expected an error but did not get one");
+    assert(err, 'Expected an error but did not get one');
   });
 
-  it("should traverse meridian east -> west", async () => {
-    let direction = BigNumber.from(0b10);
+  it('should traverse meridian east -> west', async () => {
+    const direction = BigNumber.from(0b10);
 
     const max_x = await geoWebCoordinate.MAX_X();
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(max_x, 0),
       direction,
       BigNumber.from(Math.floor(max_x / 16)),
@@ -293,22 +293,22 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       makeCoord(0, 0).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
-    assert.equal(result[1].toString(), "0", "X is not correct");
+    assert.equal(result[1].toString(), '0', 'X is not correct');
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "0", "I is not correct");
+    assert.equal(result[3].toString(), '0', 'I is not correct');
   });
 
-  it("should traverse meridian west -> east", async () => {
-    let direction = BigNumber.from(0b11);
+  it('should traverse meridian west -> east', async () => {
+    const direction = BigNumber.from(0b11);
 
     const max_x = await geoWebCoordinate.MAX_X();
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 0),
       direction,
       BigNumber.from(0),
@@ -319,67 +319,67 @@ describe("LibGeoWebCoordinate", async () => {
     assert.equal(
       result[0].toString(),
       makeCoord(max_x, 0).toString(),
-      "Destination is not correct"
+      'Destination is not correct'
     );
 
     assert.equal(
       result[1].toString(),
       BigNumber.from(Math.floor(max_x / 16)).toString(),
-      "X is not correct"
+      'X is not correct'
     );
 
-    assert.equal(result[2].toString(), "0", "Y is not correct");
+    assert.equal(result[2].toString(), '0', 'Y is not correct');
 
-    assert.equal(result[3].toString(), "15", "I is not correct");
+    assert.equal(result[3].toString(), '15', 'I is not correct');
   });
 
-  it("should convert to a word index", async () => {
+  it('should convert to a word index', async () => {
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-    let result = await geoWebCoordinate.toWordIndex(coord);
+    const result = await geoWebCoordinate.toWordIndex(coord);
 
     assert.equal(
       result.iX.toString(),
       BigNumber.from(0).toString(),
-      "X coord is incorrect"
+      'X coord is incorrect'
     );
 
     assert.equal(
       result.iY.toString(),
       BigNumber.from(2).toString(),
-      "Y coord is incorrect"
+      'Y coord is incorrect'
     );
 
     assert.equal(
       result.i.toString(),
       BigNumber.from(20).toString(),
-      "Index is incorrect"
+      'Index is incorrect'
     );
   });
 
-  it("should convert to a word index", async () => {
+  it('should convert to a word index', async () => {
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-    let result = await geoWebCoordinate.toWordIndex(coord);
+    const result = await geoWebCoordinate.toWordIndex(coord);
 
     assert.equal(
       result.iX.toString(),
       BigNumber.from(0).toString(),
-      "X coord is incorrect"
+      'X coord is incorrect'
     );
 
     assert.equal(
       result.iY.toString(),
       BigNumber.from(2).toString(),
-      "Y coord is incorrect"
+      'Y coord is incorrect'
     );
 
     assert.equal(
       result.i.toString(),
       BigNumber.from(20).toString(),
-      "Index is incorrect"
+      'Index is incorrect'
     );
   });
 });

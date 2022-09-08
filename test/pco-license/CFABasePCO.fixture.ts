@@ -1,17 +1,17 @@
-import { BigNumber, BigNumberish } from "ethers";
-import { expect } from "chai";
-import { smock } from "@defi-wonderland/smock";
-import { deployments } from "hardhat";
+import { BigNumber, BigNumberish } from 'ethers';
+import { expect } from 'chai';
+import { smock } from '@defi-wonderland/smock';
+import { deployments } from 'hardhat';
 import {
   IERC721,
   PCOLicenseClaimerFacet,
   PCOLicenseParamsFacet,
-} from "../../typechain-types";
+} from '../../typechain-types';
 import {
   perYearToPerSecondRate,
   rateToPurchasePrice,
   setupSf,
-} from "../shared";
+} from '../shared';
 
 const setup = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
@@ -20,10 +20,10 @@ const setup = deployments.createFixture(
 
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
-    await diamond.deploy("TestBasePCO", {
+    await diamond.deploy('TestBasePCO', {
       from: diamondAdmin,
       owner: diamondAdmin,
-      facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
+      facets: ['CFABasePCOFacet', 'CFAPenaltyBidFacet', 'CFAReclaimerFacet'],
     });
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
@@ -32,9 +32,9 @@ const setup = deployments.createFixture(
 
     const [admin] = accounts;
 
-    const basePCOFacet = await ethers.getContract("TestBasePCO", diamondAdmin);
+    const basePCOFacet = await ethers.getContract('TestBasePCO', diamondAdmin);
 
-    let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
+    const mockParamsStore = await smock.fake('IPCOLicenseParamsStore');
     mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
     mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
     mockParamsStore.getPenaltyNumerator.returns(numerator);
@@ -45,7 +45,7 @@ const setup = deployments.createFixture(
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
     mockParamsStore.getReclaimAuctionLength.returns(14 * 60 * 60 * 24);
 
-    let mockLicense = await smock.fake<IERC721>("IERC721");
+    const mockLicense = await smock.fake<IERC721>('IERC721');
 
     async function checkUserToAppFlow(
       _user: string,
@@ -60,7 +60,7 @@ const setup = deployments.createFixture(
 
       expect(userToAppFlow.flowRate).to.equal(
         expectedAmount.toString(),
-        "User -> App flow is incorrect"
+        'User -> App flow is incorrect'
       );
     }
 
@@ -74,7 +74,7 @@ const setup = deployments.createFixture(
 
       expect(appToBeneficiaryFlow.flowRate).to.equal(
         expectedAmount.toString(),
-        "App -> Beneficiary flow is incorrect"
+        'App -> Beneficiary flow is incorrect'
       );
     }
 
@@ -86,8 +86,8 @@ const setup = deployments.createFixture(
       });
 
       expect(appNetFlow).to.equal(
-        check?.toString() ?? "0",
-        "App net flow is incorrect"
+        check?.toString() ?? '0',
+        'App net flow is incorrect'
       );
     }
 
@@ -97,7 +97,7 @@ const setup = deployments.createFixture(
         providerOrSigner: admin,
       });
 
-      expect(appBalance).to.equal(check.toString(), "App balance is incorrect");
+      expect(appBalance).to.equal(check.toString(), 'App balance is incorrect');
     }
 
     return {
@@ -224,18 +224,18 @@ const initializedWithRealLicense = deployments.createFixture(
 
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
-    await diamond.deploy("ERC721Facet", {
+    await diamond.deploy('ERC721Facet', {
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
-        "PCOLicenseClaimerFacet",
-        "GeoWebParcelFacet",
-        "PCOLicenseParamsFacet",
-        "ERC721Facet",
+        'PCOLicenseClaimerFacet',
+        'GeoWebParcelFacet',
+        'PCOLicenseParamsFacet',
+        'ERC721Facet',
       ],
     });
 
-    const erc721Facet = await ethers.getContract("ERC721Facet", diamondAdmin);
+    const erc721Facet = await ethers.getContract('ERC721Facet', diamondAdmin);
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
@@ -261,9 +261,9 @@ const initializedWithRealLicense = deployments.createFixture(
 
     const { user } = await getNamedAccounts();
 
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
     const contributionRate = ethers.utils
-      .parseEther("9")
+      .parseEther('9')
       .div(365 * 24 * 60 * 60 * 10);
     const forSalePrice = await rateToPurchasePrice(
       erc721Facet,
@@ -317,7 +317,7 @@ const initializedWithRealLicense = deployments.createFixture(
 
       expect(userToAppFlow.flowRate).to.equal(
         expectedAmount.toString(),
-        "User -> App flow is incorrect"
+        'User -> App flow is incorrect'
       );
     }
 
@@ -331,7 +331,7 @@ const initializedWithRealLicense = deployments.createFixture(
 
       expect(appToBeneficiaryFlow.flowRate).to.equal(
         expectedAmount.toString(),
-        "App -> Beneficiary flow is incorrect"
+        'App -> Beneficiary flow is incorrect'
       );
     }
 
@@ -343,8 +343,8 @@ const initializedWithRealLicense = deployments.createFixture(
       });
 
       expect(appNetFlow).to.equal(
-        check?.toString() ?? "0",
-        "App net flow is incorrect"
+        check?.toString() ?? '0',
+        'App net flow is incorrect'
       );
     }
 
@@ -354,7 +354,7 @@ const initializedWithRealLicense = deployments.createFixture(
         providerOrSigner: admin,
       });
 
-      expect(appBalance).to.equal(check.toString(), "App balance is incorrect");
+      expect(appBalance).to.equal(check.toString(), 'App balance is incorrect');
     }
 
     return {
