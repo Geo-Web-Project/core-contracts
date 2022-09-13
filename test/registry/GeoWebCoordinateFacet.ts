@@ -27,11 +27,11 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should parse direction from path", async () => {
-    let path = BigNumber.from(2)
+    const path = BigNumber.from(2)
       .shl(256 - 8)
       .or(BigNumber.from(0b1110));
 
-    let result = await geoWebCoordinatePath.nextDirection(path);
+    const result = await geoWebCoordinatePath.nextDirection(path);
 
     assert.equal(
       result.direction.toString(),
@@ -50,9 +50,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse north", async () => {
-    let direction = BigNumber.from(0b00);
+    const direction = BigNumber.from(0b00);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 0),
       direction,
       BigNumber.from(0),
@@ -74,9 +74,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse south", async () => {
-    let direction = BigNumber.from(0b01);
+    const direction = BigNumber.from(0b01);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 1),
       direction,
       BigNumber.from(0),
@@ -96,9 +96,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse east", async () => {
-    let direction = BigNumber.from(0b10);
+    const direction = BigNumber.from(0b10);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 0),
       direction,
       BigNumber.from(0),
@@ -120,9 +120,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse west", async () => {
-    let direction = BigNumber.from(0b11);
+    const direction = BigNumber.from(0b11);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(1, 0),
       direction,
       BigNumber.from(0),
@@ -144,9 +144,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse north into new word", async () => {
-    let direction = BigNumber.from(0b00);
+    const direction = BigNumber.from(0b00);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(8, 15),
       direction,
       BigNumber.from(0),
@@ -168,9 +168,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse south into new word", async () => {
-    let direction = BigNumber.from(0b01);
+    const direction = BigNumber.from(0b01);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(8, 16),
       direction,
       BigNumber.from(0),
@@ -192,9 +192,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse east into new word", async () => {
-    let direction = BigNumber.from(0b10);
+    const direction = BigNumber.from(0b10);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(15, 8),
       direction,
       BigNumber.from(0),
@@ -216,9 +216,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse west into new word", async () => {
-    let direction = BigNumber.from(0b11);
+    const direction = BigNumber.from(0b11);
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(16, 8),
       direction,
       BigNumber.from(1),
@@ -240,9 +240,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should not traverse too far north", async () => {
-    let direction = BigNumber.from(0b00);
+    const direction = BigNumber.from(0b00);
 
-    var err;
+    let err;
     try {
       await geoWebCoordinate.traverse(
         makeCoord(0, 2 ** 18 - 1),
@@ -259,9 +259,9 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should not traverse too far south", async () => {
-    let direction = BigNumber.from(0b01);
+    const direction = BigNumber.from(0b01);
 
-    var err;
+    let err;
     try {
       await geoWebCoordinate.traverse(
         makeCoord(0, 0),
@@ -278,11 +278,11 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse meridian east -> west", async () => {
-    let direction = BigNumber.from(0b10);
+    const direction = BigNumber.from(0b10);
 
     const max_x = await geoWebCoordinate.MAX_X();
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(max_x, 0),
       direction,
       BigNumber.from(Math.floor(max_x / 16)),
@@ -304,11 +304,11 @@ describe("LibGeoWebCoordinate", async () => {
   });
 
   it("should traverse meridian west -> east", async () => {
-    let direction = BigNumber.from(0b11);
+    const direction = BigNumber.from(0b11);
 
     const max_x = await geoWebCoordinate.MAX_X();
 
-    let result = await geoWebCoordinate.traverse(
+    const result = await geoWebCoordinate.traverse(
       makeCoord(0, 0),
       direction,
       BigNumber.from(0),
@@ -335,9 +335,9 @@ describe("LibGeoWebCoordinate", async () => {
 
   it("should convert to a word index", async () => {
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-    let result = await geoWebCoordinate.toWordIndex(coord);
+    const result = await geoWebCoordinate.toWordIndex(coord);
 
     assert.equal(
       result.iX.toString(),
@@ -360,9 +360,9 @@ describe("LibGeoWebCoordinate", async () => {
 
   it("should convert to a word index", async () => {
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-    let result = await geoWebCoordinate.toWordIndex(coord);
+    const result = await geoWebCoordinate.toWordIndex(coord);
 
     assert.equal(
       result.iX.toString(),

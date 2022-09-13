@@ -1,5 +1,5 @@
 import { assert, expect, use } from "chai";
-import { ethers, deployments } from "hardhat";
+import { deployments } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { BigNumber } from "ethers";
 
@@ -47,13 +47,13 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-    let buildTx = await geoWebParcel.build(coord, [BigNumber.from(0)]);
+    const buildTx = await geoWebParcel.build(coord, [BigNumber.from(0)]);
 
-    let buildResult = await buildTx.wait();
+    const buildResult = await buildTx.wait();
 
-    let result = await geoWebParcel.availabilityIndex(0, 2);
+    const result = await geoWebParcel.availabilityIndex(0, 2);
 
     assert.equal(
       result.toString(),
@@ -62,7 +62,7 @@ describe("GeoWebParcel", async () => {
     );
 
     const parcelId = buildResult.events![0].topics[1];
-    let parcel = await geoWebParcel.getLandParcel(parcelId);
+    const parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
@@ -71,7 +71,7 @@ describe("GeoWebParcel", async () => {
 
     await geoWebParcel.destroy(parcelId);
 
-    let result1 = await geoWebParcel.availabilityIndex(0, 2);
+    const result1 = await geoWebParcel.availabilityIndex(0, 2);
 
     assert.equal(
       result1.toString(),
@@ -79,7 +79,7 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
@@ -91,16 +91,16 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
 
     // North, North, West
-    let buildTx = await geoWebParcel.build(coord, [
+    const buildTx = await geoWebParcel.build(coord, [
       makePathPrefix(3).or(BigNumber.from(0b110000)),
     ]);
 
-    let buildResult = await buildTx.wait();
+    const buildResult = await buildTx.wait();
 
-    let result = await geoWebParcel.availabilityIndex(0, 1);
+    const result = await geoWebParcel.availabilityIndex(0, 1);
 
     assert.equal(
       result.toString(),
@@ -114,7 +114,7 @@ describe("GeoWebParcel", async () => {
     );
 
     const parcelId = buildResult.events![0].topics[1];
-    let parcel = await geoWebParcel.getLandParcel(parcelId);
+    const parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
@@ -123,7 +123,7 @@ describe("GeoWebParcel", async () => {
 
     await geoWebParcel.destroy(parcelId);
 
-    let result1 = await geoWebParcel.availabilityIndex(0, 1);
+    const result1 = await geoWebParcel.availabilityIndex(0, 1);
 
     assert.equal(
       result1.toString(),
@@ -131,7 +131,7 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
@@ -143,18 +143,18 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
-    let coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
+    const coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
 
     // East, North
     // East -> Index(1, 0), Local(0, 1)
-    let buildTx = await geoWebParcel.build(coord, [
+    const buildTx = await geoWebParcel.build(coord, [
       makePathPrefix(2).or(BigNumber.from(0b0010)),
     ]);
 
-    let buildResult = await buildTx.wait();
+    const buildResult = await buildTx.wait();
 
-    let result0 = await geoWebParcel.availabilityIndex(0, 0);
-    let result1 = await geoWebParcel.availabilityIndex(1, 0);
+    const result0 = await geoWebParcel.availabilityIndex(0, 0);
+    const result1 = await geoWebParcel.availabilityIndex(1, 0);
 
     assert.equal(
       result0.toString(),
@@ -169,7 +169,7 @@ describe("GeoWebParcel", async () => {
     );
 
     const parcelId = buildResult.events![0].topics[1];
-    let parcel = await geoWebParcel.getLandParcel(parcelId);
+    const parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
@@ -178,8 +178,8 @@ describe("GeoWebParcel", async () => {
 
     await geoWebParcel.destroy(parcelId);
 
-    let result0_1 = await geoWebParcel.availabilityIndex(0, 0);
-    let result1_1 = await geoWebParcel.availabilityIndex(1, 0);
+    const result0_1 = await geoWebParcel.availabilityIndex(0, 0);
+    const result1_1 = await geoWebParcel.availabilityIndex(1, 0);
 
     assert.equal(
       result0_1.toString(),
@@ -192,7 +192,7 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
@@ -204,21 +204,21 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(511, 0) -> Index(31, 0), Local(15, 0)
-    let coord = BigNumber.from(511).shl(32).or(BigNumber.from(0));
+    const coord = BigNumber.from(511).shl(32).or(BigNumber.from(0));
 
     // West 124 times
-    let path1 = makePathPrefix(124).or(
+    const path1 = makePathPrefix(124).or(
       BigNumber.from(2)
         .shl(248 - 1)
         .sub(BigNumber.from(1))
     );
     // West 3 times
-    let path2 = makePathPrefix(3).or(BigNumber.from(0b111111));
-    let buildTx = await geoWebParcel.build(coord, [path1, path2]);
-    let buildResult = await buildTx.wait();
+    const path2 = makePathPrefix(3).or(BigNumber.from(0b111111));
+    const buildTx = await geoWebParcel.build(coord, [path1, path2]);
+    const buildResult = await buildTx.wait();
 
     for (let i = 0; i < 128 / 16; i++) {
-      let result = await geoWebParcel.availabilityIndex(31 - i, 0);
+      const result = await geoWebParcel.availabilityIndex(31 - i, 0);
 
       assert.equal(
         result.toString(),
@@ -228,7 +228,7 @@ describe("GeoWebParcel", async () => {
     }
 
     const parcelId = buildResult.events![0].topics[1];
-    let parcel = await geoWebParcel.getLandParcel(parcelId);
+    const parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
@@ -238,7 +238,7 @@ describe("GeoWebParcel", async () => {
     await geoWebParcel.destroy(parcelId);
 
     for (let i = 0; i < 128 / 16; i++) {
-      let result = await geoWebParcel.availabilityIndex(31 - i, 0);
+      const result = await geoWebParcel.availabilityIndex(31 - i, 0);
 
       assert.equal(
         result.toString(),
@@ -247,7 +247,7 @@ describe("GeoWebParcel", async () => {
       );
     }
 
-    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
@@ -259,16 +259,16 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel, max_x } = await setupTest();
 
     // Global(0, 160) -> Index(0, 10), Local(0, 0)
-    let coord = BigNumber.from(0).shl(32).or(BigNumber.from(160));
+    const coord = BigNumber.from(0).shl(32).or(BigNumber.from(160));
 
     // West -> Index(MAX/16, 10), Local(15, 0)
-    let buildTx = await geoWebParcel.build(coord, [
+    const buildTx = await geoWebParcel.build(coord, [
       makePathPrefix(1).or(BigNumber.from(0b11)),
     ]);
-    let buildResult = await buildTx.wait();
+    const buildResult = await buildTx.wait();
 
-    let result0 = await geoWebParcel.availabilityIndex(0, 10);
-    let result1 = await geoWebParcel.availabilityIndex(
+    const result0 = await geoWebParcel.availabilityIndex(0, 10);
+    const result1 = await geoWebParcel.availabilityIndex(
       max_x.add(1).div(16).sub(1),
       10
     );
@@ -286,7 +286,7 @@ describe("GeoWebParcel", async () => {
     );
 
     const parcelId = buildResult.events![0].topics[1];
-    let parcel = await geoWebParcel.getLandParcel(parcelId);
+    const parcel = await geoWebParcel.getLandParcel(parcelId);
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
@@ -295,8 +295,8 @@ describe("GeoWebParcel", async () => {
 
     await geoWebParcel.destroy(parcelId);
 
-    let result0_1 = await geoWebParcel.availabilityIndex(0, 10);
-    let result1_1 = await geoWebParcel.availabilityIndex(
+    const result0_1 = await geoWebParcel.availabilityIndex(0, 10);
+    const result1_1 = await geoWebParcel.availabilityIndex(
       max_x.add(1).div(16).sub(1),
       10
     );
@@ -311,7 +311,7 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
@@ -323,12 +323,12 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
 
-    var err;
+    let err;
     try {
       // North, North, West, East
-      let buildTx = await geoWebParcel.build(coord, [
+      const buildTx = await geoWebParcel.build(coord, [
         makePathPrefix(4).or(BigNumber.from(0b10110000)),
       ]);
 
@@ -350,13 +350,13 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
-    let coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
+    const coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
 
-    var err;
+    let err;
     try {
       // East, North, South, West
       // East -> Index(1, 0), Local(0, 1)
-      let buildTx = await geoWebParcel.build(coord, [
+      const buildTx = await geoWebParcel.build(coord, [
         makePathPrefix(4).or(BigNumber.from(0b11010010)),
       ]);
 
@@ -378,11 +378,11 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
     await geoWebParcel.build(coord, [BigNumber.from(0)]);
 
-    var err;
+    let err;
     try {
       // North
       await geoWebParcel.build(coord, [BigNumber.from(0)]);
@@ -403,9 +403,9 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel, max_y } = await setupTest();
 
     // Global(16000, MAX) -> Index(1000, MAX/16), Local(0, 15)
-    let coord = BigNumber.from(16000).shl(32).or(max_y);
+    const coord = BigNumber.from(16000).shl(32).or(max_y);
 
-    var err;
+    let err;
     try {
       // North
       await geoWebParcel.build(coord, [
@@ -422,9 +422,9 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
-    let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
+    const coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
 
-    var err;
+    let err;
     try {
       // South
       await geoWebParcel.build(coord, [
@@ -441,9 +441,9 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
-    let coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
+    const coord = BigNumber.from(16000).shl(32).or(BigNumber.from(0));
 
-    var err;
+    let err;
     try {
       // North
       await geoWebParcel.build(coord, []);
@@ -464,19 +464,19 @@ describe("GeoWebParcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
     // Global(4, 34) -> Index(0, 2), Local(4, 2)
-    let coord1 = BigNumber.from(4).shl(32).or(BigNumber.from(34));
+    const coord1 = BigNumber.from(4).shl(32).or(BigNumber.from(34));
 
     await geoWebParcel.build(coord, [BigNumber.from(0)]);
-    let buildTx = await geoWebParcel.build(coord1, [BigNumber.from(0)]);
-    let buildResult = await buildTx.wait();
+    const buildTx = await geoWebParcel.build(coord1, [BigNumber.from(0)]);
+    const buildResult = await buildTx.wait();
 
     const parcelId = buildResult.events![0].topics[1];
     await geoWebParcel.destroy(parcelId);
 
-    let result1 = await geoWebParcel.availabilityIndex(0, 2);
+    const result1 = await geoWebParcel.availabilityIndex(0, 2);
 
     assert.equal(
       result1.toString(),
@@ -484,7 +484,7 @@ describe("GeoWebParcel", async () => {
       "Parcel coordinates were not destroyed"
     );
 
-    let parcel1 = await geoWebParcel.getLandParcel(parcelId);
+    const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
       "Parcel was not marked as destroyed"
