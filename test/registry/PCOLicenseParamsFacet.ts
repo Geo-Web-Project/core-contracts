@@ -1,28 +1,28 @@
-import chaiAsPromised from 'chai-as-promised';
-import { expect, use } from 'chai';
-import { ethers, getNamedAccounts, deployments } from 'hardhat';
-import { solidity } from 'ethereum-waffle';
-import { smock } from '@defi-wonderland/smock';
-import { PCOLicenseParamsFacet } from '../../typechain-types';
+import chaiAsPromised from "chai-as-promised";
+import { expect, use } from "chai";
+import { ethers, getNamedAccounts, deployments } from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { smock } from "@defi-wonderland/smock";
+import { PCOLicenseParamsFacet } from "../../typechain-types";
 
 use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe('PCOLicenseParamsFacet', async function () {
+describe("PCOLicenseParamsFacet", async function () {
   const setupTest = deployments.createFixture(
     async ({ deployments, getNamedAccounts, ethers }, options) => {
       await deployments.fixture();
       const { diamondAdmin } = await getNamedAccounts();
       const { diamond } = deployments;
-      await diamond.deploy('PCOLicenseParamsFacet', {
+      await diamond.deploy("PCOLicenseParamsFacet", {
         from: diamondAdmin,
         owner: diamondAdmin,
-        facets: ['PCOLicenseParamsFacet'],
+        facets: ["PCOLicenseParamsFacet"],
       });
 
       const pcoLicenseParams: PCOLicenseParamsFacet = await ethers.getContract(
-        'PCOLicenseParamsFacet',
+        "PCOLicenseParamsFacet",
         diamondAdmin
       );
 
@@ -32,8 +32,8 @@ describe('PCOLicenseParamsFacet', async function () {
     }
   );
 
-  describe('initialized', async () => {
-    it('should initialize', async () => {
+  describe("initialized", async () => {
+    it("should initialize", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user, bidder, diamondAdmin } = await getNamedAccounts();
 
@@ -60,7 +60,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getReclaimAuctionLength()).to.equal(6);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user, bidder, diamondAdmin } = await getNamedAccounts();
 
@@ -69,13 +69,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .initializeParams(diamondAdmin, user, bidder, 1, 2, 3, 4, 5, 6);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setBeneficiary', async () => {
-    it('should set', async () => {
+  describe("setBeneficiary", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -84,7 +84,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getBeneficiary()).to.equal(user);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -93,13 +93,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setBeneficiary(user);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setPaymentToken', async () => {
-    it('should set', async () => {
+  describe("setPaymentToken", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -108,7 +108,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getPaymentToken()).to.equal(user);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -117,13 +117,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setPaymentToken(user);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setHost', async () => {
-    it('should set', async () => {
+  describe("setHost", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -132,7 +132,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getHost()).to.equal(user);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -141,13 +141,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setHost(user);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setPerSecondFeeNumerator', async () => {
-    it('should set', async () => {
+  describe("setPerSecondFeeNumerator", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
 
       await pcoLicenseParams.setPerSecondFeeNumerator(1);
@@ -155,7 +155,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getPerSecondFeeNumerator()).to.equal(1);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -164,13 +164,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setPerSecondFeeNumerator(1);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setPerSecondFeeDenominator', async () => {
-    it('should set', async () => {
+  describe("setPerSecondFeeDenominator", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
 
       await pcoLicenseParams.setPerSecondFeeDenominator(1);
@@ -178,7 +178,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getPerSecondFeeDenominator()).to.equal(1);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -187,13 +187,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setPerSecondFeeDenominator(1);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setPenaltyNumerator', async () => {
-    it('should set', async () => {
+  describe("setPenaltyNumerator", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
 
       await pcoLicenseParams.setPenaltyNumerator(1);
@@ -201,7 +201,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getPenaltyNumerator()).to.equal(1);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -210,13 +210,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setPenaltyNumerator(1);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setPenaltyDenominator', async () => {
-    it('should set', async () => {
+  describe("setPenaltyDenominator", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
 
       await pcoLicenseParams.setPenaltyDenominator(1);
@@ -224,7 +224,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getPenaltyDenominator()).to.equal(1);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -233,13 +233,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setPenaltyDenominator(1);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setBidPeriodLengthInSeconds', async () => {
-    it('should set', async () => {
+  describe("setBidPeriodLengthInSeconds", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
 
       await pcoLicenseParams.setBidPeriodLengthInSeconds(1);
@@ -247,7 +247,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getBidPeriodLengthInSeconds()).to.equal(1);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -256,13 +256,13 @@ describe('PCOLicenseParamsFacet', async function () {
         .setBidPeriodLengthInSeconds(1);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });
 
-  describe('setReclaimAuctionLength', async () => {
-    it('should set', async () => {
+  describe("setReclaimAuctionLength", async () => {
+    it("should set", async () => {
       const { pcoLicenseParams } = await setupTest();
 
       await pcoLicenseParams.setReclaimAuctionLength(1);
@@ -270,7 +270,7 @@ describe('PCOLicenseParamsFacet', async function () {
       expect(await pcoLicenseParams.getReclaimAuctionLength()).to.equal(1);
     });
 
-    it('should fail if not owner', async () => {
+    it("should fail if not owner", async () => {
       const { pcoLicenseParams } = await setupTest();
       const { user } = await getNamedAccounts();
 
@@ -279,7 +279,7 @@ describe('PCOLicenseParamsFacet', async function () {
         .setReclaimAuctionLength(1);
 
       await expect(txn).to.be.revertedWith(
-        'LibDiamond: Must be contract owner'
+        "LibDiamond: Must be contract owner"
       );
     });
   });

@@ -1,8 +1,8 @@
-import BN from 'bn.js';
-import { BigNumber, ethers } from 'ethers';
-import { task, types } from 'hardhat/config';
-const GeoWebCoordinate = require('js-geo-web-coordinate');
-import { Framework, SuperToken } from '@superfluid-finance/sdk-core';
+import BN from "bn.js";
+import { BigNumber, ethers } from "ethers";
+import { task, types } from "hardhat/config";
+const GeoWebCoordinate = require("js-geo-web-coordinate");
+import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 
 function makePathPrefix(length: any) {
   return BigNumber.from(length).shl(256 - 8);
@@ -14,8 +14,8 @@ function makeCoord(x: number, y: number) {
 
 function toBN(value: BigNumber): BN {
   const hex = BigNumber.from(value).toHexString();
-  if (hex[0] === '-') {
-    return new BN('-' + hex.substring(3), 16);
+  if (hex[0] === "-") {
+    return new BN("-" + hex.substring(3), 16);
   }
   return new BN(hex.substring(2), 16);
 }
@@ -78,7 +78,7 @@ async function mintPath(count: any, registryDiamond: ethers.Contract) {
   const coord = BigNumber.from(160000).shl(32).or(BigNumber.from(17));
 
   const contributionRate = ethers.utils
-    .parseEther('9')
+    .parseEther("9")
     .div(365 * 24 * 60 * 60 * 10);
   const forSalePrice = await rateToPurchasePrice(
     registryDiamond,
@@ -109,7 +109,7 @@ async function mintSquare(dim: number, registryDiamond: ethers.Contract) {
   );
 
   const contributionRate = ethers.utils
-    .parseEther('9')
+    .parseEther("9")
     .div(365 * 24 * 60 * 60 * 10);
   const forSalePrice = await rateToPurchasePrice(
     registryDiamond,
@@ -152,20 +152,20 @@ async function mintSquare(dim: number, registryDiamond: ethers.Contract) {
 //     }
 //   );
 
-task('measure:parcel-gas').setAction(async ({ a = {} }, hre) => {
+task("measure:parcel-gas").setAction(async ({ a = {} }, hre) => {
   const { getNamedAccounts } = hre;
 
   const { diamondAdmin } = await getNamedAccounts();
 
   const registryDiamond: ethers.Contract = await hre.ethers.getContract(
-    'RegistryDiamond'
+    "RegistryDiamond"
   );
 
   const sf: Framework = await Framework.create({
     chainId: hre.network.config.chainId!,
     provider: hre.ethers.provider,
   });
-  const ethx: SuperToken = await sf.loadSuperToken('ETHx');
+  const ethx: SuperToken = await sf.loadSuperToken("ETHx");
 
   // Approve flow creation
   const nextAddress = await registryDiamond.getNextProxyAddress(diamondAdmin);
@@ -177,7 +177,7 @@ task('measure:parcel-gas').setAction(async ({ a = {} }, hre) => {
   });
   console.log(flowData);
 
-  if (flowData.permissions !== '7') {
+  if (flowData.permissions !== "7") {
     const op = await sf.cfaV1.authorizeFlowOperatorWithFullControl({
       superToken: ethx.address,
       flowOperator: nextAddress,

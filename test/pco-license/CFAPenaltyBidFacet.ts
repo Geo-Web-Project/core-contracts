@@ -1,38 +1,38 @@
-import { expect, use } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import { ethers, getUnnamedAccounts, network } from 'hardhat';
-import { BigNumber } from 'ethers';
-import { solidity } from 'ethereum-waffle';
-import { smock } from '@defi-wonderland/smock';
-import { getNamedAccounts } from 'hardhat';
-import { rateToPurchasePrice } from '../shared';
-import BaseFixtures from './CFABasePCO.fixture';
-import CFAPenaltyBidFixtures from './CFAPenaltyBid.fixture';
-import CFABasePCOFixture from './CFABasePCO.fixture';
+import { expect, use } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { ethers, getUnnamedAccounts, network } from "hardhat";
+import { BigNumber } from "ethers";
+import { solidity } from "ethereum-waffle";
+import { smock } from "@defi-wonderland/smock";
+import { getNamedAccounts } from "hardhat";
+import { rateToPurchasePrice } from "../shared";
+import BaseFixtures from "./CFABasePCO.fixture";
+import CFAPenaltyBidFixtures from "./CFAPenaltyBid.fixture";
+import CFABasePCOFixture from "./CFABasePCO.fixture";
 
 use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe('CFAPenaltyBidFacet', async function () {
+describe("CFAPenaltyBidFacet", async function () {
   before(async () => {
     await BaseFixtures.initialized();
   });
 
-  describe('hasPendingBid', async () => {
-    it('should have after initialization', async () => {
+  describe("hasPendingBid", async () => {
+    it("should have after initialization", async () => {
       const { basePCOFacet } = await BaseFixtures.initialized();
 
       expect(await basePCOFacet.hasPendingBid()).to.equal(false);
     });
 
-    it('should have after place bid', async () => {
+    it("should have after place bid", async () => {
       const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
       expect(await basePCOFacet.hasPendingBid()).to.equal(true);
     });
 
-    it('should have after decreasing flow allowance', async () => {
+    it("should have after decreasing flow allowance", async () => {
       const { basePCOFacet, ethersjsSf, paymentToken } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
       const { bidder } = await getNamedAccounts();
@@ -42,14 +42,14 @@ describe('CFAPenaltyBidFacet', async function () {
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
-        flowRateAllowance: '0',
+        flowRateAllowance: "0",
       });
       await op.exec(await ethers.getSigner(bidder));
 
       expect(await basePCOFacet.hasPendingBid()).to.equal(true);
     });
 
-    it('should have after revoking full control', async () => {
+    it("should have after revoking full control", async () => {
       const { basePCOFacet, ethersjsSf, paymentToken } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
       const { bidder } = await getNamedAccounts();
@@ -65,8 +65,8 @@ describe('CFAPenaltyBidFacet', async function () {
     });
   });
 
-  describe('editBid', async () => {
-    it('should increase bid', async () => {
+  describe("editBid", async () => {
+    it("should increase bid", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -115,10 +115,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'PayerContributionRateUpdated')
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
         .withArgs(user, newContributionRate);
       await expect(txn)
-        .to.emit(basePCOFacet, 'PayerForSalePriceUpdated')
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
@@ -131,7 +131,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should decrease bid', async () => {
+    it("should decrease bid", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -167,10 +167,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'PayerContributionRateUpdated')
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
         .withArgs(user, newContributionRate);
       await expect(txn)
-        .to.emit(basePCOFacet, 'PayerForSalePriceUpdated')
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
@@ -183,7 +183,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should edit bid after payer delete', async () => {
+    it("should edit bid after payer delete", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -229,10 +229,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'PayerContributionRateUpdated')
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
         .withArgs(user, newContributionRate);
       await expect(txn)
-        .to.emit(basePCOFacet, 'PayerForSalePriceUpdated')
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
@@ -245,7 +245,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should fail if not payer', async () => {
+    it("should fail if not payer", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
@@ -284,11 +284,11 @@ describe('CFAPenaltyBidFacet', async function () {
       const txn = basePCOFacet.editBid(newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'CFABasePCOFacet: Only payer is allowed to perform this action'
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
       );
     });
 
-    it('should fail if for sale price is incorrect rounding', async () => {
+    it("should fail if for sale price is incorrect rounding", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
@@ -329,11 +329,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(user))
         .editBid(newContributionRate.add(10), newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'LibCFABasePCO: Incorrect for sale price'
+        "LibCFABasePCO: Incorrect for sale price"
       );
     });
 
-    it('should fail if has pending bid', async () => {
+    it("should fail if has pending bid", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
       const { user } = await getNamedAccounts();
@@ -374,11 +374,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .editBid(newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Pending bid exists'
+        "CFAPenaltyBidFacet: Pending bid exists"
       );
     });
 
-    it('should fail if missing flow permissions', async () => {
+    it("should fail if missing flow permissions", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
@@ -406,10 +406,10 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(user))
         .editBid(newContributionRate, newForSalePrice);
 
-      await expect(txn).to.be.revertedWith('E_NO_OPERATOR_UPDATE_FLOW');
+      await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
     });
 
-    it('should fail if missing buffer transfer allowance', async () => {
+    it("should fail if missing buffer transfer allowance", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
@@ -437,13 +437,13 @@ describe('CFAPenaltyBidFacet', async function () {
         .editBid(newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'SuperToken: transfer amount exceeds allowance'
+        "SuperToken: transfer amount exceeds allowance"
       );
     });
   });
 
-  describe('placeBid', async () => {
-    it('should place bid with create permissions', async () => {
+  describe("placeBid", async () => {
+    it("should place bid with create permissions", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -492,10 +492,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidPlaced')
+        .to.emit(basePCOFacet, "BidPlaced")
         .withArgs(bidder, newContributionRate, newForSalePrice);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(bidder, basePCOFacet.address, totalCollateral);
 
       const pendingBid = await basePCOFacet.pendingBid();
@@ -507,7 +507,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should place bid with full control', async () => {
+    it("should place bid with full control", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -554,10 +554,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidPlaced')
+        .to.emit(basePCOFacet, "BidPlaced")
         .withArgs(bidder, newContributionRate, newForSalePrice);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(bidder, basePCOFacet.address, totalCollateral);
 
       const pendingBid = await basePCOFacet.pendingBid();
@@ -569,7 +569,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should fail if for sale price is incorrect rounding', async () => {
+    it("should fail if for sale price is incorrect rounding", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
@@ -608,11 +608,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(bidder))
         .placeBid(newContributionRate.add(10), newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Incorrect for sale price'
+        "CFAPenaltyBidFacet: Incorrect for sale price"
       );
     });
 
-    it('should fail if missing flow permissions', async () => {
+    it("should fail if missing flow permissions", async () => {
       const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
@@ -642,11 +642,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(bidder))
         .placeBid(newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: CREATE_FLOW permission not granted'
+        "CFAPenaltyBidFacet: CREATE_FLOW permission not granted"
       );
     });
 
-    it('should fail if flow allowance is not enough', async () => {
+    it("should fail if flow allowance is not enough", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
@@ -685,11 +685,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(bidder))
         .placeBid(newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: CREATE_FLOW permission does not have enough allowance'
+        "CFAPenaltyBidFacet: CREATE_FLOW permission does not have enough allowance"
       );
     });
 
-    it('should fail if deposit allowance is not enough', async () => {
+    it("should fail if deposit allowance is not enough", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
@@ -713,11 +713,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(bidder))
         .placeBid(newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'SuperToken: transfer amount exceeds allowance'
+        "SuperToken: transfer amount exceeds allowance"
       );
     });
 
-    it('should fail if pending bid exists', async () => {
+    it("should fail if pending bid exists", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
       const accounts = await getUnnamedAccounts();
@@ -756,11 +756,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(accounts[3]))
         .placeBid(newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Pending bid already exists'
+        "CFAPenaltyBidFacet: Pending bid already exists"
       );
     });
 
-    it('should fail if payer bid is inactive', async () => {
+    it("should fail if payer bid is inactive", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.afterPayerDelete();
       const accounts = await getUnnamedAccounts();
@@ -799,11 +799,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(accounts[3]))
         .placeBid(newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'CFABasePCOFacet: Can only perform action when payer bid is active'
+        "CFABasePCOFacet: Can only perform action when payer bid is active"
       );
     });
 
-    it('should fail if for sale price is too low', async () => {
+    it("should fail if for sale price is too low", async () => {
       const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
@@ -843,13 +843,13 @@ describe('CFAPenaltyBidFacet', async function () {
         .placeBid(newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: New contribution rate is not high enough'
+        "CFAPenaltyBidFacet: New contribution rate is not high enough"
       );
     });
   });
 
-  describe('acceptBid', async () => {
-    it('should accept bid', async () => {
+  describe("acceptBid", async () => {
+    it("should accept bid", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -862,7 +862,7 @@ describe('CFAPenaltyBidFacet', async function () {
         paymentToken,
       } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
@@ -887,10 +887,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidAccepted')
+        .to.emit(basePCOFacet, "BidAccepted")
         .withArgs(user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -899,14 +899,14 @@ describe('CFAPenaltyBidFacet', async function () {
 
       // Check payment token transfers
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
           oldPendingBid.forSalePrice.sub(forSalePrice)
         );
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
       await checkAppBalance(0);
 
@@ -927,7 +927,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should accept bid if bidder revokes permissions', async () => {
+    it("should accept bid if bidder revokes permissions", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -940,7 +940,7 @@ describe('CFAPenaltyBidFacet', async function () {
         paymentToken,
       } = await CFAPenaltyBidFixtures.afterPlaceBidAndBidderRevokes();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
@@ -959,10 +959,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidAccepted')
+        .to.emit(basePCOFacet, "BidAccepted")
         .withArgs(user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -971,14 +971,14 @@ describe('CFAPenaltyBidFacet', async function () {
 
       // Check payment token transfers
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
           oldPendingBid.forSalePrice.sub(forSalePrice)
         );
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
       await checkAppBalance(0);
 
@@ -999,7 +999,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow(-200000000);
     });
 
-    it('should refund surplus', async () => {
+    it("should refund surplus", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -1013,7 +1013,7 @@ describe('CFAPenaltyBidFacet', async function () {
         surplusBlock,
       } = await CFAPenaltyBidFixtures.afterPlaceBidAndSurplus();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
       const existingContributionRate = await basePCOFacet.contributionRate();
@@ -1034,10 +1034,10 @@ describe('CFAPenaltyBidFacet', async function () {
       const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidAccepted')
+        .to.emit(basePCOFacet, "BidAccepted")
         .withArgs(user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -1048,14 +1048,14 @@ describe('CFAPenaltyBidFacet', async function () {
       const timeSinceIncrease = txnBlock.timestamp - surplusBlock.timestamp;
       const accumulatedBuffer = existingContributionRate.mul(timeSinceIncrease);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
           oldPendingBid.forSalePrice.sub(forSalePrice)
         );
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           user,
@@ -1080,7 +1080,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should fail if pending bid does not exist', async () => {
+    it("should fail if pending bid does not exist", async () => {
       const { basePCOFacet } = await CFABasePCOFixture.initialized();
       const { user } = await getNamedAccounts();
 
@@ -1089,28 +1089,28 @@ describe('CFAPenaltyBidFacet', async function () {
         .acceptBid();
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Pending bid does not exist'
+        "CFAPenaltyBidFacet: Pending bid does not exist"
       );
     });
 
-    it('should fail if bidding period has elapsed', async () => {
+    it("should fail if bidding period has elapsed", async () => {
       const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
       const { user } = await getNamedAccounts();
 
       // Advance time
-      await network.provider.send('evm_increaseTime', [60 * 60 * 24]);
-      await network.provider.send('evm_mine');
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
         .acceptBid();
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Bid period has elapsed'
+        "CFAPenaltyBidFacet: Bid period has elapsed"
       );
     });
 
-    it('should fail if not payer', async () => {
+    it("should fail if not payer", async () => {
       const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
       const { bidder } = await getNamedAccounts();
 
@@ -1119,13 +1119,13 @@ describe('CFAPenaltyBidFacet', async function () {
         .acceptBid();
 
       await expect(txn).to.be.revertedWith(
-        'CFABasePCOFacet: Only payer is allowed to perform this action'
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
       );
     });
   });
 
-  describe('rejectBid', async () => {
-    it('should reject bid during period', async () => {
+  describe("rejectBid", async () => {
+    it("should reject bid during period", async () => {
       const {
         basePCOFacet,
         checkUserToAppFlow,
@@ -1181,18 +1181,18 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidRejected')
+        .to.emit(basePCOFacet, "BidRejected")
         .withArgs(user, bidder, forSalePrice);
 
       // Check payment token transfers
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(user, diamondAdmin, penaltyPayment);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -1217,7 +1217,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should reject bid with higher contribution rate', async () => {
+    it("should reject bid with higher contribution rate", async () => {
       const {
         basePCOFacet,
         checkUserToAppFlow,
@@ -1280,18 +1280,18 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidRejected')
+        .to.emit(basePCOFacet, "BidRejected")
         .withArgs(user, bidder, forSalePrice);
 
       // Check payment token transfers
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(user, diamondAdmin, penaltyPayment);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -1314,7 +1314,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should fail if contribution rate is too low', async () => {
+    it("should fail if contribution rate is too low", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf, mockParamsStore } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
@@ -1366,11 +1366,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .rejectBid(newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'LibCFAPenaltyBid: New contribution rate must be >= pending bid'
+        "LibCFAPenaltyBid: New contribution rate must be >= pending bid"
       );
     });
 
-    it('should fail if for sale price is incorrect rounding', async () => {
+    it("should fail if for sale price is incorrect rounding", async () => {
       const {
         basePCOFacet,
         checkUserToAppFlow,
@@ -1431,11 +1431,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(user))
         .rejectBid(newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        'LibCFABasePCO: Incorrect for sale price'
+        "LibCFABasePCO: Incorrect for sale price"
       );
     });
 
-    it('should refund surplus', async () => {
+    it("should refund surplus", async () => {
       const {
         basePCOFacet,
         checkUserToAppFlow,
@@ -1493,23 +1493,23 @@ describe('CFAPenaltyBidFacet', async function () {
       const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'BidRejected')
+        .to.emit(basePCOFacet, "BidRejected")
         .withArgs(user, bidder, forSalePrice);
 
       // Check payment token transfers
       const timeSinceIncrease = txnBlock.timestamp - surplusBlock.timestamp;
       const accumulatedBuffer = existingContributionRate.mul(timeSinceIncrease);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(user, diamondAdmin, penaltyPayment);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(basePCOFacet.address, user, accumulatedBuffer);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -1534,7 +1534,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should fail if not payer', async () => {
+    it("should fail if not payer", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
@@ -1580,11 +1580,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'CFABasePCOFacet: Only payer is allowed to perform this action'
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
       );
     });
 
-    it('should fail if no pending bid', async () => {
+    it("should fail if no pending bid", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf } =
         await CFAPenaltyBidFixtures.afterAcceptBid();
 
@@ -1614,11 +1614,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'CFABasePCOFacet: Only payer is allowed to perform this action'
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
       );
     });
 
-    it('should fail if missing flow permissions', async () => {
+    it("should fail if missing flow permissions", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
@@ -1651,10 +1651,10 @@ describe('CFAPenaltyBidFacet', async function () {
         .connect(await ethers.getSigner(user))
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
-      await expect(txn).to.be.revertedWith('E_NO_OPERATOR_UPDATE_FLOW');
+      await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
     });
 
-    it('should fail if not enough allowance for penalty', async () => {
+    it("should fail if not enough allowance for penalty", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
@@ -1679,11 +1679,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'SuperToken: transfer amount exceeds allowance'
+        "SuperToken: transfer amount exceeds allowance"
       );
     });
 
-    it('should fail if bid period has elapsed', async () => {
+    it("should fail if bid period has elapsed", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
@@ -1725,19 +1725,19 @@ describe('CFAPenaltyBidFacet', async function () {
       await op.exec(await ethers.getSigner(user));
 
       // Advance time
-      await network.provider.send('evm_increaseTime', [60 * 60 * 24]);
-      await network.provider.send('evm_mine');
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Bid period has elapsed'
+        "CFAPenaltyBidFacet: Bid period has elapsed"
       );
     });
 
-    it('should fail if not enough allowance for buffer', async () => {
+    it("should fail if not enough allowance for buffer", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
@@ -1770,13 +1770,13 @@ describe('CFAPenaltyBidFacet', async function () {
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        'SuperToken: transfer amount exceeds allowance'
+        "SuperToken: transfer amount exceeds allowance"
       );
     });
   });
 
-  describe('triggerTransfer', async () => {
-    it('should trigger transfer after bidding period elapsed', async () => {
+  describe("triggerTransfer", async () => {
+    it("should trigger transfer after bidding period elapsed", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -1789,7 +1789,7 @@ describe('CFAPenaltyBidFacet', async function () {
         paymentToken,
       } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
@@ -1803,8 +1803,8 @@ describe('CFAPenaltyBidFacet', async function () {
         );
 
       // Advance time
-      await network.provider.send('evm_increaseTime', [60 * 60 * 24]);
-      await network.provider.send('evm_mine');
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
@@ -1812,10 +1812,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'TransferTriggered')
+        .to.emit(basePCOFacet, "TransferTriggered")
         .withArgs(bidder, user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -1824,10 +1824,10 @@ describe('CFAPenaltyBidFacet', async function () {
 
       // Check payment token transfers
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -1852,7 +1852,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should trigger transfer after bidding period elapsed and bidder revokes permissions', async () => {
+    it("should trigger transfer after bidding period elapsed and bidder revokes permissions", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -1865,7 +1865,7 @@ describe('CFAPenaltyBidFacet', async function () {
         paymentToken,
       } = await CFAPenaltyBidFixtures.afterPlaceBidAndBidderRevokes();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
@@ -1879,8 +1879,8 @@ describe('CFAPenaltyBidFacet', async function () {
         );
 
       // Advance time
-      await network.provider.send('evm_increaseTime', [60 * 60 * 24]);
-      await network.provider.send('evm_mine');
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
@@ -1888,10 +1888,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'TransferTriggered')
+        .to.emit(basePCOFacet, "TransferTriggered")
         .withArgs(bidder, user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -1900,10 +1900,10 @@ describe('CFAPenaltyBidFacet', async function () {
 
       // Check payment token transfers
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -1928,7 +1928,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow(-200000000);
     });
 
-    it('should trigger transfer after bidding period elapsed and flow is deleted', async () => {
+    it("should trigger transfer after bidding period elapsed and flow is deleted", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -1941,7 +1941,7 @@ describe('CFAPenaltyBidFacet', async function () {
         paymentToken,
       } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
@@ -1956,8 +1956,8 @@ describe('CFAPenaltyBidFacet', async function () {
         );
 
       // Advance time
-      await network.provider.send('evm_increaseTime', [60 * 60 * 24]);
-      await network.provider.send('evm_mine');
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
 
       // Payer deletes flow
       const op1 = ethersjsSf.cfaV1.deleteFlow({
@@ -1977,10 +1977,10 @@ describe('CFAPenaltyBidFacet', async function () {
       const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'TransferTriggered')
+        .to.emit(basePCOFacet, "TransferTriggered")
         .withArgs(bidder, user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -1991,14 +1991,14 @@ describe('CFAPenaltyBidFacet', async function () {
       const timeSinceDeletion = txnBlock.timestamp - op1Block.timestamp;
       const depletedBuffer = oldContributionRate.mul(timeSinceDeletion);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           user,
           forSalePrice.add(oldBuffer).sub(depletedBuffer)
         );
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -2023,7 +2023,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should trigger transfer early if payer bid becomes inactive', async () => {
+    it("should trigger transfer early if payer bid becomes inactive", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -2036,7 +2036,7 @@ describe('CFAPenaltyBidFacet', async function () {
         checkAppBalance,
       } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user, diamondAdmin } = await getNamedAccounts();
 
@@ -2078,10 +2078,10 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'TransferTriggered')
+        .to.emit(basePCOFacet, "TransferTriggered")
         .withArgs(bidder, user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -2092,14 +2092,14 @@ describe('CFAPenaltyBidFacet', async function () {
       const timeSinceDeletion = op2Block.timestamp - op1Block.timestamp;
       const depletedBuffer = oldContributionRate.mul(timeSinceDeletion);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           user,
           forSalePrice.add(oldBuffer).sub(depletedBuffer)
         );
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -2124,7 +2124,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should trigger transfer with real license', async () => {
+    it("should trigger transfer with real license", async () => {
       const {
         basePCOFacet,
         checkUserToAppFlow,
@@ -2148,8 +2148,8 @@ describe('CFAPenaltyBidFacet', async function () {
         );
 
       // Advance time
-      await network.provider.send('evm_increaseTime', [60 * 60 * 24]);
-      await network.provider.send('evm_mine');
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
@@ -2157,15 +2157,15 @@ describe('CFAPenaltyBidFacet', async function () {
       await txn.wait();
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'TransferTriggered')
+        .to.emit(basePCOFacet, "TransferTriggered")
         .withArgs(bidder, user, bidder, forSalePrice);
 
       // Check payment token transfers
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -2190,7 +2190,7 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should refund surplus', async () => {
+    it("should refund surplus", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -2204,7 +2204,7 @@ describe('CFAPenaltyBidFacet', async function () {
         surplusBlock,
       } = await CFAPenaltyBidFixtures.afterPlaceBidAndSurplus();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
@@ -2219,8 +2219,8 @@ describe('CFAPenaltyBidFacet', async function () {
         );
 
       // Advance time
-      await network.provider.send('evm_increaseTime', [60 * 60 * 24]);
-      await network.provider.send('evm_mine');
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
@@ -2229,10 +2229,10 @@ describe('CFAPenaltyBidFacet', async function () {
       const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
 
       await expect(txn)
-        .to.emit(basePCOFacet, 'TransferTriggered')
+        .to.emit(basePCOFacet, "TransferTriggered")
         .withArgs(bidder, user, bidder, forSalePrice);
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledOnceWith(
         user,
         bidder,
@@ -2243,14 +2243,14 @@ describe('CFAPenaltyBidFacet', async function () {
       const timeSinceIncrease = txnBlock.timestamp - surplusBlock.timestamp;
       const accumulatedBuffer = oldContributionRate.mul(timeSinceIncrease);
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           user,
           forSalePrice.add(oldBuffer).add(accumulatedBuffer)
         );
       await expect(txn)
-        .to.emit(ethx_erc20, 'Transfer')
+        .to.emit(ethx_erc20, "Transfer")
         .withArgs(
           basePCOFacet.address,
           bidder,
@@ -2275,11 +2275,11 @@ describe('CFAPenaltyBidFacet', async function () {
       await checkAppNetFlow();
     });
 
-    it('should fail to trigger transfer early if payer deletes and reopens bid', async () => {
+    it("should fail to trigger transfer early if payer deletes and reopens bid", async () => {
       const { basePCOFacet, mockLicense, ethersjsSf, ethx_erc20 } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      mockLicense['safeTransferFrom(address,address,uint256)'].reset();
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
@@ -2310,11 +2310,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .triggerTransfer();
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Bid period has not elapsed'
+        "CFAPenaltyBidFacet: Bid period has not elapsed"
       );
     });
 
-    it('should fail if pending bid does not exist', async () => {
+    it("should fail if pending bid does not exist", async () => {
       const { basePCOFacet } = await CFAPenaltyBidFixtures.afterAcceptBid();
       const { bidder } = await getNamedAccounts();
 
@@ -2323,11 +2323,11 @@ describe('CFAPenaltyBidFacet', async function () {
         .triggerTransfer();
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Pending bid does not exist'
+        "CFAPenaltyBidFacet: Pending bid does not exist"
       );
     });
 
-    it('should fail if bidding period has not elapsed', async () => {
+    it("should fail if bidding period has not elapsed", async () => {
       const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
       const { bidder } = await getNamedAccounts();
 
@@ -2336,7 +2336,7 @@ describe('CFAPenaltyBidFacet', async function () {
         .triggerTransfer();
 
       await expect(txn).to.be.revertedWith(
-        'CFAPenaltyBidFacet: Bid period has not elapsed'
+        "CFAPenaltyBidFacet: Bid period has not elapsed"
       );
     });
   });

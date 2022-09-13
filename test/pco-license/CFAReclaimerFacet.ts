@@ -1,20 +1,20 @@
-import { expect, use } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import { ethers, getNamedAccounts, network } from 'hardhat';
-import { BigNumber } from 'ethers';
-import { solidity } from 'ethereum-waffle';
-import { smock } from '@defi-wonderland/smock';
-import { addDays, getUnixTime, startOfToday } from 'date-fns';
-import BaseFixtures from './CFABasePCO.fixture';
-import { rateToPurchasePrice } from '../shared';
+import { expect, use } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { ethers, getNamedAccounts, network } from "hardhat";
+import { BigNumber } from "ethers";
+import { solidity } from "ethereum-waffle";
+import { smock } from "@defi-wonderland/smock";
+import { addDays, getUnixTime, startOfToday } from "date-fns";
+import BaseFixtures from "./CFABasePCO.fixture";
+import { rateToPurchasePrice } from "../shared";
 
 use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe('CFAReclaimerFacet', async function () {
-  describe('reclaim', async () => {
-    it('should emits the licenseReclaimed event and calls license.safeTransferFrom', async () => {
+describe("CFAReclaimerFacet", async function () {
+  describe("reclaim", async () => {
+    it("should emits the licenseReclaimed event and calls license.safeTransferFrom", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -58,13 +58,13 @@ describe('CFAReclaimerFacet', async function () {
         .connect(await ethers.getSigner(bidder))
         .reclaim(contributionRate, forSalePrice);
       await txn.wait();
-      await expect(txn).to.emit(basePCOFacet, 'LicenseReclaimed');
+      await expect(txn).to.emit(basePCOFacet, "LicenseReclaimed");
       expect(
-        mockLicense['safeTransferFrom(address,address,uint256)']
+        mockLicense["safeTransferFrom(address,address,uint256)"]
       ).to.have.been.calledWith(user, bidder, await basePCOFacet.licenseId());
     });
 
-    it('should revert if insufficient balance', async () => {
+    it("should revert if insufficient balance", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -118,10 +118,10 @@ describe('CFAReclaimerFacet', async function () {
         basePCOFacet
           .connect(await ethers.getSigner(bidder))
           .reclaim(contributionRate, forSalePrice)
-      ).to.be.revertedWith('CFAReclaimerFacet: Insufficient balance');
+      ).to.be.revertedWith("CFAReclaimerFacet: Insufficient balance");
     });
 
-    it('should revert if insufficient allowance', async () => {
+    it("should revert if insufficient allowance", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -165,10 +165,10 @@ describe('CFAReclaimerFacet', async function () {
         basePCOFacet
           .connect(await ethers.getSigner(bidder))
           .reclaim(contributionRate, forSalePrice)
-      ).to.be.revertedWith('CFAReclaimerFacet: Insufficient allowance');
+      ).to.be.revertedWith("CFAReclaimerFacet: Insufficient allowance");
     });
 
-    it('should revert if permission not granted to create flow', async () => {
+    it("should revert if permission not granted to create flow", async () => {
       const {
         basePCOFacet,
         mockParamsStore,
@@ -204,7 +204,7 @@ describe('CFAReclaimerFacet', async function () {
           .connect(await ethers.getSigner(bidder))
           .reclaim(contributionRate, forSalePrice)
       ).to.be.revertedWith(
-        'CFAReclaimerFacet: CREATE_FLOW permission not granted'
+        "CFAReclaimerFacet: CREATE_FLOW permission not granted"
       );
     });
 
@@ -253,11 +253,11 @@ describe('CFAReclaimerFacet', async function () {
           .connect(await ethers.getSigner(bidder))
           .reclaim(contributionRate, forSalePrice)
       ).to.be.revertedWith(
-        'CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance'
+        "CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance"
       );
     });
 
-    it('should revert if the player bid is active', async () => {
+    it("should revert if the player bid is active", async () => {
       const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
@@ -293,11 +293,11 @@ describe('CFAReclaimerFacet', async function () {
           .connect(await ethers.getSigner(bidder))
           .reclaim(contributionRate, forSalePrice)
       ).to.be.revertedWith(
-        'CFAReclaimerFacet: Can only perform action when payer bid is active'
+        "CFAReclaimerFacet: Can only perform action when payer bid is active"
       );
     });
 
-    it('should revert if the sale price is incorrect', async () => {
+    it("should revert if the sale price is incorrect", async () => {
       const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
         await BaseFixtures.afterPayerDelete();
       const { bidder } = await getNamedAccounts();
@@ -335,17 +335,17 @@ describe('CFAReclaimerFacet', async function () {
         basePCOFacet
           .connect(await ethers.getSigner(bidder))
           .reclaim(contributionRate, forSalePrice)
-      ).to.be.revertedWith('CFAReclaimerFacet: Incorrect for sale price');
+      ).to.be.revertedWith("CFAReclaimerFacet: Incorrect for sale price");
     });
   });
 
-  describe('reclaimPrice', async () => {
+  describe("reclaimPrice", async () => {
     let originalForSalePrice: BigNumber;
     let prevPrice: BigNumber;
     let nextPrice: BigNumber;
     let daysFromNow: number;
 
-    it('should decay the price until the auctionLength expires', async () => {
+    it("should decay the price until the auctionLength expires", async () => {
       const { basePCOFacet } = await BaseFixtures.afterPayerDelete();
       const { user } = await getNamedAccounts();
 
@@ -353,7 +353,7 @@ describe('CFAReclaimerFacet', async function () {
       originalForSalePrice = currentBid.forSalePrice;
 
       daysFromNow = getUnixTime(addDays(startOfToday(), 2));
-      await network.provider.send('evm_mine', [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
 
       const startPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
@@ -361,7 +361,7 @@ describe('CFAReclaimerFacet', async function () {
       expect(startPrice.lt(originalForSalePrice)).to.be.true;
 
       daysFromNow = getUnixTime(addDays(startOfToday(), 5));
-      await network.provider.send('evm_mine', [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
 
       prevPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
@@ -369,7 +369,7 @@ describe('CFAReclaimerFacet', async function () {
       expect(prevPrice.lt(startPrice)).to.be.true;
 
       daysFromNow = getUnixTime(addDays(startOfToday(), 7));
-      await network.provider.send('evm_mine', [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
         .reclaimPrice();
@@ -377,7 +377,7 @@ describe('CFAReclaimerFacet', async function () {
 
       prevPrice = nextPrice;
       daysFromNow = getUnixTime(addDays(startOfToday(), 10));
-      await network.provider.send('evm_mine', [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
         .reclaimPrice();
@@ -385,33 +385,33 @@ describe('CFAReclaimerFacet', async function () {
 
       prevPrice = nextPrice;
       daysFromNow = getUnixTime(addDays(startOfToday(), 13));
-      await network.provider.send('evm_mine', [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await basePCOFacet
         .connect(await ethers.getSigner(user))
         .reclaimPrice();
       expect(nextPrice.lt(prevPrice)).to.be.true;
     });
 
-    it('should return a price of 0 if auctionLength has expired', async () => {
+    it("should return a price of 0 if auctionLength has expired", async () => {
       const { basePCOFacet } = await BaseFixtures.afterPayerDelete();
       const { user } = await getNamedAccounts();
 
       daysFromNow = getUnixTime(addDays(startOfToday(), 15));
-      await network.provider.send('evm_mine', [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       const price = await basePCOFacet
         .connect(await ethers.getSigner(user))
         .reclaimPrice();
       expect(price.eq(ethers.constants.Zero)).to.be.true;
     });
 
-    it('should revert if the player bid is active', async () => {
+    it("should revert if the player bid is active", async () => {
       const { basePCOFacet } = await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
 
       await expect(
         basePCOFacet.connect(await ethers.getSigner(user)).reclaimPrice()
       ).to.be.revertedWith(
-        'CFAReclaimerFacet: Can only perform action when payer bid is active'
+        "CFAReclaimerFacet: Can only perform action when payer bid is active"
       );
     });
   });

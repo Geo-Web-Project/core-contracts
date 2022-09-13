@@ -1,16 +1,16 @@
-import { Framework } from '@superfluid-finance/sdk-core';
-import { BigNumber, ethers } from 'ethers';
-import { task } from 'hardhat/config';
+import { Framework } from "@superfluid-finance/sdk-core";
+import { BigNumber, ethers } from "ethers";
+import { task } from "hardhat/config";
 
 enum Action {
   CLAIM,
   BID,
 }
 
-task('example:bid')
-  .addParam('superAppAddress', 'AuctionSuperApp contract address')
-  .addParam('licenseId', 'License ID')
-  .addParam('newForSalePrice', 'New for sale price in ETH')
+task("example:bid")
+  .addParam("superAppAddress", "AuctionSuperApp contract address")
+  .addParam("licenseId", "License ID")
+  .addParam("newForSalePrice", "New for sale price in ETH")
   .setAction(
     async (
       {
@@ -28,13 +28,13 @@ task('example:bid')
         networkName: hre.network.name,
         provider: hre.ethers.provider,
       });
-      const ethx = await sf.loadSuperToken('ETHx');
+      const ethx = await sf.loadSuperToken("ETHx");
       const newForSalePriceWei = ethers.utils.parseEther(newForSalePrice);
 
       const [admin] = await hre.ethers.getSigners();
 
       const superApp = await hre.ethers.getContractAt(
-        'AuctionSuperApp',
+        "AuctionSuperApp",
         superAppAddress
       );
 
@@ -52,15 +52,15 @@ task('example:bid')
       });
 
       const bidData = ethers.utils.defaultAbiCoder.encode(
-        ['uint256'],
+        ["uint256"],
         [licenseId]
       );
       const actionData = ethers.utils.defaultAbiCoder.encode(
-        ['uint256', 'bytes'],
+        ["uint256", "bytes"],
         [newForSalePriceWei, bidData]
       );
       const userData = ethers.utils.defaultAbiCoder.encode(
-        ['uint8', 'bytes'],
+        ["uint8", "bytes"],
         [Action.BID, actionData]
       );
 

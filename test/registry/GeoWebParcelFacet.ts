@@ -1,11 +1,11 @@
-import { assert, expect, use } from 'chai';
-import { deployments } from 'hardhat';
-import { solidity } from 'ethereum-waffle';
-import { BigNumber } from 'ethers';
+import { assert, expect, use } from "chai";
+import { deployments } from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { BigNumber } from "ethers";
 
 use(solidity);
 
-describe('GeoWebParcel', async () => {
+describe("GeoWebParcel", async () => {
   function makePathPrefix(length: any) {
     return BigNumber.from(length).shl(256 - 8);
   }
@@ -14,7 +14,7 @@ describe('GeoWebParcel', async () => {
     async ({ deployments, getNamedAccounts, ethers }, options) => {
       await deployments.fixture();
       const GeoWebCoordinate = await ethers.getContractFactory(
-        'LibGeoWebCoordinate'
+        "LibGeoWebCoordinate"
       );
       const geoWebCoordinate = await GeoWebCoordinate.deploy();
       await geoWebCoordinate.deployed();
@@ -24,14 +24,14 @@ describe('GeoWebParcel', async () => {
 
       const { diamondAdmin } = await getNamedAccounts();
       const { diamond } = deployments;
-      await diamond.deploy('GeoWebParcel', {
+      await diamond.deploy("GeoWebParcel", {
         from: diamondAdmin,
         owner: diamondAdmin,
-        facets: ['TestableGeoWebParcelFacet'],
+        facets: ["TestableGeoWebParcelFacet"],
       });
 
       const geoWebParcel = await ethers.getContract(
-        'GeoWebParcel',
+        "GeoWebParcel",
         diamondAdmin
       );
 
@@ -43,7 +43,7 @@ describe('GeoWebParcel', async () => {
     }
   );
 
-  it('should build and destroy a parcel of a single coordinate', async () => {
+  it("should build and destroy a parcel of a single coordinate", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
@@ -58,7 +58,7 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result.toString(),
       BigNumber.from(1).shl(20).toString(),
-      'Incorrect availability'
+      "Incorrect availability"
     );
 
     const parcelId = buildResult.events![0].topics[1];
@@ -66,7 +66,7 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
-      'Stored base coordinate is incorrect'
+      "Stored base coordinate is incorrect"
     );
 
     await geoWebParcel.destroy(parcelId);
@@ -76,18 +76,18 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result1.toString(),
       BigNumber.from(0).toString(),
-      'Parcel coordinates were not destroyed'
+      "Parcel coordinates were not destroyed"
     );
 
     const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
-      'Parcel was not marked as destroyed'
+      "Parcel was not marked as destroyed"
     );
-    expect(parcel1.path, 'Parcel was not marked as destroyed').to.be.empty;
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
-  it('should build and destroy parcel within one word', async () => {
+  it("should build and destroy parcel within one word", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
@@ -110,7 +110,7 @@ describe('GeoWebParcel', async () => {
         .or(BigNumber.from(1).shl(52))
         .or(BigNumber.from(1).shl(51))
         .toString(),
-      'Incorrect availability'
+      "Incorrect availability"
     );
 
     const parcelId = buildResult.events![0].topics[1];
@@ -118,7 +118,7 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
-      'Stored base coordinate is incorrect'
+      "Stored base coordinate is incorrect"
     );
 
     await geoWebParcel.destroy(parcelId);
@@ -128,18 +128,18 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result1.toString(),
       BigNumber.from(0).toString(),
-      'Parcel coordinates were not destroyed'
+      "Parcel coordinates were not destroyed"
     );
 
     const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
-      'Parcel was not marked as destroyed'
+      "Parcel was not marked as destroyed"
     );
-    expect(parcel1.path, 'Parcel was not marked as destroyed').to.be.empty;
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
-  it('should build and destroy parcel that spans multiple words', async () => {
+  it("should build and destroy parcel that spans multiple words", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
@@ -159,13 +159,13 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result0.toString(),
       BigNumber.from(1).shl(31).toString(),
-      'Incorrect availability for index 0'
+      "Incorrect availability for index 0"
     );
 
     assert.equal(
       result1.toString(),
       BigNumber.from(1).shl(16).or(BigNumber.from(1).shl(32)).toString(),
-      'Incorrect availability for index 1'
+      "Incorrect availability for index 1"
     );
 
     const parcelId = buildResult.events![0].topics[1];
@@ -173,7 +173,7 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
-      'Stored base coordinate is incorrect'
+      "Stored base coordinate is incorrect"
     );
 
     await geoWebParcel.destroy(parcelId);
@@ -184,23 +184,23 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result0_1.toString(),
       BigNumber.from(0).toString(),
-      'Parcel coordinates were not destroyed'
+      "Parcel coordinates were not destroyed"
     );
     assert.equal(
       result1_1.toString(),
       BigNumber.from(0).toString(),
-      'Parcel coordinates were not destroyed'
+      "Parcel coordinates were not destroyed"
     );
 
     const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
-      'Parcel was not marked as destroyed'
+      "Parcel was not marked as destroyed"
     );
-    expect(parcel1.path, 'Parcel was not marked as destroyed').to.be.empty;
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
-  it('should build and destroy parcel with a long path', async () => {
+  it("should build and destroy parcel with a long path", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(511, 0) -> Index(31, 0), Local(15, 0)
@@ -223,7 +223,7 @@ describe('GeoWebParcel', async () => {
       assert.equal(
         result.toString(),
         BigNumber.from(2).shl(15).sub(BigNumber.from(1)).toString(),
-        'Incorrect availability for ' + i
+        "Incorrect availability for " + i
       );
     }
 
@@ -232,7 +232,7 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
-      'Stored base coordinate is incorrect'
+      "Stored base coordinate is incorrect"
     );
 
     await geoWebParcel.destroy(parcelId);
@@ -243,19 +243,19 @@ describe('GeoWebParcel', async () => {
       assert.equal(
         result.toString(),
         BigNumber.from(0).toString(),
-        'Parcel coordinates were not destroyed'
+        "Parcel coordinates were not destroyed"
       );
     }
 
     const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
-      'Parcel was not marked as destroyed'
+      "Parcel was not marked as destroyed"
     );
-    expect(parcel1.path, 'Parcel was not marked as destroyed').to.be.empty;
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
-  it('should build and destroy parcel that crosses the meridian', async () => {
+  it("should build and destroy parcel that crosses the meridian", async () => {
     const { geoWebParcel, max_x } = await setupTest();
 
     // Global(0, 160) -> Index(0, 10), Local(0, 0)
@@ -276,13 +276,13 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result0.toString(),
       BigNumber.from(1).toString(),
-      'Incorrect availability for index 0'
+      "Incorrect availability for index 0"
     );
 
     assert.equal(
       result1.toString(),
       BigNumber.from(1).shl(15).toString(),
-      'Incorrect availability for index 1'
+      "Incorrect availability for index 1"
     );
 
     const parcelId = buildResult.events![0].topics[1];
@@ -290,7 +290,7 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       parcel.baseCoordinate.toString(),
       coord.toString(),
-      'Stored base coordinate is incorrect'
+      "Stored base coordinate is incorrect"
     );
 
     await geoWebParcel.destroy(parcelId);
@@ -303,23 +303,23 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result0_1.toString(),
       BigNumber.from(0).toString(),
-      'Parcel coordinates were not destroyed'
+      "Parcel coordinates were not destroyed"
     );
     assert.equal(
       result1_1.toString(),
       BigNumber.from(0).toString(),
-      'Parcel coordinates were not destroyed'
+      "Parcel coordinates were not destroyed"
     );
 
     const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
-      'Parcel was not marked as destroyed'
+      "Parcel was not marked as destroyed"
     );
-    expect(parcel1.path, 'Parcel was not marked as destroyed').to.be.empty;
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 
-  it('should not build parcel that repeats coordinates', async () => {
+  it("should not build parcel that repeats coordinates", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
@@ -337,16 +337,16 @@ describe('GeoWebParcel', async () => {
       err = error;
     }
 
-    assert(err instanceof Error, 'Expected an error but did not get one');
+    assert(err instanceof Error, "Expected an error but did not get one");
     if (err instanceof Error) {
       assert(
-        err.message.includes('Coordinate is not available'),
-        'Expected an error but did not get one'
+        err.message.includes("Coordinate is not available"),
+        "Expected an error but did not get one"
       );
     }
   });
 
-  it('should not build parcel that repeats coordinates across multiple words', async () => {
+  it("should not build parcel that repeats coordinates across multiple words", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
@@ -365,16 +365,16 @@ describe('GeoWebParcel', async () => {
       err = error;
     }
 
-    assert(err instanceof Error, 'Expected an error but did not get one');
+    assert(err instanceof Error, "Expected an error but did not get one");
     if (err instanceof Error) {
       assert(
-        err.message.includes('Coordinate is not available'),
-        'Expected an error but did not get one'
+        err.message.includes("Coordinate is not available"),
+        "Expected an error but did not get one"
       );
     }
   });
 
-  it('should not build parcel that overlaps with a existing parcel', async () => {
+  it("should not build parcel that overlaps with a existing parcel", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
@@ -390,16 +390,16 @@ describe('GeoWebParcel', async () => {
       err = error;
     }
 
-    assert(err instanceof Error, 'Expected an error but did not get one');
+    assert(err instanceof Error, "Expected an error but did not get one");
     if (err instanceof Error) {
       assert(
-        err.message.includes('Coordinate is not available'),
-        'Expected an error but did not get one'
+        err.message.includes("Coordinate is not available"),
+        "Expected an error but did not get one"
       );
     }
   });
 
-  it('should not build parcel that goes too far north', async () => {
+  it("should not build parcel that goes too far north", async () => {
     const { geoWebParcel, max_y } = await setupTest();
 
     // Global(16000, MAX) -> Index(1000, MAX/16), Local(0, 15)
@@ -415,10 +415,10 @@ describe('GeoWebParcel', async () => {
       err = error;
     }
 
-    assert(err, 'Expected an error but did not get one');
+    assert(err, "Expected an error but did not get one");
   });
 
-  it('should not build parcel that goes too far south', async () => {
+  it("should not build parcel that goes too far south", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
@@ -434,10 +434,10 @@ describe('GeoWebParcel', async () => {
       err = error;
     }
 
-    assert(err, 'Expected an error but did not get one');
+    assert(err, "Expected an error but did not get one");
   });
 
-  it('should not build parcel with empty path', async () => {
+  it("should not build parcel with empty path", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(16000, 0) -> Index(1000, 0), Local(0, 0)
@@ -451,16 +451,16 @@ describe('GeoWebParcel', async () => {
       err = error;
     }
 
-    assert(err instanceof Error, 'Expected an error but did not get one');
+    assert(err instanceof Error, "Expected an error but did not get one");
     if (err instanceof Error) {
       assert(
-        err.message.includes('Path must have at least one component'),
-        'Expected an error but did not get one'
+        err.message.includes("Path must have at least one component"),
+        "Expected an error but did not get one"
       );
     }
   });
 
-  it('should only destroy one parcel within a word', async () => {
+  it("should only destroy one parcel within a word", async () => {
     const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
@@ -481,14 +481,14 @@ describe('GeoWebParcel', async () => {
     assert.equal(
       result1.toString(),
       BigNumber.from(1).shl(20).toString(),
-      'Parcel coordinates were not destroyed'
+      "Parcel coordinates were not destroyed"
     );
 
     const parcel1 = await geoWebParcel.getLandParcel(parcelId);
     expect(parcel1.baseCoordinate).to.equal(
       0,
-      'Parcel was not marked as destroyed'
+      "Parcel was not marked as destroyed"
     );
-    expect(parcel1.path, 'Parcel was not marked as destroyed').to.be.empty;
+    expect(parcel1.path, "Parcel was not marked as destroyed").to.be.empty;
   });
 });
