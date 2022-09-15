@@ -95,7 +95,7 @@ module.exports = {
     },
     {
       name: "PCOLicenseDiamond",
-      include: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
+      include: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
       strict: true,
     },
   ],

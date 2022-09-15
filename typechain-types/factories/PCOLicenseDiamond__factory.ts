@@ -454,6 +454,56 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
+      },
+    ],
+    name: "LicenseReclaimed",
+    type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int96",
+        name: "newContributionRate",
+        type: "int96",
+      },
+      {
+        internalType: "uint256",
+        name: "newForSalePrice",
+        type: "uint256",
+      },
+    ],
+    name: "reclaim",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "reclaimPrice",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
 export class PCOLicenseDiamond__factory {
