@@ -34,7 +34,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         // TODO This is a temporary solution to get the time when the flow is closed
         (uint256 startTime, , , ) = cs.cfaV1.cfa.getAccountFlowInfo(
             ds.paramsStore.getPaymentToken(),
-            ds.paramsStore.getBeneficiary()
+            address(this)
         );
         uint256 _length = ds.paramsStore.getReclaimAuctionLength();
 
