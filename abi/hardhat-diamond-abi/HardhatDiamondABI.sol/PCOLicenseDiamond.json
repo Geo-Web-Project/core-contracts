@@ -419,7 +419,18 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "int96",
+        "name": "newContributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newForSalePrice",
+        "type": "uint256"
+      }
+    ],
     "name": "rejectBid",
     "outputs": [],
     "stateMutability": "nonpayable",

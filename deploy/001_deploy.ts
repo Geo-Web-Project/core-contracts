@@ -5,6 +5,7 @@ const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 import { ethers } from "hardhat";
+import { Contract } from "ethers";
 
 function perYearToPerSecondRate(annualRate: number) {
   return {
@@ -45,7 +46,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     sf = await Framework.create({
       chainId: hre.network.config.chainId,
       provider: hre.web3,
-      resolverAddress: jsSf.resolver.address,
+      resolverAddress: (jsSf.resolver as Contract).address,
       protocolReleaseVersion: "test",
     });
 
@@ -82,7 +83,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await diamond.deploy("PCOLicenseBeacon", {
     from: diamondAdmin,
     owner: diamondAdmin,
-    facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
+    facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
     log: true,
   });
 
