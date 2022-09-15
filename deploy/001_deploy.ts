@@ -62,7 +62,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { diamond } = deployments;
 
   // Deploy registry diamond
-  await diamond.deploy("RegistryDiamond", {
+  const deployed = await diamond.deploy("RegistryDiamond", {
     from: diamondAdmin,
     owner: diamondAdmin,
     facets: [
@@ -87,24 +87,27 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log: true,
   });
 
-  const beacon = await ethers.getContract("PCOLicenseBeacon", diamondAdmin);
+  if (deployed.newlyDeployed) {
+    console.log("Initializing RegistryDiamond...");
+    const beacon = await ethers.getContract("PCOLicenseBeacon", diamondAdmin);
 
-  // Initialize
-  const perSecondFee = perYearToPerSecondRate(0.1);
-  const penalty = perYearToPerSecondRate(0.1);
+    // Initialize
+    const perSecondFee = perYearToPerSecondRate(0.1);
 
-  await registryDiamond.initializeClaimer(0, 0, 0, 0, beacon.address);
-  await registryDiamond.initializeParams(
-    treasury,
-    ethx.address,
-    sf.host.contract.address,
-    perSecondFee.numerator,
-    perSecondFee.denominator,
-    penalty.numerator,
-    penalty.denominator,
-    60 * 60 * 24 * 7, // 7 days
-    60 * 60 * 24 * 14 // 2 weeks
-  );
+    await registryDiamond.initializeClaimer(0, 0, 0, 0, beacon.address);
+    await registryDiamond.initializeParams(
+      treasury,
+      ethx.address,
+      sf.host.contract.address,
+      perSecondFee.numerator,
+      perSecondFee.denominator,
+      1,
+      10,
+      60 * 60 * 24 * 7, // 7 days
+      60 * 60 * 24 * 14 // 2 weeks
+    );
+    console.log("Initialized RegistryDiamond.");
+  }
 };
 export default func;
 func.tags = ["Main"];
