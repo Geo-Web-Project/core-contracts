@@ -88,24 +88,6 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         {
-            uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-                paymentToken,
-                newContributionRate
-            );
-
-            require(
-                paymentToken.balanceOf(msg.sender) >=
-                    newForSalePrice + requiredBuffer,
-                "CFAReclaimerFacet: Insufficient balance"
-            );
-            require(
-                paymentToken.allowance(msg.sender, address(this)) >=
-                    newForSalePrice + requiredBuffer,
-                "CFAReclaimerFacet: Insufficient allowance"
-            );
-        }
-
-        {
             // Check operator permissions
             (, uint8 permissions, int96 flowRateAllowance) = cs
                 .cfaV1
