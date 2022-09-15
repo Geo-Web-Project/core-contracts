@@ -18,6 +18,7 @@ import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/estimate_minting_gas";
+import "hardhat-gas-reporter";
 
 const networks: any = {
   local: {
@@ -63,6 +64,9 @@ module.exports = {
   abiExporter: {
     path: "./abi",
     clear: true,
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
   },
   namedAccounts: {
     diamondAdmin: {

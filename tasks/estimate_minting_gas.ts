@@ -32,9 +32,9 @@ async function rateToPurchasePrice(
 }
 
 async function traverseSingle(gwCoor: ethers.Contract) {
-  let direction = BigNumber.from(0b00);
+  const direction = BigNumber.from(0b00);
 
-  let gas = await gwCoor.estimateGas.traverse(
+  const gas = await gwCoor.estimateGas.traverse(
     makeCoord(0, 0),
     direction,
     BigNumber.from(0),
@@ -46,36 +46,36 @@ async function traverseSingle(gwCoor: ethers.Contract) {
 }
 
 async function parseDirection(gwCoorPath: ethers.Contract) {
-  let path = BigNumber.from(2)
+  const path = BigNumber.from(2)
     .shl(256 - 8)
     .or(BigNumber.from(0b1110));
 
-  let gas = await gwCoorPath.estimateGas.nextDirection(path);
+  const gas = await gwCoorPath.estimateGas.nextDirection(path);
 
   console.log(`Estimated gas for parsing direction: ${gas}`);
 }
 
 async function wordIndex(gwCoor: ethers.Contract) {
   // Global(4, 33) -> Index(0, 2), Local(4, 1)
-  let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+  const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-  let gas = await gwCoor.estimateGas.toWordIndex(coord);
+  const gas = await gwCoor.estimateGas.toWordIndex(coord);
 
   console.log(`Estimated gas for word index: ${gas}`);
 }
 
 async function buildSingleCoordinate(GW: ethers.Contract) {
   // Global(4, 33) -> Index(0, 2), Local(4, 1)
-  let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+  const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 
-  let gas = await GW.estimateGas.build(coord, [BigNumber.from(0)]);
+  const gas = await GW.estimateGas.build(coord, [BigNumber.from(0)]);
 
   console.log(`Estimated gas for single coordinate build: ${gas}`);
 }
 
 async function mintPath(count: any, registryDiamond: ethers.Contract) {
   // Global(160000, 17) -> Index(100000, 1), Local(0, 1)
-  let coord = BigNumber.from(160000).shl(32).or(BigNumber.from(17));
+  const coord = BigNumber.from(160000).shl(32).or(BigNumber.from(17));
 
   const contributionRate = ethers.utils
     .parseEther("9")
@@ -85,7 +85,7 @@ async function mintPath(count: any, registryDiamond: ethers.Contract) {
     contributionRate
   );
 
-  let gas = await registryDiamond.estimateGas.claim(
+  const gas = await registryDiamond.estimateGas.claim(
     contributionRate,
     forSalePrice,
     coord,
@@ -116,7 +116,7 @@ async function mintSquare(dim: number, registryDiamond: ethers.Contract) {
     contributionRate
   );
 
-  let gas = await registryDiamond.estimateGas.claim(
+  const gas = await registryDiamond.estimateGas.claim(
     contributionRate,
     forSalePrice,
     coord1,
@@ -152,7 +152,7 @@ async function mintSquare(dim: number, registryDiamond: ethers.Contract) {
 //     }
 //   );
 
-task("measure:parcel-gas").setAction(async ({}, hre) => {
+task("measure:parcel-gas").setAction(async ({ a = {} }, hre) => {
   const { getNamedAccounts } = hre;
 
   const { diamondAdmin } = await getNamedAccounts();
@@ -161,11 +161,11 @@ task("measure:parcel-gas").setAction(async ({}, hre) => {
     "RegistryDiamond"
   );
 
-  let sf: Framework = await Framework.create({
+  const sf: Framework = await Framework.create({
     chainId: hre.network.config.chainId!,
     provider: hre.ethers.provider,
   });
-  let ethx: SuperToken = await sf.loadSuperToken("ETHx");
+  const ethx: SuperToken = await sf.loadSuperToken("ETHx");
 
   // Approve flow creation
   const nextAddress = await registryDiamond.getNextProxyAddress(diamondAdmin);

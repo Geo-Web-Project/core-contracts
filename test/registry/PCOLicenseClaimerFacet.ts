@@ -1,14 +1,12 @@
 import chaiAsPromised from "chai-as-promised";
 import { expect, use } from "chai";
-import { ethers, getNamedAccounts, deployments } from "hardhat";
+import { ethers, getNamedAccounts, deployments, network } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
 import { BigNumber } from "ethers";
 import { rateToPurchasePrice } from "../shared";
 import Fixtures from "./PCOLicenseClaimer.fixture";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
-
-const hre = require("hardhat");
 
 use(solidity);
 use(chaiAsPromised);
@@ -187,7 +185,7 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const nextAddress = await pcoLicenseClaimer.getNextProxyAddress(user);
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = ethers.utils
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
@@ -229,7 +227,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       });
       await approveOp.exec(await ethers.getSigner(user));
 
-      let coord1 = BigNumber.from(5).shl(32).or(BigNumber.from(33));
+      const coord1 = BigNumber.from(5).shl(32).or(BigNumber.from(33));
       await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
         .claim(contributionRate, forSalePrice, coord1, [BigNumber.from(0)]);
@@ -252,25 +250,25 @@ describe("PCOLicenseClaimerFacet", async function () {
       expect(startPrice.lt(startBid)).to.be.true;
 
       let daysFromNow = getUnixTime(addDays(startOfToday(), 2));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
 
       let prevPrice = await pcoLicenseClaimer.requiredBid();
       expect(prevPrice.lt(startPrice)).to.be.true;
 
       daysFromNow = getUnixTime(addDays(startOfToday(), 5));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       let nextPrice = await pcoLicenseClaimer.requiredBid();
       expect(nextPrice.lt(prevPrice)).to.be.true;
 
       prevPrice = nextPrice;
       daysFromNow = getUnixTime(addDays(startOfToday(), 7));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await pcoLicenseClaimer.requiredBid();
       expect(nextPrice.lt(prevPrice)).to.be.true;
 
       prevPrice = nextPrice;
       daysFromNow = getUnixTime(addDays(startOfToday(), 10));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await pcoLicenseClaimer.requiredBid();
 
       expect(nextPrice.lt(prevPrice)).to.be.true;
@@ -278,7 +276,7 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       prevPrice = nextPrice;
       daysFromNow = getUnixTime(addDays(startOfToday(), 12));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
       nextPrice = await pcoLicenseClaimer.requiredBid();
 
       expect(nextPrice).to.be.equal(endingBid);
@@ -291,7 +289,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = ethers.utils
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
@@ -326,7 +324,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = ethers.utils
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
@@ -336,7 +334,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       );
 
       const daysFromNow = getUnixTime(addDays(startOfToday(), 7));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
 
       // Approve payment token
       const requiredBuffer = await ethersjsSf.cfaV1.contract
@@ -376,7 +374,7 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const { user } = await getNamedAccounts();
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = ethers.utils
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
@@ -421,7 +419,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = ethers.utils
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
@@ -431,7 +429,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       );
 
       const daysFromNow = getUnixTime(addDays(startOfToday(), 7));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
 
       // Approve payment token for buffer
       const requiredBuffer = await ethersjsSf.cfaV1.contract
@@ -453,11 +451,11 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if payment for buffer fails", async () => {
-      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
+      const { pcoLicenseClaimer, pcoLicenseParams, paymentToken } =
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = ethers.utils
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
@@ -467,7 +465,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       );
 
       const daysFromNow = getUnixTime(addDays(startOfToday(), 7));
-      await hre.network.provider.send("evm_mine", [daysFromNow]);
+      await network.provider.send("evm_mine", [daysFromNow]);
 
       // Approve payment token
       const approveOp = await paymentToken.approve({
@@ -490,7 +488,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = ethers.utils
         .parseEther("9")
         .div(365 * 24 * 60 * 60 * 10);
@@ -527,7 +525,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
-      let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+      const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
       const contributionRate = BigNumber.from(1);
       const forSalePrice = await rateToPurchasePrice(
         pcoLicenseParams,

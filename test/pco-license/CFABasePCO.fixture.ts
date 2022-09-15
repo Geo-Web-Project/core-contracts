@@ -23,7 +23,7 @@ const setup = deployments.createFixture(
     await diamond.deploy("TestBasePCO", {
       from: diamondAdmin,
       owner: diamondAdmin,
-      facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet"],
+      facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
     });
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
@@ -34,7 +34,7 @@ const setup = deployments.createFixture(
 
     const basePCOFacet = await ethers.getContract("TestBasePCO", diamondAdmin);
 
-    let mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
+    const mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
     mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
     mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
     mockParamsStore.getPenaltyNumerator.returns(numerator);
@@ -43,8 +43,9 @@ const setup = deployments.createFixture(
     mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
     mockParamsStore.getBeneficiary.returns(diamondAdmin);
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
+    mockParamsStore.getReclaimAuctionLength.returns(14 * 60 * 60 * 24);
 
-    let mockLicense = await smock.fake<IERC721>("IERC721");
+    const mockLicense = await smock.fake<IERC721>("IERC721");
 
     async function checkUserToAppFlow(
       _user: string,
@@ -260,7 +261,7 @@ const initializedWithRealLicense = deployments.createFixture(
 
     const { user } = await getNamedAccounts();
 
-    let coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
+    const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
     const contributionRate = ethers.utils
       .parseEther("9")
       .div(365 * 24 * 60 * 60 * 10);

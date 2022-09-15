@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-const SuperfluidSDK = require("@superfluid-finance/js-sdk");
+import SuperfluidSDK from "@superfluid-finance/js-sdk";
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";

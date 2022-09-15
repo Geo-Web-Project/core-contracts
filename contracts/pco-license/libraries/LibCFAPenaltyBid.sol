@@ -80,18 +80,31 @@ library LibCFAPenaltyBid {
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
-        Bid storage _pendingBid = pendingBid();
+        LibCFABasePCO.Bid memory oldCurrentBid = _currentBid;
+        Bid memory _pendingBid = pendingBid();
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+
+        // Update current bid
+        _currentBid.timestamp = _pendingBid.timestamp;
+        _currentBid.bidder = _pendingBid.bidder;
+        _currentBid.contributionRate = _pendingBid.contributionRate;
+        _currentBid.perSecondFeeNumerator = _pendingBid.perSecondFeeNumerator;
+        _currentBid.perSecondFeeDenominator = _pendingBid
+            .perSecondFeeDenominator;
+        _currentBid.forSalePrice = _pendingBid.forSalePrice;
+
+        // Update pending bid
+        _clearPendingBid();
 
         // Delete payer flow
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
-            _currentBid.bidder,
+            oldCurrentBid.bidder,
             address(this)
         );
         if (flowRate > 0) {
             cs.cfaV1.deleteFlow(
-                _currentBid.bidder,
+                oldCurrentBid.bidder,
                 address(this),
                 paymentToken
             );
@@ -140,7 +153,7 @@ library LibCFAPenaltyBid {
 
         // Transfer license
         ds.license.safeTransferFrom(
-            _currentBid.bidder,
+            oldCurrentBid.bidder,
             _pendingBid.bidder,
             ds.licenseId
         );
@@ -160,45 +173,47 @@ library LibCFAPenaltyBid {
             // Keep full newBuffer
             remainingBalance -= newBuffer;
             uint256 bidderPayment = _pendingBid.forSalePrice -
-                _currentBid.forSalePrice;
+                oldCurrentBid.forSalePrice;
             if (remainingBalance > bidderPayment) {
                 // Transfer bidder full payment
                 paymentToken.safeTransfer(_pendingBid.bidder, bidderPayment);
                 remainingBalance -= bidderPayment;
 
                 // Transfer remaining to payer
-                paymentToken.safeTransfer(_currentBid.bidder, remainingBalance);
+                paymentToken.safeTransfer(
+                    oldCurrentBid.bidder,
+                    remainingBalance
+                );
             } else {
                 // Transfer remaining to bidder
                 paymentToken.safeTransfer(_pendingBid.bidder, remainingBalance);
             }
         }
-
-        // Update current bid
-        _currentBid.timestamp = _pendingBid.timestamp;
-        _currentBid.bidder = _pendingBid.bidder;
-        _currentBid.contributionRate = _pendingBid.contributionRate;
-        _currentBid.perSecondFeeNumerator = _pendingBid.perSecondFeeNumerator;
-        _currentBid.perSecondFeeDenominator = _pendingBid
-            .perSecondFeeDenominator;
-        _currentBid.forSalePrice = _pendingBid.forSalePrice;
-
-        // Update pending bid
-        _clearPendingBid();
     }
 
     /// @notice Reject Bid
-    function _rejectBid() internal {
+    function _rejectBid(int96 newContributionRate, uint256 newForSalePrice)
+        internal
+    {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
-        Bid storage _pendingBid = pendingBid();
+        Bid memory _pendingBid = pendingBid();
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
         address beneficiary = ds.paramsStore.getBeneficiary();
 
         uint256 penaltyAmount = _calculatePenalty();
+
+        require(
+            newContributionRate >= _pendingBid.contributionRate,
+            "LibCFAPenaltyBid: New contribution rate must be >= pending bid"
+        );
+
+        _clearPendingBid();
+
+        LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
 
         // Transfer payments
         (int256 availableBalance, uint256 deposit, , ) = paymentToken
@@ -233,12 +248,5 @@ library LibCFAPenaltyBid {
             beneficiary,
             penaltyAmount
         );
-
-        LibCFABasePCO._editBid(
-            _pendingBid.contributionRate,
-            _pendingBid.forSalePrice
-        );
-
-        _clearPendingBid();
     }
 }
