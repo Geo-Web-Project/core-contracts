@@ -8,6 +8,8 @@ import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/c
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
+import "../../registry/interfaces/ICFABeneficiary.sol";
 
 contract CFABasePCOFacetModifiers {
     modifier onlyPayer() {
@@ -51,6 +53,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
     function initializeBid(
+        ICFABeneficiary beneficiary,
         IPCOLicenseParamsStore paramsStore,
         IERC721 initLicense,
         uint256 initLicenseId,
@@ -65,6 +68,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         ds.paramsStore = paramsStore;
         ds.license = initLicense;
         ds.licenseId = initLicenseId;
+        ds.beneficiary = beneficiary;
 
         uint256 perSecondFeeNumerator = ds
             .paramsStore
@@ -97,7 +101,6 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
             )
         );
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        address beneficiary = ds.paramsStore.getBeneficiary();
 
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         _currentBid.timestamp = block.timestamp;
@@ -119,7 +122,11 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         );
 
         // Create flow (license -> beneficiary)
-        cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
+        cs.cfaV1.createFlow(
+            address(beneficiary),
+            paymentToken,
+            newContributionRate
+        );
     }
 
     /**

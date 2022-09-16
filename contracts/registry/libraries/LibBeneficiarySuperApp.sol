@@ -61,12 +61,41 @@ library LibBeneficiarySuperApp {
     /**
      * @notice Increase flow to beneficiary
      * @param ctx CFA ctx
+     * @param agreementId Agreement ID
+     * @param originalFlowRate Original flow rate before update
+     */
+    function _updateAppToBeneficiaryFlow(
+        bytes memory ctx,
+        bytes32 agreementId,
+        int96 originalFlowRate
+    ) internal returns (bytes memory newCtx) {
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
+        DiamondCFAStorage storage cs = cfaStorage();
+
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlowByID(
+            ds.paymentToken,
+            agreementId
+        );
+
+        if (originalFlowRate < flowRate) {
+            return
+                _increaseAppToBeneficiaryFlow(ctx, flowRate - originalFlowRate);
+        } else {
+            return
+                _decreaseAppToBeneficiaryFlow(ctx, originalFlowRate - flowRate);
+        }
+    }
+
+    /**
+     * @notice Increase flow to beneficiary
+     * @param ctx CFA ctx
      * @param amount Flow amount to increase
      */
-    function _increaseAppToBeneficiaryFlowWithCtx(
-        bytes memory ctx,
-        int96 amount
-    ) internal returns (bytes memory newCtx) {
+    function _increaseAppToBeneficiaryFlow(bytes memory ctx, int96 amount)
+        internal
+        returns (bytes memory newCtx)
+    {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
         DiamondCFAStorage storage cs = cfaStorage();
@@ -99,10 +128,10 @@ library LibBeneficiarySuperApp {
      * @param ctx CFA ctx
      * @param amount Flow amount to increase
      */
-    function _decreaseAppToBeneficiaryFlowWithCtx(
-        bytes memory ctx,
-        int96 amount
-    ) internal returns (bytes memory newCtx) {
+    function _decreaseAppToBeneficiaryFlow(bytes memory ctx, int96 amount)
+        internal
+        returns (bytes memory newCtx)
+    {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
         DiamondCFAStorage storage cs = cfaStorage();

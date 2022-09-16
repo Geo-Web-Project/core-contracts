@@ -122,6 +122,11 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "contract ICFABeneficiary",
+        name: "beneficiary",
+        type: "address",
+      },
+      {
         internalType: "contract IPCOLicenseParamsStore",
         name: "paramsStore",
         type: "address",

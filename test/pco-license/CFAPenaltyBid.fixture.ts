@@ -22,14 +22,14 @@ const afterPlaceBid = deployments.createFixture(
     const totalCollateral = newForSalePrice.add(requiredBuffer);
 
     // Approve payment token
-    const approveOp = await paymentToken.approve({
+    const approveOp = paymentToken.approve({
       receiver: basePCOFacet.address,
       amount: totalCollateral.toString(),
     });
     await approveOp.exec(await ethers.getSigner(bidder));
 
     // Approve flow update
-    const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: basePCOFacet.address,
       permissions: 1,
@@ -70,7 +70,7 @@ const afterPlaceBidAndSurplus = deployments.createFixture(
     const existingContributionRate = await basePCOFacet.contributionRate();
 
     // User increases flow
-    const op1 = await ethersjsSf.cfaV1.updateFlow({
+    const op1 = ethersjsSf.cfaV1.updateFlow({
       receiver: basePCOFacet.address,
       flowRate: existingContributionRate.add(100),
       superToken: ethx_erc20.address,
@@ -91,7 +91,7 @@ const afterPlaceBidAndBidderRevokes = deployments.createFixture(
     const { bidder } = await getNamedAccounts();
 
     // Revoke permissions
-    const op = await ethersjsSf.cfaV1.revokeFlowOperatorWithFullControl({
+    const op = ethersjsSf.cfaV1.revokeFlowOperatorWithFullControl({
       superToken: paymentToken.address,
       flowOperator: basePCOFacet.address,
     });
@@ -122,14 +122,14 @@ const afterPlaceBidWithRealLicense = deployments.createFixture(
     const totalCollateral = newForSalePrice.add(requiredBuffer);
 
     // Approve payment token
-    const approveOp = await paymentToken.approve({
+    const approveOp = paymentToken.approve({
       receiver: basePCOFacet.address,
       amount: totalCollateral.toString(),
     });
     await approveOp.exec(await ethers.getSigner(bidder));
 
     // Approve flow update
-    const op = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: basePCOFacet.address,
       permissions: 1,

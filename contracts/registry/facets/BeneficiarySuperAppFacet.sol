@@ -4,12 +4,13 @@ pragma solidity ^0.8.4;
 import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
 import "../libraries/LibPCOLicenseParams.sol";
 import "../libraries/LibBeneficiarySuperApp.sol";
+import "../interfaces/ICFABeneficiary.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {SuperAppDefinitions} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/Definitions.sol";
 import {ISuperAgreement} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperAgreement.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 
-contract BeneficiarySuperAppFacet is SuperAppBase {
+contract BeneficiarySuperAppFacet is SuperAppBase, ICFABeneficiary {
     function initializeSuperApp() external {
         LibDiamond.enforceIsContractOwner();
 
@@ -37,6 +38,18 @@ contract BeneficiarySuperAppFacet is SuperAppBase {
         );
     }
 
+    /// @notice Get last deletion for sender
+    function getLastDeletion(address sender)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        LibBeneficiarySuperApp.DiamondStorage
+            storage ds = LibBeneficiarySuperApp.diamondStorage();
+        return ds.lastDeletion[sender];
+    }
+
     /**************************************************************************
      * SuperApp callbacks
      *************************************************************************/
@@ -55,20 +68,11 @@ contract BeneficiarySuperAppFacet is SuperAppBase {
         onlyHost
         returns (bytes memory newCtx)
     {
-        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
-            .diamondStorage();
-        LibBeneficiarySuperApp.DiamondCFAStorage
-            storage cs = LibBeneficiarySuperApp.cfaStorage();
-
-        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlowByID(
-            ds.paymentToken,
-            _agreementId
-        );
-
         return
-            LibBeneficiarySuperApp._increaseAppToBeneficiaryFlowWithCtx(
+            LibBeneficiarySuperApp._updateAppToBeneficiaryFlow(
                 _ctx,
-                flowRate
+                _agreementId,
+                0
             );
     }
 
@@ -112,30 +116,14 @@ contract BeneficiarySuperAppFacet is SuperAppBase {
         onlyHost
         returns (bytes memory newCtx)
     {
-        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
-            .diamondStorage();
-        LibBeneficiarySuperApp.DiamondCFAStorage
-            storage cs = LibBeneficiarySuperApp.cfaStorage();
-
         int96 originalFlowRate = abi.decode(_cbdata, (int96));
-        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlowByID(
-            ds.paymentToken,
-            _agreementId
-        );
 
-        if (originalFlowRate < flowRate) {
-            return
-                LibBeneficiarySuperApp._increaseAppToBeneficiaryFlowWithCtx(
-                    _ctx,
-                    flowRate - originalFlowRate
-                );
-        } else {
-            return
-                LibBeneficiarySuperApp._decreaseAppToBeneficiaryFlowWithCtx(
-                    _ctx,
-                    originalFlowRate - flowRate
-                );
-        }
+        return
+            LibBeneficiarySuperApp._updateAppToBeneficiaryFlow(
+                _ctx,
+                _agreementId,
+                originalFlowRate
+            );
     }
 
     function beforeAgreementTerminated(
@@ -185,7 +173,7 @@ contract BeneficiarySuperAppFacet is SuperAppBase {
         if (isUserToApp) {
             LibBeneficiarySuperApp._setLastDeletion(user);
             return
-                LibBeneficiarySuperApp._decreaseAppToBeneficiaryFlowWithCtx(
+                LibBeneficiarySuperApp._decreaseAppToBeneficiaryFlow(
                     _ctx,
                     originalFlowRate
                 );

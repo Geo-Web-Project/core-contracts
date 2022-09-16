@@ -34,6 +34,7 @@ const setup = deployments.createFixture(
 
     const basePCOFacet = await ethers.getContract("TestBasePCO", diamondAdmin);
 
+    const mockCFABeneficiary = await smock.fake("ICFABeneficiary");
     const mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
     mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
     mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
@@ -68,7 +69,7 @@ const setup = deployments.createFixture(
       const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
         superToken: paymentToken.address,
         sender: basePCOFacet.address,
-        receiver: admin.address,
+        receiver: mockCFABeneficiary.address,
         providerOrSigner: admin,
       });
 
@@ -103,6 +104,7 @@ const setup = deployments.createFixture(
     return {
       basePCOFacet,
       mockParamsStore,
+      mockCFABeneficiary,
       mockLicense,
       checkUserToAppFlow,
       checkAppToBeneficiaryFlow,
@@ -119,6 +121,7 @@ const initialized = deployments.createFixture(
     const {
       basePCOFacet,
       mockParamsStore,
+      mockCFABeneficiary,
       mockLicense,
       ethersjsSf,
       paymentToken,
@@ -136,14 +139,14 @@ const initialized = deployments.createFixture(
     const requiredBuffer = await ethersjsSf.cfaV1.contract
       .connect(await ethers.getSigner(user))
       .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-    const op1 = await paymentToken.transfer({
+    const op1 = paymentToken.transfer({
       receiver: basePCOFacet.address,
       amount: requiredBuffer.toString(),
     });
     await op1.exec(await ethers.getSigner(user));
 
     // Approve flow creation
-    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: basePCOFacet.address,
       permissions: 1,
@@ -152,6 +155,7 @@ const initialized = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -171,6 +175,7 @@ const initializedLarge = deployments.createFixture(
     const {
       basePCOFacet,
       mockParamsStore,
+      mockCFABeneficiary,
       mockLicense,
       ethersjsSf,
       paymentToken,
@@ -188,14 +193,14 @@ const initializedLarge = deployments.createFixture(
     const requiredBuffer = await ethersjsSf.cfaV1.contract
       .connect(await ethers.getSigner(user))
       .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-    const op1 = await paymentToken.transfer({
+    const op1 = paymentToken.transfer({
       receiver: basePCOFacet.address,
       amount: requiredBuffer.toString(),
     });
     await op1.exec(await ethers.getSigner(user));
 
     // Approve flow creation
-    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: basePCOFacet.address,
       permissions: 1,
@@ -204,6 +209,7 @@ const initializedLarge = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -274,7 +280,7 @@ const initializedWithRealLicense = deployments.createFixture(
     const requiredBuffer = await ethersjsSf.cfaV1.contract
       .connect(await ethers.getSigner(user))
       .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-    const approveOp = await paymentToken.approve({
+    const approveOp = paymentToken.approve({
       receiver: erc721Facet.address,
       amount: requiredBuffer.toString(),
     });
@@ -284,7 +290,7 @@ const initializedWithRealLicense = deployments.createFixture(
     const nextAddress = await (
       erc721Facet as PCOLicenseClaimerFacet
     ).getNextProxyAddress(user);
-    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: nextAddress,
       permissions: 1,
@@ -325,7 +331,7 @@ const initializedWithRealLicense = deployments.createFixture(
       const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
         superToken: paymentToken.address,
         sender: newBasePCOFacet.address,
-        receiver: admin.address,
+        receiver: erc721Facet.address,
         providerOrSigner: admin,
       });
 
@@ -371,12 +377,12 @@ const initializedWithRealLicense = deployments.createFixture(
 const afterPayerDelete = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
     const res = await initialized();
-    const { basePCOFacet, ethersjsSf, ethx_erc20 } = res;
+    const { basePCOFacet, ethersjsSf, ethx_erc20, mockCFABeneficiary } = res;
 
     const { user, diamondAdmin } = await getNamedAccounts();
 
     // Payer deletes flow
-    const op1 = await ethersjsSf.cfaV1.deleteFlow({
+    const op1 = ethersjsSf.cfaV1.deleteFlow({
       sender: user,
       receiver: basePCOFacet.address,
       superToken: ethx_erc20.address,
@@ -386,14 +392,17 @@ const afterPayerDelete = deployments.createFixture(
     await op1Resp.wait();
 
     // Simulate closing flow
-    const op2 = await ethersjsSf.cfaV1.deleteFlow({
+    const op2 = ethersjsSf.cfaV1.deleteFlow({
       sender: basePCOFacet.address,
-      receiver: diamondAdmin,
+      receiver: mockCFABeneficiary.address,
       superToken: ethx_erc20.address,
     });
 
     const op2Resp = await op2.exec(await ethers.getSigner(diamondAdmin));
-    await op2Resp.wait();
+    const op2Receipt = await op2Resp.wait();
+    const txnBlock = await ethers.provider.getBlock(op2Receipt.blockNumber);
+
+    mockCFABeneficiary.getLastDeletion.returns(txnBlock.timestamp);
 
     return res;
   }

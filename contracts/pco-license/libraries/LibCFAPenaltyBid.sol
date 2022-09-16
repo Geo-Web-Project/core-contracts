@@ -131,7 +131,7 @@ library LibCFAPenaltyBid {
         /* solhint-enable no-empty-blocks  */
 
         // Update beneficiary flow
-        address beneficiary = ds.paramsStore.getBeneficiary();
+        address beneficiary = address(LibCFABasePCO._getBeneficiary());
         (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
             address(this),
@@ -144,11 +144,7 @@ library LibCFAPenaltyBid {
                 _pendingBid.contributionRate
             );
         } else {
-            cs.cfaV1.createFlow(
-                beneficiary,
-                paymentToken,
-                _pendingBid.contributionRate
-            );
+            LibCFABasePCO._createBeneficiaryFlow(_pendingBid.contributionRate);
         }
 
         // Transfer license
@@ -202,7 +198,6 @@ library LibCFAPenaltyBid {
         Bid memory _pendingBid = pendingBid();
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        address beneficiary = ds.paramsStore.getBeneficiary();
 
         uint256 penaltyAmount = _calculatePenalty();
 
@@ -245,7 +240,7 @@ library LibCFAPenaltyBid {
 
         paymentToken.safeTransferFrom(
             _currentBid.bidder,
-            beneficiary,
+            address(LibCFABasePCO._getBeneficiary()),
             penaltyAmount
         );
     }
