@@ -169,25 +169,27 @@ library LibCFAPenaltyBid {
             paymentToken,
             _pendingBid.contributionRate
         );
+        uint256 withdrawToBidder = _pendingBid.forSalePrice -
+            oldCurrentBid.forSalePrice;
+        uint256 withdrawToPayer = 0;
         if (remainingBalance > newBuffer) {
             // Keep full newBuffer
             remainingBalance -= newBuffer;
-            uint256 bidderPayment = _pendingBid.forSalePrice -
-                oldCurrentBid.forSalePrice;
-            if (remainingBalance > bidderPayment) {
+            if (remainingBalance > withdrawToBidder) {
                 // Transfer bidder full payment
-                paymentToken.safeTransfer(_pendingBid.bidder, bidderPayment);
-                remainingBalance -= bidderPayment;
+                remainingBalance -= withdrawToBidder;
 
                 // Transfer remaining to payer
-                paymentToken.safeTransfer(
-                    oldCurrentBid.bidder,
-                    remainingBalance
-                );
+                withdrawToPayer = remainingBalance;
             } else {
                 // Transfer remaining to bidder
-                paymentToken.safeTransfer(_pendingBid.bidder, remainingBalance);
+                withdrawToBidder = remainingBalance;
             }
+        }
+
+        paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+        if (withdrawToPayer > 0) {
+            paymentToken.safeTransfer(oldCurrentBid.bidder, withdrawToPayer);
         }
     }
 
@@ -226,23 +228,36 @@ library LibCFAPenaltyBid {
             paymentToken,
             _pendingBid.contributionRate
         );
+
+        uint256 withdrawToBidder = _pendingBid.forSalePrice + newBuffer;
+        uint256 withdrawToPayer = 0;
+        uint256 depositFromPayer = 0;
         if (remainingBalance > deposit) {
             // Keep full deposit
             remainingBalance -= deposit;
-            uint256 bidderPayment = _pendingBid.forSalePrice + newBuffer;
-            if (remainingBalance > bidderPayment) {
+            if (remainingBalance > withdrawToBidder) {
                 // Transfer bidder full payment
-                paymentToken.safeTransfer(_pendingBid.bidder, bidderPayment);
-                remainingBalance -= bidderPayment;
+                remainingBalance -= withdrawToBidder;
 
                 // Transfer remaining to payer
-                paymentToken.safeTransfer(_currentBid.bidder, remainingBalance);
+                withdrawToPayer = remainingBalance;
             } else {
-                // Transfer remaining to bidder
-                paymentToken.safeTransfer(_pendingBid.bidder, remainingBalance);
+                // Transfer depleted amount from payer
+                depositFromPayer = withdrawToBidder - remainingBalance;
             }
         }
 
+        if (depositFromPayer > 0) {
+            paymentToken.safeTransferFrom(
+                _currentBid.bidder,
+                address(this),
+                depositFromPayer
+            );
+        }
+        paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+        if (withdrawToPayer > 0) {
+            paymentToken.safeTransfer(_currentBid.bidder, withdrawToPayer);
+        }
         paymentToken.safeTransferFrom(
             _currentBid.bidder,
             beneficiary,
