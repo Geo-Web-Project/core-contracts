@@ -9,6 +9,7 @@ import {
 } from "../../typechain-types";
 import {
   perYearToPerSecondRate,
+  fromValueToRate,
   rateToPurchasePrice,
   setupSf,
 } from "../shared";
@@ -368,6 +369,118 @@ const initializedWithRealLicense = deployments.createFixture(
   }
 );
 
+const initializedExtremeFeeDuring = deployments.createFixture(
+  async ({ getNamedAccounts, ethers }) => {
+    const res = await setup();
+    const {
+      basePCOFacet,
+      mockParamsStore,
+      mockLicense,
+      ethersjsSf,
+      paymentToken,
+    } = res;
+
+    // 100% in an hour
+    mockParamsStore.getPerSecondFeeNumerator.returns(2778 * 100);
+    mockParamsStore.getPerSecondFeeDenominator.returns(100000);
+
+    const { user } = await getNamedAccounts();
+
+    const forSalePrice = BigNumber.from(50000);
+    const contributionRate = await fromValueToRate(
+      mockParamsStore,
+      forSalePrice
+    );
+
+    // Transfer payment token for buffer
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(user))
+      .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+    const op1 = paymentToken.transfer({
+      receiver: basePCOFacet.address,
+      amount: requiredBuffer.toString(),
+    });
+    await op1.exec(await ethers.getSigner(user));
+
+    // Approve flow creation
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: contributionRate.toString(),
+    });
+    await op2.exec(await ethers.getSigner(user));
+
+    const txn = await basePCOFacet.initializeBid(
+      mockParamsStore.address,
+      mockLicense.address,
+      1,
+      user,
+      contributionRate,
+      forSalePrice
+    );
+    await txn.wait();
+
+    return res;
+  }
+);
+
+const initializedExtremeFeeAfter = deployments.createFixture(
+  async ({ getNamedAccounts, ethers }) => {
+    const res = await setup();
+    const {
+      basePCOFacet,
+      mockParamsStore,
+      mockLicense,
+      ethersjsSf,
+      paymentToken,
+    } = res;
+
+    // 100% in 25 hours
+    mockParamsStore.getPerSecondFeeNumerator.returns(1111 * 100);
+    mockParamsStore.getPerSecondFeeDenominator.returns(1000000);
+
+    const { user } = await getNamedAccounts();
+
+    const forSalePrice = BigNumber.from(50000);
+    const contributionRate = await fromValueToRate(
+      mockParamsStore,
+      forSalePrice
+    );
+
+    // Transfer payment token for buffer
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(user))
+      .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+    const op1 = paymentToken.transfer({
+      receiver: basePCOFacet.address,
+      amount: requiredBuffer.toString(),
+    });
+    await op1.exec(await ethers.getSigner(user));
+
+    // Approve flow creation
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: contributionRate.toString(),
+    });
+    await op2.exec(await ethers.getSigner(user));
+
+    const txn = await basePCOFacet.initializeBid(
+      mockParamsStore.address,
+      mockLicense.address,
+      1,
+      user,
+      contributionRate,
+      forSalePrice
+    );
+    await txn.wait();
+
+    return res;
+  }
+);
+
 const afterPayerDelete = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
     const res = await initialized();
@@ -403,6 +516,8 @@ export default {
   setup,
   initialized,
   initializedLarge,
-  afterPayerDelete,
   initializedWithRealLicense,
+  initializedExtremeFeeDuring,
+  initializedExtremeFeeAfter,
+  afterPayerDelete,
 };

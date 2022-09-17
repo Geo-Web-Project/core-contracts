@@ -2553,6 +2553,107 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkAppNetFlow();
     });
 
+    it.only("should trigger transfer after bidding period elapsed and deposit was depleted during period", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+        paymentToken,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidExtremeFeeDuring();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      await op1.exec(await ethers.getSigner(user));
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      const txnReceipt = await txn.wait();
+      const op1Block = await ethers.provider.getBlock(txnReceipt.blockNumber);
+
+      console.log(ethx_erc20.address);
+      console.log(basePCOFacet.address);
+      console.log(user);
+      console.log(bidder);
+      console.log(
+        (
+          await ethx_erc20.queryFilter(
+            ethx_erc20.filters.Transfer(),
+            txnReceipt.blockNumber
+          )
+        ).map((v) => v.args?.value.toString())
+      );
+
+      const accountInfo1 = await ethersjsSf.cfaV1.getAccountFlowInfo({
+        account: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+        providerOrSigner: await ethers.getSigner(user),
+      });
+      const appBalance1 = await paymentToken.realtimeBalanceOf({
+        account: basePCOFacet.address,
+        timestamp: op1Block.timestamp,
+        providerOrSigner: await ethers.getSigner(user),
+      });
+      console.log(accountInfo1, appBalance1);
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      await expect(txn)
+        .to.not.emit(ethx_erc20, "Transfer")
+        .withArgs(basePCOFacet.address, user);
+      await expect(txn)
+        .to.not.emit(ethx_erc20, "Transfer")
+        .withArgs(basePCOFacet.address, bidder);
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
     it("should fail to trigger transfer early if payer deletes and reopens bid", async () => {
       const { basePCOFacet, mockLicense, ethersjsSf, ethx_erc20 } =
         await CFAPenaltyBidFixtures.afterPlaceBid();

@@ -5,6 +5,7 @@ import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "./LibCFABasePCO.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "hardhat/console.sol";
 
 library LibCFAPenaltyBid {
     using CFAv1Library for CFAv1Library.InitData;
@@ -130,6 +131,17 @@ library LibCFAPenaltyBid {
         {} catch {}
         /* solhint-enable no-empty-blocks  */
 
+        (int256 availableBalance, uint256 deposit, , ) = paymentToken
+            .realtimeBalanceOfNow(address(this));
+        uint256 remainingBalance = 0;
+        if (availableBalance + int256(deposit) >= 0) {
+            remainingBalance = uint256(availableBalance + int256(deposit));
+        }
+        uint256 newBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            _pendingBid.contributionRate
+        );
+
         // Update beneficiary flow
         address beneficiary = ds.paramsStore.getBeneficiary();
         (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
@@ -137,7 +149,14 @@ library LibCFAPenaltyBid {
             address(this),
             beneficiary
         );
-        if (flowRate > 0) {
+        if (remainingBalance < newBuffer) {
+            cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
+            cs.cfaV1.createFlow(
+                beneficiary,
+                paymentToken,
+                _pendingBid.contributionRate
+            );
+        } else if (flowRate > 0) {
             cs.cfaV1.updateFlow(
                 beneficiary,
                 paymentToken,
@@ -159,24 +178,19 @@ library LibCFAPenaltyBid {
         );
 
         // Transfer payments
-        (int256 availableBalance, uint256 deposit, , ) = paymentToken
-            .realtimeBalanceOfNow(address(this));
-        uint256 remainingBalance = 0;
-        if (availableBalance + int256(deposit) >= 0) {
-            remainingBalance = uint256(availableBalance + int256(deposit));
-        }
-        uint256 newBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-            paymentToken,
-            _pendingBid.contributionRate
-        );
-        uint256 withdrawToBidder = _pendingBid.forSalePrice -
-            oldCurrentBid.forSalePrice;
+        uint256 withdrawToBidder = 0;
         uint256 withdrawToPayer = 0;
+        console.log("remainingBalance: %s", remainingBalance);
+        console.log("newBuffer: %s", newBuffer);
+
         if (remainingBalance > newBuffer) {
             // Keep full newBuffer
             remainingBalance -= newBuffer;
-            if (remainingBalance > withdrawToBidder) {
+            uint256 bidderPayment = _pendingBid.forSalePrice -
+                oldCurrentBid.forSalePrice;
+            if (remainingBalance > bidderPayment) {
                 // Transfer bidder full payment
+                withdrawToBidder = bidderPayment;
                 remainingBalance -= withdrawToBidder;
 
                 // Transfer remaining to payer
@@ -187,7 +201,12 @@ library LibCFAPenaltyBid {
             }
         }
 
-        paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+        console.log("withdrawToBidder: %s", withdrawToBidder);
+        console.log("withdrawToPayer: %s", withdrawToPayer);
+
+        if (withdrawToBidder > 0) {
+            paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+        }
         if (withdrawToPayer > 0) {
             paymentToken.safeTransfer(oldCurrentBid.bidder, withdrawToPayer);
         }
