@@ -127,6 +127,11 @@ const initialized = deployments.createFixture(
 
     const { user } = await getNamedAccounts();
 
+    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+
+    mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
+    mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
+
     const contributionRate = BigNumber.from(100);
     const forSalePrice = await rateToPurchasePrice(
       mockParamsStore,
@@ -437,8 +442,8 @@ const initializedExtremeFeeAfter = deployments.createFixture(
     } = res;
 
     // 100% in 25 hours
-    mockParamsStore.getPerSecondFeeNumerator.returns(1111 * 100);
-    mockParamsStore.getPerSecondFeeDenominator.returns(1000000);
+    mockParamsStore.getPerSecondFeeNumerator.returns(900 * 100);
+    mockParamsStore.getPerSecondFeeDenominator.returns(100000);
 
     const { user } = await getNamedAccounts();
 

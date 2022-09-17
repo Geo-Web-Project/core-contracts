@@ -157,7 +157,7 @@ const afterPlaceBidExtremeFeeDuring = deployments.createFixture(
 
     const { bidder } = await getNamedAccounts();
 
-    const newForSalePrice = BigNumber.from(51000);
+    const newForSalePrice = BigNumber.from(50000);
     const newContributionRate = await fromValueToRate(
       mockParamsStore,
       newForSalePrice
@@ -200,7 +200,7 @@ const afterPlaceBidExtremeFeeAfter = deployments.createFixture(
 
     const { bidder } = await getNamedAccounts();
 
-    const newForSalePrice = BigNumber.from(51000);
+    const newForSalePrice = BigNumber.from(50000);
     const newContributionRate = await fromValueToRate(
       mockParamsStore,
       newForSalePrice

@@ -5,7 +5,6 @@ import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "./LibCFABasePCO.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
 
 library LibCFAPenaltyBid {
     using CFAv1Library for CFAv1Library.InitData;
@@ -111,26 +110,6 @@ library LibCFAPenaltyBid {
             );
         }
 
-        // Create bidder flow
-        /* solhint-disable no-empty-blocks */
-        try
-            cs.cfaV1.host.callAgreement(
-                cs.cfaV1.cfa,
-                abi.encodeCall(
-                    cs.cfaV1.cfa.createFlowByOperator,
-                    (
-                        paymentToken,
-                        _pendingBid.bidder,
-                        address(this),
-                        _pendingBid.contributionRate,
-                        new bytes(0)
-                    )
-                ),
-                new bytes(0)
-            )
-        {} catch {}
-        /* solhint-enable no-empty-blocks  */
-
         (int256 availableBalance, uint256 deposit, , ) = paymentToken
             .realtimeBalanceOfNow(address(this));
         uint256 remainingBalance = 0;
@@ -142,27 +121,55 @@ library LibCFAPenaltyBid {
             _pendingBid.contributionRate
         );
 
-        // Update beneficiary flow
+        // Check if beneficiary flow needs to be deleted
         address beneficiary = ds.paramsStore.getBeneficiary();
+        if (remainingBalance < newBuffer) {
+            cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
+
+            (availableBalance, deposit, , ) = paymentToken.realtimeBalanceOfNow(
+                address(this)
+            );
+            remainingBalance = 0;
+            if (availableBalance + int256(deposit) >= 0) {
+                remainingBalance = uint256(availableBalance + int256(deposit));
+            }
+        }
+
+        // Create bidder flow
+        if (remainingBalance >= newBuffer) {
+            /* solhint-disable no-empty-blocks */
+            try
+                cs.cfaV1.host.callAgreement(
+                    cs.cfaV1.cfa,
+                    abi.encodeCall(
+                        cs.cfaV1.cfa.createFlowByOperator,
+                        (
+                            paymentToken,
+                            _pendingBid.bidder,
+                            address(this),
+                            _pendingBid.contributionRate,
+                            new bytes(0)
+                        )
+                    ),
+                    new bytes(0)
+                )
+            {} catch {}
+            /* solhint-enable no-empty-blocks  */
+        }
+
+        // Update beneficiary flow
         (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
             address(this),
             beneficiary
         );
-        if (remainingBalance < newBuffer) {
-            cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
-            cs.cfaV1.createFlow(
-                beneficiary,
-                paymentToken,
-                _pendingBid.contributionRate
-            );
-        } else if (flowRate > 0) {
+        if (flowRate > 0) {
             cs.cfaV1.updateFlow(
                 beneficiary,
                 paymentToken,
                 _pendingBid.contributionRate
             );
-        } else {
+        } else if (remainingBalance >= newBuffer) {
             cs.cfaV1.createFlow(
                 beneficiary,
                 paymentToken,
@@ -180,8 +187,6 @@ library LibCFAPenaltyBid {
         // Transfer payments
         uint256 withdrawToBidder = 0;
         uint256 withdrawToPayer = 0;
-        console.log("remainingBalance: %s", remainingBalance);
-        console.log("newBuffer: %s", newBuffer);
 
         if (remainingBalance > newBuffer) {
             // Keep full newBuffer
@@ -200,9 +205,6 @@ library LibCFAPenaltyBid {
                 withdrawToBidder = remainingBalance;
             }
         }
-
-        console.log("withdrawToBidder: %s", withdrawToBidder);
-        console.log("withdrawToPayer: %s", withdrawToPayer);
 
         if (withdrawToBidder > 0) {
             paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
