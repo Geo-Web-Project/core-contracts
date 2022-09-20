@@ -41,14 +41,14 @@ describe("CFABasePCOFacet", async function () {
       const requiredBuffer = await ethersjsSf.cfaV1.contract
         .connect(await ethers.getSigner(user))
         .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-      const op1 = await paymentToken.transfer({
+      const op1 = paymentToken.transfer({
         receiver: basePCOFacet.address,
         amount: requiredBuffer.toString(),
       });
       await op1.exec(await ethers.getSigner(user));
 
       // Approve flow creation
-      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -101,14 +101,14 @@ describe("CFABasePCOFacet", async function () {
       );
 
       // Transfer payment token for buffer
-      const op1 = await paymentToken.transfer({
+      const op1 = paymentToken.transfer({
         receiver: basePCOFacet.address,
         amount: forSalePrice.toString(),
       });
       await op1.exec(await ethers.getSigner(user));
 
       // Approve flow creation
-      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -148,7 +148,7 @@ describe("CFABasePCOFacet", async function () {
       );
 
       // Approve flow creation
-      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -179,7 +179,7 @@ describe("CFABasePCOFacet", async function () {
       );
 
       // Transfer payment token for buffer
-      const op1 = await paymentToken.transfer({
+      const op1 = paymentToken.transfer({
         receiver: basePCOFacet.address,
         amount: forSalePrice.toString(),
       });
@@ -213,14 +213,14 @@ describe("CFABasePCOFacet", async function () {
       );
 
       // Transfer payment token for buffer
-      const op1 = await paymentToken.transfer({
+      const op1 = paymentToken.transfer({
         receiver: basePCOFacet.address,
         amount: forSalePrice.toString(),
       });
       await op1.exec(await ethers.getSigner(user));
 
       // Approve flow creation
-      const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
         permissions: 1,
@@ -251,7 +251,7 @@ describe("CFABasePCOFacet", async function () {
       const contributionRate = await basePCOFacet.contributionRate();
       const forSalePrice = await basePCOFacet.forSalePrice();
 
-      const op = await ethersjsSf.cfaV1.updateFlow({
+      const op = ethersjsSf.cfaV1.updateFlow({
         sender: user,
         receiver: basePCOFacet.address,
         flowRate: contributionRate.sub(10).toString(),
@@ -260,10 +260,8 @@ describe("CFABasePCOFacet", async function () {
 
       await op.exec(await ethers.getSigner(user));
 
-      await expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
-      await expect(await basePCOFacet.contributionRate()).to.equal(
-        contributionRate
-      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
+      expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
     });
 
     it("should deplete buffer", async () => {
@@ -273,7 +271,7 @@ describe("CFABasePCOFacet", async function () {
 
       const contributionRate = await basePCOFacet.contributionRate();
 
-      const op = await ethersjsSf.cfaV1.updateFlow({
+      const op = ethersjsSf.cfaV1.updateFlow({
         sender: user,
         receiver: basePCOFacet.address,
         flowRate: contributionRate.sub(99).toString(),
@@ -290,7 +288,7 @@ describe("CFABasePCOFacet", async function () {
       expect(Number(accountInfo.flowRate)).to.be.lessThan(0);
 
       // Close flow
-      const op1 = await ethersjsSf.cfaV1.deleteFlow({
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
         sender: basePCOFacet.address,
         receiver: diamondAdmin,
         superToken: ethx_erc20.address,
@@ -313,7 +311,7 @@ describe("CFABasePCOFacet", async function () {
       const contributionRate = await basePCOFacet.contributionRate();
       const forSalePrice = await basePCOFacet.forSalePrice();
 
-      const op = await ethersjsSf.cfaV1.updateFlow({
+      const op = ethersjsSf.cfaV1.updateFlow({
         sender: user,
         receiver: basePCOFacet.address,
         flowRate: contributionRate.add(10).toString(),
@@ -322,10 +320,8 @@ describe("CFABasePCOFacet", async function () {
 
       await op.exec(await ethers.getSigner(user));
 
-      await expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
-      await expect(await basePCOFacet.contributionRate()).to.equal(
-        contributionRate
-      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
+      expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
     });
 
     it("should accumulate buffer", async () => {
@@ -336,7 +332,7 @@ describe("CFABasePCOFacet", async function () {
       const contributionRate = await basePCOFacet.contributionRate();
       const forSalePrice = await basePCOFacet.forSalePrice();
 
-      const op = await ethersjsSf.cfaV1.updateFlow({
+      const op = ethersjsSf.cfaV1.updateFlow({
         sender: user,
         receiver: basePCOFacet.address,
         flowRate: contributionRate.add(100).toString(),

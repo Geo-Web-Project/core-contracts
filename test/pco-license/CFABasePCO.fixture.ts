@@ -136,14 +136,14 @@ const initialized = deployments.createFixture(
     const requiredBuffer = await ethersjsSf.cfaV1.contract
       .connect(await ethers.getSigner(user))
       .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-    const op1 = await paymentToken.transfer({
+    const op1 = paymentToken.transfer({
       receiver: basePCOFacet.address,
       amount: requiredBuffer.toString(),
     });
     await op1.exec(await ethers.getSigner(user));
 
     // Approve flow creation
-    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: basePCOFacet.address,
       permissions: 1,
@@ -188,14 +188,14 @@ const initializedLarge = deployments.createFixture(
     const requiredBuffer = await ethersjsSf.cfaV1.contract
       .connect(await ethers.getSigner(user))
       .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-    const op1 = await paymentToken.transfer({
+    const op1 = paymentToken.transfer({
       receiver: basePCOFacet.address,
       amount: requiredBuffer.toString(),
     });
     await op1.exec(await ethers.getSigner(user));
 
     // Approve flow creation
-    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: basePCOFacet.address,
       permissions: 1,
@@ -274,7 +274,7 @@ const initializedWithRealLicense = deployments.createFixture(
     const requiredBuffer = await ethersjsSf.cfaV1.contract
       .connect(await ethers.getSigner(user))
       .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-    const approveOp = await paymentToken.approve({
+    const approveOp = paymentToken.approve({
       receiver: erc721Facet.address,
       amount: requiredBuffer.toString(),
     });
@@ -284,7 +284,7 @@ const initializedWithRealLicense = deployments.createFixture(
     const nextAddress = await (
       erc721Facet as PCOLicenseClaimerFacet
     ).getNextProxyAddress(user);
-    const op2 = await ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+    const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
       flowOperator: nextAddress,
       permissions: 1,
@@ -376,7 +376,7 @@ const afterPayerDelete = deployments.createFixture(
     const { user, diamondAdmin } = await getNamedAccounts();
 
     // Payer deletes flow
-    const op1 = await ethersjsSf.cfaV1.deleteFlow({
+    const op1 = ethersjsSf.cfaV1.deleteFlow({
       sender: user,
       receiver: basePCOFacet.address,
       superToken: ethx_erc20.address,
@@ -386,7 +386,7 @@ const afterPayerDelete = deployments.createFixture(
     await op1Resp.wait();
 
     // Simulate closing flow
-    const op2 = await ethersjsSf.cfaV1.deleteFlow({
+    const op2 = ethersjsSf.cfaV1.deleteFlow({
       sender: basePCOFacet.address,
       receiver: diamondAdmin,
       superToken: ethx_erc20.address,
