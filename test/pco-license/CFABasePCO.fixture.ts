@@ -24,7 +24,12 @@ const setup = deployments.createFixture(
     await diamond.deploy("TestBasePCO", {
       from: diamondAdmin,
       owner: diamondAdmin,
-      facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
+      facets: [
+        "CFABasePCOFacet",
+        "TestableCFABasePCOFacet",
+        "CFAPenaltyBidFacet",
+        "CFAReclaimerFacet",
+      ],
     });
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);

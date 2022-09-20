@@ -233,8 +233,6 @@ library LibCFAPenaltyBid {
 
         _clearPendingBid();
 
-        LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
-
         // Transfer payments
         (int256 availableBalance, uint256 deposit, , ) = paymentToken
             .realtimeBalanceOfNow(address(this));
@@ -246,6 +244,18 @@ library LibCFAPenaltyBid {
             paymentToken,
             _pendingBid.contributionRate
         );
+
+        // Check if beneficiary flow needs to be recreated
+        if (availableBalance < 0) {
+            cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
+
+            (availableBalance, deposit, , ) = paymentToken.realtimeBalanceOfNow(
+                address(this)
+            );
+            remainingBalance = uint256(availableBalance + int256(deposit));
+        }
+
+        LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
 
         uint256 withdrawToBidder = _pendingBid.forSalePrice + newBuffer;
         uint256 withdrawToPayer = 0;
@@ -263,6 +273,8 @@ library LibCFAPenaltyBid {
                 // Transfer depleted amount from payer
                 depositFromPayer = withdrawToBidder - remainingBalance;
             }
+        } else {
+            depositFromPayer = withdrawToBidder;
         }
 
         if (depositFromPayer > 0) {
