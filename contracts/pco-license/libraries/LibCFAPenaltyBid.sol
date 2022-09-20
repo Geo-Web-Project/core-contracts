@@ -129,10 +129,7 @@ library LibCFAPenaltyBid {
             (availableBalance, deposit, , ) = paymentToken.realtimeBalanceOfNow(
                 address(this)
             );
-            remainingBalance = 0;
-            if (availableBalance + int256(deposit) >= 0) {
-                remainingBalance = uint256(availableBalance + int256(deposit));
-            }
+            remainingBalance = uint256(availableBalance + int256(deposit));
         }
 
         // Create bidder flow
