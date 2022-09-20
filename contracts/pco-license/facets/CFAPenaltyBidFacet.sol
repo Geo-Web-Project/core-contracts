@@ -59,12 +59,18 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     modifier onlyAfterBidPeriod() {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
-
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
 
-        // Succeed if payer bid is not active
-        if (LibCFABasePCO._isPayerBidActive()) {
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
+
+        int96 flowRate = cs.cfaV1.cfa.getNetFlow(
+            ds.paramsStore.getPaymentToken(),
+            address(this)
+        );
+
+        // Succeed if net flow is negative and payer bid is active
+        if (flowRate >= 0 && LibCFABasePCO._isPayerBidActive()) {
             uint256 bidPeriodLengthInSeconds = ds
                 .paramsStore
                 .getBidPeriodLengthInSeconds();
@@ -80,17 +86,24 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
     modifier onlyDuringBidPeriod() {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
-        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
-
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
+
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
+
+        int96 flowRate = cs.cfaV1.cfa.getNetFlow(
+            ds.paramsStore.getPaymentToken(),
+            address(this)
+        );
 
         uint256 bidPeriodLengthInSeconds = ds
             .paramsStore
             .getBidPeriodLengthInSeconds();
         uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
         require(
-            elapsedTime < bidPeriodLengthInSeconds,
+            elapsedTime < bidPeriodLengthInSeconds &&
+                flowRate >= 0 &&
+                LibCFABasePCO._isPayerBidActive(),
             "CFAPenaltyBidFacet: Bid period has elapsed"
         );
         _;
