@@ -62,24 +62,15 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
 
-        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-
-        int96 flowRate = cs.cfaV1.cfa.getNetFlow(
-            ds.paramsStore.getPaymentToken(),
-            address(this)
+        uint256 bidPeriodLengthInSeconds = ds
+            .paramsStore
+            .getBidPeriodLengthInSeconds();
+        uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
+        require(
+            elapsedTime >= bidPeriodLengthInSeconds ||
+                shouldBidPeriodEndEarly(),
+            "CFAPenaltyBidFacet: Bid period has not elapsed"
         );
-
-        // Succeed if net flow is negative and payer bid is active
-        if (flowRate >= 0 && LibCFABasePCO._isPayerBidActive()) {
-            uint256 bidPeriodLengthInSeconds = ds
-                .paramsStore
-                .getBidPeriodLengthInSeconds();
-            uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
-            require(
-                elapsedTime >= bidPeriodLengthInSeconds,
-                "CFAPenaltyBidFacet: Bid period has not elapsed"
-            );
-        }
         _;
     }
 
@@ -89,24 +80,40 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
 
-        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-
-        int96 flowRate = cs.cfaV1.cfa.getNetFlow(
-            ds.paramsStore.getPaymentToken(),
-            address(this)
-        );
-
         uint256 bidPeriodLengthInSeconds = ds
             .paramsStore
             .getBidPeriodLengthInSeconds();
         uint256 elapsedTime = block.timestamp - _pendingBid.timestamp;
         require(
             elapsedTime < bidPeriodLengthInSeconds &&
-                flowRate >= 0 &&
-                LibCFABasePCO._isPayerBidActive(),
+                !shouldBidPeriodEndEarly(),
             "CFAPenaltyBidFacet: Bid period has elapsed"
         );
         _;
+    }
+
+    /**
+     * @notice Should bid period end early
+     */
+    function shouldBidPeriodEndEarly() public view returns (bool) {
+        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
+            .pendingBid();
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
+
+        (uint256 timestamp, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            ds.paramsStore.getPaymentToken(),
+            _currentBid.bidder,
+            address(this)
+        );
+
+        return
+            timestamp > _pendingBid.timestamp ||
+            flowRate == 0 ||
+            !LibCFABasePCO._isPayerBidActive();
     }
 
     /**

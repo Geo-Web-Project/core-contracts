@@ -449,6 +449,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "shouldBidPeriodEndEarly",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "triggerTransfer",
     outputs: [],
     stateMutability: "nonpayable",
