@@ -110,28 +110,51 @@ library LibCFAPenaltyBid {
             );
         }
 
+        (int256 availableBalance, uint256 deposit, , ) = paymentToken
+            .realtimeBalanceOfNow(address(this));
+        uint256 remainingBalance = 0;
+        if (availableBalance + int256(deposit) >= 0) {
+            remainingBalance = uint256(availableBalance + int256(deposit));
+        }
+        uint256 newBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            _pendingBid.contributionRate
+        );
+
+        // Check if beneficiary flow needs to be deleted
+        address beneficiary = ds.paramsStore.getBeneficiary();
+        if (remainingBalance < newBuffer) {
+            cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
+
+            (availableBalance, deposit, , ) = paymentToken.realtimeBalanceOfNow(
+                address(this)
+            );
+            remainingBalance = uint256(availableBalance + int256(deposit));
+        }
+
         // Create bidder flow
-        /* solhint-disable no-empty-blocks */
-        try
-            cs.cfaV1.host.callAgreement(
-                cs.cfaV1.cfa,
-                abi.encodeCall(
-                    cs.cfaV1.cfa.createFlowByOperator,
-                    (
-                        paymentToken,
-                        _pendingBid.bidder,
-                        address(this),
-                        _pendingBid.contributionRate,
-                        new bytes(0)
-                    )
-                ),
-                new bytes(0)
-            )
-        {} catch {}
-        /* solhint-enable no-empty-blocks  */
+        if (remainingBalance >= newBuffer) {
+            /* solhint-disable no-empty-blocks */
+            try
+                cs.cfaV1.host.callAgreement(
+                    cs.cfaV1.cfa,
+                    abi.encodeCall(
+                        cs.cfaV1.cfa.createFlowByOperator,
+                        (
+                            paymentToken,
+                            _pendingBid.bidder,
+                            address(this),
+                            _pendingBid.contributionRate,
+                            new bytes(0)
+                        )
+                    ),
+                    new bytes(0)
+                )
+            {} catch {}
+            /* solhint-enable no-empty-blocks  */
+        }
 
         // Update beneficiary flow
-        address beneficiary = ds.paramsStore.getBeneficiary();
         (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
             address(this),
@@ -143,7 +166,7 @@ library LibCFAPenaltyBid {
                 paymentToken,
                 _pendingBid.contributionRate
             );
-        } else {
+        } else if (remainingBalance >= newBuffer) {
             cs.cfaV1.createFlow(
                 beneficiary,
                 paymentToken,
@@ -159,16 +182,9 @@ library LibCFAPenaltyBid {
         );
 
         // Transfer payments
-        (int256 availableBalance, uint256 deposit, , ) = paymentToken
-            .realtimeBalanceOfNow(address(this));
-        uint256 remainingBalance = 0;
-        if (availableBalance + int256(deposit) >= 0) {
-            remainingBalance = uint256(availableBalance + int256(deposit));
-        }
-        uint256 newBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-            paymentToken,
-            _pendingBid.contributionRate
-        );
+        uint256 withdrawToBidder = 0;
+        uint256 withdrawToPayer = 0;
+
         if (remainingBalance > newBuffer) {
             // Keep full newBuffer
             remainingBalance -= newBuffer;
@@ -176,18 +192,22 @@ library LibCFAPenaltyBid {
                 oldCurrentBid.forSalePrice;
             if (remainingBalance > bidderPayment) {
                 // Transfer bidder full payment
-                paymentToken.safeTransfer(_pendingBid.bidder, bidderPayment);
-                remainingBalance -= bidderPayment;
+                withdrawToBidder = bidderPayment;
+                remainingBalance -= withdrawToBidder;
 
                 // Transfer remaining to payer
-                paymentToken.safeTransfer(
-                    oldCurrentBid.bidder,
-                    remainingBalance
-                );
+                withdrawToPayer = remainingBalance;
             } else {
                 // Transfer remaining to bidder
-                paymentToken.safeTransfer(_pendingBid.bidder, remainingBalance);
+                withdrawToBidder = remainingBalance;
             }
+        }
+
+        if (withdrawToBidder > 0) {
+            paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+        }
+        if (withdrawToPayer > 0) {
+            paymentToken.safeTransfer(oldCurrentBid.bidder, withdrawToPayer);
         }
     }
 
@@ -213,8 +233,6 @@ library LibCFAPenaltyBid {
 
         _clearPendingBid();
 
-        LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
-
         // Transfer payments
         (int256 availableBalance, uint256 deposit, , ) = paymentToken
             .realtimeBalanceOfNow(address(this));
@@ -226,23 +244,50 @@ library LibCFAPenaltyBid {
             paymentToken,
             _pendingBid.contributionRate
         );
+
+        // Check if beneficiary flow needs to be recreated
+        if (availableBalance < 0) {
+            cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
+
+            (availableBalance, deposit, , ) = paymentToken.realtimeBalanceOfNow(
+                address(this)
+            );
+            remainingBalance = uint256(availableBalance + int256(deposit));
+        }
+
+        LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
+
+        uint256 withdrawToBidder = _pendingBid.forSalePrice + newBuffer;
+        uint256 withdrawToPayer = 0;
+        uint256 depositFromPayer = 0;
         if (remainingBalance > deposit) {
             // Keep full deposit
             remainingBalance -= deposit;
-            uint256 bidderPayment = _pendingBid.forSalePrice + newBuffer;
-            if (remainingBalance > bidderPayment) {
+            if (remainingBalance > withdrawToBidder) {
                 // Transfer bidder full payment
-                paymentToken.safeTransfer(_pendingBid.bidder, bidderPayment);
-                remainingBalance -= bidderPayment;
+                remainingBalance -= withdrawToBidder;
 
                 // Transfer remaining to payer
-                paymentToken.safeTransfer(_currentBid.bidder, remainingBalance);
+                withdrawToPayer = remainingBalance;
             } else {
-                // Transfer remaining to bidder
-                paymentToken.safeTransfer(_pendingBid.bidder, remainingBalance);
+                // Transfer depleted amount from payer
+                depositFromPayer = withdrawToBidder - remainingBalance;
             }
+        } else {
+            depositFromPayer = withdrawToBidder;
         }
 
+        if (depositFromPayer > 0) {
+            paymentToken.safeTransferFrom(
+                _currentBid.bidder,
+                address(this),
+                depositFromPayer
+            );
+        }
+        paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+        if (withdrawToPayer > 0) {
+            paymentToken.safeTransfer(_currentBid.bidder, withdrawToPayer);
+        }
         paymentToken.safeTransferFrom(
             _currentBid.bidder,
             beneficiary,

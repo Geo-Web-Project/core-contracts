@@ -1,6 +1,10 @@
 import { BigNumber } from "ethers";
 import { deployments } from "hardhat";
-import { rateToPurchasePrice } from "../shared";
+import {
+  rateToPurchasePrice,
+  perYearToPerSecondRate,
+  fromValueToRate,
+} from "../shared";
 import BaseFixtures from "./CFABasePCO.fixture";
 
 const afterPlaceBid = deployments.createFixture(
@@ -146,10 +150,142 @@ const afterPlaceBidWithRealLicense = deployments.createFixture(
   }
 );
 
+const afterPlaceBidExtremeFeeDuring = deployments.createFixture(
+  async ({ getNamedAccounts, ethers }) => {
+    const res = await BaseFixtures.initializedExtremeFeeDuring();
+    const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
+
+    const { bidder } = await getNamedAccounts();
+
+    const newForSalePrice = BigNumber.from(50000);
+    const newContributionRate = await fromValueToRate(
+      mockParamsStore,
+      newForSalePrice
+    );
+
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(bidder))
+      .getDepositRequiredForFlowRate(paymentToken.address, newContributionRate);
+    const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+    // Approve payment token
+    const approveOp = paymentToken.approve({
+      receiver: basePCOFacet.address,
+      amount: totalCollateral.toString(),
+    });
+    await approveOp.exec(await ethers.getSigner(bidder));
+
+    // Approve flow update
+    const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: newContributionRate.toString(),
+    });
+    await op.exec(await ethers.getSigner(bidder));
+
+    const txn = await basePCOFacet
+      .connect(await ethers.getSigner(bidder))
+      .placeBid(newContributionRate, newForSalePrice);
+    await txn.wait();
+
+    return res;
+  }
+);
+
+const afterPlaceBidExtremeFeeAfter = deployments.createFixture(
+  async ({ getNamedAccounts, ethers }) => {
+    const res = await BaseFixtures.initializedExtremeFeeAfter();
+    const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
+
+    const { bidder } = await getNamedAccounts();
+
+    const newForSalePrice = BigNumber.from(50000);
+    const newContributionRate = await fromValueToRate(
+      mockParamsStore,
+      newForSalePrice
+    );
+
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(bidder))
+      .getDepositRequiredForFlowRate(paymentToken.address, newContributionRate);
+    const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+    // Approve payment token
+    const approveOp = paymentToken.approve({
+      receiver: basePCOFacet.address,
+      amount: totalCollateral.toString(),
+    });
+    await approveOp.exec(await ethers.getSigner(bidder));
+
+    // Approve flow update
+    const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: newContributionRate.toString(),
+    });
+    await op.exec(await ethers.getSigner(bidder));
+
+    const txn = await basePCOFacet
+      .connect(await ethers.getSigner(bidder))
+      .placeBid(newContributionRate, newForSalePrice);
+    await txn.wait();
+
+    return res;
+  }
+);
+
+const afterPlaceBidLargeExtremeFeeAfter = deployments.createFixture(
+  async ({ getNamedAccounts, ethers }) => {
+    const res = await BaseFixtures.initializedExtremeFeeAfter();
+    const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
+
+    const { bidder } = await getNamedAccounts();
+
+    const newForSalePrice = BigNumber.from(50000000);
+    const newContributionRate = await fromValueToRate(
+      mockParamsStore,
+      newForSalePrice
+    );
+
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(bidder))
+      .getDepositRequiredForFlowRate(paymentToken.address, newContributionRate);
+    const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+    // Approve payment token
+    const approveOp = paymentToken.approve({
+      receiver: basePCOFacet.address,
+      amount: totalCollateral.toString(),
+    });
+    await approveOp.exec(await ethers.getSigner(bidder));
+
+    // Approve flow update
+    const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: newContributionRate.toString(),
+    });
+    await op.exec(await ethers.getSigner(bidder));
+
+    const txn = await basePCOFacet
+      .connect(await ethers.getSigner(bidder))
+      .placeBid(newContributionRate, newForSalePrice);
+    await txn.wait();
+
+    return res;
+  }
+);
+
 export default {
   afterPlaceBid,
   afterAcceptBid,
   afterPlaceBidAndSurplus,
   afterPlaceBidAndBidderRevokes,
   afterPlaceBidWithRealLicense,
+  afterPlaceBidExtremeFeeDuring,
+  afterPlaceBidExtremeFeeAfter,
+  afterPlaceBidLargeExtremeFeeAfter,
 };

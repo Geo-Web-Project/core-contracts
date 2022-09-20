@@ -19,6 +19,14 @@ export async function rateToPurchasePrice(paramsStore: any, rate: BigNumber) {
   return rate.mul(perSecondFeeDenominator).div(perSecondFeeNumerator);
 }
 
+export async function fromValueToRate(paramsStore: any, value: BigNumber) {
+  const perSecondFeeNumerator = await paramsStore.getPerSecondFeeNumerator();
+  const perSecondFeeDenominator =
+    await paramsStore.getPerSecondFeeDenominator();
+
+  return value.mul(perSecondFeeNumerator).div(perSecondFeeDenominator);
+}
+
 export function perYearToPerSecondRate(annualRate: number) {
   return {
     numerator: annualRate * 100,
