@@ -2670,6 +2670,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -2746,6 +2747,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(true);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, BigNumber.from(0));
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -2841,6 +2843,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -2937,6 +2940,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3033,6 +3037,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3134,6 +3139,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3225,6 +3231,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3325,6 +3332,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3391,6 +3399,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3476,6 +3485,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3564,6 +3574,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -3645,6 +3656,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       expect(await basePCOFacet.payer()).to.equal(bidder);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(false);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(true);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, BigNumber.from(0));
       await checkAppToBeneficiaryFlow(BigNumber.from(0));
@@ -3751,6 +3763,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
