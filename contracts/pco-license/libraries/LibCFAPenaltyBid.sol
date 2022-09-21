@@ -72,6 +72,7 @@ library LibCFAPenaltyBid {
     function _clearPendingBid() internal {
         Bid storage _pendingBid = pendingBid();
         _pendingBid.contributionRate = 0;
+        _pendingBid.timestamp = block.timestamp;
     }
 
     /// @notice Trigger transfer of license
