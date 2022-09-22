@@ -846,6 +846,50 @@ describe("CFAPenaltyBidFacet", async function () {
         "CFAPenaltyBidFacet: New contribution rate is not high enough"
       );
     });
+
+    it("should fail if payer is bidder", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const accounts = await getUnnamedAccounts();
+      const { user } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(accounts[3]))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op1 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .placeBid(newContributionRate, newForSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Payer is not allowed to perform this action"
+      );
+    });
   });
 
   describe("acceptBid", async () => {

@@ -170,6 +170,7 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
         external
         override
         onlyIfPayerBidActive
+        onlyNotPayer
     {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
