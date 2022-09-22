@@ -78,6 +78,9 @@ module.exports = {
     bidder: {
       default: 2,
     },
+    other: {
+      default: 3,
+    },
     treasury: {
       5: "0xC8A14DEe867329D54E911e01561B984378c0675C",
     },

@@ -999,85 +999,20 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkAppNetFlow(-200000000);
     });
 
-    it("should refund surplus", async () => {
-      const {
-        basePCOFacet,
-        mockLicense,
-        checkUserToAppFlow,
-        checkAppNetFlow,
-        checkAppToBeneficiaryFlow,
-        ethx_erc20,
-        checkAppBalance,
-        ethersjsSf,
-        paymentToken,
-        surplusBlock,
-      } = await CFAPenaltyBidFixtures.afterPlaceBidAndSurplus();
+    it("should fail if payer has increased flow manually", async () => {
+      const { basePCOFacet, mockLicense } =
+        await CFAPenaltyBidFixtures.afterPlaceBidAndSurplus();
 
       mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
-      const { bidder, user } = await getNamedAccounts();
-      const existingContributionRate = await basePCOFacet.contributionRate();
-
-      const oldPendingBid = await basePCOFacet.pendingBid();
-      const forSalePrice = await basePCOFacet.forSalePrice();
-      const oldBuffer = await ethersjsSf.cfaV1.contract
-        .connect(await ethers.getSigner(user))
-        .getDepositRequiredForFlowRate(
-          paymentToken.address,
-          await basePCOFacet.contributionRate()
-        );
-
-      const txn = await basePCOFacet
+      const { user } = await getNamedAccounts();
+      const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
         .acceptBid();
-      const txnResp = await txn.wait();
-      const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
 
-      await expect(txn)
-        .to.emit(basePCOFacet, "BidAccepted")
-        .withArgs(user, bidder, forSalePrice);
-      expect(
-        mockLicense["safeTransferFrom(address,address,uint256)"]
-      ).to.have.been.calledOnceWith(
-        user,
-        bidder,
-        await basePCOFacet.licenseId()
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
       );
-
-      // Check payment token transfers
-      const timeSinceIncrease = txnBlock.timestamp - surplusBlock.timestamp;
-      const accumulatedBuffer = existingContributionRate.mul(timeSinceIncrease);
-      await expect(txn)
-        .to.emit(ethx_erc20, "Transfer")
-        .withArgs(
-          basePCOFacet.address,
-          bidder,
-          oldPendingBid.forSalePrice.sub(forSalePrice)
-        );
-      await expect(txn)
-        .to.emit(ethx_erc20, "Transfer")
-        .withArgs(
-          basePCOFacet.address,
-          user,
-          forSalePrice.add(oldBuffer).add(accumulatedBuffer)
-        );
-      await checkAppBalance(0);
-
-      const pendingBid = await basePCOFacet.pendingBid();
-      expect(pendingBid.contributionRate).to.equal(0);
-
-      expect(await basePCOFacet.payer()).to.equal(bidder);
-      expect(await basePCOFacet.contributionRate()).to.equal(
-        oldPendingBid.contributionRate
-      );
-      expect(await basePCOFacet.forSalePrice()).to.equal(
-        oldPendingBid.forSalePrice
-      );
-      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
-      await checkUserToAppFlow(user, BigNumber.from(0));
-      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
-      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
-      await checkAppNetFlow();
     });
 
     it("should fail if pending bid does not exist", async () => {
@@ -1120,6 +1055,130 @@ describe("CFAPenaltyBidFacet", async function () {
 
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Only payer is allowed to perform this action"
+      );
+    });
+
+    it("should fail if payer bid becomes inactive", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user, diamondAdmin } = await getNamedAccounts();
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      // Simulate closing flow
+      const op2 = ethersjsSf.cfaV1.deleteFlow({
+        sender: basePCOFacet.address,
+        receiver: diamondAdmin,
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(diamondAdmin));
+      await op2Resp.wait();
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
+
+    it("should fail if payer deletes bid", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user } = await getNamedAccounts();
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
+
+    it("should fail if payer decreases bid", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const { user } = await getNamedAccounts();
+
+      // Payer decreases flow
+      const op1 = ethersjsSf.cfaV1.updateFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+        flowRate: existingContributionRate.sub(1).toString(),
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
+
+    it("should fail if payer deletes and reopens bid", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      // Payer re-opens flow
+      const op2 = ethersjsSf.cfaV1.createFlow({
+        receiver: basePCOFacet.address,
+        flowRate: existingContributionRate,
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(user));
+      await op2Resp.wait();
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
       );
     });
   });
@@ -1316,6 +1375,573 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkAppNetFlow();
     });
 
+    it("should reject bid if deposit is somehow depleted", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+        checkAppBalance,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidExtremeFeeDuring();
+
+      const { bidder, user, diamondAdmin, other } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment
+          .add(newBuffer)
+          .add(newBuffer)
+          .add(oldPendingBid.forSalePrice)
+          .toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      // Outgoing flow is somehow created
+      await basePCOFacet.manualCreateFlow(other, existingContributionRate);
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 23]);
+      await network.provider.send("evm_mine");
+
+      // Delete extra flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        receiver: other,
+        sender: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      await op1.exec(await ethers.getSigner(other));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+      const txnReceipt = await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidRejected")
+        .withArgs(user, bidder, forSalePrice);
+
+      // Check payment token transfers
+      const toUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, user),
+        txnReceipt.blockNumber
+      );
+      const fromUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(user),
+        txnReceipt.blockNumber
+      );
+      const toBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, bidder),
+        txnReceipt.blockNumber
+      );
+      const fromBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(bidder),
+        txnReceipt.blockNumber
+      );
+      expect(toUserTransfers.length).to.be.equal(0);
+      expect(fromUserTransfers.length).to.be.equal(3);
+      expect(toBidderTransfers.length).to.be.equal(1);
+      expect(fromBidderTransfers.length).to.be.equal(0);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, diamondAdmin, penaltyPayment);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, basePCOFacet.address, newBuffer);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          user,
+          basePCOFacet.address,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(bidder, BigNumber.from(0));
+      await checkUserToAppFlow(user, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should reject bid if balance is somehow depleted to 0", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+        checkAppBalance,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { bidder, user, diamondAdmin } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Balance is somehow depleted to 0
+      await basePCOFacet.manualTransfer(
+        diamondAdmin,
+        oldPendingBid.forSalePrice.add(newBuffer)
+      );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment
+          .add(newBuffer)
+          .sub(oldBuffer)
+          .add(newBuffer)
+          .add(oldPendingBid.forSalePrice)
+          .toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+      const txnReceipt = await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidRejected")
+        .withArgs(user, bidder, forSalePrice);
+
+      // Check payment token transfers
+      const toUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, user),
+        txnReceipt.blockNumber
+      );
+      const fromUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(user),
+        txnReceipt.blockNumber
+      );
+      const toBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, bidder),
+        txnReceipt.blockNumber
+      );
+      const fromBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(bidder),
+        txnReceipt.blockNumber
+      );
+      expect(toUserTransfers.length).to.be.equal(0);
+      expect(fromUserTransfers.length).to.be.equal(3);
+      expect(toBidderTransfers.length).to.be.equal(1);
+      expect(fromBidderTransfers.length).to.be.equal(0);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, diamondAdmin, penaltyPayment);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          user,
+          basePCOFacet.address,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(bidder, BigNumber.from(0));
+      await checkUserToAppFlow(user, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should reject bid if balance is somehow depleted to between 0 and bidder payment", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+        checkAppBalance,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { bidder, user, diamondAdmin } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Balance is somehow depleted to below bidder payment
+      await basePCOFacet.manualTransfer(
+        diamondAdmin,
+        oldPendingBid.forSalePrice
+      );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment
+          .add(newBuffer)
+          .sub(oldBuffer)
+          .add(oldPendingBid.forSalePrice)
+          .toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+      const txnReceipt = await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidRejected")
+        .withArgs(user, bidder, forSalePrice);
+
+      // Check payment token transfers
+      const toUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, user),
+        txnReceipt.blockNumber
+      );
+      const fromUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(user),
+        txnReceipt.blockNumber
+      );
+      const toBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, bidder),
+        txnReceipt.blockNumber
+      );
+      const fromBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(bidder),
+        txnReceipt.blockNumber
+      );
+      expect(toUserTransfers.length).to.be.equal(0);
+      expect(fromUserTransfers.length).to.be.equal(3);
+      expect(toBidderTransfers.length).to.be.equal(1);
+      expect(fromBidderTransfers.length).to.be.equal(0);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, basePCOFacet.address, oldPendingBid.forSalePrice);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(bidder, BigNumber.from(0));
+      await checkUserToAppFlow(user, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should reject bid and refund surplus", async () => {
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+        checkAppBalance,
+        surplusBlock,
+        mockCFABeneficiary,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidAndSurplus();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Surplus is transferred
+      const transferOp = paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: "100",
+      });
+      await transferOp.exec(await ethers.getSigner(user));
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment
+          .add(newBuffer)
+          .sub(oldBuffer)
+          .add(oldPendingBid.forSalePrice)
+          .toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+      const txnReceipt = await txn.wait();
+      const txnBlock = await ethers.provider.getBlock(txnReceipt.blockNumber);
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidRejected")
+        .withArgs(user, bidder, forSalePrice);
+
+      const timeSinceIncrease = txnBlock.timestamp - surplusBlock.timestamp;
+      const accumulatedBuffer = existingContributionRate.mul(timeSinceIncrease);
+
+      // Check payment token transfers
+      const toUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, user),
+        txnReceipt.blockNumber
+      );
+      const fromUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(user),
+        txnReceipt.blockNumber
+      );
+      const toBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(basePCOFacet.address, bidder),
+        txnReceipt.blockNumber
+      );
+      const fromBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(bidder),
+        txnReceipt.blockNumber
+      );
+      expect(toUserTransfers.length).to.be.equal(1);
+      expect(fromUserTransfers.length).to.be.equal(2);
+      expect(toBidderTransfers.length).to.be.equal(1);
+      expect(fromBidderTransfers.length).to.be.equal(0);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, mockCFABeneficiary.address, penaltyPayment);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(basePCOFacet.address, user, accumulatedBuffer);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.add(newBuffer)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      await checkUserToAppFlow(bidder, BigNumber.from(0));
+      await checkUserToAppFlow(user, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should fail if payer increases flow manually", async () => {
+      const { basePCOFacet, paymentToken, ethersjsSf } =
+        await CFAPenaltyBidFixtures.afterPlaceBidAndSurplus();
+
+      const { user } = await getNamedAccounts();
+      const existingContributionRate = await basePCOFacet.contributionRate();
+
+      const penaltyPayment = await basePCOFacet.calculatePenalty();
+
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
+
     it("should fail if contribution rate is too low", async () => {
       const { basePCOFacet, paymentToken, ethersjsSf, mockParamsStore } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
@@ -1373,15 +1999,25 @@ describe("CFAPenaltyBidFacet", async function () {
     });
 
     it("should fail if for sale price is incorrect rounding", async () => {
-      const { basePCOFacet, paymentToken, ethersjsSf, mockParamsStore } =
-        await CFAPenaltyBidFixtures.afterPlaceBid();
+      const {
+        basePCOFacet,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        paymentToken,
+        ethx_erc20,
+        ethersjsSf,
+        checkAppBalance,
+        mockParamsStore,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      const { user } = await getNamedAccounts();
+      const { bidder, user, diamondAdmin } = await getNamedAccounts();
 
       const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
 
       const existingContributionRate = await basePCOFacet.contributionRate();
       const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
       const oldBuffer = await ethersjsSf.cfaV1.contract
         .connect(await ethers.getSigner(user))
         .getDepositRequiredForFlowRate(
@@ -1427,27 +2063,16 @@ describe("CFAPenaltyBidFacet", async function () {
       );
     });
 
-    it("should refund surplus", async () => {
-      const {
-        basePCOFacet,
-        checkUserToAppFlow,
-        checkAppNetFlow,
-        checkAppToBeneficiaryFlow,
-        paymentToken,
-        ethx_erc20,
-        ethersjsSf,
-        checkAppBalance,
-        surplusBlock,
-        mockCFABeneficiary,
-      } = await CFAPenaltyBidFixtures.afterPlaceBidAndSurplus();
+    it("should fail if payer bid becomes inactive", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      const { bidder, user, diamondAdmin } = await getNamedAccounts();
+      const { user, diamondAdmin } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
       const existingContributionRate = await basePCOFacet.contributionRate();
-
-      const penaltyPayment = await basePCOFacet.calculatePenalty();
-
       const oldPendingBid = await basePCOFacet.pendingBid();
-      const forSalePrice = await basePCOFacet.forSalePrice();
       const oldBuffer = await ethersjsSf.cfaV1.contract
         .connect(await ethers.getSigner(user))
         .getDepositRequiredForFlowRate(
@@ -1461,10 +2086,39 @@ describe("CFAPenaltyBidFacet", async function () {
           oldPendingBid.contributionRate
         );
 
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      // Simulate closing flow
+      const op2 = ethersjsSf.cfaV1.deleteFlow({
+        sender: basePCOFacet.address,
+        receiver: diamondAdmin,
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(diamondAdmin));
+      await op2Resp.wait();
+
+      const estimatedTimeSinceDeletion = 60;
+      const estimatedDepletedBuffer = existingContributionRate.mul(
+        estimatedTimeSinceDeletion
+      );
+
       // Approve payment token
       const approveOp = paymentToken.approve({
         receiver: basePCOFacet.address,
-        amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
+        amount: penaltyPayment
+          .add(newBuffer)
+          .sub(oldBuffer)
+          .add(estimatedDepletedBuffer.mul(2)) // Add extra to cover approve txns
+          .toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
@@ -1472,59 +2126,241 @@ describe("CFAPenaltyBidFacet", async function () {
       const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
         superToken: paymentToken.address,
         flowOperator: basePCOFacet.address,
-        permissions: 2,
-        flowRateAllowance: oldPendingBid.contributionRate
-          .sub(existingContributionRate)
-          .toString(),
+        permissions: 3,
+        flowRateAllowance: oldPendingBid.contributionRate.toString(),
       });
       await op.exec(await ethers.getSigner(user));
 
-      const txn = await basePCOFacet
+      const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
-      const txnResp = await txn.wait();
-      const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
 
-      await expect(txn)
-        .to.emit(basePCOFacet, "BidRejected")
-        .withArgs(user, bidder, forSalePrice);
+    it("should fail if payer deletes bid", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      // Check payment token transfers
-      const timeSinceIncrease = txnBlock.timestamp - surplusBlock.timestamp;
-      const accumulatedBuffer = existingContributionRate.mul(timeSinceIncrease);
-      await expect(txn)
-        .to.emit(ethx_erc20, "Transfer")
-        .withArgs(user, mockCFABeneficiary.address, penaltyPayment);
-      await expect(txn)
-        .to.emit(ethx_erc20, "Transfer")
-        .withArgs(user, basePCOFacet.address, newBuffer.sub(oldBuffer));
-      await expect(txn)
-        .to.emit(ethx_erc20, "Transfer")
-        .withArgs(basePCOFacet.address, user, accumulatedBuffer);
-      await expect(txn)
-        .to.emit(ethx_erc20, "Transfer")
-        .withArgs(
-          basePCOFacet.address,
-          bidder,
-          oldPendingBid.forSalePrice.add(newBuffer)
+      const { user } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
         );
-      await checkAppBalance(0);
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
 
-      const pendingBid = await basePCOFacet.pendingBid();
-      expect(pendingBid.contributionRate).to.equal(0);
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
 
-      expect(await basePCOFacet.payer()).to.equal(user);
-      expect(await basePCOFacet.contributionRate()).to.equal(
-        oldPendingBid.contributionRate
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60]);
+      await network.provider.send("evm_mine");
+
+      const estimatedTimeSinceDeletion = 60;
+      const estimatedDepletedBuffer = existingContributionRate.mul(
+        estimatedTimeSinceDeletion
       );
-      expect(await basePCOFacet.forSalePrice()).to.equal(
-        oldPendingBid.forSalePrice
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment
+          .add(newBuffer)
+          .sub(oldBuffer)
+          .add(estimatedDepletedBuffer.mul(2)) // Add extra to cover approve txns
+          .toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 3,
+        flowRateAllowance: oldPendingBid.contributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
       );
-      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
-      await checkUserToAppFlow(bidder, BigNumber.from(0));
-      await checkUserToAppFlow(user, oldPendingBid.contributionRate);
-      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
-      await checkAppNetFlow();
+    });
+
+    it("should fail if payer decreases bid", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Payer decreases flow
+      const op1 = ethersjsSf.cfaV1.updateFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+        flowRate: existingContributionRate.sub(1).toString(),
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60]);
+      await network.provider.send("evm_mine");
+
+      const estimatedTimeSinceDeletion = 60;
+      const estimatedDepletedBuffer = existingContributionRate.mul(
+        estimatedTimeSinceDeletion
+      );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment
+          .add(newBuffer)
+          .sub(oldBuffer)
+          .add(estimatedDepletedBuffer.mul(2)) // Add extra to cover approve txns
+          .toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 3,
+        flowRateAllowance: oldPendingBid.contributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
+    });
+
+    it("should fail if payer deletes and reopens bid", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      const { user } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      await op1Resp.wait();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60]);
+      await network.provider.send("evm_mine");
+
+      const estimatedTimeSinceDeletion = 60;
+      const estimatedDepletedBuffer = existingContributionRate.mul(
+        estimatedTimeSinceDeletion
+      );
+
+      // Payer re-opens flow
+      const op2 = ethersjsSf.cfaV1.createFlow({
+        receiver: basePCOFacet.address,
+        flowRate: existingContributionRate,
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(user));
+      await op2Resp.wait();
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment
+          .add(newBuffer)
+          .sub(oldBuffer)
+          .add(estimatedDepletedBuffer.mul(2)) // Add extra to cover approve txns
+          .toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 3,
+        flowRateAllowance: oldPendingBid.contributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Bid period has elapsed"
+      );
     });
 
     it("should fail if not payer", async () => {
@@ -1839,6 +2675,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -1915,13 +2752,14 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(true);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, BigNumber.from(0));
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
       await checkAppNetFlow(-200000000);
     });
 
-    it("should trigger transfer after bidding period elapsed and flow is deleted", async () => {
+    it("should trigger transfer after bidding period elapsed and then flow is deleted", async () => {
       const {
         basePCOFacet,
         mockLicense,
@@ -2010,6 +2848,496 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer after bidding period elapsed and then flow is decreased", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethersjsSf,
+        ethx_erc20,
+        checkAppBalance,
+        paymentToken,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldContributionRate
+        );
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      // Payer decreases flow
+      const op1 = ethersjsSf.cfaV1.updateFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+        flowRate: oldContributionRate.sub(1).toString(),
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      const op1Receipt = await op1Resp.wait();
+      const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      const txnResp = await txn.wait();
+      const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      const timeSinceDeletion = txnBlock.timestamp - op1Block.timestamp;
+      const depletedBuffer = timeSinceDeletion;
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          user,
+          forSalePrice.add(oldBuffer).sub(depletedBuffer)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer after flow is deleted and then bidding period elapsed", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethersjsSf,
+        ethx_erc20,
+        checkAppBalance,
+        paymentToken,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldContributionRate
+        );
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      const op1Receipt = await op1Resp.wait();
+      const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      const txnResp = await txn.wait();
+      const txnBlock = await ethers.provider.getBlock(txnResp.blockNumber);
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      const timeSinceDeletion = txnBlock.timestamp - op1Block.timestamp;
+      const depletedBuffer = oldContributionRate.mul(timeSinceDeletion);
+
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          user,
+          forSalePrice.add(oldBuffer).sub(depletedBuffer)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer early if payer bid becomes inactive", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethersjsSf,
+        ethx_erc20,
+        paymentToken,
+        checkAppBalance,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user, diamondAdmin } = await getNamedAccounts();
+
+      const oldContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldContributionRate
+        );
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      const op1Receipt = await op1Resp.wait();
+      const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
+
+      // Simulate closing flow
+      const op2 = ethersjsSf.cfaV1.deleteFlow({
+        sender: basePCOFacet.address,
+        receiver: diamondAdmin,
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(diamondAdmin));
+      const op2Receipt = await op2Resp.wait();
+      const op2Block = await ethers.provider.getBlock(op2Receipt.blockNumber);
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      const timeSinceDeletion = op2Block.timestamp - op1Block.timestamp;
+      const depletedBuffer = oldContributionRate.mul(timeSinceDeletion);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          user,
+          forSalePrice.add(oldBuffer).sub(depletedBuffer)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer early if payer deletes bid", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethersjsSf,
+        ethx_erc20,
+        paymentToken,
+        checkAppBalance,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldContributionRate
+        );
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      const op1Receipt = await op1Resp.wait();
+      const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      const op2Receipt = await txn.wait();
+      const op2Block = await ethers.provider.getBlock(op2Receipt.blockNumber);
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      const timeSinceDeletion = op2Block.timestamp - op1Block.timestamp;
+      const depletedBuffer = oldContributionRate.mul(timeSinceDeletion);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          user,
+          forSalePrice.add(oldBuffer).sub(depletedBuffer)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer early if payer deletes and reopens bid", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethersjsSf,
+        ethx_erc20,
+        paymentToken,
+        checkAppBalance,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldContributionRate
+        );
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const op1Resp = await op1.exec(await ethers.getSigner(user));
+      const op1Receipt = await op1Resp.wait();
+      const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
+
+      // Payer re-opens flow
+      const op2 = ethersjsSf.cfaV1.createFlow({
+        receiver: basePCOFacet.address,
+        flowRate: oldContributionRate,
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(user));
+      const op2Receipt = await op2Resp.wait();
+      const op2Block = await ethers.provider.getBlock(op2Receipt.blockNumber);
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      const timeSinceDeletion = op2Block.timestamp - op1Block.timestamp;
+      const depletedBuffer = oldContributionRate.mul(timeSinceDeletion);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          user,
+          forSalePrice.add(oldBuffer).sub(depletedBuffer)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -2076,6 +3404,7 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -2161,21 +3490,210 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
       await checkAppNetFlow();
     });
 
-    it("should fail to trigger transfer early if payer deletes and reopens bid", async () => {
-      const { basePCOFacet, mockLicense, ethersjsSf, ethx_erc20 } =
-        await CFAPenaltyBidFixtures.afterPlaceBid();
+    it("should trigger transfer after bidding period elapsed and deposit was depleted during period", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidExtremeFeeDuring();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      await op1.exec(await ethers.getSigner(user));
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      const txnReceipt = await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      const toUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(null, user),
+        txnReceipt.blockNumber
+      );
+      const fromUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(user),
+        txnReceipt.blockNumber
+      );
+      const toBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(null, bidder),
+        txnReceipt.blockNumber
+      );
+      const fromBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(bidder),
+        txnReceipt.blockNumber
+      );
+      expect(toUserTransfers.length).to.be.equal(0);
+      expect(fromUserTransfers.length).to.be.equal(0);
+      expect(toBidderTransfers.length).to.be.equal(0);
+      expect(fromBidderTransfers.length).to.be.equal(0);
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer after bidding period elapsed and deposit was depleted after period", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidExtremeFeeAfter();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const forSalePrice = await basePCOFacet.forSalePrice();
+
+      // Payer deletes flow
+      const op1 = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: basePCOFacet.address,
+        superToken: ethx_erc20.address,
+      });
+
+      await op1.exec(await ethers.getSigner(user));
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 27]);
+      await network.provider.send("evm_mine");
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .triggerTransfer();
+      const txnReceipt = await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      const toUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(null, user),
+        txnReceipt.blockNumber
+      );
+      const fromUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(user),
+        txnReceipt.blockNumber
+      );
+      const toBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(null, bidder),
+        txnReceipt.blockNumber
+      );
+      const fromBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(bidder),
+        txnReceipt.blockNumber
+      );
+      expect(toUserTransfers.length).to.be.equal(0);
+      expect(fromUserTransfers.length).to.be.equal(0);
+      expect(toBidderTransfers.length).to.be.equal(0);
+      expect(fromBidderTransfers.length).to.be.equal(0);
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(false);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(true);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, BigNumber.from(0));
+      await checkAppToBeneficiaryFlow(BigNumber.from(0));
+      await checkAppNetFlow();
+    });
+
+    it("should trigger transfer and partially refund collateral if collateral was depleted during period", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+        paymentToken,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidLargeExtremeFeeAfter();
 
       mockLicense["safeTransferFrom(address,address,uint256)"].reset();
 
       const { bidder, user } = await getNamedAccounts();
 
       const oldContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldContributionRate
+        );
 
       // Payer deletes flow
       const op1 = ethersjsSf.cfaV1.deleteFlow({
@@ -2185,25 +3703,76 @@ describe("CFAPenaltyBidFacet", async function () {
       });
 
       const op1Resp = await op1.exec(await ethers.getSigner(user));
-      await op1Resp.wait();
+      const op1Receipt = await op1Resp.wait();
+      const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
 
-      // Payer re-opens flow
-      const op2 = ethersjsSf.cfaV1.createFlow({
-        receiver: basePCOFacet.address,
-        flowRate: oldContributionRate,
-        superToken: ethx_erc20.address,
-      });
+      // Advance time
+      await network.provider.send("evm_increaseTime", [96000]);
+      await network.provider.send("evm_mine");
 
-      const op2Resp = await op2.exec(await ethers.getSigner(user));
-      await op2Resp.wait();
-
-      const txn = basePCOFacet
+      const txn = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
         .triggerTransfer();
+      const txnReceipt = await txn.wait();
+      const txnBlock = await ethers.provider.getBlock(txnReceipt.blockNumber);
 
-      await expect(txn).to.be.revertedWith(
-        "CFAPenaltyBidFacet: Bid period has not elapsed"
+      await expect(txn)
+        .to.emit(basePCOFacet, "TransferTriggered")
+        .withArgs(bidder, user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
       );
+
+      // Check payment token transfers
+      const timeSinceDeletion = txnBlock.timestamp - op1Block.timestamp;
+      const depletedBuffer = oldContributionRate.mul(timeSinceDeletion);
+
+      const toUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(null, user),
+        txnReceipt.blockNumber
+      );
+      const fromUserTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(user),
+        txnReceipt.blockNumber
+      );
+      const fromBidderTransfers = await ethx_erc20.queryFilter(
+        ethx_erc20.filters.Transfer(bidder),
+        txnReceipt.blockNumber
+      );
+      expect(toUserTransfers.length).to.be.equal(0);
+      expect(fromUserTransfers.length).to.be.equal(0);
+      expect(fromBidderTransfers.length).to.be.equal(0);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice
+            .sub(forSalePrice)
+            .sub(depletedBuffer.sub(forSalePrice).sub(oldBuffer))
+        );
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.shouldBidPeriodEndEarly()).to.equal(false);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
     });
 
     it("should fail if pending bid does not exist", async () => {
