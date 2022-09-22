@@ -26,6 +26,15 @@ contract CFABasePCOFacetModifiers {
         );
         _;
     }
+
+    modifier onlyNotPayer() {
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+        require(
+            msg.sender != _currentBid.bidder,
+            "CFABasePCOFacet: Payer is not allowed to perform this action"
+        );
+        _;
+    }
 }
 
 /// @notice Handles basic PCO functionality using Constant Flow Agreement (CFA)
