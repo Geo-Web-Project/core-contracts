@@ -35,12 +35,12 @@ export function perYearToPerSecondRate(annualRate: number) {
 }
 
 export const setupSf = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ deployments, ethers }) => {
     await deployments.fixture("setupSf");
 
     const accounts = await ethers.getSigners();
 
-    const [admin, user, bidder, other] = accounts;
+    const [admin, user, bidder] = accounts;
     const uAccounts = await getUnnamedAccounts();
 
     await deployFramework(errorHandler, {

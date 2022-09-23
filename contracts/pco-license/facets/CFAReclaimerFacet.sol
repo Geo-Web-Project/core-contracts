@@ -6,7 +6,7 @@ import "../libraries/LibCFAPenaltyBid.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../registry/interfaces/ICFABeneficiary.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 /// @notice Handles reclaiming of licenses that are no longer active
 contract CFAReclaimerFacet is CFABasePCOFacetModifiers {

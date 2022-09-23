@@ -9,7 +9,7 @@ import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/app
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
-import "../../registry/interfaces/ICFABeneficiary.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 contract CFABasePCOFacetModifiers {
     modifier onlyPayer() {
