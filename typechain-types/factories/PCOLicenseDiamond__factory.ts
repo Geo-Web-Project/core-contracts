@@ -543,6 +543,11 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "maxClaimPrice",
+        type: "uint256",
+      },
+      {
         internalType: "int96",
         name: "newContributionRate",
         type: "int96",

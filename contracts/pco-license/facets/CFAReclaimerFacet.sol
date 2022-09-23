@@ -47,12 +47,15 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
      *      - Payer bid must be inactive
      *      - Must have permissions to create flow for bidder
      *      - Must have ERC-20 approval of payment token for claimPrice amount
+     * @param maxClaimPrice Max price willing to pay for claim. Prevents front-running
      * @param newContributionRate New contribution rate for license
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function reclaim(int96 newContributionRate, uint256 newForSalePrice)
-        external
-    {
+    function reclaim(
+        uint256 maxClaimPrice,
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external {
         require(
             !LibCFABasePCO._isPayerBidActive(),
             "CFAReclaimerFacet: Can only perform action when payer bid is active"
@@ -111,6 +114,11 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         require(
             newForSalePrice >= claimPrice,
             "CFAReclaimerFacet: For sale price must be greater than or equal to claim price"
+        );
+
+        require(
+            maxClaimPrice >= claimPrice,
+            "CFAReclaimerFacet: Claim price must be under maximum"
         );
 
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
