@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 library LibPCOLicenseParams {
     bytes32 private constant STORAGE_POSITION =
@@ -11,7 +12,7 @@ library LibPCOLicenseParams {
 
     struct DiamondStorage {
         /// @notice Beneficiary of funds.
-        address beneficiary;
+        ICFABeneficiary beneficiary;
         /// @notice Payment token.
         ISuperToken paymentToken;
         /// @notice Superfluid host

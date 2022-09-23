@@ -4,7 +4,7 @@
     "name": "getBeneficiary",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract ICFABeneficiary",
         "name": "",
         "type": "address"
       }

@@ -270,14 +270,14 @@ contract PCOLicenseClaimerFacet {
         if (block.timestamp <= ds.auctionEnd) {
             ls.paymentToken.safeTransferFrom(
                 msg.sender,
-                ls.beneficiary,
+                address(ls.beneficiary),
                 initialForSalePrice
             );
         }
 
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(
-            ICFABeneficiary(address(this)),
+            ls.beneficiary,
             IPCOLicenseParamsStore(address(this)),
             IERC721(address(this)),
             licenseId,

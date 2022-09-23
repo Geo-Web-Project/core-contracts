@@ -11,8 +11,9 @@ import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/app
 import "../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary {
+contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
     using CFAv1Library for CFAv1Library.InitData;
 
     CFAv1Library.InitData private cfaV1;
@@ -21,9 +22,19 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary {
     /// @notice Timestamp of last deletion from each beacon proxy
     mapping(address => uint256) public lastDeletion;
 
-    constructor(IPCOLicenseParamsStore _paramsStore) {
+    /// @notice Beneficiary of funds.
+    address beneficiary;
+
+    constructor(IPCOLicenseParamsStore _paramsStore, address _beneficiary) {
+        paramsStore = _paramsStore;
+        beneficiary = _beneficiary;
+
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
-            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP;
+            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
+            SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
+            SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
         ISuperfluid host = _paramsStore.getHost();
         host.registerApp(configWord);
@@ -41,7 +52,19 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary {
             )
         );
 
-        paramsStore = _paramsStore;
+        // Approve beneficiary to transfer payment token
+        ISuperToken paymentToken = paramsStore.getPaymentToken();
+        paymentToken.approve(beneficiary, type(uint256).max);
+    }
+
+    /// @notice Beneficiary
+    function getBeneficiary() external view returns (address) {
+        return beneficiary;
+    }
+
+    /// @notice Set Beneficiary
+    function setBeneficiary(address _beneficiary) external onlyOwner {
+        beneficiary = _beneficiary;
     }
 
     /// @notice Get last deletion for sender
@@ -62,189 +85,16 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary {
         lastDeletion[beaconProxy] = block.timestamp;
     }
 
-    /**
-     * @notice Increase flow to beneficiary
-     * @param ctx CFA ctx
-     * @param agreementId Agreement ID
-     * @param originalFlowRate Original flow rate before update
-     */
-    function _updateAppToBeneficiaryFlow(
-        bytes memory ctx,
-        bytes32 agreementId,
-        int96 originalFlowRate
-    ) internal returns (bytes memory newCtx) {
-        ISuperToken paymentToken = paramsStore.getPaymentToken();
-        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
-            paymentToken,
-            agreementId
-        );
-
-        if (originalFlowRate < flowRate) {
-            return
-                _increaseAppToBeneficiaryFlow(ctx, flowRate - originalFlowRate);
-        } else {
-            return
-                _decreaseAppToBeneficiaryFlow(ctx, originalFlowRate - flowRate);
-        }
-    }
-
-    /**
-     * @notice Increase flow to beneficiary
-     * @param ctx CFA ctx
-     * @param amount Flow amount to increase
-     */
-    function _increaseAppToBeneficiaryFlow(bytes memory ctx, int96 amount)
-        internal
-        returns (bytes memory newCtx)
-    {
-        ISuperToken paymentToken = paramsStore.getPaymentToken();
-        address beneficiary = paramsStore.getBeneficiary();
-
-        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
-            paymentToken,
-            address(this),
-            beneficiary
-        );
-
-        if (flowRate > 0) {
-            newCtx = cfaV1.updateFlowWithCtx(
-                ctx,
-                beneficiary,
-                paymentToken,
-                flowRate + amount
-            );
-        } else {
-            newCtx = cfaV1.createFlowWithCtx(
-                ctx,
-                beneficiary,
-                paymentToken,
-                amount
-            );
-        }
-    }
-
-    /**
-     * @notice Decrease flow to beneficiary
-     * @param ctx CFA ctx
-     * @param amount Flow amount to increase
-     */
-    function _decreaseAppToBeneficiaryFlow(bytes memory ctx, int96 amount)
-        internal
-        returns (bytes memory newCtx)
-    {
-        ISuperToken paymentToken = paramsStore.getPaymentToken();
-        address beneficiary = paramsStore.getBeneficiary();
-
-        (, int96 flowRate, , ) = cfaV1.cfa.getFlow(
-            paymentToken,
-            address(this),
-            beneficiary
-        );
-
-        if (amount < flowRate) {
-            newCtx = cfaV1.updateFlowWithCtx(
-                ctx,
-                beneficiary,
-                paymentToken,
-                flowRate - amount
-            );
-        } else if (flowRate > 0) {
-            newCtx = cfaV1.deleteFlowWithCtx(
-                ctx,
-                address(this),
-                beneficiary,
-                paymentToken
-            );
-        } else {
-            newCtx = ctx;
-        }
-    }
-
     /**************************************************************************
      * SuperApp callbacks
      *************************************************************************/
-
-    function afterAgreementCreated(
-        ISuperToken _superToken,
-        address _agreementClass,
-        bytes32 _agreementId,
-        bytes calldata,
-        bytes calldata, // _cbdata,
-        bytes calldata _ctx
-    )
-        external
-        override
-        onlyExpected(_superToken, _agreementClass)
-        onlyHost
-        returns (bytes memory newCtx)
-    {
-        return _updateAppToBeneficiaryFlow(_ctx, _agreementId, 0);
-    }
-
-    function beforeAgreementUpdated(
-        ISuperToken _superToken,
-        address _agreementClass,
-        bytes32 _agreementId,
-        bytes calldata,
-        bytes calldata
-    )
-        external
-        view
-        override
-        onlyExpected(_superToken, _agreementClass)
-        onlyHost
-        returns (bytes memory cbdata)
-    {
-        ISuperToken paymentToken = paramsStore.getPaymentToken();
-        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
-            paymentToken,
-            _agreementId
-        );
-        cbdata = abi.encode(flowRate);
-    }
-
-    function afterAgreementUpdated(
-        ISuperToken _superToken,
-        address _agreementClass,
-        bytes32 _agreementId,
-        bytes calldata,
-        bytes calldata _cbdata,
-        bytes calldata _ctx
-    )
-        external
-        override
-        onlyExpected(_superToken, _agreementClass)
-        onlyHost
-        returns (bytes memory newCtx)
-    {
-        int96 originalFlowRate = abi.decode(_cbdata, (int96));
-
-        return
-            _updateAppToBeneficiaryFlow(_ctx, _agreementId, originalFlowRate);
-    }
-
-    function beforeAgreementTerminated(
-        ISuperToken, // _superToken,
-        address, // _agreementClass,
-        bytes32 _agreementId,
-        bytes calldata,
-        bytes calldata
-    ) external view override onlyHost returns (bytes memory cbdata) {
-        ISuperToken paymentToken = paramsStore.getPaymentToken();
-
-        (, int96 flowRate, , ) = cfaV1.cfa.getFlowByID(
-            paymentToken,
-            _agreementId
-        );
-        cbdata = abi.encode(flowRate);
-    }
 
     function afterAgreementTerminated(
         ISuperToken _superToken,
         address _agreementClass,
         bytes32,
         bytes calldata _agreementData,
-        bytes calldata _cbdata,
+        bytes calldata,
         bytes calldata _ctx
     ) external override onlyHost returns (bytes memory newCtx) {
         // According to the app basic law, we should never revert in a termination callback
@@ -262,14 +112,11 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary {
             user = isUserToApp ? _sender : _receiver;
         }
 
-        int96 originalFlowRate = abi.decode(_cbdata, (int96));
-
         if (isUserToApp) {
             _setLastDeletion(user);
-            return _decreaseAppToBeneficiaryFlow(_ctx, originalFlowRate);
-        } else {
-            return _ctx;
         }
+
+        return _ctx;
     }
 
     function _isSameToken(ISuperToken superToken) private view returns (bool) {

@@ -5,26 +5,50 @@
         "internalType": "contract IPCOLicenseParamsStore",
         "name": "_paramsStore",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_beneficiary",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract ISuperToken",
-        "name": "_superToken",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_agreementClass",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "bytes32",
-        "name": "_agreementId",
+        "name": "",
         "type": "bytes32"
       },
       {
@@ -39,7 +63,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_ctx",
+        "name": "",
         "type": "bytes"
       }
     ],
@@ -47,7 +71,7 @@
     "outputs": [
       {
         "internalType": "bytes",
-        "name": "newCtx",
+        "name": "",
         "type": "bytes"
       }
     ],
@@ -78,7 +102,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_cbdata",
+        "name": "",
         "type": "bytes"
       },
       {
@@ -102,17 +126,17 @@
     "inputs": [
       {
         "internalType": "contract ISuperToken",
-        "name": "_superToken",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_agreementClass",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "bytes32",
-        "name": "_agreementId",
+        "name": "",
         "type": "bytes32"
       },
       {
@@ -122,12 +146,12 @@
       },
       {
         "internalType": "bytes",
-        "name": "_cbdata",
+        "name": "",
         "type": "bytes"
       },
       {
         "internalType": "bytes",
-        "name": "_ctx",
+        "name": "",
         "type": "bytes"
       }
     ],
@@ -135,7 +159,7 @@
     "outputs": [
       {
         "internalType": "bytes",
-        "name": "newCtx",
+        "name": "",
         "type": "bytes"
       }
     ],
@@ -195,7 +219,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "_agreementId",
+        "name": "",
         "type": "bytes32"
       },
       {
@@ -213,7 +237,7 @@
     "outputs": [
       {
         "internalType": "bytes",
-        "name": "cbdata",
+        "name": "",
         "type": "bytes"
       }
     ],
@@ -224,17 +248,17 @@
     "inputs": [
       {
         "internalType": "contract ISuperToken",
-        "name": "_superToken",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_agreementClass",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "bytes32",
-        "name": "_agreementId",
+        "name": "",
         "type": "bytes32"
       },
       {
@@ -252,8 +276,21 @@
     "outputs": [
       {
         "internalType": "bytes",
-        "name": "cbdata",
+        "name": "",
         "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBeneficiary",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -295,6 +332,52 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_beneficiary",
+        "type": "address"
+      }
+    ],
+    "name": "setBeneficiary",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

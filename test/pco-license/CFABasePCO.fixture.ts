@@ -48,7 +48,7 @@ const setup = deployments.createFixture(
     mockParamsStore.getPenaltyDenominator.returns(denominator);
     mockParamsStore.getHost.returns(sf.host.address);
     mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
-    mockParamsStore.getBeneficiary.returns(diamondAdmin);
+    mockParamsStore.getBeneficiary.returns(mockCFABeneficiary);
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
     mockParamsStore.getReclaimAuctionLength.returns(14 * 60 * 60 * 24);
 
@@ -237,7 +237,14 @@ const initializedLarge = deployments.createFixture(
 const initializedWithRealLicense = deployments.createFixture(
   async ({ getNamedAccounts, ethers }) => {
     const res = await setup();
-    const { basePCOFacet, ethersjsSf, paymentToken, ethx_erc20, sf } = res;
+    const {
+      basePCOFacet,
+      ethersjsSf,
+      paymentToken,
+      ethx_erc20,
+      sf,
+      mockCFABeneficiary,
+    } = res;
 
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
@@ -265,7 +272,7 @@ const initializedWithRealLicense = deployments.createFixture(
     );
 
     await (erc721Facet as PCOLicenseParamsFacet).initializeParams(
-      diamondAdmin,
+      mockCFABeneficiary.address,
       ethx_erc20.address,
       sf.host.address,
       numerator,
@@ -342,7 +349,7 @@ const initializedWithRealLicense = deployments.createFixture(
       const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
         superToken: paymentToken.address,
         sender: newBasePCOFacet.address,
-        receiver: erc721Facet.address,
+        receiver: mockCFABeneficiary.address,
         providerOrSigner: admin,
       });
 
