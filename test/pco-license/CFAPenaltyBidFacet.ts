@@ -1103,10 +1103,10 @@ describe("CFAPenaltyBidFacet", async function () {
     });
 
     it("should fail if payer bid becomes inactive", async () => {
-      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+      const { basePCOFacet, ethersjsSf, ethx_erc20, mockCFABeneficiary } =
         await CFAPenaltyBidFixtures.afterPlaceBid();
 
-      const { user, diamondAdmin } = await getNamedAccounts();
+      const { user } = await getNamedAccounts();
 
       // Payer deletes flow
       const op1 = ethersjsSf.cfaV1.deleteFlow({
@@ -1119,14 +1119,7 @@ describe("CFAPenaltyBidFacet", async function () {
       await op1Resp.wait();
 
       // Simulate closing flow
-      const op2 = ethersjsSf.cfaV1.deleteFlow({
-        sender: basePCOFacet.address,
-        receiver: diamondAdmin,
-        superToken: ethx_erc20.address,
-      });
-
-      const op2Resp = await op2.exec(await ethers.getSigner(diamondAdmin));
-      await op2Resp.wait();
+      await basePCOFacet.manualDeleteFlow(mockCFABeneficiary.address);
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
