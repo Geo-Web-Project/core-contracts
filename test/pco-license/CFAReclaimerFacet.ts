@@ -412,6 +412,64 @@ describe("CFAReclaimerFacet", async function () {
       expect(nextPrice.lt(prevPrice)).to.be.true;
     });
 
+    it("should decay the price even if account is updated during", async () => {
+      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+        await BaseFixtures.afterPayerDelete();
+      const { user } = await getNamedAccounts();
+
+      const currentBid = await basePCOFacet.currentBid();
+      originalForSalePrice = currentBid.forSalePrice;
+
+      daysFromNow = getUnixTime(addDays(startOfToday(), 2));
+      await network.provider.send("evm_mine", [daysFromNow]);
+
+      const startPrice = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .reclaimPrice();
+      expect(startPrice.lt(originalForSalePrice)).to.be.true;
+
+      daysFromNow = getUnixTime(addDays(startOfToday(), 5));
+      await network.provider.send("evm_mine", [daysFromNow]);
+
+      prevPrice = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .reclaimPrice();
+      expect(prevPrice.lt(startPrice)).to.be.true;
+
+      daysFromNow = getUnixTime(addDays(startOfToday(), 7));
+      await network.provider.send("evm_mine", [daysFromNow]);
+      nextPrice = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .reclaimPrice();
+      expect(nextPrice.lt(prevPrice)).to.be.true;
+
+      // Update account
+      const op2 = ethersjsSf.cfaV1.createFlow({
+        receiver: basePCOFacet.address,
+        flowRate: "100",
+        superToken: ethx_erc20.address,
+      });
+
+      const op2Resp = await op2.exec(await ethers.getSigner(user));
+      await op2Resp.wait();
+
+      prevPrice = nextPrice;
+      daysFromNow = getUnixTime(addDays(startOfToday(), 10));
+      await network.provider.send("evm_mine", [daysFromNow]);
+      nextPrice = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .reclaimPrice();
+      expect(nextPrice.lt(prevPrice)).to.be.true;
+
+      prevPrice = nextPrice;
+      daysFromNow = getUnixTime(addDays(startOfToday(), 13));
+      await network.provider.send("evm_mine", [daysFromNow]);
+      nextPrice = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .reclaimPrice();
+      expect(nextPrice.lt(prevPrice)).to.be.true;
+    });
+
     it("should return a price of 0 if auctionLength has expired", async () => {
       const { basePCOFacet } = await BaseFixtures.afterPayerDelete();
       const { user } = await getNamedAccounts();
