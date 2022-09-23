@@ -64,7 +64,15 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
 
     /// @notice Set Beneficiary
     function setBeneficiary(address _beneficiary) external onlyOwner {
+        address oldBeneficiary = beneficiary;
         beneficiary = _beneficiary;
+
+        // Revoke old beneficiary to transfer payment token
+        ISuperToken paymentToken = paramsStore.getPaymentToken();
+        paymentToken.approve(oldBeneficiary, 0);
+
+        // Approve beneficiary to transfer payment token
+        paymentToken.approve(beneficiary, type(uint256).max);
     }
 
     /// @notice Get last deletion for sender

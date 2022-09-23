@@ -1,11 +1,11 @@
 import chaiAsPromised from "chai-as-promised";
 import { expect, use } from "chai";
-import { ethers, getNamedAccounts, deployments } from "hardhat";
+import { ethers, getNamedAccounts, deployments, network } from "hardhat";
 import { ContractReceipt } from "ethers";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
 import { setupSf, perYearToPerSecondRate } from "../shared";
-import { BigNumber, BigNumberish } from "ethers";
+import { BigNumber } from "ethers";
 
 use(solidity);
 use(chaiAsPromised);
@@ -104,68 +104,148 @@ describe("BeneficiarySuperApp", async function () {
     }
   );
 
-  it("should handle create and delete flow", async () => {
-    const {
-      beneSuperApp,
-      ethx_erc20,
-      ethersjsSf,
-      checkJailed,
-      checkUserToAppFlow,
-    } = await createOne();
+  describe("setBeneficiary", async () => {
+    it("should set", async () => {
+      const { beneSuperApp, ethx_erc20 } = await setupTest();
+      const { user, diamondAdmin } = await getNamedAccounts();
 
-    const { user } = await getNamedAccounts();
+      expect(
+        await ethx_erc20.allowance(beneSuperApp.address, diamondAdmin)
+      ).to.equal(ethers.constants.MaxUint256);
 
-    const op = ethersjsSf.cfaV1.deleteFlow({
-      sender: user,
-      receiver: beneSuperApp.address,
-      superToken: ethx_erc20.address,
+      await beneSuperApp.setBeneficiary(user);
+
+      expect(await beneSuperApp.getBeneficiary()).to.equal(user);
+      expect(
+        await ethx_erc20.allowance(beneSuperApp.address, diamondAdmin)
+      ).to.equal(0);
+      expect(await ethx_erc20.allowance(beneSuperApp.address, user)).to.equal(
+        ethers.constants.MaxUint256
+      );
     });
 
-    const opResp = await op.exec(await ethers.getSigner(user));
-    const opReceipt = await opResp.wait();
-    const opBlock = await ethers.provider.getBlock(opReceipt.blockNumber);
+    it("should fail if not owner", async () => {
+      const { beneSuperApp } = await setupTest();
+      const { user } = await getNamedAccounts();
 
-    await checkJailed(opReceipt);
-    await checkUserToAppFlow(user, BigNumber.from(0));
-    expect(await beneSuperApp.getLastDeletion(user)).to.be.equal(
-      opBlock.timestamp
-    );
+      const txn = beneSuperApp
+        .connect(await ethers.getSigner(user))
+        .setBeneficiary(user);
+
+      await expect(txn).to.be.revertedWith("Ownable: caller is not the owner");
+    });
   });
 
-  it("should handle recreate flow", async () => {
-    const {
-      beneSuperApp,
-      ethx_erc20,
-      ethersjsSf,
-      checkJailed,
-      checkUserToAppFlow,
-    } = await createOne();
+  describe("getLastDeletion", async () => {
+    it("should handle create and delete flow", async () => {
+      const {
+        beneSuperApp,
+        ethx_erc20,
+        ethersjsSf,
+        checkJailed,
+        checkUserToAppFlow,
+      } = await createOne();
 
-    const { user } = await getNamedAccounts();
+      const { user } = await getNamedAccounts();
 
-    const op = ethersjsSf.cfaV1.deleteFlow({
-      sender: user,
-      receiver: beneSuperApp.address,
-      superToken: ethx_erc20.address,
+      const op = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: beneSuperApp.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const opResp = await op.exec(await ethers.getSigner(user));
+      const opReceipt = await opResp.wait();
+      const opBlock = await ethers.provider.getBlock(opReceipt.blockNumber);
+
+      await checkJailed(opReceipt);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      expect(await beneSuperApp.getLastDeletion(user)).to.be.equal(
+        opBlock.timestamp
+      );
     });
 
-    const opResp = await op.exec(await ethers.getSigner(user));
-    const opReceipt = await opResp.wait();
-    const opBlock = await ethers.provider.getBlock(opReceipt.blockNumber);
+    it("should handle recreate flow", async () => {
+      const {
+        beneSuperApp,
+        ethx_erc20,
+        ethersjsSf,
+        checkJailed,
+        checkUserToAppFlow,
+      } = await createOne();
 
-    const flowRate = BigNumber.from(1000);
-    const op1 = ethersjsSf.cfaV1.createFlow({
-      receiver: beneSuperApp.address,
-      flowRate: flowRate.toString(),
-      superToken: ethx_erc20.address,
+      const { user } = await getNamedAccounts();
+
+      const op = ethersjsSf.cfaV1.deleteFlow({
+        sender: user,
+        receiver: beneSuperApp.address,
+        superToken: ethx_erc20.address,
+      });
+
+      const opResp = await op.exec(await ethers.getSigner(user));
+      const opReceipt = await opResp.wait();
+      const opBlock = await ethers.provider.getBlock(opReceipt.blockNumber);
+
+      const flowRate = BigNumber.from(1000);
+      const op1 = ethersjsSf.cfaV1.createFlow({
+        receiver: beneSuperApp.address,
+        flowRate: flowRate.toString(),
+        superToken: ethx_erc20.address,
+      });
+
+      await op1.exec(await ethers.getSigner(user));
+
+      await checkJailed(opReceipt);
+      await checkUserToAppFlow(user, flowRate);
+      expect(await beneSuperApp.getLastDeletion(user)).to.be.equal(
+        opBlock.timestamp
+      );
+    });
+  });
+
+  describe("withdraw", async () => {
+    it("should allow beneficiary to withdraw", async () => {
+      const { beneSuperApp, ethx_erc20, flowRate } = await createOne();
+
+      const { diamondAdmin } = await getNamedAccounts();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const timeElapsed = 60 * 60 * 24;
+      const accumulatedBalance = flowRate.mul(timeElapsed);
+
+      const txn = await ethx_erc20.transferFrom(
+        beneSuperApp.address,
+        diamondAdmin,
+        accumulatedBalance
+      );
+      await txn.wait();
+
+      const beneficiaryBalance = await ethx_erc20.balanceOf(diamondAdmin);
+      expect(beneficiaryBalance).to.equal(accumulatedBalance);
     });
 
-    await op1.exec(await ethers.getSigner(user));
+    it("should fail if not beneficiary", async () => {
+      const { beneSuperApp, ethx_erc20, flowRate } = await createOne();
 
-    await checkJailed(opReceipt);
-    await checkUserToAppFlow(user, flowRate);
-    expect(await beneSuperApp.getLastDeletion(user)).to.be.equal(
-      opBlock.timestamp
-    );
+      const { user } = await getNamedAccounts();
+
+      // Advance time
+      await network.provider.send("evm_increaseTime", [60 * 60 * 24]);
+      await network.provider.send("evm_mine");
+
+      const timeElapsed = 60 * 60 * 24;
+      const accumulatedBalance = flowRate.mul(timeElapsed);
+
+      const txn = ethx_erc20
+        .connect(await ethers.getSigner(user))
+        .transferFrom(beneSuperApp.address, user, accumulatedBalance);
+
+      await expect(txn).to.be.revertedWith(
+        "SuperToken: transfer amount exceeds allowance"
+      );
+    });
   });
 });
