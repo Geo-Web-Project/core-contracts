@@ -107,6 +107,12 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         }
 
         uint256 claimPrice = reclaimPrice();
+
+        require(
+            newForSalePrice >= claimPrice,
+            "CFAReclaimerFacet: For sale price must be greater than or equal to claim price"
+        );
+
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         address bidder = _currentBid.bidder;
 

@@ -113,6 +113,49 @@ describe("CFAReclaimerFacet", async function () {
       ).to.have.been.calledWith(user, bidder, await basePCOFacet.licenseId());
     });
 
+    it("should revert if for sale price is lower than claim price", async () => {
+      const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
+        await BaseFixtures.afterPayerDelete();
+      const { bidder } = await getNamedAccounts();
+
+      const reclaimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaimPrice();
+      const contributionRate = BigNumber.from(1);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+
+      // Allow spending of reclaimPrice
+      const op2 = paymentToken.approve({
+        amount: reclaimPrice.add(requiredBuffer),
+        receiver: basePCOFacet.address,
+      });
+      await op2.exec(await ethers.getSigner(bidder));
+
+      // Approve flow creation
+      const op3 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op3.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaim(contributionRate, forSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "CFAReclaimerFacet: For sale price must be greater than or equal to claim price"
+      );
+    });
+
     it("should revert if insufficient balance", async () => {
       const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
         await BaseFixtures.afterPayerDelete();
