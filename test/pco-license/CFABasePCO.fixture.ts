@@ -15,7 +15,7 @@ import {
 } from "../shared";
 
 const setup = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ deployments, getNamedAccounts, ethers }) => {
     const res = await setupSf();
     const { sf, ethersjsSf, paymentToken } = res;
 
@@ -122,7 +122,7 @@ const setup = deployments.createFixture(
 );
 
 const initialized = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await setup();
     const {
       basePCOFacet,
@@ -181,7 +181,7 @@ const initialized = deployments.createFixture(
 );
 
 const initializedLarge = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await setup();
     const {
       basePCOFacet,
@@ -235,7 +235,7 @@ const initializedLarge = deployments.createFixture(
 );
 
 const initializedWithRealLicense = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await setup();
     const { basePCOFacet, ethersjsSf, paymentToken, ethx_erc20, sf } = res;
 
@@ -394,6 +394,7 @@ const initializedExtremeFeeDuring = deployments.createFixture(
       mockLicense,
       ethersjsSf,
       paymentToken,
+      mockCFABeneficiary,
     } = res;
 
     // 100% in an hour
@@ -428,6 +429,7 @@ const initializedExtremeFeeDuring = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -450,6 +452,7 @@ const initializedExtremeFeeAfter = deployments.createFixture(
       mockLicense,
       ethersjsSf,
       paymentToken,
+      mockCFABeneficiary,
     } = res;
 
     // 100% in 25 hours
@@ -484,6 +487,7 @@ const initializedExtremeFeeAfter = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -498,7 +502,7 @@ const initializedExtremeFeeAfter = deployments.createFixture(
 );
 
 const afterPayerDelete = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await initialized();
     const { basePCOFacet, ethersjsSf, ethx_erc20, mockCFABeneficiary } = res;
 
