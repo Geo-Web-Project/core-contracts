@@ -279,7 +279,7 @@ describe("CFAReclaimerFacet", async function () {
       );
     });
 
-    it("should revert if the player bid is active", async () => {
+    it("should revert if the payer bid is active", async () => {
       const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
         await BaseFixtures.initialized();
       const { bidder } = await getNamedAccounts();
@@ -424,7 +424,7 @@ describe("CFAReclaimerFacet", async function () {
       expect(price.eq(ethers.constants.Zero)).to.be.true;
     });
 
-    it("should revert if the player bid is active", async () => {
+    it("should revert if the payer bid is active", async () => {
       const { basePCOFacet } = await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
 

@@ -30,16 +30,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         uint256 originalForSalePrice = _currentBid.forSalePrice;
-
-        ICFABeneficiary beneficiary;
-        if (address(ds.beneficiary) == address(0x0)) {
-            beneficiary = ICFABeneficiary(
-                address(ds.paramsStore.getBeneficiary())
-            );
-        } else {
-            beneficiary = ds.beneficiary;
-        }
-        uint256 startTime = beneficiary.getLastDeletion(address(this));
+        uint256 startTime = ds.beneficiary.getLastDeletion(address(this));
         uint256 _length = ds.paramsStore.getReclaimAuctionLength();
 
         if (block.timestamp > startTime + _length) {

@@ -85,12 +85,7 @@ library LibCFABasePCO {
     /// @dev Get beneficiary or default if not set
     function _getBeneficiary() internal view returns (address) {
         DiamondStorage storage ds = diamondStorage();
-
-        if (address(ds.beneficiary) == address(0x0)) {
-            return ds.paramsStore.getBeneficiary();
-        } else {
-            return address(ds.beneficiary);
-        }
+        return address(ds.beneficiary);
     }
 
     function _checkForSalePrice(
@@ -128,11 +123,6 @@ library LibCFABasePCO {
         DiamondStorage storage ds = diamondStorage();
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-
-        if (address(ds.beneficiary) == address(0x0)) {
-            /// Migrate beneficiary
-            ds.beneficiary = ICFABeneficiary(address(ds.paramsStore));
-        }
 
         // Create to stored beneficiary
         cs.cfaV1.createFlow(
