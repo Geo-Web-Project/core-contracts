@@ -155,6 +155,8 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary {
                 beneficiary,
                 paymentToken
             );
+        } else {
+            newCtx = ctx;
         }
     }
 

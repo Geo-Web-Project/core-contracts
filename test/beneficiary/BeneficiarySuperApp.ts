@@ -476,4 +476,52 @@ describe("BeneficiarySuperApp", async function () {
       opBlock.timestamp
     );
   });
+
+  it("should not delete if already deleted", async () => {
+    const {
+      beneSuperApp,
+      ethx_erc20,
+      ethersjsSf,
+      checkJailed,
+      checkUserToAppFlow,
+      checkAppToBeneficiaryFlow,
+      checkAppNetFlow,
+      checkAppBalance,
+      flowRate,
+    } = await createOne();
+
+    const { user, diamondAdmin } = await getNamedAccounts();
+
+    const op0 = ethersjsSf.cfaV1.deleteFlow({
+      sender: beneSuperApp.address,
+      receiver: diamondAdmin,
+      superToken: ethx_erc20.address,
+    });
+    const op0Resp = await op0.exec(await ethers.getSigner(diamondAdmin));
+    const opReceipt0 = await op0Resp.wait();
+
+    const op = ethersjsSf.cfaV1.deleteFlow({
+      sender: user,
+      receiver: beneSuperApp.address,
+      superToken: ethx_erc20.address,
+    });
+
+    const opResp = await op.exec(await ethers.getSigner(user));
+    const opReceipt1 = await opResp.wait();
+
+    const opBlock0 = await ethers.provider.getBlock(opReceipt0.blockNumber);
+    const opBlock1 = await ethers.provider.getBlock(opReceipt1.blockNumber);
+
+    const timeElapsed = opBlock1.timestamp - opBlock0.timestamp;
+    const surplus = flowRate.mul(timeElapsed);
+
+    await checkJailed(opReceipt1);
+    await checkUserToAppFlow(user, BigNumber.from(0));
+    await checkAppToBeneficiaryFlow(BigNumber.from(0));
+    await checkAppNetFlow();
+    await checkAppBalance(surplus);
+    expect(await beneSuperApp.getLastDeletion(user)).to.be.equal(
+      opBlock1.timestamp
+    );
+  });
 });
