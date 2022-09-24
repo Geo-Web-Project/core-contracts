@@ -105,6 +105,39 @@ describe("BeneficiarySuperApp", async function () {
     }
   );
 
+  describe("deploy", async () => {
+    it("should fail if beneficiary is zero", async () => {
+      const res = await setupSf();
+      const { sf } = res;
+      const { diamondAdmin } = await getNamedAccounts();
+
+      const { numerator, denominator } = perYearToPerSecondRate(0.1);
+
+      const mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
+      mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
+      mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
+      mockParamsStore.getPenaltyNumerator.returns(numerator);
+      mockParamsStore.getPenaltyDenominator.returns(denominator);
+      mockParamsStore.getHost.returns(sf.host.address);
+      mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
+      mockParamsStore.getBeneficiary.returns(diamondAdmin);
+      mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
+      mockParamsStore.getReclaimAuctionLength.returns(14 * 60 * 60 * 24);
+
+      const BeneficiarySuperApp = await ethers.getContractFactory(
+        "BeneficiarySuperApp"
+      );
+      const beneSuperApp = BeneficiarySuperApp.deploy(
+        mockParamsStore.address,
+        ethers.constants.AddressZero
+      );
+
+      await expect(beneSuperApp).to.be.revertedWith(
+        "BeneficiarySuperApp: Beneficiary cannot be 0x0"
+      );
+    });
+  });
+
   describe("setBeneficiary", async () => {
     it("should set", async () => {
       const { beneSuperApp, ethx_erc20 } = await setupTest();
@@ -134,6 +167,16 @@ describe("BeneficiarySuperApp", async function () {
         .setBeneficiary(user);
 
       await expect(txn).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("should fail if address is zero", async () => {
+      const { beneSuperApp } = await setupTest();
+
+      const txn = beneSuperApp.setBeneficiary(ethers.constants.AddressZero);
+
+      await expect(txn).to.be.revertedWith(
+        "BeneficiarySuperApp: Beneficiary cannot be 0x0"
+      );
     });
   });
 

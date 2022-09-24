@@ -28,6 +28,11 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
     address public beneficiary;
 
     constructor(IPCOLicenseParamsStore _paramsStore, address _beneficiary) {
+        require(
+            _beneficiary != address(0x0),
+            "BeneficiarySuperApp: Beneficiary cannot be 0x0"
+        );
+
         paramsStore = _paramsStore;
         beneficiary = _beneficiary;
 
@@ -66,6 +71,11 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
 
     /// @notice Set Beneficiary
     function setBeneficiary(address _beneficiary) external onlyOwner {
+        require(
+            _beneficiary != address(0x0),
+            "BeneficiarySuperApp: Beneficiary cannot be 0x0"
+        );
+
         address oldBeneficiary = beneficiary;
         beneficiary = _beneficiary;
 
