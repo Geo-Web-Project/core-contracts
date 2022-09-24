@@ -27,14 +27,14 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
     /// @notice Beneficiary of funds.
     address public beneficiary;
 
-    constructor(IPCOLicenseParamsStore _paramsStore, address _beneficiary) {
+    constructor(IPCOLicenseParamsStore paramsStore_, address beneficiary_) {
         require(
-            _beneficiary != address(0x0),
+            beneficiary_ != address(0x0),
             "BeneficiarySuperApp: Beneficiary cannot be 0x0"
         );
 
-        paramsStore = _paramsStore;
-        beneficiary = _beneficiary;
+        paramsStore = paramsStore_;
+        beneficiary = beneficiary_;
 
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
             SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
@@ -43,7 +43,7 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
             SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
             SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
-        ISuperfluid host = _paramsStore.getHost();
+        ISuperfluid host = paramsStore.getHost();
         host.registerApp(configWord);
 
         cfaV1 = CFAv1Library.InitData(
@@ -70,14 +70,14 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
     }
 
     /// @notice Set Beneficiary
-    function setBeneficiary(address _beneficiary) external onlyOwner {
+    function setBeneficiary(address beneficiary_) external onlyOwner {
         require(
-            _beneficiary != address(0x0),
+            beneficiary_ != address(0x0),
             "BeneficiarySuperApp: Beneficiary cannot be 0x0"
         );
 
         address oldBeneficiary = beneficiary;
-        beneficiary = _beneficiary;
+        beneficiary = beneficiary_;
 
         // Revoke old beneficiary to transfer payment token
         ISuperToken paymentToken = paramsStore.getPaymentToken();
@@ -110,21 +110,20 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
      *************************************************************************/
 
     function afterAgreementTerminated(
-        ISuperToken _superToken,
-        address _agreementClass,
+        ISuperToken superToken,
+        address agreementClass,
         bytes32,
-        bytes calldata _agreementData,
+        bytes calldata agreementData,
         bytes calldata,
-        bytes calldata _ctx
+        bytes calldata ctx
     ) external override onlyHost returns (bytes memory newCtx) {
         // According to the app basic law, we should never revert in a termination callback
-        if (!_isSameToken(_superToken) || !_isCFAv1(_agreementClass))
-            return _ctx;
+        if (!_isSameToken(superToken) || !_isCFAv1(agreementClass)) return ctx;
 
-        (address _sender, ) = abi.decode(_agreementData, (address, address));
+        (address _sender, ) = abi.decode(agreementData, (address, address));
         _setLastDeletion(_sender);
 
-        return _ctx;
+        return ctx;
     }
 
     function _isSameToken(ISuperToken superToken) private view returns (bool) {
