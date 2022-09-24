@@ -3,12 +3,12 @@
     "inputs": [
       {
         "internalType": "contract IPCOLicenseParamsStore",
-        "name": "_paramsStore",
+        "name": "paramsStore_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_beneficiary",
+        "name": "beneficiary_",
         "type": "address"
       }
     ],
@@ -82,12 +82,12 @@
     "inputs": [
       {
         "internalType": "contract ISuperToken",
-        "name": "_superToken",
+        "name": "superToken",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_agreementClass",
+        "name": "agreementClass",
         "type": "address"
       },
       {
@@ -97,7 +97,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_agreementData",
+        "name": "agreementData",
         "type": "bytes"
       },
       {
@@ -107,7 +107,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_ctx",
+        "name": "ctx",
         "type": "bytes"
       }
     ],
@@ -371,7 +371,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_beneficiary",
+        "name": "beneficiary_",
         "type": "address"
       }
     ],
