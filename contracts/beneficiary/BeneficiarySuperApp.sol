@@ -12,9 +12,11 @@ import "../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
     using CFAv1Library for CFAv1Library.InitData;
+    using SafeERC20 for ISuperToken;
 
     CFAv1Library.InitData private cfaV1;
     IPCOLicenseParamsStore private paramsStore;
@@ -54,7 +56,7 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
 
         // Approve beneficiary to transfer payment token
         ISuperToken paymentToken = paramsStore.getPaymentToken();
-        paymentToken.approve(beneficiary, type(uint256).max);
+        paymentToken.safeIncreaseAllowance(beneficiary, type(uint256).max);
     }
 
     /// @notice Beneficiary
@@ -69,10 +71,10 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
 
         // Revoke old beneficiary to transfer payment token
         ISuperToken paymentToken = paramsStore.getPaymentToken();
-        paymentToken.approve(oldBeneficiary, 0);
+        paymentToken.safeDecreaseAllowance(oldBeneficiary, type(uint256).max);
 
         // Approve beneficiary to transfer payment token
-        paymentToken.approve(beneficiary, type(uint256).max);
+        paymentToken.safeIncreaseAllowance(beneficiary, type(uint256).max);
     }
 
     /// @notice Get last deletion for sender
