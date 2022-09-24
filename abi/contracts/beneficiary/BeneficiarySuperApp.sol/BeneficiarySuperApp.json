@@ -1,19 +1,16 @@
 [
   {
+    "anonymous": false,
     "inputs": [
       {
-        "internalType": "contract IPCOLicenseParamsStore",
-        "name": "paramsStore_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "beneficiary_",
-        "type": "address"
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    "name": "Initialized",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -326,6 +323,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPCOLicenseParamsStore",
+        "name": "paramsStore_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "beneficiary_",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

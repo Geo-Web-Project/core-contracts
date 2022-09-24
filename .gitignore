@@ -38,3 +38,6 @@ coverage.json
 coverage/
 
 shell.nix
+
+.openzeppelin/unknown-*.json
+

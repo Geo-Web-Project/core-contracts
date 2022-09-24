@@ -1,6 +1,12 @@
 import chaiAsPromised from "chai-as-promised";
 import { expect, use } from "chai";
-import { ethers, getNamedAccounts, deployments, network } from "hardhat";
+import {
+  ethers,
+  getNamedAccounts,
+  deployments,
+  network,
+  upgrades,
+} from "hardhat";
 import { ContractReceipt } from "ethers";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
@@ -34,10 +40,10 @@ describe("BeneficiarySuperApp", async function () {
       const BeneficiarySuperApp = await ethers.getContractFactory(
         "BeneficiarySuperApp"
       );
-      const beneSuperApp = await BeneficiarySuperApp.deploy(
+      const beneSuperApp = await upgrades.deployProxy(BeneficiarySuperApp, [
         mockParamsStore.address,
-        diamondAdmin
-      );
+        diamondAdmin,
+      ]);
       await beneSuperApp.deployed();
 
       async function checkUserToAppFlow(
@@ -127,10 +133,10 @@ describe("BeneficiarySuperApp", async function () {
       const BeneficiarySuperApp = await ethers.getContractFactory(
         "BeneficiarySuperApp"
       );
-      const beneSuperApp = BeneficiarySuperApp.deploy(
+      const beneSuperApp = upgrades.deployProxy(BeneficiarySuperApp, [
         mockParamsStore.address,
-        ethers.constants.AddressZero
-      );
+        ethers.constants.AddressZero,
+      ]);
 
       await expect(beneSuperApp).to.be.revertedWith(
         "BeneficiarySuperApp: Beneficiary cannot be 0x0"
