@@ -36,7 +36,7 @@ contract BeneficiarySuperApp is
     function initialize(
         IPCOLicenseParamsStore paramsStore_,
         address beneficiary_
-    ) public initializer {
+    ) external initializer {
         __Ownable_init();
 
         require(
@@ -47,15 +47,7 @@ contract BeneficiarySuperApp is
         paramsStore = paramsStore_;
         beneficiary = beneficiary_;
 
-        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
-            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
-            SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
-
         ISuperfluid host = paramsStore.getHost();
-        host.registerApp(configWord);
 
         cfaV1 = CFAv1Library.InitData(
             host,
@@ -77,6 +69,15 @@ contract BeneficiarySuperApp is
             beneficiary,
             type(uint256).max
         );
+
+        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
+            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
+            SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
+            SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
+
+        host.registerApp(configWord);
     }
 
     /// @notice Beneficiary
