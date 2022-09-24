@@ -152,6 +152,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         }
 
         // Create bidder flow
+        /* solhint-disable no-empty-blocks */
         try
             cs.cfaV1.host.callAgreement(
                 cs.cfaV1.cfa,
@@ -168,6 +169,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
                 new bytes(0)
             )
         {} catch {}
+        /* solhint-enable no-empty-blocks */
 
         // Update beneficiary flow
         LibCFABasePCO._createBeneficiaryFlow(newContributionRate);

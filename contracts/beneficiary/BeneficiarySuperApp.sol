@@ -23,7 +23,7 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
     mapping(address => uint256) public lastDeletion;
 
     /// @notice Beneficiary of funds.
-    address beneficiary;
+    address public beneficiary;
 
     constructor(IPCOLicenseParamsStore _paramsStore, address _beneficiary) {
         paramsStore = _paramsStore;
