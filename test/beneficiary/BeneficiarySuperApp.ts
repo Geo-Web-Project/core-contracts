@@ -74,6 +74,7 @@ describe("BeneficiarySuperApp", async function () {
         beneSuperApp,
         checkUserToAppFlow,
         checkJailed,
+        mockParamsStore,
         ...res,
       };
     }
@@ -246,6 +247,106 @@ describe("BeneficiarySuperApp", async function () {
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
       );
+    });
+  });
+
+  describe("afterAgreementTerminated", async () => {
+    it("should fail if not called by host", async () => {
+      const { beneSuperApp, paymentToken, ethersjsSf } = await setupTest();
+
+      const txn = beneSuperApp.afterAgreementTerminated(
+        paymentToken.address,
+        ethersjsSf.cfaV1.contract.address,
+        ethers.constants.HashZero,
+        ethers.constants.HashZero,
+        ethers.constants.HashZero,
+        ethers.constants.HashZero
+      );
+
+      await expect(txn).to.be.revertedWith(
+        "BeneficiarySuperApp: support only one host"
+      );
+    });
+
+    it("should pass if called with different token", async () => {
+      const {
+        beneSuperApp,
+        ethersjsSf,
+        sf,
+        ethx_erc20,
+        checkJailed,
+        mockParamsStore,
+      } = await setupTest();
+
+      const { user } = await getNamedAccounts();
+
+      mockParamsStore.getPaymentToken.returns(sf.tokens.fDAIx.address);
+
+      const flowRate = BigNumber.from(100);
+      const op = ethersjsSf.cfaV1.createFlow({
+        receiver: beneSuperApp.address,
+        flowRate: flowRate.toString(),
+        superToken: ethx_erc20.address,
+      });
+
+      const opResp = await op.exec(await ethers.getSigner(user));
+      const opReceipt = await opResp.wait();
+
+      await checkJailed(opReceipt);
+      const userToAppFlow = await ethersjsSf.cfaV1.getFlow({
+        superToken: sf.tokens.fDAIx.address,
+        sender: user,
+        receiver: beneSuperApp.address,
+        providerOrSigner: await ethers.getSigner(user),
+      });
+
+      expect(userToAppFlow.flowRate).to.equal(
+        "0",
+        "User -> App flow is incorrect"
+      );
+      expect(await beneSuperApp.getLastDeletion(user)).to.be.equal(0);
+
+      mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
+    });
+
+    it("should pass if called with different agreement", async () => {
+      const {
+        beneSuperApp,
+        ethersjsSf,
+        ethx_erc20,
+        checkJailed,
+        checkUserToAppFlow,
+      } = await setupTest();
+
+      const { user } = await getNamedAccounts();
+
+      const op = ethersjsSf.idaV1.createIndex({
+        superToken: ethx_erc20.address,
+        indexId: "0",
+      });
+
+      await op.exec(await ethers.getSigner(user));
+
+      const op1 = ethersjsSf.idaV1.updateSubscriptionUnits({
+        indexId: "0",
+        superToken: ethx_erc20.address,
+        subscriber: beneSuperApp.address,
+        units: "1",
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      const op2 = ethersjsSf.idaV1.deleteSubscription({
+        indexId: "0",
+        superToken: ethx_erc20.address,
+        subscriber: beneSuperApp.address,
+        publisher: user,
+      });
+      const opResp = await op2.exec(await ethers.getSigner(user));
+      const opReceipt = await opResp.wait();
+
+      await checkJailed(opReceipt);
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      expect(await beneSuperApp.getLastDeletion(user)).to.be.equal(0);
     });
   });
 });

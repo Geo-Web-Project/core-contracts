@@ -4,6 +4,7 @@ import { BigNumber } from "ethers";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
+const deployTestToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-test-token");
 import { deployments, getUnnamedAccounts } from "hardhat";
 import { ISuperfluid } from "../typechain-types";
 
@@ -53,10 +54,20 @@ export const setupSf = deployments.createFixture(
       from: admin.address,
     });
 
+    await deployTestToken(errorHandler, [":", "fDAI"], {
+      web3,
+      from: admin.address,
+    });
+
+    await deploySuperToken(errorHandler, [":", "fDAI"], {
+      web3,
+      from: admin.address,
+    });
+
     const sf = new SuperfluidSDK.Framework({
       web3,
       version: "test",
-      tokens: ["ETH"],
+      tokens: ["ETH", "fDAI"],
     });
     await sf.initialize();
 

@@ -109,20 +109,8 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
         if (!_isSameToken(_superToken) || !_isCFAv1(_agreementClass))
             return _ctx;
 
-        address user;
-        bool isUserToApp;
-        {
-            (address _sender, address _receiver) = abi.decode(
-                _agreementData,
-                (address, address)
-            );
-            isUserToApp = _receiver == address(this);
-            user = isUserToApp ? _sender : _receiver;
-        }
-
-        if (isUserToApp) {
-            _setLastDeletion(user);
-        }
+        (address _sender, ) = abi.decode(_agreementData, (address, address));
+        _setLastDeletion(_sender);
 
         return _ctx;
     }
@@ -147,18 +135,6 @@ contract BeneficiarySuperApp is SuperAppBase, ICFABeneficiary, Ownable {
         require(
             msg.sender == address(host),
             "BeneficiarySuperApp: support only one host"
-        );
-        _;
-    }
-
-    modifier onlyExpected(ISuperToken superToken, address agreementClass) {
-        require(
-            _isSameToken(superToken),
-            "BeneficiarySuperApp: not accepted token"
-        );
-        require(
-            _isCFAv1(agreementClass),
-            "BeneficiarySuperApp: only CFAv1 supported"
         );
         _;
     }
