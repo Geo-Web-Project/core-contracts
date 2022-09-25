@@ -26,7 +26,7 @@ const networks: any = {
     url: `http://localhost:8545`,
   },
   hardhat: {
-    deploy: ["deploy-hardhat/"],
+    deploy: ["deploy/"],
   },
 };
 
@@ -40,6 +40,17 @@ if (process.env.INFURA_KEY) {
       verify: {
         etherscan: {
           apiUrl: "https://api-goerli.etherscan.io/",
+        },
+      },
+    };
+    networks["optimism-goerli"] = {
+      url: `https://optimism-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+      chainId: 420,
+      accounts: [process.env.DEV_PRIVATE_KEY],
+      deploy: ["deploy/"],
+      verify: {
+        etherscan: {
+          apiUrl: "https://api-goerli-optimism.etherscan.io/",
         },
       },
     };
@@ -83,6 +94,8 @@ module.exports = {
     },
     treasury: {
       5: "0xC8A14DEe867329D54E911e01561B984378c0675C",
+      420: "0x85ACc73a9Cff049A978962f05cE0Ce6496416023",
+      31337: 0,
     },
   },
   diamondAbi: [

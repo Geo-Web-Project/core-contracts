@@ -1903,15 +1903,19 @@
     auto-bind "^4.0.0"
     node-fetch "^2.6.7"
 
-"@superfluid-finance/sdk-core@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@superfluid-finance/sdk-core/-/sdk-core-0.5.0.tgz#006312bd109d150a63128b3d8bfe6a6b705132c6"
-  integrity sha512-3R3iHK49h5eaq1QW3CSCszrt6Dp4cLB410OSFRtc+C4xAuS0WjsZFr/qwwEwbjB6Do3gScSrPmxkenHTiHfSRQ==
+"@superfluid-finance/metadata@git+https://github.com/superfluid-finance/metadata.git":
+  version "1.1.0"
+  resolved "git+https://github.com/superfluid-finance/metadata.git#edd18b65e170417d2abff336fc14b6683fcf5e94"
+
+"@superfluid-finance/sdk-core@^0.5.6":
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/@superfluid-finance/sdk-core/-/sdk-core-0.5.6.tgz#ab8d23cd621cd9ca64cb1e6f257aff1306bef8c5"
+  integrity sha512-PeaIgGu/hcM/fnSZwAGOT8BlRxH/RnLxpaC7yhsTjFZXIGIhJYIEjbUHNWVpgwKqOTX5+JTnesLwIEQdNUF0wA==
   dependencies:
+    "@superfluid-finance/metadata" "git+https://github.com/superfluid-finance/metadata.git"
     browserify "^17.0.0"
     graphql-request "^4.3.0"
     lodash "^4.17.21"
-    serialize-error "8.1.0"
     tsify "^5.0.4"
 
 "@szmarczak/http-timer@^1.1.2":
@@ -11219,13 +11223,6 @@ sentence-case@^2.1.0:
   dependencies:
     no-case "^2.2.0"
     upper-case-first "^1.1.2"
-
-serialize-error@8.1.0:
-  version "8.1.0"
-  resolved "https://registry.yarnpkg.com/serialize-error/-/serialize-error-8.1.0.tgz#3a069970c712f78634942ddd50fbbc0eaebe2f67"
-  integrity sha512-3NnuWfM6vBYoy5gZFvHiYsVbafvI9vZv/+jlIigFn4oP4zjNPK3LhcY0xSCgeb1a5L8jO71Mit9LlNoi2UfDDQ==
-  dependencies:
-    type-fest "^0.20.2"
 
 serialize-javascript@6.0.0:
   version "6.0.0"

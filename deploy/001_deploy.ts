@@ -4,7 +4,7 @@ import SuperfluidSDK from "@superfluid-finance/js-sdk";
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { Contract } from "ethers";
 
 function perYearToPerSecondRate(annualRate: number) {
@@ -108,6 +108,21 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
     console.log("Initialized RegistryDiamond.");
   }
+
+  // Deploy super app
+  console.log("Deploying BeneficiarySuperApp...");
+  const BeneficiarySuperApp = await ethers.getContractFactory(
+    "BeneficiarySuperApp"
+  );
+  const beneSuperApp = await upgrades.deployProxy(BeneficiarySuperApp, [
+    registryDiamond.address,
+    treasury,
+  ]);
+  await beneSuperApp.deployed();
+
+  // Set beneficiary to super app
+  console.log("Setting beneficiary to super app...");
+  await registryDiamond.setBeneficiary(beneSuperApp.address);
 };
 export default func;
 func.tags = ["Main"];
