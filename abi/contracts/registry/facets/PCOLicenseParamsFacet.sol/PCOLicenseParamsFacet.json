@@ -4,7 +4,7 @@
     "name": "getBeneficiary",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract ICFABeneficiary",
         "name": "",
         "type": "address"
       }
@@ -119,7 +119,7 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "contract ICFABeneficiary",
         "name": "beneficiary",
         "type": "address"
       },
@@ -172,7 +172,7 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "contract ICFABeneficiary",
         "name": "beneficiary",
         "type": "address"
       }

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -32,6 +33,7 @@ library LibCFABasePCO {
         IPCOLicenseParamsStore paramsStore;
         IERC721 license;
         uint256 licenseId;
+        ICFABeneficiary beneficiary;
     }
 
     struct DiamondCFAStorage {
@@ -80,6 +82,12 @@ library LibCFABasePCO {
         }
     }
 
+    /// @dev Get beneficiary or default if not set
+    function _getBeneficiary() internal view returns (address) {
+        DiamondStorage storage ds = diamondStorage();
+        return address(ds.beneficiary);
+    }
+
     function _checkForSalePrice(
         uint256 forSalePrice,
         int96 contributionRate,
@@ -100,7 +108,7 @@ library LibCFABasePCO {
         (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             ds.paramsStore.getPaymentToken(),
             address(this),
-            ds.paramsStore.getBeneficiary()
+            address(_getBeneficiary())
         );
 
         return flowRate;
@@ -108,6 +116,20 @@ library LibCFABasePCO {
 
     function _isPayerBidActive() internal view returns (bool) {
         return _contributionRate() > 0;
+    }
+
+    function _createBeneficiaryFlow(int96 newContributionRate) internal {
+        DiamondCFAStorage storage cs = cfaStorage();
+        DiamondStorage storage ds = diamondStorage();
+
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+
+        // Create to stored beneficiary
+        cs.cfaV1.createFlow(
+            address(ds.beneficiary),
+            paymentToken,
+            newContributionRate
+        );
     }
 
     function _editBid(int96 newContributionRate, uint256 newForSalePrice)
@@ -134,7 +156,6 @@ library LibCFABasePCO {
         );
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        address beneficiary = ds.paramsStore.getBeneficiary();
 
         bid.timestamp = block.timestamp;
         bid.bidder = bid.bidder;
@@ -186,6 +207,7 @@ library LibCFABasePCO {
             );
         }
 
+        address beneficiary = address(_getBeneficiary());
         (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
             address(this),
@@ -197,7 +219,7 @@ library LibCFABasePCO {
             cs.cfaV1.updateFlow(beneficiary, paymentToken, newContributionRate);
         } else {
             // Recreate flow (license -> beneficiary)
-            cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
+            _createBeneficiaryFlow(newContributionRate);
         }
 
         // Refund buffer

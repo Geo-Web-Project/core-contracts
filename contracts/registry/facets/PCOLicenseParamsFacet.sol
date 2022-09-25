@@ -6,6 +6,7 @@ import "../interfaces/IPCOLicenseParamsStore.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 /// @title Public access to global Claimer parameters
 contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
@@ -23,7 +24,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
      * @param reclaimAuctionLength when the required bid amount reaches its minimum value.
      */
     function initializeParams(
-        address beneficiary,
+        ICFABeneficiary beneficiary,
         ISuperToken paymentToken,
         ISuperfluid host,
         uint256 perSecondFeeNumerator,
@@ -84,7 +85,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Beneficiary
-    function getBeneficiary() external view override returns (address) {
+    function getBeneficiary() external view override returns (ICFABeneficiary) {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -92,7 +93,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Beneficiary
-    function setBeneficiary(address beneficiary) external {
+    function setBeneficiary(ICFABeneficiary beneficiary) external {
         LibDiamond.enforceIsContractOwner();
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();

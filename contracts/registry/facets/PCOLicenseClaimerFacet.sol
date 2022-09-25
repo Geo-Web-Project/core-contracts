@@ -11,6 +11,7 @@ import "../../beacon-diamond/BeaconDiamond.sol";
 import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 contract PCOLicenseClaimerFacet {
     using CFAv1Library for CFAv1Library.InitData;
@@ -269,13 +270,14 @@ contract PCOLicenseClaimerFacet {
         if (block.timestamp <= ds.auctionEnd) {
             ls.paymentToken.safeTransferFrom(
                 msg.sender,
-                ls.beneficiary,
+                address(ls.beneficiary),
                 initialForSalePrice
             );
         }
 
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(
+            ls.beneficiary,
             IPCOLicenseParamsStore(address(this)),
             IERC721(address(this)),
             licenseId,

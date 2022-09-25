@@ -21,6 +21,7 @@ describe("CFABasePCOFacet", async function () {
       const {
         basePCOFacet,
         mockParamsStore,
+        mockCFABeneficiary,
         mockLicense,
         ethersjsSf,
         paymentToken,
@@ -57,6 +58,7 @@ describe("CFABasePCOFacet", async function () {
       await op2.exec(await ethers.getSigner(user));
 
       const txn = await basePCOFacet.initializeBid(
+        mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
         1,
@@ -88,6 +90,7 @@ describe("CFABasePCOFacet", async function () {
       const {
         basePCOFacet,
         mockParamsStore,
+        mockCFABeneficiary,
         mockLicense,
         ethersjsSf,
         paymentToken,
@@ -119,6 +122,7 @@ describe("CFABasePCOFacet", async function () {
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
         .initializeBid(
+          mockCFABeneficiary.address,
           mockParamsStore.address,
           mockLicense.address,
           1,
@@ -135,6 +139,7 @@ describe("CFABasePCOFacet", async function () {
       const {
         basePCOFacet,
         mockParamsStore,
+        mockCFABeneficiary,
         mockLicense,
         ethersjsSf,
         paymentToken,
@@ -157,6 +162,7 @@ describe("CFABasePCOFacet", async function () {
       await op2.exec(await ethers.getSigner(user));
 
       const txn = basePCOFacet.initializeBid(
+        mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
         1,
@@ -168,8 +174,13 @@ describe("CFABasePCOFacet", async function () {
     });
 
     it("should fail if flow permissions are missing", async () => {
-      const { basePCOFacet, mockParamsStore, mockLicense, paymentToken } =
-        await Fixtures.setup();
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockCFABeneficiary,
+        mockLicense,
+        paymentToken,
+      } = await Fixtures.setup();
       const { user } = await getNamedAccounts();
 
       const contributionRate = BigNumber.from(100);
@@ -186,6 +197,7 @@ describe("CFABasePCOFacet", async function () {
       await op1.exec(await ethers.getSigner(user));
 
       const txn = basePCOFacet.initializeBid(
+        mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
         1,
@@ -200,6 +212,7 @@ describe("CFABasePCOFacet", async function () {
       const {
         basePCOFacet,
         mockParamsStore,
+        mockCFABeneficiary,
         mockLicense,
         ethersjsSf,
         paymentToken,
@@ -229,6 +242,7 @@ describe("CFABasePCOFacet", async function () {
       await op2.exec(await ethers.getSigner(user));
 
       const txn = basePCOFacet.initializeBid(
+        mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
         1,
@@ -265,7 +279,7 @@ describe("CFABasePCOFacet", async function () {
     });
 
     it("should deplete buffer", async () => {
-      const { basePCOFacet, ethersjsSf, ethx_erc20 } =
+      const { basePCOFacet, ethersjsSf, ethx_erc20, mockCFABeneficiary } =
         await Fixtures.initialized();
       const { user, diamondAdmin } = await getNamedAccounts();
 
@@ -290,11 +304,12 @@ describe("CFABasePCOFacet", async function () {
       // Close flow
       const op1 = ethersjsSf.cfaV1.deleteFlow({
         sender: basePCOFacet.address,
-        receiver: diamondAdmin,
+        receiver: mockCFABeneficiary.address,
         superToken: ethx_erc20.address,
       });
 
-      await op1.exec(await ethers.getSigner(diamondAdmin));
+      const op1Resp = await op1.exec(await ethers.getSigner(diamondAdmin));
+      await op1Resp.wait();
 
       expect(await basePCOFacet.contributionRate()).to.equal(0);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(false);

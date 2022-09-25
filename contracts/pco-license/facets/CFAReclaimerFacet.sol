@@ -6,6 +6,7 @@ import "../libraries/LibCFAPenaltyBid.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 /// @notice Handles reclaiming of licenses that are no longer active
 contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
@@ -25,17 +26,11 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         );
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
-        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
 
         uint256 originalForSalePrice = _currentBid.forSalePrice;
-
-        // TODO This is a temporary solution to get the time when the flow is closed
-        (uint256 startTime, , , ) = cs.cfaV1.cfa.getAccountFlowInfo(
-            ds.paramsStore.getPaymentToken(),
-            address(this)
-        );
+        uint256 startTime = ds.beneficiary.getLastDeletion(address(this));
         uint256 _length = ds.paramsStore.getReclaimAuctionLength();
 
         if (block.timestamp > startTime + _length) {
@@ -52,12 +47,15 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
      *      - Payer bid must be inactive
      *      - Must have permissions to create flow for bidder
      *      - Must have ERC-20 approval of payment token for claimPrice amount
+     * @param maxClaimPrice Max price willing to pay for claim. Prevents front-running
      * @param newContributionRate New contribution rate for license
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function reclaim(int96 newContributionRate, uint256 newForSalePrice)
-        external
-    {
+    function reclaim(
+        uint256 maxClaimPrice,
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external {
         require(
             !LibCFABasePCO._isPayerBidActive(),
             "CFAReclaimerFacet: Can only perform action when payer bid is active"
@@ -112,6 +110,17 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         }
 
         uint256 claimPrice = reclaimPrice();
+
+        require(
+            newForSalePrice >= claimPrice,
+            "CFAReclaimerFacet: For sale price must be greater than or equal to claim price"
+        );
+
+        require(
+            maxClaimPrice >= claimPrice,
+            "CFAReclaimerFacet: Claim price must be under maximum"
+        );
+
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         address bidder = _currentBid.bidder;
 
@@ -143,6 +152,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
         }
 
         // Create bidder flow
+        /* solhint-disable no-empty-blocks */
         try
             cs.cfaV1.host.callAgreement(
                 cs.cfaV1.cfa,
@@ -159,10 +169,10 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
                 new bytes(0)
             )
         {} catch {}
+        /* solhint-enable no-empty-blocks */
 
         // Update beneficiary flow
-        address beneficiary = ds.paramsStore.getBeneficiary();
-        cs.cfaV1.createFlow(beneficiary, paymentToken, newContributionRate);
+        LibCFABasePCO._createBeneficiaryFlow(newContributionRate);
 
         // Transfer license
         ds.license.safeTransferFrom(bidder, msg.sender, ds.licenseId);

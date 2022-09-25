@@ -123,7 +123,7 @@ library LibCFAPenaltyBid {
         );
 
         // Check if beneficiary flow needs to be deleted
-        address beneficiary = ds.paramsStore.getBeneficiary();
+        address beneficiary = address(LibCFABasePCO._getBeneficiary());
         if (remainingBalance < newBuffer) {
             cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
 
@@ -168,11 +168,7 @@ library LibCFAPenaltyBid {
                 _pendingBid.contributionRate
             );
         } else if (remainingBalance >= newBuffer) {
-            cs.cfaV1.createFlow(
-                beneficiary,
-                paymentToken,
-                _pendingBid.contributionRate
-            );
+            LibCFABasePCO._createBeneficiaryFlow(_pendingBid.contributionRate);
         }
 
         // Transfer license
@@ -223,7 +219,6 @@ library LibCFAPenaltyBid {
         Bid memory _pendingBid = pendingBid();
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        address beneficiary = ds.paramsStore.getBeneficiary();
 
         uint256 penaltyAmount = _calculatePenalty();
 
@@ -246,7 +241,8 @@ library LibCFAPenaltyBid {
             _pendingBid.contributionRate
         );
 
-        // Check if beneficiary flow needs to be recreated
+        // Check if beneficiary flow needs to be deleted
+        address beneficiary = address(LibCFABasePCO._getBeneficiary());
         if (availableBalance < 0) {
             cs.cfaV1.deleteFlow(address(this), beneficiary, paymentToken);
 
@@ -291,7 +287,7 @@ library LibCFAPenaltyBid {
         }
         paymentToken.safeTransferFrom(
             _currentBid.bidder,
-            beneficiary,
+            address(LibCFABasePCO._getBeneficiary()),
             penaltyAmount
         );
     }

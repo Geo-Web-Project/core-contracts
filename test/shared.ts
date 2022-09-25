@@ -4,6 +4,7 @@ import { BigNumber } from "ethers";
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
+const deployTestToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-test-token");
 import { deployments, getUnnamedAccounts } from "hardhat";
 import { ISuperfluid } from "../typechain-types";
 
@@ -35,12 +36,12 @@ export function perYearToPerSecondRate(annualRate: number) {
 }
 
 export const setupSf = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ deployments, ethers }) => {
     await deployments.fixture("setupSf");
 
     const accounts = await ethers.getSigners();
 
-    const [admin, user, bidder, other] = accounts;
+    const [admin, user, bidder] = accounts;
     const uAccounts = await getUnnamedAccounts();
 
     await deployFramework(errorHandler, {
@@ -53,10 +54,20 @@ export const setupSf = deployments.createFixture(
       from: admin.address,
     });
 
+    await deployTestToken(errorHandler, [":", "fDAI"], {
+      web3,
+      from: admin.address,
+    });
+
+    await deploySuperToken(errorHandler, [":", "fDAI"], {
+      web3,
+      from: admin.address,
+    });
+
     const sf = new SuperfluidSDK.Framework({
       web3,
       version: "test",
-      tokens: ["ETH"],
+      tokens: ["ETH", "fDAI"],
     });
     await sf.initialize();
 

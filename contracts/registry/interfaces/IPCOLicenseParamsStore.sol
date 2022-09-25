@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
+import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 interface IPCOLicenseParamsStore {
     /// @notice Superfluid Host
@@ -12,7 +13,7 @@ interface IPCOLicenseParamsStore {
     function getPaymentToken() external view returns (ISuperToken);
 
     /// @notice Beneficiary
-    function getBeneficiary() external view returns (address);
+    function getBeneficiary() external view returns (ICFABeneficiary);
 
     /// @notice The numerator of the network-wide per second contribution fee.
     function getPerSecondFeeNumerator() external view returns (uint256);

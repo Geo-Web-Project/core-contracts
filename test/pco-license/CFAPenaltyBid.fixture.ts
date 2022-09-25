@@ -1,14 +1,10 @@
 import { BigNumber } from "ethers";
 import { deployments } from "hardhat";
-import {
-  rateToPurchasePrice,
-  perYearToPerSecondRate,
-  fromValueToRate,
-} from "../shared";
+import { rateToPurchasePrice, fromValueToRate } from "../shared";
 import BaseFixtures from "./CFABasePCO.fixture";
 
 const afterPlaceBid = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await BaseFixtures.initialized();
     const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
 
@@ -51,7 +47,7 @@ const afterPlaceBid = deployments.createFixture(
 );
 
 const afterAcceptBid = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await afterPlaceBid();
     const { basePCOFacet } = res;
     const { user } = await getNamedAccounts();
@@ -66,7 +62,7 @@ const afterAcceptBid = deployments.createFixture(
 );
 
 const afterPlaceBidAndSurplus = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await afterPlaceBid();
     const { basePCOFacet, ethersjsSf, ethx_erc20 } = res;
     const { user } = await getNamedAccounts();
@@ -89,7 +85,7 @@ const afterPlaceBidAndSurplus = deployments.createFixture(
 );
 
 const afterPlaceBidAndBidderRevokes = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await afterPlaceBid();
     const { basePCOFacet, ethersjsSf, paymentToken } = res;
     const { bidder } = await getNamedAccounts();
@@ -106,7 +102,7 @@ const afterPlaceBidAndBidderRevokes = deployments.createFixture(
 );
 
 const afterPlaceBidWithRealLicense = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await BaseFixtures.initializedWithRealLicense();
     const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
 

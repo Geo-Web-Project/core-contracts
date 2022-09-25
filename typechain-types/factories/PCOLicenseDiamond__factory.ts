@@ -122,6 +122,11 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "contract ICFABeneficiary",
+        name: "beneficiary",
+        type: "address",
+      },
+      {
         internalType: "contract IPCOLicenseParamsStore",
         name: "paramsStore",
         type: "address",
@@ -223,6 +228,19 @@ const _abi = [
       },
     ],
     name: "manualCreateFlow",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+    ],
+    name: "manualDeleteFlow",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -524,6 +542,11 @@ const _abi = [
   },
   {
     inputs: [
+      {
+        internalType: "uint256",
+        name: "maxClaimPrice",
+        type: "uint256",
+      },
       {
         internalType: "int96",
         name: "newContributionRate",

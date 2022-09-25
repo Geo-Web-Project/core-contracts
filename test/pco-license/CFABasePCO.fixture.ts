@@ -15,7 +15,7 @@ import {
 } from "../shared";
 
 const setup = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ deployments, getNamedAccounts, ethers }) => {
     const res = await setupSf();
     const { sf, ethersjsSf, paymentToken } = res;
 
@@ -40,6 +40,7 @@ const setup = deployments.createFixture(
 
     const basePCOFacet = await ethers.getContract("TestBasePCO", diamondAdmin);
 
+    const mockCFABeneficiary = await smock.fake("ICFABeneficiary");
     const mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
     mockParamsStore.getPerSecondFeeNumerator.returns(numerator);
     mockParamsStore.getPerSecondFeeDenominator.returns(denominator);
@@ -47,7 +48,7 @@ const setup = deployments.createFixture(
     mockParamsStore.getPenaltyDenominator.returns(denominator);
     mockParamsStore.getHost.returns(sf.host.address);
     mockParamsStore.getPaymentToken.returns(sf.tokens.ETHx.address);
-    mockParamsStore.getBeneficiary.returns(diamondAdmin);
+    mockParamsStore.getBeneficiary.returns(mockCFABeneficiary);
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
     mockParamsStore.getReclaimAuctionLength.returns(14 * 60 * 60 * 24);
 
@@ -74,7 +75,7 @@ const setup = deployments.createFixture(
       const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
         superToken: paymentToken.address,
         sender: basePCOFacet.address,
-        receiver: admin.address,
+        receiver: mockCFABeneficiary.address,
         providerOrSigner: admin,
       });
 
@@ -109,6 +110,7 @@ const setup = deployments.createFixture(
     return {
       basePCOFacet,
       mockParamsStore,
+      mockCFABeneficiary,
       mockLicense,
       checkUserToAppFlow,
       checkAppToBeneficiaryFlow,
@@ -120,11 +122,12 @@ const setup = deployments.createFixture(
 );
 
 const initialized = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await setup();
     const {
       basePCOFacet,
       mockParamsStore,
+      mockCFABeneficiary,
       mockLicense,
       ethersjsSf,
       paymentToken,
@@ -163,6 +166,7 @@ const initialized = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -177,11 +181,12 @@ const initialized = deployments.createFixture(
 );
 
 const initializedLarge = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await setup();
     const {
       basePCOFacet,
       mockParamsStore,
+      mockCFABeneficiary,
       mockLicense,
       ethersjsSf,
       paymentToken,
@@ -215,6 +220,7 @@ const initializedLarge = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -229,9 +235,16 @@ const initializedLarge = deployments.createFixture(
 );
 
 const initializedWithRealLicense = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await setup();
-    const { basePCOFacet, ethersjsSf, paymentToken, ethx_erc20, sf } = res;
+    const {
+      basePCOFacet,
+      ethersjsSf,
+      paymentToken,
+      ethx_erc20,
+      sf,
+      mockCFABeneficiary,
+    } = res;
 
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
@@ -259,7 +272,7 @@ const initializedWithRealLicense = deployments.createFixture(
     );
 
     await (erc721Facet as PCOLicenseParamsFacet).initializeParams(
-      diamondAdmin,
+      mockCFABeneficiary.address,
       ethx_erc20.address,
       sf.host.address,
       numerator,
@@ -336,7 +349,7 @@ const initializedWithRealLicense = deployments.createFixture(
       const appToBeneficiaryFlow = await ethersjsSf.cfaV1.getFlow({
         superToken: paymentToken.address,
         sender: newBasePCOFacet.address,
-        receiver: admin.address,
+        receiver: mockCFABeneficiary.address,
         providerOrSigner: admin,
       });
 
@@ -388,6 +401,7 @@ const initializedExtremeFeeDuring = deployments.createFixture(
       mockLicense,
       ethersjsSf,
       paymentToken,
+      mockCFABeneficiary,
     } = res;
 
     // 100% in an hour
@@ -422,6 +436,7 @@ const initializedExtremeFeeDuring = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -444,6 +459,7 @@ const initializedExtremeFeeAfter = deployments.createFixture(
       mockLicense,
       ethersjsSf,
       paymentToken,
+      mockCFABeneficiary,
     } = res;
 
     // 100% in 25 hours
@@ -478,6 +494,7 @@ const initializedExtremeFeeAfter = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const txn = await basePCOFacet.initializeBid(
+      mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
       1,
@@ -492,9 +509,9 @@ const initializedExtremeFeeAfter = deployments.createFixture(
 );
 
 const afterPayerDelete = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }, options) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await initialized();
-    const { basePCOFacet, ethersjsSf, ethx_erc20 } = res;
+    const { basePCOFacet, ethersjsSf, ethx_erc20, mockCFABeneficiary } = res;
 
     const { user, diamondAdmin } = await getNamedAccounts();
 
@@ -511,12 +528,15 @@ const afterPayerDelete = deployments.createFixture(
     // Simulate closing flow
     const op2 = ethersjsSf.cfaV1.deleteFlow({
       sender: basePCOFacet.address,
-      receiver: diamondAdmin,
+      receiver: mockCFABeneficiary.address,
       superToken: ethx_erc20.address,
     });
 
     const op2Resp = await op2.exec(await ethers.getSigner(diamondAdmin));
-    await op2Resp.wait();
+    const op2Receipt = await op2Resp.wait();
+    const txnBlock = await ethers.provider.getBlock(op2Receipt.blockNumber);
+
+    mockCFABeneficiary.getLastDeletion.returns(txnBlock.timestamp);
 
     return res;
   }

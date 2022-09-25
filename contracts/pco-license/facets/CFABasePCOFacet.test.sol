@@ -26,4 +26,13 @@ contract TestableCFABasePCOFacet {
 
         cs.cfaV1.createFlow(to, paymentToken, flowRate);
     }
+
+    function manualDeleteFlow(address to) external {
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+
+        cs.cfaV1.deleteFlow(address(this), to, paymentToken);
+    }
 }

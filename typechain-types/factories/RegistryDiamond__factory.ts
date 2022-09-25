@@ -751,7 +751,7 @@ const _abi = [
     name: "getBeneficiary",
     outputs: [
       {
-        internalType: "address",
+        internalType: "contract ICFABeneficiary",
         name: "",
         type: "address",
       },
@@ -866,7 +866,7 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
+        internalType: "contract ICFABeneficiary",
         name: "beneficiary",
         type: "address",
       },
@@ -919,7 +919,7 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
+        internalType: "contract ICFABeneficiary",
         name: "beneficiary",
         type: "address",
       },
