@@ -39,5 +39,5 @@ coverage/
 
 shell.nix
 
-.openzeppelin/unknown-*.json
+.openzeppelin/unknown-31337.json
 
