@@ -107,22 +107,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       60 * 60 * 24 * 14 // 2 weeks
     );
     console.log("Initialized RegistryDiamond.");
+
+    // Deploy super app
+    console.log("Deploying BeneficiarySuperApp...");
+    const BeneficiarySuperApp = await ethers.getContractFactory(
+      "BeneficiarySuperApp"
+    );
+    const beneSuperApp = await upgrades.deployProxy(BeneficiarySuperApp, [
+      registryDiamond.address,
+      treasury,
+    ]);
+    await beneSuperApp.deployed();
+
+    // Set beneficiary to super app
+    console.log("Setting beneficiary to super app...");
+    await registryDiamond.setBeneficiary(beneSuperApp.address);
   }
-
-  // Deploy super app
-  console.log("Deploying BeneficiarySuperApp...");
-  const BeneficiarySuperApp = await ethers.getContractFactory(
-    "BeneficiarySuperApp"
-  );
-  const beneSuperApp = await upgrades.deployProxy(BeneficiarySuperApp, [
-    registryDiamond.address,
-    treasury,
-  ]);
-  await beneSuperApp.deployed();
-
-  // Set beneficiary to super app
-  console.log("Setting beneficiary to super app...");
-  await registryDiamond.setBeneficiary(beneSuperApp.address);
 };
 export default func;
 func.tags = ["Main"];

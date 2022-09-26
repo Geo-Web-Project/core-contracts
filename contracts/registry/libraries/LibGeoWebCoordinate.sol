@@ -3,9 +3,9 @@ pragma solidity ^0.8.4;
 
 /// @title LibGeoWebCoordinate is an unsigned 64-bit integer that contains x and y coordinates in the upper and lower 32 bits, respectively
 library LibGeoWebCoordinate {
-    // Fixed grid size is 2^22 longitude by 2^21 latitude
-    uint64 public constant MAX_X = ((2**22) - 1);
-    uint64 public constant MAX_Y = ((2**21) - 1);
+    // Fixed grid size is 2^23 longitude by 2^22 latitude
+    uint64 public constant MAX_X = ((2**23) - 1);
+    uint64 public constant MAX_Y = ((2**22) - 1);
 
     /// @notice Traverse a single direction
     /// @param origin The origin coordinate to start from
