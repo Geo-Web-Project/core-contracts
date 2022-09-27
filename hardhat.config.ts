@@ -93,7 +93,7 @@ module.exports = {
       default: 3,
     },
     treasury: {
-      5: "0xC8A14DEe867329D54E911e01561B984378c0675C",
+      5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
       420: "0x85ACc73a9Cff049A978962f05cE0Ce6496416023",
       31337: 0,
     },
