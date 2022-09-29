@@ -15,14 +15,14 @@ describe("PCOLicenseParamsFacet", async function () {
       await deployments.fixture();
       const { diamondAdmin } = await getNamedAccounts();
       const { diamond } = deployments;
-      await diamond.deploy("PCOLicenseParamsFacet", {
+      await diamond.deploy("PCOLicenseParams", {
         from: diamondAdmin,
         owner: diamondAdmin,
         facets: ["PCOLicenseParamsFacet"],
       });
 
       const pcoLicenseParams: PCOLicenseParamsFacet = await ethers.getContract(
-        "PCOLicenseParamsFacet",
+        "PCOLicenseParams",
         diamondAdmin
       );
 
