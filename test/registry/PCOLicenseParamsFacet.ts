@@ -46,7 +46,8 @@ describe("PCOLicenseParamsFacet", async function () {
         3,
         4,
         5,
-        6
+        6,
+        7
       );
 
       expect(await pcoLicenseParams.getBeneficiary()).to.equal(diamondAdmin);
@@ -58,6 +59,7 @@ describe("PCOLicenseParamsFacet", async function () {
       expect(await pcoLicenseParams.getPenaltyDenominator()).to.equal(4);
       expect(await pcoLicenseParams.getBidPeriodLengthInSeconds()).to.equal(5);
       expect(await pcoLicenseParams.getReclaimAuctionLength()).to.equal(6);
+      expect(await pcoLicenseParams.getMinForSalePrice()).to.equal(7);
     });
 
     it("should fail if not owner", async () => {
@@ -66,7 +68,7 @@ describe("PCOLicenseParamsFacet", async function () {
 
       const txn = pcoLicenseParams
         .connect(await ethers.getSigner(user))
-        .initializeParams(diamondAdmin, user, bidder, 1, 2, 3, 4, 5, 6);
+        .initializeParams(diamondAdmin, user, bidder, 1, 2, 3, 4, 5, 6, 7);
 
       await expect(txn).to.be.revertedWith(
         "LibDiamond: Must be contract owner"
@@ -277,6 +279,29 @@ describe("PCOLicenseParamsFacet", async function () {
       const txn = pcoLicenseParams
         .connect(await ethers.getSigner(user))
         .setReclaimAuctionLength(1);
+
+      await expect(txn).to.be.revertedWith(
+        "LibDiamond: Must be contract owner"
+      );
+    });
+  });
+
+  describe("setMinForSalePrice", async () => {
+    it("should set", async () => {
+      const { pcoLicenseParams } = await setupTest();
+
+      await pcoLicenseParams.setMinForSalePrice(1);
+
+      expect(await pcoLicenseParams.getMinForSalePrice()).to.equal(1);
+    });
+
+    it("should fail if not owner", async () => {
+      const { pcoLicenseParams } = await setupTest();
+      const { user } = await getNamedAccounts();
+
+      const txn = pcoLicenseParams
+        .connect(await ethers.getSigner(user))
+        .setMinForSalePrice(1);
 
       await expect(txn).to.be.revertedWith(
         "LibDiamond: Must be contract owner"

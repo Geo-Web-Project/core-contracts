@@ -51,6 +51,7 @@ const setup = deployments.createFixture(
     mockParamsStore.getBeneficiary.returns(mockCFABeneficiary);
     mockParamsStore.getBidPeriodLengthInSeconds.returns(60 * 60 * 24);
     mockParamsStore.getReclaimAuctionLength.returns(14 * 60 * 60 * 24);
+    mockParamsStore.getMinForSalePrice.returns(0);
 
     const mockLicense = await smock.fake<IERC721>("IERC721");
 
@@ -280,7 +281,8 @@ const initializedWithRealLicense = deployments.createFixture(
       numerator,
       denominator,
       60 * 60 * 24,
-      60 * 60 * 24
+      60 * 60 * 24,
+      0
     );
 
     const { user } = await getNamedAccounts();

@@ -40,6 +40,19 @@
   },
   {
     "inputs": [],
+    "name": "getMinForSalePrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getPaymentToken",
     "outputs": [
       {
@@ -162,6 +175,11 @@
         "internalType": "uint256",
         "name": "reclaimAuctionLength",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minForSalePrice",
+        "type": "uint256"
       }
     ],
     "name": "initializeParams",
@@ -204,6 +222,19 @@
       }
     ],
     "name": "setHost",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "minForSalePrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinForSalePrice",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

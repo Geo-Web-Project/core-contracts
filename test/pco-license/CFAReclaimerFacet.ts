@@ -460,6 +460,53 @@ describe("CFAReclaimerFacet", async function () {
           .reclaim(reclaimPrice, contributionRate, forSalePrice)
       ).to.be.revertedWith("CFAReclaimerFacet: Incorrect for sale price");
     });
+
+    it("should revert if the for sale price does not meet minimum", async () => {
+      const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
+        await BaseFixtures.afterPayerDelete();
+      const { bidder } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      const totalCollateral = forSalePrice.add(requiredBuffer);
+
+      const reclaimPrice = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaimPrice();
+
+      // Allow spending of reclaimPrice
+      const op2 = paymentToken.approve({
+        amount: reclaimPrice.add(totalCollateral),
+        receiver: basePCOFacet.address,
+      });
+      await op2.exec(await ethers.getSigner(bidder));
+
+      // Approve flow creation
+      const op3 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op3.exec(await ethers.getSigner(bidder));
+
+      mockParamsStore.getMinForSalePrice.returns(forSalePrice.add(1000));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        .reclaim(reclaimPrice, contributionRate, forSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "CFAReclaimerFacet: Minimum for sale price not met"
+      );
+
+      mockParamsStore.getMinForSalePrice.returns(0);
+    });
   });
 
   describe("reclaimPrice", async () => {

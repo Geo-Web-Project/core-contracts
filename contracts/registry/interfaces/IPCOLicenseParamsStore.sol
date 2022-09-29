@@ -32,4 +32,7 @@ interface IPCOLicenseParamsStore {
 
     /// @notice Bid period length in seconds
     function getBidPeriodLengthInSeconds() external view returns (uint256);
+
+    /// @notice Minimum for sale price
+    function getMinForSalePrice() external view returns (uint256);
 }

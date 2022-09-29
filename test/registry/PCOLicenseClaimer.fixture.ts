@@ -41,7 +41,8 @@ const setup = deployments.createFixture(
       numerator,
       denominator,
       60 * 60 * 24,
-      60 * 60 * 24
+      60 * 60 * 24,
+      0
     );
 
     return {
@@ -94,4 +95,8 @@ const initializedWithAuction = deployments.createFixture(
   }
 );
 
-export default { setup, initialized, initializedWithAuction };
+export default {
+  setup,
+  initialized,
+  initializedWithAuction,
+};

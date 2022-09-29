@@ -440,6 +440,55 @@ describe("CFAPenaltyBidFacet", async function () {
         "SuperToken: transfer amount exceeds allowance"
       );
     });
+
+    it("should fail if for sale price does not meet minimum", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      mockParamsStore.getMinForSalePrice.returns(newForSalePrice.add(1000));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .editBid(newContributionRate, newForSalePrice);
+
+      await expect(txn).to.be.revertedWith(
+        "LibCFABasePCO: Minimum for sale price not met"
+      );
+
+      mockParamsStore.getMinForSalePrice.returns(0);
+    });
   });
 
   describe("placeBid", async () => {

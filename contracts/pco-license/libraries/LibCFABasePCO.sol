@@ -139,6 +139,11 @@ library LibCFABasePCO {
         DiamondCFAStorage storage cs = cfaStorage();
         Bid storage bid = _currentBid();
 
+        require(
+            newForSalePrice >= ds.paramsStore.getMinForSalePrice(),
+            "LibCFABasePCO: Minimum for sale price not met"
+        );
+
         uint256 perSecondFeeNumerator = ds
             .paramsStore
             .getPerSecondFeeNumerator();

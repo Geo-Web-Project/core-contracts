@@ -32,7 +32,8 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         uint256 penaltyNumerator,
         uint256 penaltyDenominator,
         uint256 bidPeriodLengthInSeconds,
-        uint256 reclaimAuctionLength
+        uint256 reclaimAuctionLength,
+        uint256 minForSalePrice
     ) external {
         LibDiamond.enforceIsContractOwner();
 
@@ -48,6 +49,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         ds.penaltyDenominator = penaltyDenominator;
         ds.bidPeriodLengthInSeconds = bidPeriodLengthInSeconds;
         ds.reclaimAuctionLength = reclaimAuctionLength;
+        ds.minForSalePrice = minForSalePrice;
     }
 
     /// @notice Superfluid Host
@@ -225,5 +227,22 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
             .diamondStorage();
 
         ds.bidPeriodLengthInSeconds = bidPeriodLengthInSeconds;
+    }
+
+    /// @notice Minimum for sale price
+    function getMinForSalePrice() external view override returns (uint256) {
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
+
+        return ds.minForSalePrice;
+    }
+
+    /// @notice Set minimum for sale price
+    function setMinForSalePrice(uint256 minForSalePrice) external {
+        LibDiamond.enforceIsContractOwner();
+        LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
+            .diamondStorage();
+
+        ds.minForSalePrice = minForSalePrice;
     }
 }

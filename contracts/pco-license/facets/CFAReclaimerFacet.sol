@@ -65,6 +65,11 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
 
+        require(
+            newForSalePrice >= ds.paramsStore.getMinForSalePrice(),
+            "CFAReclaimerFacet: Minimum for sale price not met"
+        );
+
         {
             uint256 perSecondFeeNumerator = ds
                 .paramsStore
