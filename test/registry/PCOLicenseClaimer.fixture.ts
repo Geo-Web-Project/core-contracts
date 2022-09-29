@@ -95,4 +95,8 @@ const initializedWithAuction = deployments.createFixture(
   }
 );
 
-export default { setup, initialized, initializedWithAuction };
+export default {
+  setup,
+  initialized,
+  initializedWithAuction,
+};

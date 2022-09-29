@@ -79,6 +79,11 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         ds.licenseId = initLicenseId;
         ds.beneficiary = beneficiary;
 
+        require(
+            newForSalePrice >= ds.paramsStore.getMinForSalePrice(),
+            "CFABasePCOFacet: Minimum for sale price not met"
+        );
+
         uint256 perSecondFeeNumerator = ds
             .paramsStore
             .getPerSecondFeeNumerator();
