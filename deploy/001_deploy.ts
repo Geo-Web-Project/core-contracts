@@ -104,7 +104,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       1,
       10,
       60 * 60 * 24 * 7, // 7 days
-      60 * 60 * 24 * 14 // 2 weeks
+      60 * 60 * 24 * 14, // 2 weeks,
+      ethers.utils.parseEther("0.005")
     );
     console.log("Initialized RegistryDiamond.");
 

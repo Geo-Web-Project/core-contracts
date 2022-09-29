@@ -41,7 +41,8 @@ const setup = deployments.createFixture(
       numerator,
       denominator,
       60 * 60 * 24,
-      60 * 60 * 24
+      60 * 60 * 24,
+      0
     );
 
     return {

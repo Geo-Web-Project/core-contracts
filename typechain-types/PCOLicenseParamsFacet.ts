@@ -23,16 +23,18 @@ export interface PCOLicenseParamsFacetInterface extends utils.Interface {
     "getBeneficiary()": FunctionFragment;
     "getBidPeriodLengthInSeconds()": FunctionFragment;
     "getHost()": FunctionFragment;
+    "getMinForSalePrice()": FunctionFragment;
     "getPaymentToken()": FunctionFragment;
     "getPenaltyDenominator()": FunctionFragment;
     "getPenaltyNumerator()": FunctionFragment;
     "getPerSecondFeeDenominator()": FunctionFragment;
     "getPerSecondFeeNumerator()": FunctionFragment;
     "getReclaimAuctionLength()": FunctionFragment;
-    "initializeParams(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
+    "initializeParams(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
     "setBeneficiary(address)": FunctionFragment;
     "setBidPeriodLengthInSeconds(uint256)": FunctionFragment;
     "setHost(address)": FunctionFragment;
+    "setMinForSalePrice(uint256)": FunctionFragment;
     "setPaymentToken(address)": FunctionFragment;
     "setPenaltyDenominator(uint256)": FunctionFragment;
     "setPenaltyNumerator(uint256)": FunctionFragment;
@@ -50,6 +52,10 @@ export interface PCOLicenseParamsFacetInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "getHost", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getMinForSalePrice",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getPaymentToken",
     values?: undefined
@@ -85,6 +91,7 @@ export interface PCOLicenseParamsFacetInterface extends utils.Interface {
       BigNumberish,
       BigNumberish,
       BigNumberish,
+      BigNumberish,
       BigNumberish
     ]
   ): string;
@@ -97,6 +104,10 @@ export interface PCOLicenseParamsFacetInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "setHost", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "setMinForSalePrice",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "setPaymentToken",
     values: [string]
@@ -131,6 +142,10 @@ export interface PCOLicenseParamsFacetInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getHost", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getMinForSalePrice",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getPaymentToken",
     data: BytesLike
@@ -168,6 +183,10 @@ export interface PCOLicenseParamsFacetInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setHost", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setMinForSalePrice",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setPaymentToken",
     data: BytesLike
@@ -232,6 +251,8 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
     getHost(overrides?: CallOverrides): Promise<[string]>;
 
+    getMinForSalePrice(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     getPaymentToken(overrides?: CallOverrides): Promise<[string]>;
 
     getPenaltyDenominator(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -254,6 +275,7 @@ export interface PCOLicenseParamsFacet extends BaseContract {
       penaltyDenominator: BigNumberish,
       bidPeriodLengthInSeconds: BigNumberish,
       reclaimAuctionLength: BigNumberish,
+      minForSalePrice: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -269,6 +291,11 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
     setHost(
       host: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setMinForSalePrice(
+      minForSalePrice: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -309,6 +336,8 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
   getHost(overrides?: CallOverrides): Promise<string>;
 
+  getMinForSalePrice(overrides?: CallOverrides): Promise<BigNumber>;
+
   getPaymentToken(overrides?: CallOverrides): Promise<string>;
 
   getPenaltyDenominator(overrides?: CallOverrides): Promise<BigNumber>;
@@ -331,6 +360,7 @@ export interface PCOLicenseParamsFacet extends BaseContract {
     penaltyDenominator: BigNumberish,
     bidPeriodLengthInSeconds: BigNumberish,
     reclaimAuctionLength: BigNumberish,
+    minForSalePrice: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -346,6 +376,11 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
   setHost(
     host: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setMinForSalePrice(
+    minForSalePrice: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -386,6 +421,8 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
     getHost(overrides?: CallOverrides): Promise<string>;
 
+    getMinForSalePrice(overrides?: CallOverrides): Promise<BigNumber>;
+
     getPaymentToken(overrides?: CallOverrides): Promise<string>;
 
     getPenaltyDenominator(overrides?: CallOverrides): Promise<BigNumber>;
@@ -408,6 +445,7 @@ export interface PCOLicenseParamsFacet extends BaseContract {
       penaltyDenominator: BigNumberish,
       bidPeriodLengthInSeconds: BigNumberish,
       reclaimAuctionLength: BigNumberish,
+      minForSalePrice: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -422,6 +460,11 @@ export interface PCOLicenseParamsFacet extends BaseContract {
     ): Promise<void>;
 
     setHost(host: string, overrides?: CallOverrides): Promise<void>;
+
+    setMinForSalePrice(
+      minForSalePrice: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     setPaymentToken(
       paymentToken: string,
@@ -463,6 +506,8 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
     getHost(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getMinForSalePrice(overrides?: CallOverrides): Promise<BigNumber>;
+
     getPaymentToken(overrides?: CallOverrides): Promise<BigNumber>;
 
     getPenaltyDenominator(overrides?: CallOverrides): Promise<BigNumber>;
@@ -485,6 +530,7 @@ export interface PCOLicenseParamsFacet extends BaseContract {
       penaltyDenominator: BigNumberish,
       bidPeriodLengthInSeconds: BigNumberish,
       reclaimAuctionLength: BigNumberish,
+      minForSalePrice: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -500,6 +546,11 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
     setHost(
       host: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setMinForSalePrice(
+      minForSalePrice: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -543,6 +594,10 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
     getHost(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    getMinForSalePrice(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getPaymentToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getPenaltyDenominator(
@@ -575,6 +630,7 @@ export interface PCOLicenseParamsFacet extends BaseContract {
       penaltyDenominator: BigNumberish,
       bidPeriodLengthInSeconds: BigNumberish,
       reclaimAuctionLength: BigNumberish,
+      minForSalePrice: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -590,6 +646,11 @@ export interface PCOLicenseParamsFacet extends BaseContract {
 
     setHost(
       host: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setMinForSalePrice(
+      minForSalePrice: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

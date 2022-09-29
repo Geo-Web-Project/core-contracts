@@ -29,6 +29,8 @@ library LibPCOLicenseParams {
         uint256 bidPeriodLengthInSeconds;
         /// @notice when the required bid amount reaches its minimum value.
         uint256 reclaimAuctionLength;
+        /// @notice Minimum for sale price
+        uint256 minForSalePrice;
     }
 
     function diamondStorage()

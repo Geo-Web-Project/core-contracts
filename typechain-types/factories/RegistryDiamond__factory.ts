@@ -787,6 +787,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "getMinForSalePrice",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "getPaymentToken",
     outputs: [
       {
@@ -910,6 +923,11 @@ const _abi = [
         name: "reclaimAuctionLength",
         type: "uint256",
       },
+      {
+        internalType: "uint256",
+        name: "minForSalePrice",
+        type: "uint256",
+      },
     ],
     name: "initializeParams",
     outputs: [],
@@ -951,6 +969,19 @@ const _abi = [
       },
     ],
     name: "setHost",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "minForSalePrice",
+        type: "uint256",
+      },
+    ],
+    name: "setMinForSalePrice",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
