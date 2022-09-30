@@ -1,7 +1,7 @@
 {
   "name": "@geo-web/contracts",
   "license": "MIT",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "GeoWeb solidity contracts, artifacts, & types",
   "author": "GeoWebCore",
   "homepage": "https://www.geoweb.network/",
@@ -31,6 +31,8 @@
   },
   "devDependencies": {
     "@defi-wonderland/smock": "^2.0.7",
+    "@gnosis.pm/safe-ethers-adapters": "^0.1.0-alpha.11",
+    "@gnosis.pm/safe-ethers-lib": "^1.6.1",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@nomiclabs/hardhat-web3": "^2.0.0",
@@ -63,6 +65,7 @@
     "hardhat-abi-exporter": "^2.8.0",
     "hardhat-deploy": "^0.11.11",
     "hardhat-gas-reporter": "^1.0.9",
+    "hardhat-safe-deployer": "github://codynhat/hardhat-safe-deployer",
     "js-geo-web-coordinate": "^0.2.0",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-dev.23",
