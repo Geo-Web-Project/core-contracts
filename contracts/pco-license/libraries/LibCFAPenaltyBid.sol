@@ -274,19 +274,20 @@ library LibCFAPenaltyBid {
             depositFromPayer = withdrawToBidder;
         }
 
+        // msg.sender is _currentBid.bidder due to onlyPayer modifier check
         if (depositFromPayer > 0) {
             paymentToken.safeTransferFrom(
-                _currentBid.bidder,
+                msg.sender,
                 address(this),
                 depositFromPayer
             );
         }
         paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
         if (withdrawToPayer > 0) {
-            paymentToken.safeTransfer(_currentBid.bidder, withdrawToPayer);
+            paymentToken.safeTransfer(msg.sender, withdrawToPayer);
         }
         paymentToken.safeTransferFrom(
-            _currentBid.bidder,
+            msg.sender,
             address(LibCFABasePCO._getBeneficiary()),
             penaltyAmount
         );
