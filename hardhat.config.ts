@@ -64,7 +64,7 @@ if (process.env.INFURA_KEY) {
 module.exports = {
   networks,
   solidity: {
-    version: "0.8.14",
+    version: "0.8.16",
     settings: {
       optimizer: {
         enabled: true,
@@ -102,10 +102,10 @@ module.exports = {
     {
       name: "RegistryDiamond",
       include: [
-        "PCOLicenseClaimerFacet",
+        "IPCOLicenseClaimerFacet",
         "GeoWebParcelFacet",
         "PCOLicenseParamsFacet",
-        "ERC721Facet",
+        "PCOERC721Facet",
       ],
       strict: false,
     },

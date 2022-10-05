@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import "../libraries/LibCFABasePCO.sol";
 import "../interfaces/IBasePCO.sol";
@@ -7,7 +7,7 @@ import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 

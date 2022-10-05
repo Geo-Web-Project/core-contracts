@@ -1878,6 +1878,11 @@
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 
+"@solidstate/contracts@^0.0.42":
+  version "0.0.42"
+  resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.42.tgz#2b2c7e6199b2af990dd6d0fb675e73686b7e885f"
+  integrity sha512-160ssaedv689WadrW22FtGJPAIMxSSTVuupSMi3nd17q0tNNG7Wy5IQgS8WUNM/XGtAmd6K2tGg0zF37zyDwuA==
+
 "@superfluid-finance/ethereum-contracts@^1.3.0":
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/@superfluid-finance/ethereum-contracts/-/ethereum-contracts-1.3.0.tgz#57f4ba070daae55b0bc16a18cb3e4448850aecbf"

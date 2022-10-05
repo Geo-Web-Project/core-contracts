@@ -145,11 +145,31 @@ export interface PCOLicenseClaimerFacetInterface extends utils.Interface {
   ): Result;
 
   events: {
+    "Approval(address,address,uint256)": EventFragment;
+    "ApprovalForAll(address,address,bool)": EventFragment;
     "ParcelClaimed(uint256,address)": EventFragment;
+    "Transfer(address,address,uint256)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ParcelClaimed"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
+
+export type ApprovalEvent = TypedEvent<
+  [string, string, BigNumber],
+  { owner: string; operator: string; tokenId: BigNumber }
+>;
+
+export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
+
+export type ApprovalForAllEvent = TypedEvent<
+  [string, string, boolean],
+  { owner: string; operator: string; approved: boolean }
+>;
+
+export type ApprovalForAllEventFilter = TypedEventFilter<ApprovalForAllEvent>;
 
 export type ParcelClaimedEvent = TypedEvent<
   [BigNumber, string],
@@ -157,6 +177,13 @@ export type ParcelClaimedEvent = TypedEvent<
 >;
 
 export type ParcelClaimedEventFilter = TypedEventFilter<ParcelClaimedEvent>;
+
+export type TransferEvent = TypedEvent<
+  [string, string, BigNumber],
+  { from: string; to: string; tokenId: BigNumber }
+>;
+
+export type TransferEventFilter = TypedEventFilter<TransferEvent>;
 
 export interface PCOLicenseClaimerFacet extends BaseContract {
   contractName: "PCOLicenseClaimerFacet";
@@ -376,6 +403,28 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
   };
 
   filters: {
+    "Approval(address,address,uint256)"(
+      owner?: string | null,
+      operator?: string | null,
+      tokenId?: BigNumberish | null
+    ): ApprovalEventFilter;
+    Approval(
+      owner?: string | null,
+      operator?: string | null,
+      tokenId?: BigNumberish | null
+    ): ApprovalEventFilter;
+
+    "ApprovalForAll(address,address,bool)"(
+      owner?: string | null,
+      operator?: string | null,
+      approved?: null
+    ): ApprovalForAllEventFilter;
+    ApprovalForAll(
+      owner?: string | null,
+      operator?: string | null,
+      approved?: null
+    ): ApprovalForAllEventFilter;
+
     "ParcelClaimed(uint256,address)"(
       _licenseId?: BigNumberish | null,
       _payer?: string | null
@@ -384,6 +433,17 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
       _licenseId?: BigNumberish | null,
       _payer?: string | null
     ): ParcelClaimedEventFilter;
+
+    "Transfer(address,address,uint256)"(
+      from?: string | null,
+      to?: string | null,
+      tokenId?: BigNumberish | null
+    ): TransferEventFilter;
+    Transfer(
+      from?: string | null,
+      to?: string | null,
+      tokenId?: BigNumberish | null
+    ): TransferEventFilter;
   };
 
   estimateGas: {

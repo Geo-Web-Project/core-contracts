@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 /******************************************************************************\
 * EIP-2535 Diamonds implementation that uses an external IDiamondLoupe to store facet addresses.

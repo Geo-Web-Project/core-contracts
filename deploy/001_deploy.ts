@@ -69,7 +69,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       "PCOLicenseClaimerFacet",
       "GeoWebParcelFacet",
       "PCOLicenseParamsFacet",
-      "ERC721Facet",
+      "PCOERC721Facet",
     ],
     log: true,
   });
@@ -94,6 +94,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // Initialize
     const perSecondFee = perYearToPerSecondRate(0.1);
 
+    await registryDiamond.initializeERC721(
+      "Geo Web Parcel License",
+      "GEOL",
+      ""
+    );
     await registryDiamond.initializeClaimer(0, 0, 0, 0, beacon.address);
     await registryDiamond.initializeParams(
       treasury,
