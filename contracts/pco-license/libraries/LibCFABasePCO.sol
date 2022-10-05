@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 library LibCFABasePCO {

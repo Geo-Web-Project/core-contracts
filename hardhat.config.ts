@@ -102,10 +102,10 @@ module.exports = {
     {
       name: "RegistryDiamond",
       include: [
-        "PCOLicenseClaimerFacet",
+        "IPCOLicenseClaimerFacet",
         "GeoWebParcelFacet",
         "PCOLicenseParamsFacet",
-        "ERC721Facet",
+        "PCOERC721Facet",
       ],
       strict: false,
     },

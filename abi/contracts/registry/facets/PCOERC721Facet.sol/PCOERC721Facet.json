@@ -54,25 +54,6 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "_licenseId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_payer",
-        "type": "address"
-      }
-    ],
-    "name": "ParcelClaimed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
         "internalType": "address",
         "name": "from",
         "type": "address"
@@ -96,34 +77,30 @@
   {
     "inputs": [
       {
-        "internalType": "int96",
-        "name": "initialContributionRate",
-        "type": "int96"
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "initialForSalePrice",
+        "name": "tokenId",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "baseCoordinate",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "path",
-        "type": "uint256[]"
       }
     ],
-    "name": "claim",
+    "name": "approve",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getAuctionEnd",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
     "outputs": [
       {
         "internalType": "uint256",
@@ -135,21 +112,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getAuctionStart",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "tokenId",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getBeacon",
+    "name": "getApproved",
     "outputs": [
       {
         "internalType": "address",
@@ -163,17 +133,45 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "licenseId",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "baseURI",
+        "type": "string"
       }
     ],
-    "name": "getBeaconProxy",
-    "outputs": [
+    "name": "initializeERC721",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "account",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "isApprovedForAll",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -181,12 +179,31 @@
   },
   {
     "inputs": [],
-    "name": "getEndingBid",
+    "name": "name",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
         "type": "uint256"
+      }
+    ],
+    "name": "ownerOf",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -196,16 +213,85 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "user",
+        "name": "from",
         "type": "address"
-      }
-    ],
-    "name": "getNextProxyAddress",
-    "outputs": [
+      },
       {
         "internalType": "address",
-        "name": "",
+        "name": "to",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "status",
+        "type": "bool"
+      }
+    ],
+    "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -213,12 +299,12 @@
   },
   {
     "inputs": [],
-    "name": "getStartingBid",
+    "name": "symbol",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -228,43 +314,16 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "auctionStart",
+        "name": "tokenId",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "auctionEnd",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "startingBid",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endingBid",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "beacon",
-        "type": "address"
       }
     ],
-    "name": "initializeClaimer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "requiredBid",
+    "name": "tokenURI",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -273,66 +332,24 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "auctionEnd",
-        "type": "uint256"
-      }
-    ],
-    "name": "setAuctionEnd",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "auctionStart",
-        "type": "uint256"
-      }
-    ],
-    "name": "setAuctionStart",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
       {
         "internalType": "address",
-        "name": "beacon",
+        "name": "to",
         "type": "address"
-      }
-    ],
-    "name": "setBeacon",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "endingBid",
+        "name": "tokenId",
         "type": "uint256"
       }
     ],
-    "name": "setEndingBid",
+    "name": "transferFrom",
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "startingBid",
-        "type": "uint256"
-      }
-    ],
-    "name": "setStartingBid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   }
 ]
