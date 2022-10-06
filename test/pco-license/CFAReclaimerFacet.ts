@@ -417,7 +417,7 @@ describe("CFAReclaimerFacet", async function () {
           .connect(await ethers.getSigner(bidder))
           .reclaim(forSalePrice, contributionRate, forSalePrice)
       ).to.be.revertedWith(
-        "CFAReclaimerFacet: Can only perform action when payer bid is active"
+        "CFAReclaimerFacet: Can only perform action when payer bid is not active"
       );
     });
 
@@ -639,7 +639,7 @@ describe("CFAReclaimerFacet", async function () {
       await expect(
         basePCOFacet.connect(await ethers.getSigner(user)).reclaimPrice()
       ).to.be.revertedWith(
-        "CFAReclaimerFacet: Can only perform action when payer bid is active"
+        "CFAReclaimerFacet: Can only perform action when payer bid is not active"
       );
     });
   });
