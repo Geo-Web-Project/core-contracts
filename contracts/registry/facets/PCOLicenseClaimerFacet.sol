@@ -279,11 +279,11 @@ abstract contract IPCOLicenseClaimerFacet {
         );
 
         // Transfer initial payment
-        if (block.timestamp <= ds.auctionEnd) {
+        if (_requiredBid > 0) {
             ls.paymentToken.safeTransferFrom(
                 msg.sender,
                 address(ls.beneficiary),
-                initialForSalePrice
+                _requiredBid
             );
         }
     }
