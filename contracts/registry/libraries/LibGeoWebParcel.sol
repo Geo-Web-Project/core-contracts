@@ -2,7 +2,6 @@
 pragma solidity ^0.8.16;
 
 import "./LibGeoWebCoordinate.sol";
-import "hardhat/console.sol";
 
 library LibGeoWebParcel {
     using LibGeoWebCoordinate for uint64;

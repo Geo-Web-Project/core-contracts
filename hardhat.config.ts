@@ -67,8 +67,7 @@ module.exports = {
     version: "0.8.16",
     settings: {
       optimizer: {
-        enabled: true,
-        runs: 200,
+        enabled: false,
       },
     },
   },
@@ -78,6 +77,7 @@ module.exports = {
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
+    outputFile: "./gas-report.out",
   },
   namedAccounts: {
     diamondAdmin: {

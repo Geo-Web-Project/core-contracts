@@ -267,15 +267,6 @@ abstract contract IPCOLicenseClaimerFacet {
             );
         }
 
-        // Transfer initial payment
-        if (block.timestamp <= ds.auctionEnd) {
-            ls.paymentToken.safeTransferFrom(
-                msg.sender,
-                address(ls.beneficiary),
-                initialForSalePrice
-            );
-        }
-
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(
             ls.beneficiary,
@@ -286,6 +277,15 @@ abstract contract IPCOLicenseClaimerFacet {
             initialContributionRate,
             initialForSalePrice
         );
+
+        // Transfer initial payment
+        if (block.timestamp <= ds.auctionEnd) {
+            ls.paymentToken.safeTransferFrom(
+                msg.sender,
+                address(ls.beneficiary),
+                initialForSalePrice
+            );
+        }
     }
 
     /**
