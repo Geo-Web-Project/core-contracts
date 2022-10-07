@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
+import {IDiamondLoupe} from "diamond-1-hardhat/contracts/interfaces/IDiamondLoupe.sol";
 
 library LibBeaconDiamond {
     bytes32 private constant STORAGE_POSITION =

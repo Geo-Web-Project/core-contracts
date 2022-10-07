@@ -8,9 +8,11 @@ pragma solidity ^0.8.16;
 * Forked from https://github.com/mudgen/diamond-3-hardhat
 /******************************************************************************/
 
-import {LibDiamond} from "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
-import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
+import {LibDiamond} from "diamond-1-hardhat/contracts/libraries/LibDiamond.sol";
+import {IDiamondLoupe} from "diamond-1-hardhat/contracts/interfaces/IDiamondLoupe.sol";
 import {LibBeaconDiamond} from "./libraries/LibBeaconDiamond.sol";
+import {DiamondInit} from "diamond-1-hardhat/contracts/upgradeInitializers/DiamondInit.sol";
+import {Diamond} from "diamond-1-hardhat/contracts/Diamond.sol";
 
 contract BeaconDiamond {
     constructor(address _contractOwner, IDiamondLoupe _beacon) payable {

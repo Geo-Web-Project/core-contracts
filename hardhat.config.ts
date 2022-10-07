@@ -36,7 +36,6 @@ if (process.env.INFURA_KEY) {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 5,
       accounts: [process.env.DEV_PRIVATE_KEY],
-      deploy: ["deploy/"],
       verify: {
         etherscan: {
           apiUrl: "https://api-goerli.etherscan.io/",
@@ -47,7 +46,6 @@ if (process.env.INFURA_KEY) {
       url: `https://optimism-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 420,
       accounts: [process.env.DEV_PRIVATE_KEY],
-      deploy: ["deploy/"],
       verify: {
         etherscan: {
           apiUrl: "https://api-goerli-optimism.etherscan.io/",
