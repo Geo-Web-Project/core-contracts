@@ -6,6 +6,7 @@ import {
   IERC721,
   PCOLicenseClaimerFacet,
   PCOLicenseParamsFacet,
+  PCOERC721Facet,
 } from "../../typechain-types";
 import {
   perYearToPerSecondRate,
@@ -249,20 +250,29 @@ const initializedWithRealLicense = deployments.createFixture(
 
     const { diamondAdmin } = await getNamedAccounts();
     const { diamond } = deployments;
-    await diamond.deploy("ERC721Facet", {
+    await diamond.deploy("PCOERC721Facet", {
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
         "PCOLicenseClaimerFacet",
         "GeoWebParcelFacet",
         "PCOLicenseParamsFacet",
-        "ERC721Facet",
+        "PCOERC721Facet",
       ],
     });
 
-    const erc721Facet = await ethers.getContract("ERC721Facet", diamondAdmin);
+    const erc721Facet = await ethers.getContract(
+      "PCOERC721Facet",
+      diamondAdmin
+    );
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
+
+    await (erc721Facet as PCOERC721Facet).initializeERC721(
+      "Geo Web License Test",
+      "GEOL",
+      ""
+    );
 
     await (erc721Facet as PCOLicenseClaimerFacet).initializeClaimer(
       0,

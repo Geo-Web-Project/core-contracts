@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import "../libraries/LibPCOLicenseClaimer.sol";
 import "../libraries/LibPCOLicenseParams.sol";
 import "../../pco-license/facets/CFABasePCOFacet.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import "../../beacon-diamond/BeaconDiamond.sol";
 import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
+import {ERC721BaseInternal} from "@solidstate/contracts/token/ERC721/base/ERC721Base.sol";
 
-contract PCOLicenseClaimerFacet {
+abstract contract IPCOLicenseClaimerFacet {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
 
@@ -242,7 +243,7 @@ contract PCOLicenseClaimerFacet {
         emit ParcelClaimed(licenseId, msg.sender);
 
         // Build and mint
-        LibPCOLicenseClaimer._buildAndMint(msg.sender, baseCoordinate, path);
+        _buildAndMint(msg.sender, baseCoordinate, path);
 
         {
             // Transfer required buffer
@@ -266,15 +267,6 @@ contract PCOLicenseClaimerFacet {
             );
         }
 
-        // Transfer initial payment
-        if (block.timestamp <= ds.auctionEnd) {
-            ls.paymentToken.safeTransferFrom(
-                msg.sender,
-                address(ls.beneficiary),
-                initialForSalePrice
-            );
-        }
-
         // Initialize beacon
         CFABasePCOFacet(address(proxy)).initializeBid(
             ls.beneficiary,
@@ -285,5 +277,44 @@ contract PCOLicenseClaimerFacet {
             initialContributionRate,
             initialForSalePrice
         );
+
+        // Transfer initial payment
+        if (_requiredBid > 0) {
+            ls.paymentToken.safeTransferFrom(
+                msg.sender,
+                address(ls.beneficiary),
+                _requiredBid
+            );
+        }
+    }
+
+    /**
+     * @notice Build a parcel and mint a license
+     * @param user Address of license owner to be
+     * @param baseCoordinate Base coordinate of parcel to claim
+     * @param path Path of parcel to claim
+     */
+    function _buildAndMint(
+        address user,
+        uint64 baseCoordinate,
+        uint256[] memory path
+    ) internal virtual;
+}
+
+contract PCOLicenseClaimerFacet is IPCOLicenseClaimerFacet, ERC721BaseInternal {
+    /**
+     * @notice Build a parcel and mint a license
+     * @param user Address of license owner to be
+     * @param baseCoordinate Base coordinate of parcel to claim
+     * @param path Path of parcel to claim
+     */
+    function _buildAndMint(
+        address user,
+        uint64 baseCoordinate,
+        uint256[] memory path
+    ) internal override {
+        uint256 licenseId = LibGeoWebParcel.nextId();
+        LibGeoWebParcel.build(baseCoordinate, path);
+        _safeMint(user, licenseId);
     }
 }

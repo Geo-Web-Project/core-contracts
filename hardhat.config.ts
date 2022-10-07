@@ -74,11 +74,10 @@ if (process.env.INFURA_KEY) {
 module.exports = {
   networks,
   solidity: {
-    version: "0.8.14",
+    version: "0.8.16",
     settings: {
       optimizer: {
-        enabled: true,
-        runs: 200,
+        enabled: false,
       },
     },
   },
@@ -88,6 +87,7 @@ module.exports = {
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
+    outputFile: "./gas-report.out",
   },
   namedAccounts: {
     diamondAdmin: {
@@ -116,10 +116,10 @@ module.exports = {
     {
       name: "RegistryDiamond",
       include: [
-        "PCOLicenseClaimerFacet",
+        "IPCOLicenseClaimerFacet",
         "GeoWebParcelFacet",
         "PCOLicenseParamsFacet",
-        "ERC721Facet",
+        "PCOERC721Facet",
       ],
       strict: false,
     },

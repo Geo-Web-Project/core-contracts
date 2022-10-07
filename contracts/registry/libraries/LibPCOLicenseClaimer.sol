@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import "./LibGeoWebParcel.sol";
-import "./LibERC721.sol";
 
 library LibPCOLicenseClaimer {
     bytes32 private constant STORAGE_POSITION =
@@ -35,22 +34,6 @@ library LibPCOLicenseClaimer {
         assembly {
             ds.slot := position
         }
-    }
-
-    /**
-     * @notice Build a parcel and mint a license
-     * @param user Address of license owner to be
-     * @param baseCoordinate Base coordinate of parcel to claim
-     * @param path Path of parcel to claim
-     */
-    function _buildAndMint(
-        address user,
-        uint64 baseCoordinate,
-        uint256[] memory path
-    ) internal {
-        uint256 licenseId = LibGeoWebParcel.nextId();
-        LibGeoWebParcel.build(baseCoordinate, path);
-        LibERC721._safeMint(user, licenseId);
     }
 
     /**

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import "../libraries/LibCFABasePCO.sol";
 import "../libraries/LibCFAPenaltyBid.sol";
@@ -22,7 +22,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
     function reclaimPrice() public view returns (uint256) {
         require(
             !LibCFABasePCO._isPayerBidActive(),
-            "CFAReclaimerFacet: Can only perform action when payer bid is active"
+            "CFAReclaimerFacet: Can only perform action when payer bid is not active"
         );
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
@@ -58,7 +58,7 @@ contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
     ) external {
         require(
             !LibCFABasePCO._isPayerBidActive(),
-            "CFAReclaimerFacet: Can only perform action when payer bid is active"
+            "CFAReclaimerFacet: Can only perform action when payer bid is not active"
         );
 
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO

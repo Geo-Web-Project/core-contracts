@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
@@ -215,7 +215,6 @@ library LibCFAPenaltyBid {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         Bid memory _pendingBid = pendingBid();
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
@@ -274,19 +273,20 @@ library LibCFAPenaltyBid {
             depositFromPayer = withdrawToBidder;
         }
 
+        // msg.sender is _currentBid.bidder due to onlyPayer modifier check
         if (depositFromPayer > 0) {
             paymentToken.safeTransferFrom(
-                _currentBid.bidder,
+                msg.sender,
                 address(this),
                 depositFromPayer
             );
         }
         paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
         if (withdrawToPayer > 0) {
-            paymentToken.safeTransfer(_currentBid.bidder, withdrawToPayer);
+            paymentToken.safeTransfer(msg.sender, withdrawToPayer);
         }
         paymentToken.safeTransferFrom(
-            _currentBid.bidder,
+            msg.sender,
             address(LibCFABasePCO._getBeneficiary()),
             penaltyAmount
         );
