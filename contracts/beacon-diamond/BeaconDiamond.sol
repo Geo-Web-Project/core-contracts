@@ -13,6 +13,9 @@ import {IDiamondLoupe} from "diamond-1-hardhat/contracts/interfaces/IDiamondLoup
 import {LibBeaconDiamond} from "./libraries/LibBeaconDiamond.sol";
 import {DiamondInit} from "diamond-1-hardhat/contracts/upgradeInitializers/DiamondInit.sol";
 import {Diamond} from "diamond-1-hardhat/contracts/Diamond.sol";
+import {DiamondCutFacet} from "diamond-1-hardhat/contracts/facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "diamond-1-hardhat/contracts/facets/DiamondLoupeFacet.sol";
+import {OwnershipFacet} from "diamond-1-hardhat/contracts/facets/OwnershipFacet.sol";
 
 contract BeaconDiamond {
     constructor(address _contractOwner, IDiamondLoupe _beacon) payable {

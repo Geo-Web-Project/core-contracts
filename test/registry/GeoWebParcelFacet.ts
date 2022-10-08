@@ -22,18 +22,11 @@ describe("GeoWebParcel", async () => {
       const max_x = await geoWebCoordinate.MAX_X();
       const max_y = await geoWebCoordinate.MAX_Y();
 
-      const { diamondAdmin } = await getNamedAccounts();
-      const { diamond } = deployments;
-      await diamond.deploy("GeoWebParcel", {
-        from: diamondAdmin,
-        owner: diamondAdmin,
-        facets: ["TestableGeoWebParcelFacet"],
-      });
-
-      const geoWebParcel = await ethers.getContract(
-        "GeoWebParcel",
-        diamondAdmin
+      const TestableGeoWebParcelFacet = await ethers.getContractFactory(
+        "TestableGeoWebParcelFacet"
       );
+      const geoWebParcel = await TestableGeoWebParcelFacet.deploy();
+      await geoWebParcel.deployed();
 
       return {
         geoWebParcel,

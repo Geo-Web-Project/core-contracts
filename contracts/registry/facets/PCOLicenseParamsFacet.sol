@@ -5,7 +5,7 @@ import "../libraries/LibPCOLicenseParams.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
-import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
+import {LibDiamond} from "diamond-1-hardhat/contracts/libraries/LibDiamond.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 /// @title Public access to global Claimer parameters

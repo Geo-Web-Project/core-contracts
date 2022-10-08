@@ -14,15 +14,15 @@ import {
   rateToPurchasePrice,
   setupSf,
 } from "../shared";
+import { deployDiamond } from "../../scripts/deploy";
 
 const setup = deployments.createFixture(
-  async ({ deployments, getNamedAccounts, ethers }) => {
+  async ({ getNamedAccounts, ethers }) => {
     const res = await setupSf();
     const { sf, ethersjsSf, paymentToken } = res;
 
     const { diamondAdmin } = await getNamedAccounts();
-    const { diamond } = deployments;
-    await diamond.deploy("TestBasePCO", {
+    const basePCOFacet = await deployDiamond("PCOLicenseDiamond", {
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
@@ -30,6 +30,7 @@ const setup = deployments.createFixture(
         "TestableCFABasePCOFacet",
         "CFAPenaltyBidFacet",
         "CFAReclaimerFacet",
+        "DiamondLoupeFacet",
       ],
     });
 
@@ -38,8 +39,6 @@ const setup = deployments.createFixture(
     const accounts = await ethers.getSigners();
 
     const [admin] = accounts;
-
-    const basePCOFacet = await ethers.getContract("TestBasePCO", diamondAdmin);
 
     const mockCFABeneficiary = await smock.fake("ICFABeneficiary");
     const mockParamsStore = await smock.fake("IPCOLicenseParamsStore");
@@ -249,8 +248,7 @@ const initializedWithRealLicense = deployments.createFixture(
     } = res;
 
     const { diamondAdmin } = await getNamedAccounts();
-    const { diamond } = deployments;
-    await diamond.deploy("PCOERC721Facet", {
+    const erc721Facet = await deployDiamond("RegistryDiamond", {
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
@@ -260,11 +258,6 @@ const initializedWithRealLicense = deployments.createFixture(
         "PCOERC721Facet",
       ],
     });
-
-    const erc721Facet = await ethers.getContract(
-      "PCOERC721Facet",
-      diamondAdmin
-    );
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 

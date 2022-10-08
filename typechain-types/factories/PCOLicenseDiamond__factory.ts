@@ -11,6 +11,22 @@ import type {
 
 const _abi = [
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_user",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_contractOwner",
+        type: "address",
+      },
+    ],
+    name: "NotContractOwner",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {

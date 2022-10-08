@@ -45,9 +45,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .initializeClaimer(1, 10, 20, 2, mockBeacon.address);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("NotContractOwner");
     });
   });
 
@@ -68,9 +66,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setAuctionStart(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("NotContractOwner");
     });
   });
 
@@ -91,9 +87,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setAuctionEnd(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("NotContractOwner");
     });
   });
 
@@ -114,9 +108,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setStartingBid(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("NotContractOwner");
     });
   });
 
@@ -137,9 +129,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setEndingBid(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("NotContractOwner");
     });
   });
 
@@ -161,9 +151,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setBeacon(user);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("NotContractOwner");
     });
   });
 

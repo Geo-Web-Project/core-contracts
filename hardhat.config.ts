@@ -25,9 +25,6 @@ const networks: any = {
     gasPrice: 1000000000,
     url: `http://localhost:8545`,
   },
-  hardhat: {
-    deploy: ["deploy/"],
-  },
 };
 
 if (process.env.INFURA_KEY) {

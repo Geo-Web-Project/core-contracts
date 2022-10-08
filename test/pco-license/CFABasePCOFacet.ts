@@ -131,7 +131,7 @@ describe("CFABasePCOFacet", async function () {
           forSalePrice
         );
       await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
+        "NotContractOwner"
       );
     });
 
