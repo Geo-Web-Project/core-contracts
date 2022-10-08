@@ -4,8 +4,15 @@ const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 const hre = require("hardhat");
 import { Contract } from "ethers";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
+
+function perYearToPerSecondRate(annualRate: number) {
+  return {
+    numerator: annualRate * 100,
+    denominator: 60 * 60 * 24 * 365 * 100,
+  };
+}
 
 async function deploySuperfluid() {
   const errorHandler = (err: any) => {
@@ -99,6 +106,92 @@ export async function deployDiamond(
   return await ethers.getContractAt(name, diamond.address);
 }
 
+async function deployBeneficiarySuperApp(registryDiamond: Contract) {
+  const { treasury } = await hre.getNamedAccounts();
+
+  console.log();
+  console.log("Deploying BeneficiarySuperApp");
+  const BeneficiarySuperApp = await ethers.getContractFactory(
+    "BeneficiarySuperApp"
+  );
+  const beneSuperApp = await upgrades.deployProxy(BeneficiarySuperApp, [
+    registryDiamond.address,
+    treasury,
+  ]);
+  await beneSuperApp.deployed();
+  console.log("BeneficiarySuperApp deployed: ", beneSuperApp.address);
+
+  return beneSuperApp;
+}
+
+async function deployBeaconDiamond() {
+  const { diamondAdmin, deployer } = await hre.getNamedAccounts();
+
+  console.log();
+  console.log("Deploying PCOLicenseDiamond");
+  const beaconDiamond = await deployDiamond("PCOLicenseDiamond", {
+    facets: [
+      "DiamondCutFacet",
+      "DiamondLoupeFacet",
+      "OwnershipFacet",
+      "CFABasePCOFacet",
+      "CFAPenaltyBidFacet",
+      "CFAReclaimerFacet",
+    ],
+    owner: diamondAdmin,
+    from: deployer,
+  });
+
+  console.log("PCOLicenseDiamond deployed: ", beaconDiamond.address);
+  return beaconDiamond;
+}
+
+async function deployRegistryDiamond(sf: Framework, ethx: SuperToken) {
+  const { diamondAdmin, deployer, treasury } = await hre.getNamedAccounts();
+
+  const beaconDiamond = await deployBeaconDiamond();
+
+  console.log();
+  console.log("Deploying RegistryDiamond");
+  const registryDiamond = await deployDiamond("RegistryDiamond", {
+    facets: [
+      "DiamondCutFacet",
+      // "DiamondLoupeFacet",
+      "OwnershipFacet",
+      "PCOLicenseClaimerFacet",
+      "GeoWebParcelFacet",
+      "PCOLicenseParamsFacet",
+      "PCOERC721Facet",
+    ],
+    owner: diamondAdmin,
+    from: deployer,
+  });
+  console.log("RegistryDiamond deployed: ", registryDiamond.address);
+
+  // Initialize
+  const perSecondFee = perYearToPerSecondRate(0.1);
+
+  await registryDiamond.initializeERC721("Geo Web Parcel License", "GEOL", "");
+  await registryDiamond.initializeClaimer(0, 0, 0, 0, beaconDiamond.address);
+  await registryDiamond.initializeParams(
+    treasury,
+    ethx.address,
+    sf.host.contract.address,
+    perSecondFee.numerator,
+    perSecondFee.denominator,
+    1,
+    10,
+    60 * 60 * 24 * 7, // 7 days
+    60 * 60 * 24 * 14, // 2 weeks,
+    ethers.utils.parseEther("0.005")
+  );
+  console.log("Initialized RegistryDiamond.");
+
+  const beneSuperApp = await deployBeneficiarySuperApp(registryDiamond);
+  console.log("Setting beneficiary to super app...");
+  await registryDiamond.setBeneficiary(beneSuperApp.address);
+}
+
 async function deploy() {
   let sf: Framework;
   let ethx: SuperToken;
@@ -114,7 +207,7 @@ async function deploy() {
     ethx = await sf.loadSuperToken("ETHx");
   }
 
-  // await deployDiamond();
+  await deployRegistryDiamond(sf, ethx);
 }
 
 if (require.main === module) {

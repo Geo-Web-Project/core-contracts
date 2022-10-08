@@ -77,6 +77,7 @@ module.exports = {
   namedAccounts: {
     diamondAdmin: {
       default: 0,
+      5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
     },
     user: {
       default: 1,
@@ -91,6 +92,9 @@ module.exports = {
       5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
       420: "0x85ACc73a9Cff049A978962f05cE0Ce6496416023",
       31337: 0,
+    },
+    deployer: {
+      default: 0,
     },
   },
   diamondAbi: [
