@@ -130,9 +130,7 @@ describe("CFABasePCOFacet", async function () {
           contributionRate,
           forSalePrice
         );
-      await expect(txn).to.be.revertedWith(
-        "Ownable: sender must be owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
 
     it("should fail if buffer is missing", async () => {
