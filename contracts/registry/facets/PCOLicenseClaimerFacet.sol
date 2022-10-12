@@ -6,17 +6,26 @@ import "../libraries/LibPCOLicenseParams.sol";
 import "../../pco-license/facets/CFABasePCOFacet.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
 import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
-import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
-import "../../beacon-diamond/BeaconDiamond.sol";
-import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
+import {BeaconDiamond} from "../../beacon-diamond/BeaconDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 import {ERC721BaseInternal} from "@solidstate/contracts/token/ERC721/base/ERC721Base.sol";
+import {IDiamondReadable} from "@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol";
+import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
 
 abstract contract IPCOLicenseClaimerFacet {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
+    using OwnableStorage for OwnableStorage.Layout;
+
+    modifier onlyOwner() {
+        require(
+            msg.sender == OwnableStorage.layout().owner,
+            "Ownable: sender must be owner"
+        );
+        _;
+    }
 
     /// @notice Emitted when a parcel is claimed
     event ParcelClaimed(uint256 indexed _licenseId, address indexed _payer);
@@ -36,9 +45,7 @@ abstract contract IPCOLicenseClaimerFacet {
         uint256 startingBid,
         uint256 endingBid,
         address beacon
-    ) external {
-        LibDiamond.enforceIsContractOwner();
-
+    ) external onlyOwner {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
@@ -53,8 +60,7 @@ abstract contract IPCOLicenseClaimerFacet {
      * @notice Admin can update the starting bid.
      * @param startingBid The new starting bid
      */
-    function setStartingBid(uint256 startingBid) external {
-        LibDiamond.enforceIsContractOwner();
+    function setStartingBid(uint256 startingBid) external onlyOwner {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
@@ -73,8 +79,7 @@ abstract contract IPCOLicenseClaimerFacet {
      * @notice Admin can update the ending bid.
      * @param endingBid The new ending bid
      */
-    function setEndingBid(uint256 endingBid) external {
-        LibDiamond.enforceIsContractOwner();
+    function setEndingBid(uint256 endingBid) external onlyOwner {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
@@ -93,8 +98,7 @@ abstract contract IPCOLicenseClaimerFacet {
      * @notice Admin can update the start time of the initial Dutch auction.
      * @param auctionStart The new start time of the initial Dutch auction
      */
-    function setAuctionStart(uint256 auctionStart) external {
-        LibDiamond.enforceIsContractOwner();
+    function setAuctionStart(uint256 auctionStart) external onlyOwner {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
@@ -113,8 +117,7 @@ abstract contract IPCOLicenseClaimerFacet {
      * @notice Admin can update the end time of the initial Dutch auction.
      * @param auctionEnd The new end time of the initial Dutch auction
      */
-    function setAuctionEnd(uint256 auctionEnd) external {
-        LibDiamond.enforceIsContractOwner();
+    function setAuctionEnd(uint256 auctionEnd) external onlyOwner {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
@@ -133,8 +136,7 @@ abstract contract IPCOLicenseClaimerFacet {
      * @notice Admin can update the beacon contract
      * @param beacon The new beacon contract
      */
-    function setBeacon(address beacon) external {
-        LibDiamond.enforceIsContractOwner();
+    function setBeacon(address beacon) external onlyOwner {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
 
@@ -189,7 +191,7 @@ abstract contract IPCOLicenseClaimerFacet {
                                         type(BeaconDiamond).creationCode,
                                         abi.encode(
                                             address(this),
-                                            IDiamondLoupe(ds.beacon)
+                                            IDiamondReadable(ds.beacon)
                                         )
                                     )
                                 )
@@ -232,7 +234,7 @@ abstract contract IPCOLicenseClaimerFacet {
             salt: keccak256(
                 abi.encodePacked(msg.sender, ds.userSalts[msg.sender])
             )
-        }(address(this), IDiamondLoupe(ds.beacon));
+        }(address(this), IDiamondReadable(ds.beacon));
 
         // Increment user salt
         ds.userSalts[msg.sender] += 1;

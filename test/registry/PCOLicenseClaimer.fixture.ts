@@ -2,11 +2,12 @@ import { smock } from "@defi-wonderland/smock";
 import { deployments, ethers } from "hardhat";
 import {
   PCOLicenseClaimerFacet,
-  IDiamondLoupe,
+  IDiamondReadable,
   PCOLicenseParamsFacet,
 } from "../../typechain-types";
 import { perYearToPerSecondRate, setupSf } from "../shared";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
+import { deployDiamond } from "../../scripts/deploy";
 
 const setup = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }, options) => {
@@ -14,8 +15,7 @@ const setup = deployments.createFixture(
     const { ethx_erc20, sf } = res;
 
     const { diamondAdmin } = await getNamedAccounts();
-    const { diamond } = deployments;
-    await diamond.deploy("PCOLicenseClaimer", {
+    const pcoLicenseClaimer = await deployDiamond("RegistryDiamond", {
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
@@ -24,11 +24,6 @@ const setup = deployments.createFixture(
         "PCOLicenseParamsFacet",
       ],
     });
-
-    const pcoLicenseClaimer = await ethers.getContract(
-      "PCOLicenseClaimer",
-      diamondAdmin
-    );
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
@@ -58,7 +53,7 @@ const initialized = deployments.createFixture(async (hre, options) => {
   const { pcoLicenseClaimer } = res;
 
   const mockFacet = await smock.fake("CFABasePCOFacet");
-  const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
+  const mockBeacon = await smock.fake<IDiamondReadable>("IDiamondReadable");
 
   mockBeacon.facetAddress.returns(mockFacet.address);
 
@@ -73,7 +68,7 @@ const initializedWithAuction = deployments.createFixture(
     const { pcoLicenseClaimer } = res;
 
     const mockFacet = await smock.fake("CFABasePCOFacet");
-    const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
+    const mockBeacon = await smock.fake<IDiamondReadable>("IDiamondReadable");
 
     mockBeacon.facetAddress.returns(mockFacet.address);
 

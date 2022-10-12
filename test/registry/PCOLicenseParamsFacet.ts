@@ -4,6 +4,7 @@ import { ethers, getNamedAccounts, deployments } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
 import { PCOLicenseParamsFacet } from "../../typechain-types";
+import { deployDiamond } from "../../scripts/deploy";
 
 use(solidity);
 use(chaiAsPromised);
@@ -11,20 +12,18 @@ use(smock.matchers);
 
 describe("PCOLicenseParamsFacet", async function () {
   const setupTest = deployments.createFixture(
-    async ({ deployments, getNamedAccounts, ethers }, options) => {
+    async ({ deployments, getNamedAccounts }) => {
       await deployments.fixture();
       const { diamondAdmin } = await getNamedAccounts();
-      const { diamond } = deployments;
-      await diamond.deploy("PCOLicenseParams", {
-        from: diamondAdmin,
-        owner: diamondAdmin,
-        facets: ["PCOLicenseParamsFacet"],
-      });
 
-      const pcoLicenseParams: PCOLicenseParamsFacet = await ethers.getContract(
-        "PCOLicenseParams",
-        diamondAdmin
-      );
+      const pcoLicenseParams: PCOLicenseParamsFacet = (await deployDiamond(
+        "RegistryDiamond",
+        {
+          from: diamondAdmin,
+          owner: diamondAdmin,
+          facets: ["PCOLicenseParamsFacet"],
+        }
+      )) as PCOLicenseParamsFacet;
 
       return {
         pcoLicenseParams,
@@ -70,9 +69,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .initializeParams(diamondAdmin, user, bidder, 1, 2, 3, 4, 5, 6, 7);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -94,9 +91,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setBeneficiary(user);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -118,9 +113,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPaymentToken(user);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -142,9 +135,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setHost(user);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -165,9 +156,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPerSecondFeeNumerator(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -188,9 +177,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPerSecondFeeDenominator(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -211,9 +198,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPenaltyNumerator(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -234,9 +219,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPenaltyDenominator(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -257,9 +240,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setBidPeriodLengthInSeconds(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -280,9 +261,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setReclaimAuctionLength(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -303,9 +282,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setMinForSalePrice(1);
 
-      await expect(txn).to.be.revertedWith(
-        "LibDiamond: Must be contract owner"
-      );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 });

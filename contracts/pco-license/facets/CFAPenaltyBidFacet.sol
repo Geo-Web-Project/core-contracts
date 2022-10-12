@@ -5,7 +5,6 @@ import "../libraries/LibCFABasePCO.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import "../libraries/LibCFAPenaltyBid.sol";
 import "../interfaces/ICFABiddable.sol";
-import "hardhat-deploy/solc_0.8/diamond/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";

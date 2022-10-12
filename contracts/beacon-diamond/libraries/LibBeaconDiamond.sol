@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import {IDiamondLoupe} from "hardhat-deploy/solc_0.8/diamond/interfaces/IDiamondLoupe.sol";
+import {IDiamondReadable} from "@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol";
 
 library LibBeaconDiamond {
     bytes32 private constant STORAGE_POSITION =
@@ -9,7 +9,7 @@ library LibBeaconDiamond {
 
     struct DiamondStorage {
         /// @notice Beacon that stores facet addresses
-        IDiamondLoupe beacon;
+        IDiamondReadable beacon;
     }
 
     function diamondStorage()
@@ -25,7 +25,7 @@ library LibBeaconDiamond {
         }
     }
 
-    function setBeacon(IDiamondLoupe beacon) internal {
+    function setBeacon(IDiamondReadable beacon) internal {
         DiamondStorage storage ds = diamondStorage();
         ds.beacon = beacon;
     }

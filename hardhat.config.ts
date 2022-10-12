@@ -25,9 +25,6 @@ const networks: any = {
     gasPrice: 1000000000,
     url: `http://localhost:8545`,
   },
-  hardhat: {
-    deploy: ["deploy/"],
-  },
 };
 
 if (process.env.INFURA_KEY) {
@@ -36,7 +33,6 @@ if (process.env.INFURA_KEY) {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 5,
       accounts: [process.env.DEV_PRIVATE_KEY],
-      deploy: ["deploy/"],
       verify: {
         etherscan: {
           apiUrl: "https://api-goerli.etherscan.io/",
@@ -47,7 +43,6 @@ if (process.env.INFURA_KEY) {
       url: `https://optimism-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 420,
       accounts: [process.env.DEV_PRIVATE_KEY],
-      deploy: ["deploy/"],
       verify: {
         etherscan: {
           apiUrl: "https://api-goerli-optimism.etherscan.io/",
@@ -82,6 +77,7 @@ module.exports = {
   namedAccounts: {
     diamondAdmin: {
       default: 0,
+      5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
     },
     user: {
       default: 1,
@@ -97,10 +93,13 @@ module.exports = {
       420: "0x85ACc73a9Cff049A978962f05cE0Ce6496416023",
       31337: 0,
     },
+    deployer: {
+      default: 0,
+    },
   },
   diamondAbi: [
     {
-      name: "RegistryDiamond",
+      name: "RegistryDiamondABI",
       include: [
         "IPCOLicenseClaimerFacet",
         "GeoWebParcelFacet",
@@ -110,7 +109,7 @@ module.exports = {
       strict: false,
     },
     {
-      name: "PCOLicenseDiamond",
+      name: "PCOLicenseDiamondABI",
       include: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
       strict: true,
     },
