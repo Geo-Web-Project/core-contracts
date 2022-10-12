@@ -69,7 +69,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .initializeParams(diamondAdmin, user, bidder, 1, 2, 3, 4, 5, 6, 7);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -91,7 +91,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setBeneficiary(user);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -113,7 +113,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPaymentToken(user);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -135,7 +135,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setHost(user);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -156,7 +156,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPerSecondFeeNumerator(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -177,7 +177,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPerSecondFeeDenominator(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -198,7 +198,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPenaltyNumerator(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -219,7 +219,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setPenaltyDenominator(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -240,7 +240,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setBidPeriodLengthInSeconds(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -261,7 +261,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setReclaimAuctionLength(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -282,7 +282,7 @@ describe("PCOLicenseParamsFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setMinForSalePrice(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 });

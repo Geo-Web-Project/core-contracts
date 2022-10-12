@@ -6,6 +6,8 @@ const hre = require("hardhat");
 import { Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
 const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
+import { DiamondWritable } from "../typechain-types/DiamondWritable";
+import { Ownable } from "../typechain-types/Ownable";
 
 function perYearToPerSecondRate(annualRate: number) {
   return {
@@ -54,15 +56,12 @@ export async function deployDiamond(
   name: string,
   { facets, from, owner }: { facets: string[]; from: string; owner: string }
 ) {
-  // Deploy DiamondInit
-  // DiamondInit provides a function that is called when the diamond is upgraded or deployed to initialize state variables
-  // Read about how the diamondCut function works in the EIP2535 Diamonds standard
-  const DiamondInit = await ethers.getContractFactory("DiamondInit");
+  const DiamondInit = await ethers.getContractFactory(name);
   const diamondInit = await DiamondInit.connect(
     await ethers.getSigner(from)
   ).deploy();
   await diamondInit.deployed();
-  console.log("DiamondInit deployed:", diamondInit.address);
+  console.log(`${name} deployed:`, diamondInit.address);
 
   // Deploy facets and set the `facetCuts` variable
   console.log("");
@@ -75,35 +74,30 @@ export async function deployDiamond(
     await facet.deployed();
     console.log(`${FacetName} deployed: ${facet.address}`);
     facetCuts.push({
-      facetAddress: facet.address,
+      target: facet.address,
       action: FacetCutAction.Add,
-      functionSelectors: getSelectors(facet),
+      selectors: getSelectors(facet),
     });
   }
 
-  // Creating a function call
-  // This call gets executed during deployment and can also be executed in upgrades
-  // It is executed with delegatecall on the DiamondInit address.
-  const functionCall = diamondInit.interface.encodeFunctionData("init");
+  const target = ethers.constants.AddressZero;
+  const data = "0x";
 
-  // Setting arguments that will be used in the diamond constructor
-  const diamondArgs = {
-    owner: owner,
-    init: diamondInit.address,
-    initCalldata: functionCall,
-  };
-
-  // deploy Diamond
-  const Diamond = await ethers.getContractFactory("Diamond");
-  const diamond = await Diamond.connect(await ethers.getSigner(from)).deploy(
-    facetCuts,
-    diamondArgs
-  );
-  await diamond.deployed();
+  // Cut diamond
+  await (diamondInit as DiamondWritable)
+    .connect(await ethers.getSigner(from))
+    .diamondCut(facetCuts, target, data);
   console.log();
-  console.log("Diamond deployed:", diamond.address);
+  console.log("Diamond deployed:", diamondInit.address);
 
-  return await ethers.getContractAt(name, diamond.address);
+  // Set owner
+  if (from !== owner) {
+    await (diamondInit as Ownable)
+      .connect(await ethers.getSigner(from))
+      .transferOwnership(owner);
+  }
+
+  return await ethers.getContractAt(`${name}ABI`, diamondInit.address);
 }
 
 async function deployBeneficiarySuperApp(registryDiamond: Contract) {
@@ -130,14 +124,7 @@ async function deployBeaconDiamond() {
   console.log();
   console.log("Deploying PCOLicenseDiamond");
   const beaconDiamond = await deployDiamond("PCOLicenseDiamond", {
-    facets: [
-      "DiamondCutFacet",
-      "DiamondLoupeFacet",
-      "OwnershipFacet",
-      "CFABasePCOFacet",
-      "CFAPenaltyBidFacet",
-      "CFAReclaimerFacet",
-    ],
+    facets: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
     owner: diamondAdmin,
     from: deployer,
   });
@@ -155,9 +142,6 @@ async function deployRegistryDiamond(sf: Framework, ethx: SuperToken) {
   console.log("Deploying RegistryDiamond");
   const registryDiamond = await deployDiamond("RegistryDiamond", {
     facets: [
-      "DiamondCutFacet",
-      // "DiamondLoupeFacet",
-      "OwnershipFacet",
       "PCOLicenseClaimerFacet",
       "GeoWebParcelFacet",
       "PCOLicenseParamsFacet",

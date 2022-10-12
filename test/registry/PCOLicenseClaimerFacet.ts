@@ -39,13 +39,13 @@ describe("PCOLicenseClaimerFacet", async function () {
       const { pcoLicenseClaimer } = res;
       const { user } = await getNamedAccounts();
 
-      const mockBeacon = await smock.fake("IDiamondLoupe");
+      const mockBeacon = await smock.fake("IDiamondReadable");
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
         .initializeClaimer(1, 10, 20, 2, mockBeacon.address);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -66,7 +66,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setAuctionStart(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -87,7 +87,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setAuctionEnd(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -108,7 +108,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setStartingBid(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -129,7 +129,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setEndingBid(1);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 
@@ -151,7 +151,7 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .setBeacon(user);
 
-      await expect(txn).to.be.revertedWith("NotContractOwner");
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
     });
   });
 

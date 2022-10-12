@@ -2,7 +2,7 @@ import { smock } from "@defi-wonderland/smock";
 import { deployments, ethers } from "hardhat";
 import {
   PCOLicenseClaimerFacet,
-  IDiamondLoupe,
+  IDiamondReadable,
   PCOLicenseParamsFacet,
 } from "../../typechain-types";
 import { perYearToPerSecondRate, setupSf } from "../shared";
@@ -53,7 +53,7 @@ const initialized = deployments.createFixture(async (hre, options) => {
   const { pcoLicenseClaimer } = res;
 
   const mockFacet = await smock.fake("CFABasePCOFacet");
-  const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
+  const mockBeacon = await smock.fake<IDiamondReadable>("IDiamondReadable");
 
   mockBeacon.facetAddress.returns(mockFacet.address);
 
@@ -68,7 +68,7 @@ const initializedWithAuction = deployments.createFixture(
     const { pcoLicenseClaimer } = res;
 
     const mockFacet = await smock.fake("CFABasePCOFacet");
-    const mockBeacon = await smock.fake<IDiamondLoupe>("IDiamondLoupe");
+    const mockBeacon = await smock.fake<IDiamondReadable>("IDiamondReadable");
 
     mockBeacon.facetAddress.returns(mockFacet.address);
 

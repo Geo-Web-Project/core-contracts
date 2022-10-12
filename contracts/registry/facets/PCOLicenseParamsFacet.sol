@@ -5,11 +5,22 @@ import "../libraries/LibPCOLicenseParams.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
-import {LibDiamond} from "diamond-1-hardhat/contracts/libraries/LibDiamond.sol";
+import {OwnableInternal} from "@solidstate/contracts/access/ownable/OwnableInternal.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
+import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
 
 /// @title Public access to global Claimer parameters
 contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
+    using OwnableStorage for OwnableStorage.Layout;
+
+    modifier onlyOwner() {
+        require(
+            msg.sender == OwnableStorage.layout().owner,
+            "Ownable: sender must be owner"
+        );
+        _;
+    }
+
     /**
      * @notice Initialize.
      *      - Must be the contract owner
@@ -34,9 +45,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
         uint256 bidPeriodLengthInSeconds,
         uint256 reclaimAuctionLength,
         uint256 minForSalePrice
-    ) external {
-        LibDiamond.enforceIsContractOwner();
-
+    ) external onlyOwner {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -61,8 +70,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Superfluid Host
-    function setHost(ISuperfluid host) external {
-        LibDiamond.enforceIsContractOwner();
+    function setHost(ISuperfluid host) external onlyOwner {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -78,8 +86,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Payment Token
-    function setPaymentToken(ISuperToken paymentToken) external {
-        LibDiamond.enforceIsContractOwner();
+    function setPaymentToken(ISuperToken paymentToken) external onlyOwner {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -95,8 +102,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Beneficiary
-    function setBeneficiary(ICFABeneficiary beneficiary) external {
-        LibDiamond.enforceIsContractOwner();
+    function setBeneficiary(ICFABeneficiary beneficiary) external onlyOwner {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -117,8 +123,10 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Per Second Fee Numerator
-    function setPerSecondFeeNumerator(uint256 perSecondFeeNumerator) external {
-        LibDiamond.enforceIsContractOwner();
+    function setPerSecondFeeNumerator(uint256 perSecondFeeNumerator)
+        external
+        onlyOwner
+    {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -141,8 +149,8 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     /// @notice Set Per Second Fee Denominator
     function setPerSecondFeeDenominator(uint256 perSecondFeeDenominator)
         external
+        onlyOwner
     {
-        LibDiamond.enforceIsContractOwner();
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -158,8 +166,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Penalty Numerator
-    function setPenaltyNumerator(uint256 penaltyNumerator) external {
-        LibDiamond.enforceIsContractOwner();
+    function setPenaltyNumerator(uint256 penaltyNumerator) external onlyOwner {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -175,8 +182,10 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Penalty Denominator
-    function setPenaltyDenominator(uint256 penaltyDenominator) external {
-        LibDiamond.enforceIsContractOwner();
+    function setPenaltyDenominator(uint256 penaltyDenominator)
+        external
+        onlyOwner
+    {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -197,8 +206,10 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set Reclaim Auction Length
-    function setReclaimAuctionLength(uint256 reclaimAuctionLength) external {
-        LibDiamond.enforceIsContractOwner();
+    function setReclaimAuctionLength(uint256 reclaimAuctionLength)
+        external
+        onlyOwner
+    {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -221,8 +232,8 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     /// @notice Set Bid Period Length in seconds
     function setBidPeriodLengthInSeconds(uint256 bidPeriodLengthInSeconds)
         external
+        onlyOwner
     {
-        LibDiamond.enforceIsContractOwner();
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 
@@ -238,8 +249,7 @@ contract PCOLicenseParamsFacet is IPCOLicenseParamsStore {
     }
 
     /// @notice Set minimum for sale price
-    function setMinForSalePrice(uint256 minForSalePrice) external {
-        LibDiamond.enforceIsContractOwner();
+    function setMinForSalePrice(uint256 minForSalePrice) external onlyOwner {
         LibPCOLicenseParams.DiamondStorage storage ds = LibPCOLicenseParams
             .diamondStorage();
 

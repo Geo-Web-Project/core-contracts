@@ -3,15 +3,25 @@ pragma solidity ^0.8.16;
 
 import "../libraries/LibCFABasePCO.sol";
 import "../interfaces/IBasePCO.sol";
-import {LibDiamond} from "diamond-1-hardhat/contracts/libraries/LibDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
+import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
 
 contract CFABasePCOFacetModifiers {
+    using OwnableStorage for OwnableStorage.Layout;
+
+    modifier onlyOwner() {
+        require(
+            msg.sender == OwnableStorage.layout().owner,
+            "Ownable: sender must be owner"
+        );
+        _;
+    }
+
     modifier onlyPayer() {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         require(
@@ -69,9 +79,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
         address bidder,
         int96 newContributionRate,
         uint256 newForSalePrice
-    ) external {
-        LibDiamond.enforceIsContractOwner();
-
+    ) external onlyOwner {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         ds.paramsStore = paramsStore;

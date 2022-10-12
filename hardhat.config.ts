@@ -99,7 +99,7 @@ module.exports = {
   },
   diamondAbi: [
     {
-      name: "RegistryDiamond",
+      name: "RegistryDiamondABI",
       include: [
         "IPCOLicenseClaimerFacet",
         "GeoWebParcelFacet",
@@ -109,7 +109,7 @@ module.exports = {
       strict: false,
     },
     {
-      name: "PCOLicenseDiamond",
+      name: "PCOLicenseDiamondABI",
       include: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
       strict: true,
     },

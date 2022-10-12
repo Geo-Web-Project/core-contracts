@@ -30,7 +30,6 @@ const setup = deployments.createFixture(
         "TestableCFABasePCOFacet",
         "CFAPenaltyBidFacet",
         "CFAReclaimerFacet",
-        "DiamondLoupeFacet",
       ],
     });
 

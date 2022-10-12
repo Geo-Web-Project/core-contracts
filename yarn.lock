@@ -5338,10 +5338,6 @@ detective@^5.2.0:
     defined "^1.0.0"
     minimist "^1.1.1"
 
-"diamond-1-hardhat@https://github.com/mudgen/diamond-1-hardhat#639662e7e9b81b6595f7e8b95f44a1f5ba86dd41":
-  version "1.0.0"
-  resolved "https://github.com/mudgen/diamond-1-hardhat#639662e7e9b81b6595f7e8b95f44a1f5ba86dd41"
-
 diff@3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"

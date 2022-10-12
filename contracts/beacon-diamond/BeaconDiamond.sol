@@ -4,22 +4,17 @@ pragma solidity ^0.8.16;
 /******************************************************************************\
 * EIP-2535 Diamonds implementation that uses an external IDiamondLoupe to store facet addresses.
 * Can be used to store a single set of facet addresses for many diamonds
-* 
-* Forked from https://github.com/mudgen/diamond-3-hardhat
 /******************************************************************************/
 
-import {LibDiamond} from "diamond-1-hardhat/contracts/libraries/LibDiamond.sol";
-import {IDiamondLoupe} from "diamond-1-hardhat/contracts/interfaces/IDiamondLoupe.sol";
 import {LibBeaconDiamond} from "./libraries/LibBeaconDiamond.sol";
-import {DiamondInit} from "diamond-1-hardhat/contracts/upgradeInitializers/DiamondInit.sol";
-import {Diamond} from "diamond-1-hardhat/contracts/Diamond.sol";
-import {DiamondCutFacet} from "diamond-1-hardhat/contracts/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "diamond-1-hardhat/contracts/facets/DiamondLoupeFacet.sol";
-import {OwnershipFacet} from "diamond-1-hardhat/contracts/facets/OwnershipFacet.sol";
+import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
+import {IDiamondReadable} from "@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol";
 
 contract BeaconDiamond {
-    constructor(address _contractOwner, IDiamondLoupe _beacon) payable {
-        LibDiamond.setContractOwner(_contractOwner);
+    using OwnableStorage for OwnableStorage.Layout;
+
+    constructor(address _contractOwner, IDiamondReadable _beacon) payable {
+        OwnableStorage.layout().setOwner(_contractOwner);
         LibBeaconDiamond.setBeacon(_beacon);
     }
 

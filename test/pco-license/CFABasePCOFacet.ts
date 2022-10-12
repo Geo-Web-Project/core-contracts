@@ -131,7 +131,7 @@ describe("CFABasePCOFacet", async function () {
           forSalePrice
         );
       await expect(txn).to.be.revertedWith(
-        "NotContractOwner"
+        "Ownable: sender must be owner"
       );
     });
 
