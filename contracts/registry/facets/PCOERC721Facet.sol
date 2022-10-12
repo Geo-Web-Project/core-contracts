@@ -11,7 +11,7 @@ import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import {ERC165Storage} from "@solidstate/contracts/introspection/ERC165Storage.sol";
 import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
 
-contract PCOERC721Facet is ERC721Base, ERC721Metadata {
+contract PCOERC721Facet is ERC721Base, ERC721Metadata, ERC165 {
     using ERC165Storage for ERC165Storage.Layout;
     using OwnableStorage for OwnableStorage.Layout;
 
@@ -69,14 +69,5 @@ contract PCOERC721Facet is ERC721Base, ERC721Metadata {
         uint256 tokenId
     ) internal virtual override(ERC721BaseInternal, ERC721Metadata) {
         super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override
-        returns (bool)
-    {
-        return ERC165Storage.layout().isSupportedInterface(interfaceId);
     }
 }
