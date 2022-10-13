@@ -112,46 +112,45 @@ async function initializeRegistryDiamond(
 
   const perSecondFee = perYearToPerSecondRate(0.1);
 
-  let nonce = await safe.getNonce();
-  console.log("initializeERC721:", nonce);
-  await registryDiamond.initializeERC721("Geo Web Parcel License", "GEOL", "", {
-    nonce: nonce++,
-  });
-  console.log("initializeClaimer:", nonce);
-  await registryDiamond.initializeClaimer(
-    1665619570,
-    1666224370,
-    hre.ethers.utils.parseEther("1.0"),
-    hre.ethers.utils.parseEther("0.005"),
-    beaconDiamondAddress,
-    {
-      nonce: nonce++,
-    }
-  );
-  console.log("initializeParams:", nonce);
-  await registryDiamond.initializeParams(
-    treasury,
-    ethx.address,
-    sf.host.contract.address,
-    perSecondFee.numerator,
-    perSecondFee.denominator,
-    1,
-    10,
-    60 * 60 * 24 * 7, // 7 days
-    60 * 60 * 24 * 14, // 2 weeks,
-    hre.ethers.utils.parseEther("0.005"),
-    {
-      nonce: nonce++,
-    }
-  );
+  // let txn = await registryDiamond.initializeERC721(
+  //   "Geo Web Parcel License",
+  //   "GEOL",
+  //   ""
+  // );
+  // console.log("Waiting for transaction:", txn.nonce);
+  // await txn.wait();
+
+  // let txn = await registryDiamond.initializeClaimer(
+  //   1665619570,
+  //   1666224370,
+  //   hre.ethers.utils.parseEther("1.0"),
+  //   hre.ethers.utils.parseEther("0.005"),
+  //   beaconDiamondAddress
+  // );
+  // console.log("Waiting for transaction:", txn.nonce);
+  // await txn.wait();
+
+  // let txn = await registryDiamond.initializeParams(
+  //   treasury,
+  //   ethx.address,
+  //   sf.host.contract.address,
+  //   perSecondFee.numerator,
+  //   perSecondFee.denominator,
+  //   1,
+  //   10,
+  //   60 * 60 * 24 * 7, // 7 days
+  //   60 * 60 * 24 * 14, // 2 weeks,
+  //   hre.ethers.utils.parseEther("0.005")
+  // );
+  // console.log("Waiting for transaction:", txn.nonce);
+  // await txn.wait();
   console.log("Initialized RegistryDiamond.");
 
   const beneSuperApp = await deployBeneficiarySuperApp(hre, registryDiamond);
   console.log("Setting beneficiary to super app...");
-  console.log("setBeneficiary:", nonce);
-  await registryDiamond.setBeneficiary(beneSuperApp.address, {
-    nonce: nonce++,
-  });
+  let txn = await registryDiamond.setBeneficiary(beneSuperApp.address);
+  console.log("Waiting for transaction:", txn.nonce);
+  await txn.wait();
 }
 
 task("deploy:initialize")
