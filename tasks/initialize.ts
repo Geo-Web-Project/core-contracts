@@ -1,16 +1,14 @@
-import { Contract } from "ethers";
-import { SafeEthersSigner, SafeService } from "@gnosis.pm/safe-ethers-adapters";
-import EthersAdapter from "@gnosis.pm/safe-ethers-lib";
-import Safe from "@gnosis.pm/safe-core-sdk";
+import { Contract, BigNumber } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import SuperfluidSDK from "@superfluid-finance/js-sdk";
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
+import { AdminClient } from "defender-admin-client";
 
-const SAFE_SERVICES: Record<number, string> = {
-  5: "https://safe-transaction-goerli.safe.global",
+const NETWORKS: Record<number, string> = {
+  5: "goerli",
 };
 
 function perYearToPerSecondRate(annualRate: number) {
@@ -84,73 +82,141 @@ async function initializeRegistryDiamond(
   registryDiamondAddress: string,
   beaconDiamondAddress: string
 ) {
-  const { diamondAdmin, deployer, treasury } = await hre.getNamedAccounts();
+  const { diamondAdmin, treasury } = await hre.getNamedAccounts();
 
-  // Initialize with Safe signer
-  const service = new SafeService(
-    SAFE_SERVICES[hre.network.config.chainId as number]
-  );
-  const ethAdapter = new EthersAdapter({
-    ethers: hre.ethers as any,
-    signer: (await hre.ethers.getSigner(deployer)) as any,
+  // Create Defender client
+  const adminClient = new AdminClient({
+    apiKey: process.env.DEFENDER_API_KEY!,
+    apiSecret: process.env.DEFENDER_API_SECRET!,
   });
-  const safe = await Safe.create({
-    ethAdapter,
-    safeAddress: diamondAdmin,
-  });
-  const safeSigner = new SafeEthersSigner(
-    safe,
-    service,
-    hre.network.provider as any
-  );
+
   const RegistryDiamond = await hre.ethers.getContractFactory(
     "RegistryDiamondABI"
   );
-  const registryDiamond = RegistryDiamond.attach(
-    registryDiamondAddress
-  ).connect(safeSigner);
+  const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
 
   const perSecondFee = perYearToPerSecondRate(0.1);
 
-  // let txn = await registryDiamond.initializeERC721(
-  //   "Geo Web Parcel License",
-  //   "GEOL",
-  //   ""
-  // );
-  // console.log("Waiting for transaction:", txn.nonce);
-  // await txn.wait();
+  await adminClient.createProposal({
+    contract: {
+      address: registryDiamond.address,
+      network: NETWORKS[hre.network.config.chainId!] as any,
+    }, // Target contract
+    title: "Initialize ERC721", // Title of the proposal
+    description: "Initialize the parameters of ERC721", // Description of the proposal
+    type: "custom", // Use 'custom' for custom admin actions
+    functionInterface: {
+      name: "initializeERC721",
+      inputs: [
+        { type: "string", name: "name" },
+        { type: "string", name: "symbol" },
+        { type: "string", name: "baseURI" },
+      ],
+    }, // Function ABI
+    functionInputs: ["Geo Web Parcel License", "GEOL", ""], // Arguments to the function
+    via: diamondAdmin, // Address to execute proposal
+    viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
+  });
 
-  // let txn = await registryDiamond.initializeClaimer(
-  //   1665619570,
-  //   1666224370,
-  //   hre.ethers.utils.parseEther("1.0"),
-  //   hre.ethers.utils.parseEther("0.005"),
-  //   beaconDiamondAddress
-  // );
-  // console.log("Waiting for transaction:", txn.nonce);
-  // await txn.wait();
+  await adminClient.createProposal({
+    contract: {
+      address: registryDiamond.address,
+      network: NETWORKS[hre.network.config.chainId!] as any,
+    }, // Target contract
+    title: "Initialize Claimer", // Title of the proposal
+    description: "Initialize the parameters of PCOLicenseClaimerFacet", // Description of the proposal
+    type: "custom", // Use 'custom' for custom admin actions
+    functionInterface: {
+      name: "initializeClaimer",
+      inputs: [
+        { type: "uint256", name: "auctionStart" },
+        { type: "uint256", name: "auctionEnd" },
+        { type: "uint256", name: "startingBid" },
+        { type: "uint256", name: "endingBid" },
+        { type: "address", name: "beacon" },
+      ],
+    }, // Function ABI
+    functionInputs: [
+      "1665619570",
+      "1666224370",
+      hre.ethers.utils.parseEther("1.0").toString(),
+      hre.ethers.utils.parseEther("0.005").toString(),
+      beaconDiamondAddress,
+    ], // Arguments to the function
+    via: diamondAdmin, // Address to execute proposal
+    viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
+  });
 
-  // let txn = await registryDiamond.initializeParams(
-  //   treasury,
-  //   ethx.address,
-  //   sf.host.contract.address,
-  //   perSecondFee.numerator,
-  //   perSecondFee.denominator,
-  //   1,
-  //   10,
-  //   60 * 60 * 24 * 7, // 7 days
-  //   60 * 60 * 24 * 14, // 2 weeks,
-  //   hre.ethers.utils.parseEther("0.005")
-  // );
-  // console.log("Waiting for transaction:", txn.nonce);
-  // await txn.wait();
+  await adminClient.createProposal({
+    contract: {
+      address: registryDiamond.address,
+      network: NETWORKS[hre.network.config.chainId!] as any,
+    }, // Target contract
+    title: "Initialize Parameters", // Title of the proposal
+    description: "Initialize the parameters of PCOLicenseParamsFacet", // Description of the proposal
+    type: "custom", // Use 'custom' for custom admin actions
+    functionInterface: {
+      name: "initializeParams",
+      inputs: [
+        {
+          name: "beneficiary",
+          type: "address",
+        },
+        {
+          name: "paymentToken",
+          type: "address",
+        },
+        {
+          name: "host",
+          type: "address",
+        },
+        {
+          name: "perSecondFeeNumerator",
+          type: "uint256",
+        },
+        {
+          name: "perSecondFeeDenominator",
+          type: "uint256",
+        },
+        {
+          name: "penaltyNumerator",
+          type: "uint256",
+        },
+        {
+          name: "penaltyDenominator",
+          type: "uint256",
+        },
+        {
+          name: "bidPeriodLengthInSeconds",
+          type: "uint256",
+        },
+        {
+          name: "reclaimAuctionLength",
+          type: "uint256",
+        },
+        {
+          name: "minForSalePrice",
+          type: "uint256",
+        },
+      ],
+    }, // Function ABI
+    functionInputs: [
+      treasury,
+      ethx.address,
+      sf.host.contract.address,
+      perSecondFee.numerator.toString(),
+      perSecondFee.denominator.toString(),
+      "1",
+      "10",
+      BigNumber.from(60 * 60 * 24 * 7).toString(), // 7 days
+      BigNumber.from(60 * 60 * 24 * 14).toString(), // 2 weeks,
+      hre.ethers.utils.parseEther("0.005").toString(),
+    ], // Arguments to the function
+    via: diamondAdmin, // Address to execute proposal
+    viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
+  });
+
   console.log("Initialized RegistryDiamond.");
-
-  const beneSuperApp = await deployBeneficiarySuperApp(hre, registryDiamond);
-  console.log("Setting beneficiary to super app...");
-  let txn = await registryDiamond.setBeneficiary(beneSuperApp.address);
-  console.log("Waiting for transaction:", txn.nonce);
-  await txn.wait();
 }
 
 task("deploy:initialize")
@@ -188,5 +254,125 @@ task("deploy:initialize")
         registryDiamondAddress,
         beaconDiamondAddress
       );
+    }
+  );
+
+task("deploy:beneficiarySuperApp")
+  .addParam("registryDiamondAddress", "RegistryDiamond address")
+  .setAction(
+    async (
+      {
+        registryDiamondAddress,
+      }: {
+        registryDiamondAddress: string;
+      },
+      hre
+    ) => {
+      const { diamondAdmin } = await hre.getNamedAccounts();
+
+      // Create Defender client
+      const adminClient = new AdminClient({
+        apiKey: process.env.DEFENDER_API_KEY!,
+        apiSecret: process.env.DEFENDER_API_SECRET!,
+      });
+
+      const RegistryDiamond = await hre.ethers.getContractFactory(
+        "RegistryDiamondABI"
+      );
+      const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
+      const beneSuperApp = await deployBeneficiarySuperApp(
+        hre,
+        registryDiamond
+      );
+      console.log("Setting beneficiary to super app...");
+
+      await adminClient.createProposal({
+        contract: {
+          address: registryDiamond.address,
+          network: NETWORKS[hre.network.config.chainId!] as any,
+        }, // Target contract
+        title: "Set Beneficiary", // Title of the proposal
+        description: "Set initial beneficiary", // Description of the proposal
+        type: "custom", // Use 'custom' for custom admin actions
+        functionInterface: {
+          name: "setBeneficiary",
+          inputs: [{ type: "address", name: "beneficiary" }],
+        }, // Function ABI
+        functionInputs: [beneSuperApp.address], // Arguments to the function
+        via: diamondAdmin, // Address to execute proposal
+        viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
+      });
+    }
+  );
+
+task("deploy:transferOwnership")
+  .addParam("registryDiamondAddress", "RegistryDiamond address")
+  .addParam("beaconDiamondAddress", "BeaconDiamond address")
+  .setAction(
+    async (
+      {
+        registryDiamondAddress,
+        beaconDiamondAddress,
+      }: {
+        registryDiamondAddress: string;
+        beaconDiamondAddress: string;
+      },
+      hre
+    ) => {
+      const { diamondAdmin, deployer } = await hre.getNamedAccounts();
+
+      // Create Defender client
+      const adminClient = new AdminClient({
+        apiKey: process.env.DEFENDER_API_KEY!,
+        apiSecret: process.env.DEFENDER_API_SECRET!,
+      });
+
+      const registryDiamond = await hre.ethers.getContractAt(
+        "SafeOwnable",
+        registryDiamondAddress,
+        await hre.ethers.getSigner(deployer)
+      );
+      const beaconDiamond = await hre.ethers.getContractAt(
+        "SafeOwnable",
+        beaconDiamondAddress,
+        await hre.ethers.getSigner(deployer)
+      );
+
+      await registryDiamond.transferOwnership(diamondAdmin);
+      await beaconDiamond.transferOwnership(diamondAdmin);
+
+      await adminClient.createProposal({
+        contract: {
+          address: registryDiamond.address,
+          network: NETWORKS[hre.network.config.chainId!] as any,
+        }, // Target contract
+        title: "Accept Ownership of RegistryDiamond", // Title of the proposal
+        description: "Accept ownership of RegistryDiamond", // Description of the proposal
+        type: "custom", // Use 'custom' for custom admin actions
+        functionInterface: {
+          name: "acceptOwnership",
+          inputs: [],
+        }, // Function ABI
+        functionInputs: [], // Arguments to the function
+        via: diamondAdmin, // Address to execute proposal
+        viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
+      });
+
+      await adminClient.createProposal({
+        contract: {
+          address: beaconDiamond.address,
+          network: NETWORKS[hre.network.config.chainId!] as any,
+        }, // Target contract
+        title: "Accept Ownership of PCOLicenseDiamond", // Title of the proposal
+        description: "Accept ownership of PCOLicenseDiamond", // Description of the proposal
+        type: "custom", // Use 'custom' for custom admin actions
+        functionInterface: {
+          name: "acceptOwnership",
+          inputs: [],
+        }, // Function ABI
+        functionInputs: [], // Arguments to the function
+        via: diamondAdmin, // Address to execute proposal
+        viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
+      });
     }
   );
