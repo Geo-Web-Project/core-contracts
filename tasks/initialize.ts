@@ -10,7 +10,7 @@ const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
 
 const SAFE_SERVICES: Record<number, string> = {
-  5: "https://safe-transaction.goerli.gnosis.io/",
+  5: "https://safe-transaction-goerli.safe.global",
 };
 
 function perYearToPerSecondRate(annualRate: number) {
@@ -60,23 +60,20 @@ async function deployBeneficiarySuperApp(
   hre: HardhatRuntimeEnvironment,
   registryDiamond: Contract
 ) {
-  const { treasury, diamondAdmin } = await hre.getNamedAccounts();
+  const { treasury, diamondAdmin, deployer } = await hre.getNamedAccounts();
 
   console.log();
   console.log("Deploying BeneficiarySuperApp");
   const factory = await hre.ethers.getContractFactory("BeneficiarySuperApp");
-  const beneSuperApp = await hre.upgrades.deployProxy(factory, [
-    registryDiamond.address,
-    treasury,
-  ]);
+  const beneSuperApp = await hre.upgrades.deployProxy(
+    factory.connect(await hre.ethers.getSigner(deployer)),
+    [registryDiamond.address, treasury]
+  );
   await beneSuperApp.deployed();
   console.log("BeneficiarySuperApp deployed: ", beneSuperApp.address);
 
   // Set owner
-  const txn = await beneSuperApp.transferOwnership(diamondAdmin);
-  console.log("Waiting to sign:", txn.hash);
-  await txn.wait();
-
+  await beneSuperApp.transferOwnership(diamondAdmin);
   return beneSuperApp;
 }
 
@@ -107,36 +104,32 @@ async function initializeRegistryDiamond(
     hre.network.provider as any
   );
   const RegistryDiamond = await hre.ethers.getContractFactory(
-    "RegistryDiamond"
+    "RegistryDiamondABI"
   );
   const registryDiamond = RegistryDiamond.attach(
     registryDiamondAddress
   ).connect(safeSigner);
-  const Ownable = await hre.ethers.getContractFactory("Ownable");
-  const ownable = Ownable.attach(registryDiamondAddress).connect(safeSigner);
 
   const perSecondFee = perYearToPerSecondRate(0.1);
 
-  let txn = await ownable.acceptOwnership();
-  console.log("Waiting to sign:", txn.hash);
-  await txn.wait();
-  txn = await registryDiamond.initializeERC721(
-    "Geo Web Parcel License",
-    "GEOL",
-    ""
-  );
-  console.log("Waiting to sign:", txn.hash);
-  await txn.wait();
-  txn = await registryDiamond.initializeClaimer(
+  let nonce = await safe.getNonce();
+  console.log("initializeERC721:", nonce);
+  await registryDiamond.initializeERC721("Geo Web Parcel License", "GEOL", "", {
+    nonce: nonce++,
+  });
+  console.log("initializeClaimer:", nonce);
+  await registryDiamond.initializeClaimer(
     1665619570,
     1666224370,
     hre.ethers.utils.parseEther("1.0"),
     hre.ethers.utils.parseEther("0.005"),
-    beaconDiamondAddress
+    beaconDiamondAddress,
+    {
+      nonce: nonce++,
+    }
   );
-  console.log("Waiting to sign:", txn.hash);
-  await txn.wait();
-  txn = await registryDiamond.initializeParams(
+  console.log("initializeParams:", nonce);
+  await registryDiamond.initializeParams(
     treasury,
     ethx.address,
     sf.host.contract.address,
@@ -146,17 +139,19 @@ async function initializeRegistryDiamond(
     10,
     60 * 60 * 24 * 7, // 7 days
     60 * 60 * 24 * 14, // 2 weeks,
-    hre.ethers.utils.parseEther("0.005")
+    hre.ethers.utils.parseEther("0.005"),
+    {
+      nonce: nonce++,
+    }
   );
-  console.log("Waiting to sign:", txn.hash);
-  await txn.wait();
   console.log("Initialized RegistryDiamond.");
 
   const beneSuperApp = await deployBeneficiarySuperApp(hre, registryDiamond);
   console.log("Setting beneficiary to super app...");
-  txn = await registryDiamond.setBeneficiary(beneSuperApp.address);
-  console.log("Waiting to sign:", txn.hash);
-  await txn.wait();
+  console.log("setBeneficiary:", nonce);
+  await registryDiamond.setBeneficiary(beneSuperApp.address, {
+    nonce: nonce++,
+  });
 }
 
 task("deploy:initialize")
