@@ -1,6 +1,6 @@
 import { assert } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "@ethersproject/contracts";
+import { Contract } from "ethers";
 
 const BigNumber = ethers.BigNumber;
 

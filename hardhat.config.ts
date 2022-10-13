@@ -18,7 +18,9 @@ import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/estimate_minting_gas";
+import "./tasks/initialize";
 import "hardhat-gas-reporter";
+import "@nomiclabs/hardhat-etherscan";
 
 const networks: any = {
   local: {
@@ -33,21 +35,11 @@ if (process.env.INFURA_KEY) {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 5,
       accounts: [process.env.DEV_PRIVATE_KEY],
-      verify: {
-        etherscan: {
-          apiUrl: "https://api-goerli.etherscan.io/",
-        },
-      },
     };
     networks["optimism-goerli"] = {
       url: `https://optimism-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 420,
       accounts: [process.env.DEV_PRIVATE_KEY],
-      verify: {
-        etherscan: {
-          apiUrl: "https://api-goerli-optimism.etherscan.io/",
-        },
-      },
     };
   } else {
     console.warn("Missing env.DEV_PRIVATE_KEY");
@@ -73,6 +65,9 @@ module.exports = {
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
     outputFile: "./gas-report.out",
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
   namedAccounts: {
     diamondAdmin: {
