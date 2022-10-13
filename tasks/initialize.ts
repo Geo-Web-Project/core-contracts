@@ -1,9 +1,4 @@
 import { Contract } from "ethers";
-import { BeneficiarySuperApp } from "../typechain-types/BeneficiarySuperApp";
-import {
-  RegistryDiamondABI__factory,
-  SafeOwnable__factory,
-} from "../typechain-types";
 import { SafeEthersSigner, SafeService } from "@gnosis.pm/safe-ethers-adapters";
 import EthersAdapter from "@gnosis.pm/safe-ethers-lib";
 import Safe from "@gnosis.pm/safe-core-sdk";
@@ -70,10 +65,10 @@ async function deployBeneficiarySuperApp(
   console.log();
   console.log("Deploying BeneficiarySuperApp");
   const factory = await hre.ethers.getContractFactory("BeneficiarySuperApp");
-  const beneSuperApp = (await hre.upgrades.deployProxy(factory, [
+  const beneSuperApp = await hre.upgrades.deployProxy(factory, [
     registryDiamond.address,
     treasury,
-  ])) as BeneficiarySuperApp;
+  ]);
   await beneSuperApp.deployed();
   console.log("BeneficiarySuperApp deployed: ", beneSuperApp.address);
 
@@ -111,15 +106,14 @@ async function initializeRegistryDiamond(
     service,
     hre.network.provider as any
   );
-
-  const registryDiamond = RegistryDiamondABI__factory.connect(
-    registryDiamondAddress,
-    safeSigner
+  const RegistryDiamond = await hre.ethers.getContractFactory(
+    "RegistryDiamond"
   );
-  const ownable = SafeOwnable__factory.connect(
-    registryDiamondAddress,
-    safeSigner
-  );
+  const registryDiamond = RegistryDiamond.attach(
+    registryDiamondAddress
+  ).connect(safeSigner);
+  const Ownable = await hre.ethers.getContractFactory("Ownable");
+  const ownable = Ownable.attach(registryDiamondAddress).connect(safeSigner);
 
   const perSecondFee = perYearToPerSecondRate(0.1);
 
