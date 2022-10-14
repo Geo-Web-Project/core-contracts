@@ -1,3 +1,8 @@
 {
-  "filter_paths": "(node_modules/|.*\\.test\\.sol)"
+  "filter_paths": "(node_modules/|.*\\.test\\.sol)",
+  "solc_remaps": [
+    "@superfluid-finance/=node_modules/@superfluid-finance/",
+    "@openzeppelin/=node_modules/@openzeppelin/",
+    "@solidstate/=node_modules/@solidstate/"
+  ]
 }

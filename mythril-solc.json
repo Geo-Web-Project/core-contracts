@@ -1,6 +1,5 @@
 {
   "remappings": [
-    "hardhat-deploy/solc_0.8/=/tmp/node_modules/hardhat-deploy/solc_0.8/",
     "@superfluid-finance/=/tmp/node_modules/@superfluid-finance/",
     "@openzeppelin/=/tmp/node_modules/@openzeppelin/",
     "@solidstate/=/tmp/node_modules/@solidstate/"
