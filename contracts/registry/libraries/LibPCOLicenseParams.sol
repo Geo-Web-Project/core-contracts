@@ -44,4 +44,10 @@ library LibPCOLicenseParams {
             ds.slot := position
         }
     }
+
+    function _initializeParams() internal {
+        DiamondStorage storage ds = diamondStorage();
+
+        ds.perSecondFeeNumerator = 10;
+    }
 }
