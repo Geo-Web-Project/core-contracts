@@ -21,6 +21,7 @@ import "./tasks/estimate_minting_gas";
 import "./tasks/initialize";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
+import "solidity-docgen";
 
 const networks: any = {
   local: {
