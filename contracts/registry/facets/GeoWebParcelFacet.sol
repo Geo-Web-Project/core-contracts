@@ -22,10 +22,10 @@ contract GeoWebParcelFacet {
     }
 
     /**
-     * @notice Get a land parcel
+     * @notice Get a V1 land parcel
      * @param id ID of land parcel
      */
-    function getLandParcel(uint256 id)
+    function getLandParcelV1(uint256 id)
         external
         view
         returns (uint64 baseCoordinate, uint256[] memory path)
@@ -33,7 +33,27 @@ contract GeoWebParcelFacet {
         LibGeoWebParcel.DiamondStorage storage ds = LibGeoWebParcel
             .diamondStorage();
 
-        LibGeoWebParcel.LandParcel storage p = ds.landParcels[id];
+        LibGeoWebParcel.LandParcelV1 storage p = ds.landParcelsV1[id];
         return (p.baseCoordinate, p.path);
+    }
+
+    /**
+     * @notice Get a V2 land parcel
+     * @param id ID of land parcel
+     */
+    function getLandParcelV2(uint256 id)
+        external
+        view
+        returns (
+            uint64 swCoordinate,
+            uint256 latDim,
+            uint256 lngDim
+        )
+    {
+        LibGeoWebParcel.DiamondStorage storage ds = LibGeoWebParcel
+            .diamondStorage();
+
+        LibGeoWebParcel.LandParcelV2 storage p = ds.landParcelsV2[id];
+        return (p.swCoordinate, p.latDim, p.lngDim);
     }
 }

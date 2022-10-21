@@ -208,14 +208,12 @@ abstract contract IPCOLicenseClaimerFacet {
      *      - To-be-created contract must have create flow permissions for bidder. See getNextProxyAddress
      * @param initialContributionRate Initial contribution rate of parcel
      * @param initialForSalePrice Initial for sale price of parcel
-     * @param baseCoordinate Base coordinate of new parcel
-     * @param path Path of new parcel
+     * @param parcel New parcel
      */
     function claim(
         int96 initialContributionRate,
         uint256 initialForSalePrice,
-        uint64 baseCoordinate,
-        uint256[] memory path
+        LibGeoWebParcel.LandParcelV2 memory parcel
     ) external {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
@@ -245,7 +243,7 @@ abstract contract IPCOLicenseClaimerFacet {
         emit ParcelClaimed(licenseId, msg.sender);
 
         // Build and mint
-        _buildAndMint(msg.sender, baseCoordinate, path);
+        _buildAndMint(msg.sender, parcel);
 
         {
             // Transfer required buffer
@@ -293,13 +291,11 @@ abstract contract IPCOLicenseClaimerFacet {
     /**
      * @notice Build a parcel and mint a license
      * @param user Address of license owner to be
-     * @param baseCoordinate Base coordinate of parcel to claim
-     * @param path Path of parcel to claim
+     * @param parcel New parcel
      */
     function _buildAndMint(
         address user,
-        uint64 baseCoordinate,
-        uint256[] memory path
+        LibGeoWebParcel.LandParcelV2 memory parcel
     ) internal virtual;
 }
 
@@ -307,16 +303,14 @@ contract PCOLicenseClaimerFacet is IPCOLicenseClaimerFacet, ERC721BaseInternal {
     /**
      * @notice Build a parcel and mint a license
      * @param user Address of license owner to be
-     * @param baseCoordinate Base coordinate of parcel to claim
-     * @param path Path of parcel to claim
+     * @param parcel New parcel
      */
     function _buildAndMint(
         address user,
-        uint64 baseCoordinate,
-        uint256[] memory path
+        LibGeoWebParcel.LandParcelV2 memory parcel
     ) internal override {
         uint256 licenseId = LibGeoWebParcel.nextId();
-        LibGeoWebParcel.build(baseCoordinate, path);
+        LibGeoWebParcel.build(parcel);
         _safeMint(user, licenseId);
     }
 }

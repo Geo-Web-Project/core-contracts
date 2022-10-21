@@ -322,7 +322,11 @@ const initializedWithRealLicense = deployments.createFixture(
 
     const txn = await (erc721Facet as PCOLicenseClaimerFacet)
       .connect(await ethers.getSigner(user))
-      .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+      .claim(contributionRate, forSalePrice, {
+        swCoordinate: coord,
+        lngDim: 1,
+        latDim: 1,
+      });
 
     await txn.wait();
 

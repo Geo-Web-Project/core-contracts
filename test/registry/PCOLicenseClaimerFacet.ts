@@ -186,7 +186,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       let requiredBuffer = await ethersjsSf.cfaV1.contract
         .connect(await ethers.getSigner(user))
         .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-      let approveOp = await paymentToken.approve({
+      let approveOp = paymentToken.approve({
         receiver: pcoLicenseClaimer.address,
         amount: requiredBuffer.toString(),
       });
@@ -194,7 +194,11 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       const newBeaconProxy = await pcoLicenseClaimer.getBeaconProxy(0);
 
@@ -209,7 +213,7 @@ describe("PCOLicenseClaimerFacet", async function () {
       requiredBuffer = await ethersjsSf.cfaV1.contract
         .connect(await ethers.getSigner(user))
         .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-      approveOp = await paymentToken.approve({
+      approveOp = paymentToken.approve({
         receiver: pcoLicenseClaimer.address,
         amount: requiredBuffer.toString(),
       });
@@ -218,7 +222,11 @@ describe("PCOLicenseClaimerFacet", async function () {
       const coord1 = BigNumber.from(5).shl(32).or(BigNumber.from(33));
       await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord1, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord1,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       const newBeaconProxy1 = await pcoLicenseClaimer.getBeaconProxy(1);
       expect(newBeaconProxy1).to.equal(
@@ -305,7 +313,11 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await txn.wait();
 
@@ -353,7 +365,11 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
       await txn.wait();
 
       const requiredBid = await pcoLicenseClaimer.requiredBid();
@@ -423,7 +439,11 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const txn = await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await txn.wait();
 
@@ -464,7 +484,11 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -499,7 +523,11 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -532,11 +560,19 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       await pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
         "LibGeoWebParcel: Coordinate is not available"
@@ -557,7 +593,11 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
         "PCOLicenseClaimerFacet: Initial for sale price does not meet requirement"

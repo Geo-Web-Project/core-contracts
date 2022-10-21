@@ -122,6 +122,19 @@ library LibGeoWebCoordinate {
         require(coordY <= MAX_Y, "Y coordinate is out of bounds");
     }
 
+    /// @notice Flip a direction
+    function _flipDirection(uint256 direction) internal pure returns (uint256) {
+        if (direction == 0) {
+            return 1;
+        } else if (direction == 1) {
+            return 0;
+        } else if (direction == 2) {
+            return 3;
+        } else {
+            return 2;
+        }
+    }
+
     /// @notice Convert coordinate to word index
     function toWordIndex(uint64 coord)
         external
