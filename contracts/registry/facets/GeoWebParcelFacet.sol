@@ -25,7 +25,7 @@ contract GeoWebParcelFacet {
      * @notice Get a V1 land parcel
      * @param id ID of land parcel
      */
-    function getLandParcelV1(uint256 id)
+    function getLandParcel(uint256 id)
         external
         view
         returns (uint64 baseCoordinate, uint256[] memory path)
