@@ -122,19 +122,6 @@ library LibGeoWebCoordinate {
         require(coordY <= MAX_Y, "Y coordinate is out of bounds");
     }
 
-    /// @notice Flip a direction
-    function _flipDirection(uint256 direction) internal pure returns (uint256) {
-        if (direction == 0) {
-            return 1;
-        } else if (direction == 1) {
-            return 0;
-        } else if (direction == 2) {
-            return 3;
-        } else {
-            return 2;
-        }
-    }
-
     /// @notice Convert coordinate to word index
     function toWordIndex(uint64 coord)
         external
@@ -167,48 +154,5 @@ library LibGeoWebCoordinate {
         uint256 lY = coordY % 16;
 
         i = lY * 16 + lX;
-    }
-}
-
-/// @notice LibGeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
-library LibGeoWebCoordinatePath {
-    uint256 private constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
-    uint256 private constant PATH_SEGMENT_MASK = (2**2) - 1;
-
-    /// @notice Get next direction from path
-    /// @param path The path to get the direction from
-    /// @return hasNext If the path has a next direction
-    /// @return direction The next direction taken from path
-    /// @return nextPath The next path with the direction popped from it
-    function nextDirection(uint256 path)
-        external
-        pure
-        returns (
-            bool hasNext,
-            uint256 direction,
-            uint256 nextPath
-        )
-    {
-        return _nextDirection(path);
-    }
-
-    function _nextDirection(uint256 path)
-        internal
-        pure
-        returns (
-            bool hasNext,
-            uint256 direction,
-            uint256 nextPath
-        )
-    {
-        uint256 length = (path >> (256 - 8)); // Take most significant 8 bits
-        hasNext = (length > 0);
-        if (!hasNext) {
-            return (hasNext, 0, 0);
-        }
-        uint256 _path = (path & INNER_PATH_MASK);
-
-        direction = (_path & PATH_SEGMENT_MASK); // Take least significant 2 bits of path
-        nextPath = (_path >> 2) | ((length - 1) << (256 - 8)); // Trim direction from path
     }
 }

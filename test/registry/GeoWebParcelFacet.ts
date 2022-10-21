@@ -69,7 +69,7 @@ describe("GeoWebParcel", async () => {
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
     const coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
 
-    const buildTx = await geoWebParcel.build([coord, 2, 2]);
+    const buildTx = await geoWebParcel.build([coord, 2, 3]);
 
     const buildResult = await buildTx.wait();
 
@@ -82,6 +82,8 @@ describe("GeoWebParcel", async () => {
         .or(BigNumber.from(1).shl(16 * 1 + 5))
         .or(BigNumber.from(1).shl(16 * 2 + 5))
         .or(BigNumber.from(1).shl(16 * 2 + 4))
+        .or(BigNumber.from(1).shl(16 * 3 + 4))
+        .or(BigNumber.from(1).shl(16 * 3 + 5))
         .toString(),
       "Incorrect availability"
     );

@@ -5,7 +5,6 @@ import "./LibGeoWebCoordinate.sol";
 
 library LibGeoWebParcel {
     using LibGeoWebCoordinate for uint64;
-    using LibGeoWebCoordinatePath for uint256;
 
     bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibGeoWebParcel");
@@ -23,13 +22,6 @@ library LibGeoWebParcel {
         uint64 swCoordinate;
         uint256 lngDim;
         uint256 latDim;
-    }
-
-    /// @dev Enum for different actions
-    enum Action {
-        Build,
-        Destroy,
-        Check
     }
 
     /// @dev Maxmium uint256 stored as a constant to use for masking
@@ -84,7 +76,7 @@ library LibGeoWebParcel {
         DiamondStorage storage ds = diamondStorage();
 
         // Mark everything as available
-        _updateAvailabilityIndex(Action.Build, parcel);
+        _updateAvailabilityIndex(parcel);
 
         ds.landParcelsV2[ds.nextId] = parcel;
 
@@ -102,9 +94,7 @@ library LibGeoWebParcel {
     }
 
     /// @dev Update availability index by traversing a path and marking everything as available or unavailable
-    function _updateAvailabilityIndex(Action action, LandParcelV2 memory parcel)
-        private
-    {
+    function _updateAvailabilityIndex(LandParcelV2 memory parcel) private {
         DiamondStorage storage ds = diamondStorage();
 
         uint64 currentCoord = parcel.swCoordinate;
@@ -116,19 +106,14 @@ library LibGeoWebParcel {
 
         for (uint256 lat = 0; lat < parcel.latDim; lat++) {
             for (uint256 lng = 0; lng < parcel.lngDim; lng++) {
-                if (action == Action.Build) {
-                    // Check if coordinate is available
-                    require(
-                        (word & (2**i) == 0),
-                        "LibGeoWebParcel: Coordinate is not available"
-                    );
+                // Check if coordinate is available
+                require(
+                    (word & (2**i) == 0),
+                    "LibGeoWebParcel: Coordinate is not available"
+                );
 
-                    // Mark coordinate as unavailable in memory
-                    word = word | (2**i);
-                } else if (action == Action.Destroy) {
-                    // Mark coordinate as available in memory
-                    word = word & ((2**i) ^ MAX_INT);
-                }
+                // Mark coordinate as unavailable in memory
+                word = word | (2**i);
 
                 // Get next direction
                 uint256 direction;
@@ -136,7 +121,11 @@ library LibGeoWebParcel {
                     direction = lngDir;
                 } else if (lat < parcel.latDim - 1) {
                     direction = 0; // North
-                    lngDir = LibGeoWebCoordinate._flipDirection(lngDir);
+                    if (lngDir == 2) {
+                        lngDir = 3; // West
+                    } else {
+                        lngDir = 2; // East
+                    }
                 } else {
                     break;
                 }
