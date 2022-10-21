@@ -39,12 +39,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "latDim",
+            "name": "lngDim",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "lngDim",
+            "name": "latDim",
             "type": "uint256"
           }
         ],

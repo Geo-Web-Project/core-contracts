@@ -31,7 +31,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getLandParcelV1",
+    "name": "getLandParcel",
     "outputs": [
       {
         "internalType": "uint64",
@@ -111,12 +111,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "latDim",
+            "name": "lngDim",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "lngDim",
+            "name": "latDim",
             "type": "uint256"
           }
         ],
@@ -138,7 +138,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getLandParcelV1",
+    "name": "getLandParcel",
     "outputs": [
       {
         "internalType": "uint64",
@@ -576,12 +576,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "latDim",
+            "name": "lngDim",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "lngDim",
+            "name": "latDim",
             "type": "uint256"
           }
         ],
