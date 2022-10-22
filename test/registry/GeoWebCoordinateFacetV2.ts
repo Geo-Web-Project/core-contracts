@@ -4,49 +4,19 @@ import { Contract } from "ethers";
 
 const BigNumber = ethers.BigNumber;
 
-describe("LibGeoWebCoordinate", async () => {
+describe("LibGeoWebCoordinateV2", async () => {
   function makeCoord(x: any, y: any) {
     return BigNumber.from(x).shl(32).or(BigNumber.from(y));
   }
 
   let geoWebCoordinate: Contract;
-  let geoWebCoordinatePath: Contract;
 
   before(async () => {
     const GeoWebCoordinate = await ethers.getContractFactory(
-      "LibGeoWebCoordinate"
+      "LibGeoWebCoordinateV2"
     );
     geoWebCoordinate = await GeoWebCoordinate.deploy();
     await geoWebCoordinate.deployed();
-
-    const GeoWebCoordinatePath = await ethers.getContractFactory(
-      "LibGeoWebCoordinatePath"
-    );
-    geoWebCoordinatePath = await GeoWebCoordinatePath.deploy();
-    await geoWebCoordinatePath.deployed();
-  });
-
-  it("should parse direction from path", async () => {
-    const path = BigNumber.from(2)
-      .shl(256 - 8)
-      .or(BigNumber.from(0b1110));
-
-    const result = await geoWebCoordinatePath.nextDirection(path);
-
-    assert.equal(
-      result.direction.toString(),
-      BigNumber.from(0b10).toString(),
-      "Direction is not correct"
-    );
-
-    assert.equal(
-      result.nextPath.toString(),
-      BigNumber.from(1)
-        .shl(256 - 8)
-        .or(BigNumber.from(0b11))
-        .toString(),
-      "Next path is not correct"
-    );
   });
 
   it("should traverse north", async () => {

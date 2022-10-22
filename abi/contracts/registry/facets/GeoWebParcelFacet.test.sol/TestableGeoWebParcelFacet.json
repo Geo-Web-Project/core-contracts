@@ -26,29 +26,30 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "uint64",
-            "name": "swCoordinate",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lngDim",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "latDim",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibGeoWebParcel.LandParcelV2",
-        "name": "parcel",
-        "type": "tuple"
+        "internalType": "uint64",
+        "name": "baseCoordinate",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "path",
+        "type": "uint256[]"
       }
     ],
     "name": "build",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "id",
+        "type": "uint64"
+      }
+    ],
+    "name": "destroy",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -72,35 +73,6 @@
         "internalType": "uint256[]",
         "name": "path",
         "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getLandParcelV2",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "swCoordinate",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint256",
-        "name": "latDim",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lngDim",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",

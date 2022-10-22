@@ -5,23 +5,22 @@ import "./LibGeoWebCoordinate.sol";
 
 library LibGeoWebParcel {
     using LibGeoWebCoordinate for uint64;
+    using LibGeoWebCoordinatePath for uint256;
 
     bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibGeoWebParcel");
 
-    uint256 private constant MAX_PARCEL_DIM = 200;
-
-    /// @dev Structure of a land parcel, path-based
-    struct LandParcelV1 {
+    /// @dev Structure of a land parcel
+    struct LandParcel {
         uint64 baseCoordinate;
         uint256[] path;
     }
 
-    /// @dev Structure of a land parcel, rectangles
-    struct LandParcelV2 {
-        uint64 swCoordinate;
-        uint256 lngDim;
-        uint256 latDim;
+    /// @dev Enum for different actions
+    enum Action {
+        Build,
+        Destroy,
+        Check
     }
 
     /// @dev Maxmium uint256 stored as a constant to use for masking
@@ -40,11 +39,9 @@ library LibGeoWebParcel {
         /// @notice Stores which coordinates are available
         mapping(uint256 => mapping(uint256 => uint256)) availabilityIndex;
         /// @notice Stores which coordinates belong to a parcel
-        mapping(uint256 => LandParcelV1) landParcelsV1;
+        mapping(uint256 => LandParcel) landParcels;
         /// @dev The next ID to assign to a parcel
         uint256 nextId;
-        /// @notice Stores which coordinates belong to a parcel
-        mapping(uint256 => LandParcelV2) landParcelsV2;
     }
 
     function diamondStorage()
@@ -61,28 +58,43 @@ library LibGeoWebParcel {
 
     /**
      * @notice Build a new parcel. All coordinates along the path must be available. All coordinates are marked unavailable after creation.
-     * @param parcel New parcel
+     * @param baseCoordinate Base coordinate of new parcel
+     * @param path Path of new parcel
      */
-    function build(LandParcelV2 memory parcel) internal {
+    function build(uint64 baseCoordinate, uint256[] memory path) internal {
         require(
-            parcel.latDim <= MAX_PARCEL_DIM && parcel.latDim > 0,
-            "LibGeoWebParcel: Latitude dimension out of bounds"
-        );
-        require(
-            parcel.lngDim <= MAX_PARCEL_DIM && parcel.lngDim > 0,
-            "LibGeoWebParcel: Longitude dimension out of bounds"
+            path.length > 0,
+            "LibGeoWebParcel: Path must have at least one component"
         );
 
         DiamondStorage storage ds = diamondStorage();
 
         // Mark everything as available
-        _updateAvailabilityIndex(parcel);
+        _updateAvailabilityIndex(Action.Build, baseCoordinate, path);
 
-        ds.landParcelsV2[ds.nextId] = parcel;
+        LandParcel storage p = ds.landParcels[ds.nextId];
+        p.baseCoordinate = baseCoordinate;
+        p.path = path;
 
         emit ParcelBuilt(ds.nextId);
 
         ds.nextId += 1;
+    }
+
+    /**
+     * @notice Destroy an existing parcel. All coordinates along the path are marked as available.
+     * @param id ID of land parcel
+     */
+    function destroy(uint256 id) internal {
+        DiamondStorage storage ds = diamondStorage();
+
+        LandParcel storage p = ds.landParcels[id];
+
+        _updateAvailabilityIndex(Action.Destroy, p.baseCoordinate, p.path);
+
+        delete ds.landParcels[id];
+
+        emit ParcelDestroyed(id);
     }
 
     /**
@@ -94,18 +106,23 @@ library LibGeoWebParcel {
     }
 
     /// @dev Update availability index by traversing a path and marking everything as available or unavailable
-    function _updateAvailabilityIndex(LandParcelV2 memory parcel) private {
+    function _updateAvailabilityIndex(
+        Action action,
+        uint64 baseCoordinate,
+        uint256[] memory path
+    ) private {
         DiamondStorage storage ds = diamondStorage();
 
-        uint64 currentCoord = parcel.swCoordinate;
+        uint64 currentCoord = baseCoordinate;
+
+        uint256 pI = 0;
+        uint256 currentPath = path[pI];
 
         (uint256 iX, uint256 iY, uint256 i) = currentCoord._toWordIndex();
         uint256 word = ds.availabilityIndex[iX][iY];
 
-        uint256 lngDir = 2; // East
-
-        for (uint256 lat = 0; lat < parcel.latDim; lat++) {
-            for (uint256 lng = 0; lng < parcel.lngDim; lng++) {
+        do {
+            if (action == Action.Build) {
                 // Check if coordinate is available
                 require(
                     (word & (2**i) == 0),
@@ -114,45 +131,49 @@ library LibGeoWebParcel {
 
                 // Mark coordinate as unavailable in memory
                 word = word | (2**i);
+            } else if (action == Action.Destroy) {
+                // Mark coordinate as available in memory
+                word = word & ((2**i) ^ MAX_INT);
+            }
 
-                // Get next direction
-                uint256 direction;
-                if (lng < parcel.lngDim - 1) {
-                    direction = lngDir;
-                } else if (lat < parcel.latDim - 1) {
-                    direction = 0; // North
-                    if (lngDir == 2) {
-                        lngDir = 3; // West
-                    } else {
-                        lngDir = 2; // East
-                    }
-                } else {
+            // Get next direction
+            bool hasNext;
+            uint256 direction;
+            (hasNext, direction, currentPath) = currentPath._nextDirection();
+
+            if (!hasNext) {
+                // Try next path
+                pI += 1;
+                if (pI >= path.length) {
                     break;
                 }
-
-                // Traverse to next coordinate
-                uint256 newIX;
-                uint256 newIY;
-                (currentCoord, newIX, newIY, i) = currentCoord._traverse(
-                    direction,
-                    iX,
-                    iY,
-                    i
-                );
-
-                // If new coordinate is in new word
-                if (newIX != iX || newIY != iY) {
-                    // Update word in storage
-                    ds.availabilityIndex[iX][iY] = word;
-
-                    // Advance to next word
-                    word = ds.availabilityIndex[newIX][newIY];
-                }
-
-                iX = newIX;
-                iY = newIY;
+                currentPath = path[pI];
+                (hasNext, direction, currentPath) = currentPath
+                    ._nextDirection();
             }
-        }
+
+            // Traverse to next coordinate
+            uint256 newIX;
+            uint256 newIY;
+            (currentCoord, newIX, newIY, i) = currentCoord._traverse(
+                direction,
+                iX,
+                iY,
+                i
+            );
+
+            // If new coordinate is in new word
+            if (newIX != iX || newIY != iY) {
+                // Update word in storage
+                ds.availabilityIndex[iX][iY] = word;
+
+                // Advance to next word
+                word = ds.availabilityIndex[newIX][newIY];
+            }
+
+            iX = newIX;
+            iY = newIY;
+        } while (true);
 
         // Update last word in storage
         ds.availabilityIndex[iX][iY] = word;

@@ -17,24 +17,10 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export declare namespace LibGeoWebParcel {
-  export type LandParcelV2Struct = {
-    swCoordinate: BigNumberish;
-    lngDim: BigNumberish;
-    latDim: BigNumberish;
-  };
-
-  export type LandParcelV2StructOutput = [BigNumber, BigNumber, BigNumber] & {
-    swCoordinate: BigNumber;
-    lngDim: BigNumber;
-    latDim: BigNumber;
-  };
-}
-
 export interface PCOLicenseClaimerFacetInterface extends utils.Interface {
   contractName: "PCOLicenseClaimerFacet";
   functions: {
-    "claim(int96,uint256,(uint64,uint256,uint256))": FunctionFragment;
+    "claim(int96,uint256,uint64,uint256[])": FunctionFragment;
     "getAuctionEnd()": FunctionFragment;
     "getAuctionStart()": FunctionFragment;
     "getBeacon()": FunctionFragment;
@@ -53,7 +39,7 @@ export interface PCOLicenseClaimerFacetInterface extends utils.Interface {
 
   encodeFunctionData(
     functionFragment: "claim",
-    values: [BigNumberish, BigNumberish, LibGeoWebParcel.LandParcelV2Struct]
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "getAuctionEnd",
@@ -230,7 +216,8 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     claim(
       initialContributionRate: BigNumberish,
       initialForSalePrice: BigNumberish,
-      parcel: LibGeoWebParcel.LandParcelV2Struct,
+      baseCoordinate: BigNumberish,
+      path: BigNumberish[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -294,7 +281,8 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
   claim(
     initialContributionRate: BigNumberish,
     initialForSalePrice: BigNumberish,
-    parcel: LibGeoWebParcel.LandParcelV2Struct,
+    baseCoordinate: BigNumberish,
+    path: BigNumberish[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -355,7 +343,8 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     claim(
       initialContributionRate: BigNumberish,
       initialForSalePrice: BigNumberish,
-      parcel: LibGeoWebParcel.LandParcelV2Struct,
+      baseCoordinate: BigNumberish,
+      path: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -461,7 +450,8 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     claim(
       initialContributionRate: BigNumberish,
       initialForSalePrice: BigNumberish,
-      parcel: LibGeoWebParcel.LandParcelV2Struct,
+      baseCoordinate: BigNumberish,
+      path: BigNumberish[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -526,7 +516,8 @@ export interface PCOLicenseClaimerFacet extends BaseContract {
     claim(
       initialContributionRate: BigNumberish,
       initialForSalePrice: BigNumberish,
-      parcel: LibGeoWebParcel.LandParcelV2Struct,
+      baseCoordinate: BigNumberish,
+      path: BigNumberish[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

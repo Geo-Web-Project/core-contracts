@@ -98,7 +98,9 @@ module.exports = {
       name: "RegistryDiamondABI",
       include: [
         "IPCOLicenseClaimerFacet",
+        "IPCOLicenseClaimerFacetV2",
         "GeoWebParcelFacet",
+        "GeoWebParcelFacetV2",
         "PCOLicenseParamsFacet",
         "PCOERC721Facet",
       ],

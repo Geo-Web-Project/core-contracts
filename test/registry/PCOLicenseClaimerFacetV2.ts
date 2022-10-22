@@ -5,14 +5,14 @@ import { solidity } from "ethereum-waffle";
 import { smock } from "@defi-wonderland/smock";
 import { BigNumber } from "ethers";
 import { rateToPurchasePrice } from "../shared";
-import Fixtures from "./PCOLicenseClaimer.fixture";
+import Fixtures from "./PCOLicenseClaimerV2.fixture";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
 
 use(solidity);
 use(chaiAsPromised);
 use(smock.matchers);
 
-describe("PCOLicenseClaimerFacet", async function () {
+describe("PCOLicenseClaimerFacetV2", async function () {
   describe("initialize", async () => {
     it("should initialize", async () => {
       const res = await Fixtures.setup();
@@ -167,8 +167,13 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should calculate next address", async () => {
-      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
-        await Fixtures.initialized();
+      const {
+        pcoLicenseClaimer,
+        pcoLicenseClaimerV2,
+        pcoLicenseParams,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
       const nextAddress = await pcoLicenseClaimer.getNextProxyAddress(user);
@@ -186,15 +191,19 @@ describe("PCOLicenseClaimerFacet", async function () {
       let requiredBuffer = await ethersjsSf.cfaV1.contract
         .connect(await ethers.getSigner(user))
         .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-      let approveOp = await paymentToken.approve({
+      let approveOp = paymentToken.approve({
         receiver: pcoLicenseClaimer.address,
         amount: requiredBuffer.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
-      await pcoLicenseClaimer
+      await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       const newBeaconProxy = await pcoLicenseClaimer.getBeaconProxy(0);
 
@@ -209,16 +218,20 @@ describe("PCOLicenseClaimerFacet", async function () {
       requiredBuffer = await ethersjsSf.cfaV1.contract
         .connect(await ethers.getSigner(user))
         .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
-      approveOp = await paymentToken.approve({
+      approveOp = paymentToken.approve({
         receiver: pcoLicenseClaimer.address,
         amount: requiredBuffer.toString(),
       });
       await approveOp.exec(await ethers.getSigner(user));
 
       const coord1 = BigNumber.from(5).shl(32).or(BigNumber.from(33));
-      await pcoLicenseClaimer
+      await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord1, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord1,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       const newBeaconProxy1 = await pcoLicenseClaimer.getBeaconProxy(1);
       expect(newBeaconProxy1).to.equal(
@@ -275,6 +288,7 @@ describe("PCOLicenseClaimerFacet", async function () {
     it("should claim", async () => {
       const {
         pcoLicenseClaimer,
+        pcoLicenseClaimerV2,
         pcoLicenseParams,
         ethersjsSf,
         paymentToken,
@@ -303,14 +317,18 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const nextAddress = await pcoLicenseClaimer.getNextProxyAddress(user);
 
-      const txn = await pcoLicenseClaimer
+      const txn = await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await txn.wait();
 
       await expect(txn)
-        .to.emit(pcoLicenseClaimer, "ParcelClaimed")
+        .to.emit(pcoLicenseClaimer, "ParcelClaimedV2")
         .withArgs(0, user);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
@@ -320,6 +338,7 @@ describe("PCOLicenseClaimerFacet", async function () {
     it("should claim when payment is required", async () => {
       const {
         pcoLicenseClaimer,
+        pcoLicenseClaimerV2,
         pcoLicenseParams,
         paymentToken,
         ethersjsSf,
@@ -351,15 +370,19 @@ describe("PCOLicenseClaimerFacet", async function () {
 
       const nextAddress = await pcoLicenseClaimer.getNextProxyAddress(user);
 
-      const txn = await pcoLicenseClaimer
+      const txn = await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
       await txn.wait();
 
       const requiredBid = await pcoLicenseClaimer.requiredBid();
 
       await expect(txn)
-        .to.emit(pcoLicenseClaimer, "ParcelClaimed")
+        .to.emit(pcoLicenseClaimer, "ParcelClaimedV2")
         .withArgs(0, user);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
@@ -372,6 +395,7 @@ describe("PCOLicenseClaimerFacet", async function () {
     it("should claim with real BeaconDiamond", async () => {
       const {
         pcoLicenseClaimer,
+        pcoLicenseClaimerV2,
         pcoLicenseParams,
         ethersjsSf,
         paymentToken,
@@ -421,14 +445,18 @@ describe("PCOLicenseClaimerFacet", async function () {
       });
       await op2.exec(await ethers.getSigner(user));
 
-      const txn = await pcoLicenseClaimer
+      const txn = await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await txn.wait();
 
       await expect(txn)
-        .to.emit(pcoLicenseClaimer, "ParcelClaimed")
+        .to.emit(pcoLicenseClaimer, "ParcelClaimedV2")
         .withArgs(0, user);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
@@ -436,8 +464,13 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if payment fails", async () => {
-      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
-        await Fixtures.initializedWithAuction();
+      const {
+        pcoLicenseClaimer,
+        pcoLicenseClaimerV2,
+        pcoLicenseParams,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
       const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
@@ -462,9 +495,13 @@ describe("PCOLicenseClaimerFacet", async function () {
       });
       await approveOp.exec(await ethers.getSigner(user));
 
-      const txn = pcoLicenseClaimer
+      const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -472,8 +509,12 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if payment for buffer fails", async () => {
-      const { pcoLicenseClaimer, pcoLicenseParams, paymentToken } =
-        await Fixtures.initializedWithAuction();
+      const {
+        pcoLicenseClaimer,
+        pcoLicenseClaimerV2,
+        pcoLicenseParams,
+        paymentToken,
+      } = await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
       const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
@@ -497,9 +538,13 @@ describe("PCOLicenseClaimerFacet", async function () {
       });
       await approveOp.exec(await ethers.getSigner(user));
 
-      const txn = pcoLicenseClaimer
+      const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -507,8 +552,13 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if buildAndMint fails", async () => {
-      const { pcoLicenseClaimer, pcoLicenseParams, ethersjsSf, paymentToken } =
-        await Fixtures.initialized();
+      const {
+        pcoLicenseClaimer,
+        pcoLicenseClaimerV2,
+        pcoLicenseParams,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.initialized();
       const { user } = await getNamedAccounts();
 
       const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
@@ -530,13 +580,21 @@ describe("PCOLicenseClaimerFacet", async function () {
       });
       await approveOp.exec(await ethers.getSigner(user));
 
-      await pcoLicenseClaimer
+      await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
-      const txn = pcoLicenseClaimer
+      const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
         "LibGeoWebParcel: Coordinate is not available"
@@ -544,7 +602,7 @@ describe("PCOLicenseClaimerFacet", async function () {
     });
 
     it("should fail if forSalePrice does not meet requirement", async () => {
-      const { pcoLicenseClaimer, pcoLicenseParams } =
+      const { pcoLicenseClaimerV2, pcoLicenseParams } =
         await Fixtures.initializedWithAuction();
       const { user } = await getNamedAccounts();
 
@@ -555,12 +613,16 @@ describe("PCOLicenseClaimerFacet", async function () {
         contributionRate
       );
 
-      const txn = pcoLicenseClaimer
+      const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
+        .claim(contributionRate, forSalePrice, {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        });
 
       await expect(txn).to.be.revertedWith(
-        "PCOLicenseClaimerFacet: Initial for sale price does not meet requirement"
+        "PCOLicenseClaimerFacetV2: Initial for sale price does not meet requirement"
       );
     });
   });

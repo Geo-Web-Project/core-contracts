@@ -1,57 +1,59 @@
 import { smock } from "@defi-wonderland/smock";
 import { deployments, ethers } from "hardhat";
 import {
-  PCOLicenseClaimerFacet,
   IDiamondReadable,
   PCOLicenseParamsFacet,
+  PCOLicenseClaimerFacet,
+  PCOLicenseClaimerFacetV2,
 } from "../../typechain-types";
 import { perYearToPerSecondRate, setupSf } from "../shared";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
 import { deployDiamond } from "../../scripts/deploy";
 
-const setup = deployments.createFixture(
-  async ({ getNamedAccounts, ethers }) => {
-    const res = await setupSf();
-    const { ethx_erc20, sf } = res;
+const setup = deployments.createFixture(async ({ getNamedAccounts }) => {
+  const res = await setupSf();
+  const { ethx_erc20, sf } = res;
 
-    const { diamondAdmin } = await getNamedAccounts();
-    const diamond = await deployDiamond("RegistryDiamond", {
-      from: diamondAdmin,
-      owner: diamondAdmin,
-      facets: [
-        "PCOLicenseClaimerFacet",
-        "GeoWebParcelFacet",
-        "PCOLicenseParamsFacet",
-      ],
-    });
+  const { diamondAdmin } = await getNamedAccounts();
+  const diamond = await deployDiamond("RegistryDiamond", {
+    from: diamondAdmin,
+    owner: diamondAdmin,
+    facets: [
+      "PCOLicenseClaimerFacet",
+      "PCOLicenseClaimerFacetV2",
+      "GeoWebParcelFacet",
+      "GeoWebParcelFacetV2",
+      "PCOLicenseParamsFacet",
+    ],
+  });
 
-    const pcoLicenseClaimer = await ethers.getContractAt(
-      `PCOLicenseClaimerFacet`,
-      diamond.address
-    );
+  const pcoLicenseClaimerV2 = await ethers.getContractAt(
+    `PCOLicenseClaimerFacetV2`,
+    diamond.address
+  );
 
-    const { numerator, denominator } = perYearToPerSecondRate(0.1);
+  const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-    await (diamond as PCOLicenseParamsFacet).initializeParams(
-      diamondAdmin,
-      ethx_erc20.address,
-      sf.host.address,
-      numerator,
-      denominator,
-      numerator,
-      denominator,
-      60 * 60 * 24,
-      60 * 60 * 24,
-      0
-    );
+  await diamond.initializeParams(
+    diamondAdmin,
+    ethx_erc20.address,
+    sf.host.address,
+    numerator,
+    denominator,
+    numerator,
+    denominator,
+    60 * 60 * 24,
+    60 * 60 * 24,
+    0
+  );
 
-    return {
-      pcoLicenseClaimer: pcoLicenseClaimer as PCOLicenseClaimerFacet,
-      pcoLicenseParams: diamond as PCOLicenseParamsFacet,
-      ...res,
-    };
-  }
-);
+  return {
+    pcoLicenseClaimer: diamond as PCOLicenseClaimerFacet,
+    pcoLicenseClaimerV2: pcoLicenseClaimerV2 as PCOLicenseClaimerFacetV2,
+    pcoLicenseParams: diamond as PCOLicenseParamsFacet,
+    ...res,
+  };
+});
 
 const initialized = deployments.createFixture(async () => {
   const res = await setup();

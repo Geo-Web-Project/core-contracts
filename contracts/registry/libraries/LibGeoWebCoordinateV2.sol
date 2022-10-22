@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 /// @title LibGeoWebCoordinate is an unsigned 64-bit integer that contains x and y coordinates in the upper and lower 32 bits, respectively
-library LibGeoWebCoordinate {
+library LibGeoWebCoordinateV2 {
     // Fixed grid size is 2^23 longitude by 2^22 latitude
     uint64 public constant MAX_X = ((2**23) - 1);
     uint64 public constant MAX_Y = ((2**22) - 1);
@@ -154,48 +154,5 @@ library LibGeoWebCoordinate {
         uint256 lY = coordY % 16;
 
         i = lY * 16 + lX;
-    }
-}
-
-/// @notice LibGeoWebCoordinatePath stores a path of directions in a uint256. The most significant 8 bits encodes the length of the path
-library LibGeoWebCoordinatePath {
-    uint256 private constant INNER_PATH_MASK = (2**(256 - 8)) - 1;
-    uint256 private constant PATH_SEGMENT_MASK = (2**2) - 1;
-
-    /// @notice Get next direction from path
-    /// @param path The path to get the direction from
-    /// @return hasNext If the path has a next direction
-    /// @return direction The next direction taken from path
-    /// @return nextPath The next path with the direction popped from it
-    function nextDirection(uint256 path)
-        external
-        pure
-        returns (
-            bool hasNext,
-            uint256 direction,
-            uint256 nextPath
-        )
-    {
-        return _nextDirection(path);
-    }
-
-    function _nextDirection(uint256 path)
-        internal
-        pure
-        returns (
-            bool hasNext,
-            uint256 direction,
-            uint256 nextPath
-        )
-    {
-        uint256 length = (path >> (256 - 8)); // Take most significant 8 bits
-        hasNext = (length > 0);
-        if (!hasNext) {
-            return (hasNext, 0, 0);
-        }
-        uint256 _path = (path & INNER_PATH_MASK);
-
-        direction = (_path & PATH_SEGMENT_MASK); // Take least significant 2 bits of path
-        nextPath = (_path >> 2) | ((length - 1) << (256 - 8)); // Trim direction from path
     }
 }
