@@ -5,6 +5,7 @@ import { deployments } from "hardhat";
 import {
   IERC721,
   PCOLicenseClaimerFacet,
+  PCOLicenseClaimerFacetV2,
   PCOLicenseParamsFacet,
   PCOERC721Facet,
 } from "../../typechain-types";
@@ -247,12 +248,13 @@ const initializedWithRealLicense = deployments.createFixture(
     } = res;
 
     const { diamondAdmin } = await getNamedAccounts();
-    const erc721Facet = await deployDiamond("RegistryDiamond", {
+    const diamond = await deployDiamond("RegistryDiamond", {
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
         "PCOLicenseClaimerFacet",
-        "GeoWebParcelFacet",
+        "PCOLicenseClaimerFacetV2",
+        "GeoWebParcelFacetV2",
         "PCOLicenseParamsFacet",
         "PCOERC721Facet",
       ],
@@ -260,13 +262,13 @@ const initializedWithRealLicense = deployments.createFixture(
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-    await (erc721Facet as PCOERC721Facet).initializeERC721(
+    await (diamond as PCOERC721Facet).initializeERC721(
       "Geo Web License Test",
       "GEOL",
       ""
     );
 
-    await (erc721Facet as PCOLicenseClaimerFacet).initializeClaimer(
+    await (diamond as PCOLicenseClaimerFacet).initializeClaimer(
       0,
       0,
       0,
@@ -274,7 +276,7 @@ const initializedWithRealLicense = deployments.createFixture(
       basePCOFacet.address
     );
 
-    await (erc721Facet as PCOLicenseParamsFacet).initializeParams(
+    await (diamond as PCOLicenseParamsFacet).initializeParams(
       mockCFABeneficiary.address,
       ethx_erc20.address,
       sf.host.address,
@@ -293,24 +295,21 @@ const initializedWithRealLicense = deployments.createFixture(
     const contributionRate = ethers.utils
       .parseEther("9")
       .div(365 * 24 * 60 * 60 * 10);
-    const forSalePrice = await rateToPurchasePrice(
-      erc721Facet,
-      contributionRate
-    );
+    const forSalePrice = await rateToPurchasePrice(diamond, contributionRate);
 
     // Approve payment token for buffer
     const requiredBuffer = await ethersjsSf.cfaV1.contract
       .connect(await ethers.getSigner(user))
       .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
     const approveOp = paymentToken.approve({
-      receiver: erc721Facet.address,
+      receiver: diamond.address,
       amount: requiredBuffer.toString(),
     });
     await approveOp.exec(await ethers.getSigner(user));
 
     // Approve flow creation
     const nextAddress = await (
-      erc721Facet as PCOLicenseClaimerFacet
+      diamond as PCOLicenseClaimerFacet
     ).getNextProxyAddress(user);
     const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
@@ -320,7 +319,11 @@ const initializedWithRealLicense = deployments.createFixture(
     });
     await op2.exec(await ethers.getSigner(user));
 
-    const txn = await (erc721Facet as PCOLicenseClaimerFacet)
+    const pcoLicenseClaimer = await ethers.getContractAt(
+      `PCOLicenseClaimerFacetV2`,
+      diamond.address
+    );
+    const txn = await (pcoLicenseClaimer as PCOLicenseClaimerFacetV2)
       .connect(await ethers.getSigner(user))
       .claim(contributionRate, forSalePrice, {
         swCoordinate: coord,
