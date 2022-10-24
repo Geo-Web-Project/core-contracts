@@ -19,6 +19,7 @@ import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/estimate_minting_gas";
 import "./tasks/initialize";
+import "./tasks/upgrades/4_1_0";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "solidity-docgen";
