@@ -19,6 +19,7 @@ import "hardhat-abi-exporter";
 import "solidity-coverage";
 import "./tasks/estimate_minting_gas";
 import "./tasks/initialize";
+import "./tasks/upgrades/4_1_0";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "solidity-docgen";
@@ -98,15 +99,23 @@ module.exports = {
       name: "RegistryDiamondABI",
       include: [
         "IPCOLicenseClaimerFacet",
+        "IPCOLicenseClaimerFacetV2",
         "GeoWebParcelFacet",
+        "GeoWebParcelFacetV2",
         "PCOLicenseParamsFacet",
         "PCOERC721Facet",
+        "IDiamondWritable",
       ],
       strict: false,
     },
     {
       name: "PCOLicenseDiamondABI",
-      include: ["CFABasePCOFacet", "CFAPenaltyBidFacet", "CFAReclaimerFacet"],
+      include: [
+        "CFABasePCOFacet",
+        "CFAPenaltyBidFacet",
+        "CFAReclaimerFacet",
+        "IDiamondWritable",
+      ],
       strict: true,
     },
   ],
