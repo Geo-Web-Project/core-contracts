@@ -30,14 +30,17 @@ const NETWORKS: Record<number, string> = {
 
 async function deployFacets(
   hre: HardhatRuntimeEnvironment,
-  registryDiamond: Contract
+  registryDiamond: Contract,
+  geoWebParcelV2?: Contract,
+  pcoLicenseClaimerV2?: Contract
 ) {
   const facetCuts = [];
 
   const GeoWebParcelFacetV2 = await hre.ethers.getContractFactory(
     "GeoWebParcelFacetV2"
   );
-  const geoWebParcelFacetV2 = await GeoWebParcelFacetV2.deploy();
+  const geoWebParcelFacetV2 =
+    geoWebParcelV2 ?? (await GeoWebParcelFacetV2.deploy());
   await geoWebParcelFacetV2.deployed();
   console.log(`GeoWebParcelFacetV2 deployed: ${geoWebParcelFacetV2.address}`);
   facetCuts.push({
@@ -51,7 +54,8 @@ async function deployFacets(
   const PCOLicenseClaimerFacetV2 = await hre.ethers.getContractFactory(
     "PCOLicenseClaimerFacetV2"
   );
-  const pcoLicenseClaimerFacetV2 = await PCOLicenseClaimerFacetV2.deploy();
+  const pcoLicenseClaimerFacetV2 =
+    pcoLicenseClaimerV2 ?? (await PCOLicenseClaimerFacetV2.deploy());
   await pcoLicenseClaimerFacetV2.deployed();
   console.log(
     `PCOLicenseClaimerFacetV2 deployed: ${pcoLicenseClaimerFacetV2.address}`
@@ -100,12 +104,18 @@ export async function upgrade(
 
 task("upgrade:4.1.0")
   .addParam("registryDiamondAddress", "RegistryDiamond address")
+  .addOptionalParam("geoWebParcelV2Address", "GeoWebParcelV2 address")
+  .addOptionalParam("pcoLicenseClaimerV2Address", "GeoWebParcelV2 address")
   .setAction(
     async (
       {
         registryDiamondAddress,
+        geoWebParcelV2Address,
+        pcoLicenseClaimerV2Address,
       }: {
         registryDiamondAddress: string;
+        geoWebParcelV2Address?: string;
+        pcoLicenseClaimerV2Address?: string;
       },
       hre
     ) => {
@@ -122,44 +132,81 @@ task("upgrade:4.1.0")
       );
       const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
 
-      const facetCuts = await deployFacets(hre, registryDiamond);
+      const GeoWebParcelFacetV2 = await hre.ethers.getContractFactory(
+        "GeoWebParcelFacetV2"
+      );
+      const geoWebParcelV2 = geoWebParcelV2Address
+        ? GeoWebParcelFacetV2.attach(geoWebParcelV2Address)
+        : undefined;
+
+      const PCOLicenseClaimerFacetV2 = await hre.ethers.getContractFactory(
+        "PCOLicenseClaimerFacetV2"
+      );
+      const pcoLicenseClaimerFacetV2 = pcoLicenseClaimerV2Address
+        ? PCOLicenseClaimerFacetV2.attach(pcoLicenseClaimerV2Address)
+        : undefined;
+
+      const facetCuts = await deployFacets(
+        hre,
+        registryDiamond,
+        geoWebParcelV2,
+        pcoLicenseClaimerFacetV2
+      );
 
       const target = hre.ethers.constants.AddressZero;
       const data = "0x";
 
-      const encodedFacetCuts = facetCuts.map((c) =>
-        hre.ethers.utils.defaultAbiCoder.encode(
-          ["address", "uint8", "bytes4[]"],
-          [c.target, c.action, c.selectors]
-        )
-      );
+      console.log(facetCuts, target, data);
 
       // Cut diamond
-      await adminClient.createProposal({
-        contract: {
-          address: registryDiamond.address,
-          network: NETWORKS[hre.network.config.chainId!] as any,
-        }, // Target contract
-        title: "Upgrade RegsitryDiamond v4.1.0", // Title of the proposal
-        description: "Cut RegistryDiamond to upgrade to v4.1.0", // Description of the proposal
-        type: "custom", // Use 'custom' for custom admin actions
-        functionInterface: {
-          name: "diamondCut",
-          inputs: [
-            { name: "facetCuts", type: "tuple[]" },
-            {
-              name: "target",
-              type: "address",
-            },
-            {
-              name: "data",
-              type: "bytes",
-            },
-          ],
-        }, // Function ABI
-        functionInputs: [encodedFacetCuts, target, data], // Arguments to the function
-        via: diamondAdmin, // Address to execute proposal
-        viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
-      });
+      // await adminClient.createProposal({
+      //   contract: {
+      //     address: registryDiamond.address,
+      //     network: NETWORKS[hre.network.config.chainId!] as any,
+      //   }, // Target contract
+      //   title: "Upgrade RegistryDiamond v4.1.0", // Title of the proposal
+      //   description: "Cut RegistryDiamond to upgrade to v4.1.0", // Description of the proposal
+      //   type: "custom", // Use 'custom' for custom admin actions
+      //   functionInterface: {
+      //     name: "diamondCut",
+      //     inputs: [
+      //       {
+      //         components: [
+      //           {
+      //             internalType: "address",
+      //             name: "target",
+      //             type: "address",
+      //           },
+      //           {
+      //             internalType: "enum IDiamondWritable.FacetCutAction",
+      //             name: "action",
+      //             type: "uint8",
+      //           },
+      //           {
+      //             internalType: "bytes4[]",
+      //             name: "selectors",
+      //             type: "bytes4[]",
+      //           },
+      //         ],
+      //         internalType: "struct IDiamondWritable.FacetCut[]",
+      //         name: "facetCuts",
+      //         type: "tuple[]",
+      //       },
+      //       {
+      //         internalType: "address",
+      //         name: "target",
+      //         type: "address",
+      //       },
+      //       {
+      //         internalType: "bytes",
+      //         name: "data",
+      //         type: "bytes",
+      //       },
+      //     ],
+      //   }, // Function ABI
+      //   functionInputs: [encodedFacetCuts, target, data], // Arguments to the function
+      //   via: diamondAdmin, // Address to execute proposal
+      //   viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
+      // });
     }
   );
