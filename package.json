@@ -43,7 +43,6 @@
     "@openzeppelin/test-helpers": "^0.5.15",
     "@openzeppelin/truffle-upgrades": "^1.3.1",
     "@solidstate/contracts": "^0.0.42",
-    "@superfluid-finance/hot-fuzz": "https://gitpkg.now.sh/api/pkg?url=superfluid-finance/protocol-monorepo/packages/hot-fuzz&commit=dev",
     "@superfluid-finance/sdk-core": "^0.5.6",
     "@typechain/ethers-v5": "^9.0.0",
     "@typechain/hardhat": "^4.0.0",

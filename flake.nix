@@ -2,6 +2,7 @@
   description = "A basic flake with a shell";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.echidna.url = "github:crytic/echidna";
 
   outputs = { self, nixpkgs, flake-utils, echidna }:
     flake-utils.lib.eachDefaultSystem (system: 
