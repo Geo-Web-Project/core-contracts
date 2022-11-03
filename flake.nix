@@ -8,13 +8,13 @@
     flake-utils.lib.eachDefaultSystem (system: 
       let pkgs = import nixpkgs {
         overlays = [ (final: prev: {
-              nodejs = prev.nodejs-18_x;
+              nodejs = prev.nodejs-14_x;
         }) ];
         inherit system;
       };
     in {
       devShells.default = pkgs.mkShell {
-        nativeBuildInputs = [ pkgs.yarn pkgs.nodejs-18_x ];
+        nativeBuildInputs = [ pkgs.yarn pkgs.nodejs-14_x ];
         buildInputs = [ ];
       };
     });
