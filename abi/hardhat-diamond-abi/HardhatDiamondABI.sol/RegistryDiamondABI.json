@@ -1,5 +1,87 @@
 [
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "enum IDiamondWritable.FacetCutAction",
+            "name": "action",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes4[]",
+            "name": "selectors",
+            "type": "bytes4[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct IDiamondWritable.FacetCut[]",
+        "name": "facetCuts",
+        "type": "tuple[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "DiamondCut",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "enum IDiamondWritable.FacetCutAction",
+            "name": "action",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes4[]",
+            "name": "selectors",
+            "type": "bytes4[]"
+          }
+        ],
+        "internalType": "struct IDiamondWritable.FacetCut[]",
+        "name": "facetCuts",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "diamondCut",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -226,6 +308,94 @@
         "internalType": "uint256[]",
         "name": "path",
         "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getLandParcelV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "swCoordinate",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint256",
+        "name": "latDim",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lngDim",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "swCoordinate",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lngDim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "latDim",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibGeoWebParcelV2.LandParcel",
+        "name": "parcel",
+        "type": "tuple"
+      }
+    ],
+    "name": "build",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getLandParcelV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "swCoordinate",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint256",
+        "name": "latDim",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lngDim",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -841,6 +1011,65 @@
       }
     ],
     "name": "setStartingBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_licenseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_payer",
+        "type": "address"
+      }
+    ],
+    "name": "ParcelClaimedV2",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int96",
+        "name": "initialContributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "initialForSalePrice",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "swCoordinate",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lngDim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "latDim",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibGeoWebParcelV2.LandParcel",
+        "name": "parcel",
+        "type": "tuple"
+      }
+    ],
+    "name": "claim",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
