@@ -1,24 +1,5 @@
 {
   "nodes": {
-    "echidna": {
-      "inputs": {
-        "newerNixpkgs": "newerNixpkgs",
-        "nixpkgs": "nixpkgs"
-      },
-      "locked": {
-        "lastModified": 1665124331,
-        "narHash": "sha256-qv3LSW+XQEmMQvwI50L5jLVT4D1P5urNpBDZj/+dcmY=",
-        "owner": "crytic",
-        "repo": "echidna",
-        "rev": "84d8953402e4c0464cad20806612cb97e35639c6",
-        "type": "github"
-      },
-      "original": {
-        "owner": "crytic",
-        "repo": "echidna",
-        "type": "github"
-      }
-    },
     "flake-utils": {
       "locked": {
         "lastModified": 1667395993,
@@ -34,57 +15,26 @@
         "type": "github"
       }
     },
-    "newerNixpkgs": {
-      "locked": {
-        "lastModified": 1659009481,
-        "narHash": "sha256-BRM5R7AMKa58NAJnZsmWsVhDxuGllnhTvpVEZ+sP49I=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "2d9b7cb5f0a41da95fccc120acf730fd20d8598d",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1659009481,
-        "narHash": "sha256-EeijR4guVHgVv+JpOX3cQO+1XdrkJfGmiJ9XVsVU530=",
+        "lastModified": 1667420999,
+        "narHash": "sha256-NDz83NKuuEuonbhC5HnfhUpZsJQGmAWJr22snKGfhKs=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "1882c6b7368fd284ad01b0a5b5601ef136321292",
+        "rev": "4f09cfce9c1d54fb56b65125061a632849de1a49",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_2": {
-      "locked": {
-        "lastModified": 1667292599,
-        "narHash": "sha256-7ISOUI1aj6UKMPIL+wwthENL22L3+A9V+jS8Is3QsRo=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "ef2f213d9659a274985778bff4ca322f3ef3ac68",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
+        "ref": "nixpkgs-22.05-darwin",
         "repo": "nixpkgs",
         "type": "github"
       }
     },
     "root": {
       "inputs": {
-        "echidna": "echidna",
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs"
       }
     }
   },

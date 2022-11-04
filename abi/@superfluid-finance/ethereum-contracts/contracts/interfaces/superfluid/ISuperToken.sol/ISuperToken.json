@@ -1,30 +1,5 @@
 [
   {
-    "inputs": [],
-    "name": "SUPER_TOKEN_CALLER_IS_NOT_OPERATOR_FOR_HOLDER",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "SUPER_TOKEN_INFLATIONARY_DEFLATIONARY_NOT_SUPPORTED",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "SUPER_TOKEN_NOT_ERC777_TOKENS_RECIPIENT",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "SUPER_TOKEN_NO_UNDERLYING_TOKEN",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "SUPER_TOKEN_ONLY_SELF",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {

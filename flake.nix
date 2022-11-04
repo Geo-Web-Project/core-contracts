@@ -1,10 +1,9 @@
 {
   description = "A basic flake with a shell";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-22.05-darwin";
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.echidna.url = "github:crytic/echidna";
 
-  outputs = { self, nixpkgs, flake-utils, echidna }:
+  outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system: 
       let pkgs = import nixpkgs {
         overlays = [ (final: prev: {
@@ -14,7 +13,7 @@
       };
     in {
       devShells.default = pkgs.mkShell {
-        nativeBuildInputs = [ pkgs.yarn pkgs.nodejs-14_x ];
+        nativeBuildInputs = [ pkgs.yarn pkgs.nodejs-14_x pkgs.python310Packages.crytic-compile pkgs.solc-select pkgs.slither-analyzer ];
         buildInputs = [ ];
       };
     });
