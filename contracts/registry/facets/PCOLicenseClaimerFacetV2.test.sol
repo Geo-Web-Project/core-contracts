@@ -2,9 +2,9 @@
 pragma solidity ^0.8.16;
 
 import "../libraries/LibPCOLicenseClaimer.sol";
-import "./PCOLicenseClaimerFacet.sol";
+import "./PCOLicenseClaimerFacetV2.sol";
 
-contract FuzzyPCOLicenseClaimerFacet is PCOLicenseClaimerFacet {
+contract FuzzyPCOLicenseClaimerFacetV2 is PCOLicenseClaimerFacetV2 {
     constructor() {
         // Initialize params
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
@@ -27,20 +27,5 @@ contract FuzzyPCOLicenseClaimerFacet is PCOLicenseClaimerFacet {
             ds.startingBid == 2 &&
             ds.endingBid == 3 &&
             ds.beacon == address(0x1);
-    }
-
-    // solhint-disable-next-line func-name-mixedcase
-    function echidna_no_repeat_next_address() public returns (bool) {
-        LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
-            .diamondStorage();
-
-        address nextAddress = getNextProxyAddress(msg.sender);
-        BeaconDiamond proxy = new BeaconDiamond{
-            salt: keccak256(
-                abi.encodePacked(msg.sender, ds.userSalts[msg.sender])
-            )
-        }(address(this), IDiamondReadable(ds.beacon));
-
-        return nextAddress == address(proxy);
     }
 }

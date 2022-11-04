@@ -172,7 +172,7 @@ abstract contract IPCOLicenseClaimerFacet {
      * @notice Get the next proxy address for user. To be used to grant permissions before calling claim
      * @param user User address
      */
-    function getNextProxyAddress(address user) external view returns (address) {
+    function getNextProxyAddress(address user) public view returns (address) {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
         return
