@@ -406,7 +406,7 @@ describe("CFAPenaltyBidFacet", async function () {
         .connect(await ethers.getSigner(user))
         .editBid(newContributionRate, newForSalePrice);
 
-      await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
+      await expect(txn).to.be.reverted;
     });
 
     it("should fail if missing buffer transfer allowance", async () => {
@@ -2545,7 +2545,7 @@ describe("CFAPenaltyBidFacet", async function () {
         .connect(await ethers.getSigner(user))
         .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
 
-      await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
+      await expect(txn).to.be.reverted;
     });
 
     it("should fail if not enough allowance for penalty", async () => {

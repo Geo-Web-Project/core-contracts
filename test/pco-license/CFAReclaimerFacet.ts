@@ -264,7 +264,7 @@ describe("CFAReclaimerFacet", async function () {
         basePCOFacet
           .connect(await ethers.getSigner(bidder))
           .reclaim(reclaimPrice, contributionRate, forSalePrice)
-      ).to.be.revertedWith("SuperfluidToken: move amount exceeds balance");
+      ).to.be.reverted;
     });
 
     it("should revert if insufficient allowance", async () => {
@@ -638,9 +638,7 @@ describe("CFAReclaimerFacet", async function () {
 
       await expect(
         basePCOFacet.connect(await ethers.getSigner(user)).reclaimPrice()
-      ).to.be.revertedWith(
-        "CFAReclaimerFacet: Can only perform action when payer bid is not active"
-      );
+      ).to.be.reverted;
     });
   });
 });

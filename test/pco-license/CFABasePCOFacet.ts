@@ -168,7 +168,7 @@ describe("CFABasePCOFacet", async function () {
         contributionRate,
         forSalePrice
       );
-      await expect(txn).to.be.revertedWith("CFA: not enough available balance");
+      await expect(txn).to.be.reverted;
     });
 
     it("should fail if flow permissions are missing", async () => {
@@ -203,7 +203,7 @@ describe("CFABasePCOFacet", async function () {
         contributionRate,
         forSalePrice
       );
-      await expect(txn).to.be.revertedWith("CFA: E_NO_OPERATOR_CREATE_FLOW");
+      await expect(txn).to.be.reverted;
     });
 
     it("should fail if for sale price is incorrect rounding", async () => {
