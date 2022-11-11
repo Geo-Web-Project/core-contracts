@@ -31,17 +31,17 @@ export declare namespace ISuperfluid {
   };
 
   export type ContextStruct = {
-    appLevel: BigNumberish;
+    appCallbackLevel: BigNumberish;
     callType: BigNumberish;
     timestamp: BigNumberish;
     msgSender: string;
     agreementSelector: BytesLike;
     userData: BytesLike;
-    appAllowanceGranted: BigNumberish;
-    appAllowanceWanted: BigNumberish;
-    appAllowanceUsed: BigNumberish;
+    appCreditGranted: BigNumberish;
+    appCreditWantedDeprecated: BigNumberish;
+    appCreditUsed: BigNumberish;
     appAddress: string;
-    appAllowanceToken: string;
+    appCreditToken: string;
   };
 
   export type ContextStructOutput = [
@@ -57,17 +57,17 @@ export declare namespace ISuperfluid {
     string,
     string
   ] & {
-    appLevel: number;
+    appCallbackLevel: number;
     callType: number;
     timestamp: BigNumber;
     msgSender: string;
     agreementSelector: string;
     userData: string;
-    appAllowanceGranted: BigNumber;
-    appAllowanceWanted: BigNumber;
-    appAllowanceUsed: BigNumber;
+    appCreditGranted: BigNumber;
+    appCreditWantedDeprecated: BigNumber;
+    appCreditUsed: BigNumber;
     appAddress: string;
-    appAllowanceToken: string;
+    appCreditToken: string;
   };
 }
 
@@ -85,11 +85,11 @@ export interface ISuperfluidInterface extends utils.Interface {
     "callAppActionWithContext(address,bytes,bytes)": FunctionFragment;
     "callAppAfterCallback(address,bytes,bool,bytes)": FunctionFragment;
     "callAppBeforeCallback(address,bytes,bool,bytes)": FunctionFragment;
-    "ctxUseAllowance(bytes,uint256,int256)": FunctionFragment;
+    "ctxUseCredit(bytes,int256)": FunctionFragment;
     "decodeCtx(bytes)": FunctionFragment;
     "forwardBatchCall((uint32,address,bytes)[])": FunctionFragment;
     "getAgreementClass(bytes32)": FunctionFragment;
-    "getAppLevel(address)": FunctionFragment;
+    "getAppCallbackLevel(address)": FunctionFragment;
     "getAppManifest(address)": FunctionFragment;
     "getGovernance()": FunctionFragment;
     "getNow()": FunctionFragment;
@@ -159,8 +159,8 @@ export interface ISuperfluidInterface extends utils.Interface {
     values: [string, BytesLike, boolean, BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "ctxUseAllowance",
-    values: [BytesLike, BigNumberish, BigNumberish]
+    functionFragment: "ctxUseCredit",
+    values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "decodeCtx",
@@ -174,7 +174,10 @@ export interface ISuperfluidInterface extends utils.Interface {
     functionFragment: "getAgreementClass",
     values: [BytesLike]
   ): string;
-  encodeFunctionData(functionFragment: "getAppLevel", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "getAppCallbackLevel",
+    values: [string]
+  ): string;
   encodeFunctionData(
     functionFragment: "getAppManifest",
     values: [string]
@@ -297,7 +300,7 @@ export interface ISuperfluidInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ctxUseAllowance",
+    functionFragment: "ctxUseCredit",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "decodeCtx", data: BytesLike): Result;
@@ -310,7 +313,7 @@ export interface ISuperfluidInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getAppLevel",
+    functionFragment: "getAppCallbackLevel",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -501,16 +504,16 @@ export interface ISuperfluid extends BaseContract {
 
     appCallbackPop(
       ctx: BytesLike,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedDelta: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     appCallbackPush(
       ctx: BytesLike,
       app: string,
-      appAllowanceGranted: BigNumberish,
-      appAllowanceUsed: BigNumberish,
-      appAllowanceToken: string,
+      appCreditGranted: BigNumberish,
+      appCreditUsed: BigNumberish,
+      appCreditToken: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -563,10 +566,9 @@ export interface ISuperfluid extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    ctxUseAllowance(
+    ctxUseCredit(
       ctx: BytesLike,
-      appAllowanceWantedMore: BigNumberish,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedMore: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -589,10 +591,10 @@ export interface ISuperfluid extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string] & { agreementClass: string }>;
 
-    getAppLevel(
+    getAppCallbackLevel(
       app: string,
       overrides?: CallOverrides
-    ): Promise<[number] & { appLevel: number }>;
+    ): Promise<[number] & { appCallbackLevel: number }>;
 
     getAppManifest(
       app: string,
@@ -718,16 +720,16 @@ export interface ISuperfluid extends BaseContract {
 
   appCallbackPop(
     ctx: BytesLike,
-    appAllowanceUsedDelta: BigNumberish,
+    appCreditUsedDelta: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   appCallbackPush(
     ctx: BytesLike,
     app: string,
-    appAllowanceGranted: BigNumberish,
-    appAllowanceUsed: BigNumberish,
-    appAllowanceToken: string,
+    appCreditGranted: BigNumberish,
+    appCreditUsed: BigNumberish,
+    appCreditToken: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -780,10 +782,9 @@ export interface ISuperfluid extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  ctxUseAllowance(
+  ctxUseCredit(
     ctx: BytesLike,
-    appAllowanceWantedMore: BigNumberish,
-    appAllowanceUsedDelta: BigNumberish,
+    appCreditUsedMore: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -802,7 +803,7 @@ export interface ISuperfluid extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  getAppLevel(app: string, overrides?: CallOverrides): Promise<number>;
+  getAppCallbackLevel(app: string, overrides?: CallOverrides): Promise<number>;
 
   getAppManifest(
     app: string,
@@ -919,16 +920,16 @@ export interface ISuperfluid extends BaseContract {
 
     appCallbackPop(
       ctx: BytesLike,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedDelta: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
     appCallbackPush(
       ctx: BytesLike,
       app: string,
-      appAllowanceGranted: BigNumberish,
-      appAllowanceUsed: BigNumberish,
-      appAllowanceToken: string,
+      appCreditGranted: BigNumberish,
+      appCreditUsed: BigNumberish,
+      appCreditToken: string,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -981,10 +982,9 @@ export interface ISuperfluid extends BaseContract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    ctxUseAllowance(
+    ctxUseCredit(
       ctx: BytesLike,
-      appAllowanceWantedMore: BigNumberish,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedMore: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -1003,7 +1003,10 @@ export interface ISuperfluid extends BaseContract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    getAppLevel(app: string, overrides?: CallOverrides): Promise<number>;
+    getAppCallbackLevel(
+      app: string,
+      overrides?: CallOverrides
+    ): Promise<number>;
 
     getAppManifest(
       app: string,
@@ -1172,16 +1175,16 @@ export interface ISuperfluid extends BaseContract {
 
     appCallbackPop(
       ctx: BytesLike,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedDelta: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     appCallbackPush(
       ctx: BytesLike,
       app: string,
-      appAllowanceGranted: BigNumberish,
-      appAllowanceUsed: BigNumberish,
-      appAllowanceToken: string,
+      appCreditGranted: BigNumberish,
+      appCreditUsed: BigNumberish,
+      appCreditToken: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1234,10 +1237,9 @@ export interface ISuperfluid extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    ctxUseAllowance(
+    ctxUseCredit(
       ctx: BytesLike,
-      appAllowanceWantedMore: BigNumberish,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedMore: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1253,7 +1255,10 @@ export interface ISuperfluid extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getAppLevel(app: string, overrides?: CallOverrides): Promise<BigNumber>;
+    getAppCallbackLevel(
+      app: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     getAppManifest(app: string, overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1362,16 +1367,16 @@ export interface ISuperfluid extends BaseContract {
 
     appCallbackPop(
       ctx: BytesLike,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedDelta: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     appCallbackPush(
       ctx: BytesLike,
       app: string,
-      appAllowanceGranted: BigNumberish,
-      appAllowanceUsed: BigNumberish,
-      appAllowanceToken: string,
+      appCreditGranted: BigNumberish,
+      appCreditUsed: BigNumberish,
+      appCreditToken: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1424,10 +1429,9 @@ export interface ISuperfluid extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    ctxUseAllowance(
+    ctxUseCredit(
       ctx: BytesLike,
-      appAllowanceWantedMore: BigNumberish,
-      appAllowanceUsedDelta: BigNumberish,
+      appCreditUsedMore: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1446,7 +1450,7 @@ export interface ISuperfluid extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getAppLevel(
+    getAppCallbackLevel(
       app: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

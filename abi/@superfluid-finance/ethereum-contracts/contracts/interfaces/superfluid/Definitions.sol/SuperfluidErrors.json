@@ -1,0 +1,90 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ALREADY_EXISTS",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "APP_RULE",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "DOES_NOT_EXIST",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "INSUFFICIENT_BALANCE",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "MUST_BE_CONTRACT",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ONLY_HOST",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ONLY_LISTED_AGREEMENT",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ZERO_ADDRESS",
+    "type": "error"
+  }
+]

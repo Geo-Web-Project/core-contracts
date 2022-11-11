@@ -1,0 +1,1035 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "MUST_BE_CONTRACT",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_GOV_ARRAYS_NOT_SAME_LENGTH",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_GOV_INVALID_LIQUIDATION_OR_PATRICIAN_PERIOD",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "factory",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "AppFactoryAuthorizationChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "deployer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "appRegistrationKey",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "expirationTs",
+        "type": "uint256"
+      }
+    ],
+    "name": "AppRegistrationKeyChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isKeySet",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "liquidationPeriod",
+        "type": "uint256"
+      }
+    ],
+    "name": "CFAv1LiquidationPeriodChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isKeySet",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "ConfigChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isKeySet",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "liquidationPeriod",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "patricianPeriod",
+        "type": "uint256"
+      }
+    ],
+    "name": "PPPConfigurationChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isKeySet",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "rewardAddress",
+        "type": "address"
+      }
+    ],
+    "name": "RewardAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isKeySet",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minimumDeposit",
+        "type": "uint256"
+      }
+    ],
+    "name": "SuperTokenMinimumDepositChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isKeySet",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "TrustedForwarderChanged",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "factory",
+        "type": "address"
+      }
+    ],
+    "name": "authorizeAppFactory",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperToken[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "batchUpdateSuperTokenLogic",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperToken[]",
+        "name": "tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "minimumDeposits",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "batchUpdateSuperTokenMinimumDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "deployer",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "registrationKey",
+        "type": "string"
+      }
+    ],
+    "name": "clearAppRegistrationKey",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "clearConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      }
+    ],
+    "name": "clearPPPConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      }
+    ],
+    "name": "clearRewardAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperToken",
+        "name": "superToken",
+        "type": "address"
+      }
+    ],
+    "name": "clearSuperTokenMinimumDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "disableTrustedForwarder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "enableTrustedForwarder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getConfigAsAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "value",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getConfigAsUint256",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "period",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      }
+    ],
+    "name": "getPPPConfig",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "liquidationPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "patricianPeriod",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      }
+    ],
+    "name": "getRewardAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      }
+    ],
+    "name": "getSuperTokenMinimumDeposit",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "rewardAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "liquidationPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "patricianPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "trustedForwarders",
+        "type": "address[]"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "factory",
+        "type": "address"
+      }
+    ],
+    "name": "isAuthorizedAppFactory",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "isTrustedForwarder",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "agreementClass",
+        "type": "address"
+      }
+    ],
+    "name": "registerAgreementClass",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "newGov",
+        "type": "address"
+      }
+    ],
+    "name": "replaceGovernance",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "deployer",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "registrationKey",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expirationTs",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAppRegistrationKey",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "value",
+        "type": "address"
+      }
+    ],
+    "name": "setConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "setConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "liquidationPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "patricianPeriod",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPPPConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "rewardAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setRewardAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "superToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "setSuperTokenMinimumDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "factory",
+        "type": "address"
+      }
+    ],
+    "name": "unauthorizeAppFactory",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "hostNewLogic",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "agreementClassNewLogics",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address",
+        "name": "superTokenFactoryNewLogic",
+        "type": "address"
+      }
+    ],
+    "name": "updateContracts",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "deployer",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "registrationKey",
+        "type": "string"
+      }
+    ],
+    "name": "verifyAppRegistrationKey",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "validNow",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expirationTs",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

@@ -1,5 +1,71 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ALREADY_EXISTS",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "DOES_NOT_EXIST",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "INSUFFICIENT_BALANCE",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ONLY_HOST",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ONLY_LISTED_AGREEMENT",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "SUPER_TOKEN_CALLER_IS_NOT_OPERATOR_FOR_HOLDER",
     "type": "error"
@@ -22,6 +88,17 @@
   {
     "inputs": [],
     "name": "SUPER_TOKEN_ONLY_SELF",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ZERO_ADDRESS",
     "type": "error"
   },
   {
@@ -363,6 +440,38 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "uuid",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "codeAddress",
+        "type": "address"
+      }
+    ],
+    "name": "CodeUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "operator",
@@ -525,7 +634,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "owner",
+        "name": "account",
         "type": "address"
       },
       {
@@ -620,6 +729,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "castrate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -647,7 +763,7 @@
         "type": "uint8"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -712,7 +828,7 @@
     "outputs": [
       {
         "internalType": "contract ISuperAgreement[]",
-        "name": "activeAgreements",
+        "name": "",
         "type": "address[]"
       }
     ],
@@ -784,6 +900,19 @@
   },
   {
     "inputs": [],
+    "name": "getCodeAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "codeAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getHost",
     "outputs": [
       {
@@ -801,7 +930,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "tokenAddr",
+        "name": "",
         "type": "address"
       }
     ],
@@ -818,7 +947,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1188,6 +1317,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "proxiableUUID",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1341,7 +1483,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "sender",
+        "name": "holder",
         "type": "address"
       },
       {
@@ -1491,7 +1633,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "sender",
+        "name": "holder",
         "type": "address"
       },
       {
@@ -1553,6 +1695,19 @@
       }
     ],
     "name": "updateAgreementStateSlot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "updateCode",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

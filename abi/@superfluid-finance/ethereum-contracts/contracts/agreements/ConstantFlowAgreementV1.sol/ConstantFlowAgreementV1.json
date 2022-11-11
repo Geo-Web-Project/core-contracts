@@ -1,5 +1,38 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ALREADY_EXISTS",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "APP_RULE",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "CFA_ACL_FLOW_RATE_ALLOWANCE_EXCEEDED",
     "type": "error"
@@ -68,6 +101,69 @@
     "inputs": [],
     "name": "CFA_NO_SELF_FLOW",
     "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "DOES_NOT_EXIST",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "INSUFFICIENT_BALANCE",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ONLY_HOST",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "ZERO_ADDRESS",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "uuid",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "codeAddress",
+        "type": "address"
+      }
+    ],
+    "name": "CodeUpdated",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -175,6 +271,58 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "DEFAULT_MINIMUM_DEPOSIT",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAXIMUM_DEPOSIT",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAXIMUM_FLOW_RATE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "agreementType",
     "outputs": [
@@ -213,6 +361,13 @@
         "type": "bytes"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "castrate",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -397,6 +552,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getCodeAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "codeAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract ISuperfluidToken",
@@ -473,7 +641,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "agreementId",
+        "name": "flowId",
         "type": "bytes32"
       }
     ],
@@ -678,6 +846,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "proxiableUUID",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract ISuperfluidToken",
@@ -742,6 +923,19 @@
         "type": "bytes"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "updateCode",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

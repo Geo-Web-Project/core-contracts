@@ -1,5 +1,15 @@
 [
   {
+    "inputs": [],
+    "name": "SF_GOV_ARRAYS_NOT_SAME_LENGTH",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_GOV_INVALID_LIQUIDATION_OR_PATRICIAN_PERIOD",
+    "type": "error"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract ISuperfluid",

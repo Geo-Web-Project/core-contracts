@@ -5,7 +5,6 @@ import {
   getNamedAccounts,
   deployments,
   network,
-  upgrades,
 } from "hardhat";
 import { ContractReceipt } from "ethers";
 import { solidity } from "ethereum-waffle";
@@ -40,10 +39,10 @@ describe("BeneficiarySuperApp", async function () {
       const BeneficiarySuperApp = await ethers.getContractFactory(
         "BeneficiarySuperApp"
       );
-      const beneSuperApp = await upgrades.deployProxy(BeneficiarySuperApp, [
+      const beneSuperApp = await BeneficiarySuperApp.deploy(
         mockParamsStore.address,
         diamondAdmin,
-      ]);
+      )
       await beneSuperApp.deployed();
 
       async function checkUserToAppFlow(
@@ -133,10 +132,10 @@ describe("BeneficiarySuperApp", async function () {
       const BeneficiarySuperApp = await ethers.getContractFactory(
         "BeneficiarySuperApp"
       );
-      const beneSuperApp = upgrades.deployProxy(BeneficiarySuperApp, [
+      const beneSuperApp = BeneficiarySuperApp.deploy(
         mockParamsStore.address,
         ethers.constants.AddressZero,
-      ]);
+      );
 
       await expect(beneSuperApp).to.be.revertedWith(
         "BeneficiarySuperApp: Beneficiary cannot be 0x0"

@@ -1,0 +1,41 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluidToken",
+        "name": "token",
+        "type": "ISuperfluidToken"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bitmapStateSlotId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dataStateSlotIDStart",
+        "type": "uint256"
+      }
+    ],
+    "name": "listData",
+    "outputs": [
+      {
+        "internalType": "uint32[]",
+        "name": "slotIds",
+        "type": "uint32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "dataList",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
