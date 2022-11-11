@@ -17,7 +17,6 @@ contract FuzzyPCOERC721Facet is PCOERC721Facet {
 
     // solhint-disable-next-line func-name-mixedcase
     function echidna_operator_always_approved() public view returns (bool) {
-        return
-            _isApprovedOrOwner(address(this), 1);
+        return _isApprovedOrOwner(address(this), 1);
     }
 }
