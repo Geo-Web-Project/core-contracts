@@ -186,6 +186,28 @@ describe("BeneficiarySuperApp", async function () {
     });
   });
 
+  describe("setParamsStore", async () => {
+    it("should set", async () => {
+      const { beneSuperApp } = await setupTest();
+      const { user } = await getNamedAccounts();
+
+      await beneSuperApp.setParamsStore(user);
+
+      expect(await beneSuperApp.getParamsStore()).to.equal(user);
+    });
+
+    it("should fail if not owner", async () => {
+      const { beneSuperApp } = await setupTest();
+      const { user } = await getNamedAccounts();
+
+      const txn = beneSuperApp
+        .connect(await ethers.getSigner(user))
+        .setParamsStore(user);
+
+      await expect(txn).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
+
   describe("getLastDeletion", async () => {
     it("should handle create and delete flow", async () => {
       const {

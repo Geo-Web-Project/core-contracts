@@ -106,6 +106,7 @@ module.exports = {
         "PCOERC721Facet",
         "IDiamondWritable",
       ],
+      exclude: ["Fuzzy*"],
       strict: false,
     },
     {
