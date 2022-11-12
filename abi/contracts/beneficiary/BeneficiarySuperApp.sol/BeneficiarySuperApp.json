@@ -326,6 +326,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getParamsStore",
+    "outputs": [
+      {
+        "internalType": "contract IPCOLicenseParamsStore",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract IPCOLicenseParamsStore",
@@ -391,6 +404,19 @@
       }
     ],
     "name": "setBeneficiary",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPCOLicenseParamsStore",
+        "name": "paramsStore_",
+        "type": "address"
+      }
+    ],
+    "name": "setParamsStore",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

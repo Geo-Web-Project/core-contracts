@@ -24,7 +24,7 @@ contract BeneficiarySuperApp is
     using CFAv1Library for CFAv1Library.InitData;
 
     CFAv1Library.InitData private cfaV1;
-    IPCOLicenseParamsStore private paramsStore;
+    IPCOLicenseParamsStore internal paramsStore;
 
     /// @notice Timestamp of last deletion from each beacon proxy
     mapping(address => uint256) public lastDeletion;
@@ -77,6 +77,19 @@ contract BeneficiarySuperApp is
             SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
         host.registerApp(configWord);
+    }
+
+    /// @notice Params Store
+    function getParamsStore() external view returns (IPCOLicenseParamsStore) {
+        return paramsStore;
+    }
+
+    /// @notice Set Params Store
+    function setParamsStore(IPCOLicenseParamsStore paramsStore_)
+        external
+        onlyOwner
+    {
+        paramsStore = paramsStore_;
     }
 
     /// @notice Beneficiary
