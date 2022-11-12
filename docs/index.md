@@ -2,23 +2,31 @@
 
 ## BeaconDiamond
 
+### BeaconDiamond__NoFacetForSignature
+
+```solidity
+error BeaconDiamond__NoFacetForSignature()
+```
+
 ### constructor
 
 ```solidity
-constructor(address _contractOwner, contract IDiamondLoupe _beacon) public payable
+constructor(address _contractOwner, contract IDiamondReadable _beacon) public payable
 ```
 
-### fallback
+### _getImplementation
 
 ```solidity
-fallback() external payable
+function _getImplementation() internal view returns (address)
 ```
 
-### receive
+get logic implementation address
 
-```solidity
-receive() external payable
-```
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | implementation address |
 
 ## LibBeaconDiamond
 
@@ -32,7 +40,7 @@ bytes32 STORAGE_POSITION
 
 ```solidity
 struct DiamondStorage {
-  contract IDiamondLoupe beacon;
+  contract IDiamondReadable beacon;
 }
 ```
 
@@ -45,7 +53,7 @@ function diamondStorage() internal pure returns (struct LibBeaconDiamond.Diamond
 ### setBeacon
 
 ```solidity
-function setBeacon(contract IDiamondLoupe beacon) internal
+function setBeacon(contract IDiamondReadable beacon) internal
 ```
 
 ## BeneficiarySuperApp
@@ -83,6 +91,22 @@ Beneficiary of funds.
 ```solidity
 function initialize(contract IPCOLicenseParamsStore paramsStore_, address beneficiary_) external
 ```
+
+### getParamsStore
+
+```solidity
+function getParamsStore() external view returns (contract IPCOLicenseParamsStore)
+```
+
+Params Store
+
+### setParamsStore
+
+```solidity
+function setParamsStore(contract IPCOLicenseParamsStore paramsStore_) external
+```
+
+Set Params Store
 
 ### getBeneficiary
 
@@ -146,6 +170,132 @@ function _isCFAv1(address agreementClass) private view returns (bool)
 modifier onlyHost()
 ```
 
+## MockParamsStore
+
+### mockERC20
+
+```solidity
+contract ERC20Upgradeable mockERC20
+```
+
+### constructor
+
+```solidity
+constructor(contract ERC20Upgradeable mockERC20_) public
+```
+
+### getPaymentToken
+
+```solidity
+function getPaymentToken() external view returns (contract ISuperToken)
+```
+
+Payment token
+
+### getHost
+
+```solidity
+function getHost() external pure returns (contract ISuperfluid)
+```
+
+Superfluid Host
+
+### getBeneficiary
+
+```solidity
+function getBeneficiary() external pure returns (contract ICFABeneficiary)
+```
+
+Beneficiary
+
+### getPerSecondFeeNumerator
+
+```solidity
+function getPerSecondFeeNumerator() external pure returns (uint256)
+```
+
+The numerator of the network-wide per second contribution fee.
+
+### getPerSecondFeeDenominator
+
+```solidity
+function getPerSecondFeeDenominator() external pure returns (uint256)
+```
+
+The denominator of the network-wide per second contribution fee.
+
+### getPenaltyNumerator
+
+```solidity
+function getPenaltyNumerator() external pure returns (uint256)
+```
+
+The numerator of the penalty rate.
+
+### getPenaltyDenominator
+
+```solidity
+function getPenaltyDenominator() external pure returns (uint256)
+```
+
+The denominator of the penalty rate.
+
+### getReclaimAuctionLength
+
+```solidity
+function getReclaimAuctionLength() external pure returns (uint256)
+```
+
+when the required bid amount reaches its minimum value.
+
+### getBidPeriodLengthInSeconds
+
+```solidity
+function getBidPeriodLengthInSeconds() external pure returns (uint256)
+```
+
+Bid period length in seconds
+
+### getMinForSalePrice
+
+```solidity
+function getMinForSalePrice() external pure returns (uint256)
+```
+
+Minimum for sale price
+
+## FuzzyBeneficiarySuperApp
+
+### mockParamsStore
+
+```solidity
+contract MockParamsStore mockParamsStore
+```
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### echidna_beneficiary_never_changes
+
+```solidity
+function echidna_beneficiary_never_changes() public view returns (bool)
+```
+
+### echidna_params_store_never_changes
+
+```solidity
+function echidna_params_store_never_changes() public view returns (bool)
+```
+
+### echidna_balance_never_decreases
+
+```solidity
+function echidna_balance_never_decreases() public view returns (bool)
+```
+
 ## ICFABeneficiary
 
 ### getLastDeletion
@@ -156,7 +306,15 @@ function getLastDeletion(address sender) external view returns (uint256)
 
 Get last deletion for sender
 
+## PCOLicenseDiamond
+
 ## CFABasePCOFacetModifiers
+
+### onlyOwner
+
+```solidity
+modifier onlyOwner()
+```
 
 ### onlyPayer
 
@@ -768,117 +926,7 @@ function _rejectBid(int96 newContributionRate, uint256 newForSalePrice) internal
 
 Reject Bid
 
-## ERC721Facet
-
-### initialize
-
-```solidity
-function initialize(string initName, string initSymbol) external
-```
-
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) public view virtual returns (bool)
-```
-
-_See {IERC165-supportsInterface}._
-
-### balanceOf
-
-```solidity
-function balanceOf(address owner) external view returns (uint256)
-```
-
-_See {IERC721-balanceOf}._
-
-### ownerOf
-
-```solidity
-function ownerOf(uint256 tokenId) external view returns (address)
-```
-
-_See {IERC721-ownerOf}._
-
-### name
-
-```solidity
-function name() external view returns (string)
-```
-
-_See {IERC721Metadata-name}._
-
-### symbol
-
-```solidity
-function symbol() external view returns (string)
-```
-
-_See {IERC721Metadata-symbol}._
-
-### tokenURI
-
-```solidity
-function tokenURI(uint256 tokenId) external view returns (string)
-```
-
-_See {IERC721Metadata-tokenURI}._
-
-### approve
-
-```solidity
-function approve(address to, uint256 tokenId) external
-```
-
-_See {IERC721-approve}._
-
-### getApproved
-
-```solidity
-function getApproved(uint256 tokenId) external view returns (address)
-```
-
-_See {IERC721-getApproved}._
-
-### setApprovalForAll
-
-```solidity
-function setApprovalForAll(address operator, bool approved) external
-```
-
-_See {IERC721-setApprovalForAll}._
-
-### isApprovedForAll
-
-```solidity
-function isApprovedForAll(address owner, address operator) public view returns (bool)
-```
-
-_See {IERC721-isApprovedForAll}._
-
-### transferFrom
-
-```solidity
-function transferFrom(address from, address to, uint256 tokenId) external
-```
-
-_See {IERC721-transferFrom}._
-
-### safeTransferFrom
-
-```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId) external
-```
-
-_See {IERC721-safeTransferFrom}._
-
-### safeTransferFrom
-
-```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) public
-```
-
-_See {IERC721-safeTransferFrom}._
+## RegistryDiamond
 
 ## GeoWebParcelFacet
 
@@ -925,7 +973,161 @@ function build(uint64 baseCoordinate, uint256[] path) external
 function destroy(uint64 id) external
 ```
 
-## PCOLicenseClaimerFacet
+## FuzzyGeoWebParcelFacet
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### build
+
+```solidity
+function build(uint64 baseCoordinate, uint256[] path) external
+```
+
+### echidna_coordinate_never_changes_parcel
+
+```solidity
+function echidna_coordinate_never_changes_parcel() public view returns (bool)
+```
+
+### echidna_coordinate_never_is_available
+
+```solidity
+function echidna_coordinate_never_is_available() public view returns (bool)
+```
+
+### echidna_next_id_never_repeats
+
+```solidity
+function echidna_next_id_never_repeats() public view returns (bool)
+```
+
+## GeoWebParcelFacetV2
+
+### getLandParcelV2
+
+```solidity
+function getLandParcelV2(uint256 id) external view returns (uint64 swCoordinate, uint256 latDim, uint256 lngDim)
+```
+
+Get a V2 land parcel
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| id | uint256 | ID of land parcel |
+
+## TestableGeoWebParcelFacetV2
+
+### build
+
+```solidity
+function build(struct LibGeoWebParcelV2.LandParcel parcel) external
+```
+
+## FuzzyGeoWebParcelFacetV2
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### build
+
+```solidity
+function build(struct LibGeoWebParcelV2.LandParcel parcel) external
+```
+
+### echidna_coordinate_never_changes_parcel
+
+```solidity
+function echidna_coordinate_never_changes_parcel() public view returns (bool)
+```
+
+### echidna_coordinate_never_is_available
+
+```solidity
+function echidna_coordinate_never_is_available() public view returns (bool)
+```
+
+### echidna_next_id_never_repeats
+
+```solidity
+function echidna_next_id_never_repeats() public view returns (bool)
+```
+
+## PCOERC721Facet
+
+### onlyOwner
+
+```solidity
+modifier onlyOwner()
+```
+
+### initializeERC721
+
+```solidity
+function initializeERC721(string name, string symbol, string baseURI) external
+```
+
+### _isApprovedOrOwner
+
+```solidity
+function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool)
+```
+
+_Override _isApprovedOrOwner to include corresponding beacon proxy_
+
+### _beforeTokenTransfer
+
+```solidity
+function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual
+```
+
+ERC721 hook, called before all transfers including mint and burn
+
+_function should be overridden and new implementation must call super_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| from | address | sender of token |
+| to | address | receiver of token |
+| tokenId | uint256 | id of transferred token |
+
+## FuzzyPCOERC721Facet
+
+### echidnaCaller
+
+```solidity
+address echidnaCaller
+```
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### echidna_operator_always_approved
+
+```solidity
+function echidna_operator_always_approved() public view returns (bool)
+```
+
+## IPCOLicenseClaimerFacet
+
+### onlyOwner
+
+```solidity
+modifier onlyOwner()
+```
 
 ### ParcelClaimed
 
@@ -1089,7 +1291,7 @@ Get beacon proxy for license
 ### getNextProxyAddress
 
 ```solidity
-function getNextProxyAddress(address user) external view returns (address)
+function getNextProxyAddress(address user) public view returns (address)
 ```
 
 Get the next proxy address for user. To be used to grant permissions before calling claim
@@ -1119,12 +1321,146 @@ Claim a new parcel and license
 | baseCoordinate | uint64 | Base coordinate of new parcel |
 | path | uint256[] | Path of new parcel |
 
+### _buildAndMint
+
+```solidity
+function _buildAndMint(address user, uint64 baseCoordinate, uint256[] path) internal virtual
+```
+
+Build a parcel and mint a license
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| user | address | Address of license owner to be |
+| baseCoordinate | uint64 | Base coordinate of parcel to claim |
+| path | uint256[] | Path of parcel to claim |
+
+## PCOLicenseClaimerFacet
+
+### _buildAndMint
+
+```solidity
+function _buildAndMint(address user, uint64 baseCoordinate, uint256[] path) internal
+```
+
+Build a parcel and mint a license
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| user | address | Address of license owner to be |
+| baseCoordinate | uint64 | Base coordinate of parcel to claim |
+| path | uint256[] | Path of parcel to claim |
+
+## FuzzyPCOLicenseClaimerFacet
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### echidna_params_never_change
+
+```solidity
+function echidna_params_never_change() public view returns (bool)
+```
+
+### echidna_no_repeat_next_address
+
+```solidity
+function echidna_no_repeat_next_address() public returns (bool)
+```
+
+## IPCOLicenseClaimerFacetV2
+
+### ParcelClaimedV2
+
+```solidity
+event ParcelClaimedV2(uint256 _licenseId, address _payer)
+```
+
+Emitted when a parcel is claimed
+
+### claim
+
+```solidity
+function claim(int96 initialContributionRate, uint256 initialForSalePrice, struct LibGeoWebParcelV2.LandParcel parcel) external
+```
+
+Claim a new parcel and license
+     - Must have ERC-20 approval of payment token
+     - To-be-created contract must have create flow permissions for bidder. See getNextProxyAddress
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| initialContributionRate | int96 | Initial contribution rate of parcel |
+| initialForSalePrice | uint256 | Initial for sale price of parcel |
+| parcel | struct LibGeoWebParcelV2.LandParcel | New parcel |
+
+### _buildAndMint
+
+```solidity
+function _buildAndMint(address user, struct LibGeoWebParcelV2.LandParcel parcel) internal virtual
+```
+
+Build a parcel and mint a license
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| user | address | Address of license owner to be |
+| parcel | struct LibGeoWebParcelV2.LandParcel | New parcel |
+
+## PCOLicenseClaimerFacetV2
+
+### _buildAndMint
+
+```solidity
+function _buildAndMint(address user, struct LibGeoWebParcelV2.LandParcel parcel) internal
+```
+
+Build a parcel and mint a license
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| user | address | Address of license owner to be |
+| parcel | struct LibGeoWebParcelV2.LandParcel | New parcel |
+
+## FuzzyPCOLicenseClaimerFacetV2
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### echidna_params_never_change
+
+```solidity
+function echidna_params_never_change() public view returns (bool)
+```
+
 ## PCOLicenseParamsFacet
+
+### onlyOwner
+
+```solidity
+modifier onlyOwner()
+```
 
 ### initializeParams
 
 ```solidity
-function initializeParams(contract ICFABeneficiary beneficiary, contract ISuperToken paymentToken, contract ISuperfluid host, uint256 perSecondFeeNumerator, uint256 perSecondFeeDenominator, uint256 penaltyNumerator, uint256 penaltyDenominator, uint256 bidPeriodLengthInSeconds, uint256 reclaimAuctionLength) external
+function initializeParams(contract ICFABeneficiary beneficiary, contract ISuperToken paymentToken, contract ISuperfluid host, uint256 perSecondFeeNumerator, uint256 perSecondFeeDenominator, uint256 penaltyNumerator, uint256 penaltyDenominator, uint256 bidPeriodLengthInSeconds, uint256 reclaimAuctionLength, uint256 minForSalePrice) external
 ```
 
 Initialize.
@@ -1143,6 +1479,7 @@ Initialize.
 | penaltyDenominator | uint256 | The denominator of the penalty to pay to reject a bid. |
 | bidPeriodLengthInSeconds | uint256 | Bid period length in seconds |
 | reclaimAuctionLength | uint256 | when the required bid amount reaches its minimum value. |
+| minForSalePrice | uint256 |  |
 
 ### getHost
 
@@ -1288,6 +1625,36 @@ function setBidPeriodLengthInSeconds(uint256 bidPeriodLengthInSeconds) external
 
 Set Bid Period Length in seconds
 
+### getMinForSalePrice
+
+```solidity
+function getMinForSalePrice() external view returns (uint256)
+```
+
+Minimum for sale price
+
+### setMinForSalePrice
+
+```solidity
+function setMinForSalePrice(uint256 minForSalePrice) external
+```
+
+Set minimum for sale price
+
+## FuzzyPCOLicenseParamsFacet
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### echidna_params_never_change
+
+```solidity
+function echidna_params_never_change() public view returns (bool)
+```
+
 ## IPCOLicenseParamsStore
 
 ### getHost
@@ -1362,237 +1729,13 @@ function getBidPeriodLengthInSeconds() external view returns (uint256)
 
 Bid period length in seconds
 
-## LibERC721
-
-### STORAGE_POSITION
+### getMinForSalePrice
 
 ```solidity
-bytes32 STORAGE_POSITION
+function getMinForSalePrice() external view returns (uint256)
 ```
 
-### Transfer
-
-```solidity
-event Transfer(address from, address to, uint256 tokenId)
-```
-
-_Emitted when `tokenId` token is transferred from `from` to `to`._
-
-### Approval
-
-```solidity
-event Approval(address owner, address approved, uint256 tokenId)
-```
-
-_Emitted when `owner` enables `approved` to manage the `tokenId` token._
-
-### ApprovalForAll
-
-```solidity
-event ApprovalForAll(address owner, address operator, bool approved)
-```
-
-_Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets._
-
-### DiamondStorage
-
-```solidity
-struct DiamondStorage {
-  string name;
-  string symbol;
-  mapping(uint256 => address) owners;
-  mapping(address => uint256) balances;
-  mapping(uint256 => address) tokenApprovals;
-  mapping(address => mapping(address => bool)) operatorApprovals;
-}
-```
-
-### diamondStorage
-
-```solidity
-function diamondStorage() internal pure returns (struct LibERC721.DiamondStorage ds)
-```
-
-### ownerOf
-
-```solidity
-function ownerOf(uint256 tokenId) internal view returns (address)
-```
-
-_See {IERC721-ownerOf}._
-
-### isApprovedForAll
-
-```solidity
-function isApprovedForAll(address owner, address operator) internal view returns (bool)
-```
-
-_See {IERC721-isApprovedForAll}._
-
-### getApproved
-
-```solidity
-function getApproved(uint256 tokenId) internal view returns (address)
-```
-
-_See {IERC721-getApproved}._
-
-### _safeTransfer
-
-```solidity
-function _safeTransfer(address from, address to, uint256 tokenId, bytes data) internal
-```
-
-_Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
-are aware of the ERC721 protocol to prevent tokens from being forever locked.
-
-`data` is additional data, it has no specified format and it is sent in call to `to`.
-
-This internal function is equivalent to {safeTransferFrom}, and can be used to e.g.
-implement alternative mechanisms to perform token transfer, such as signature-based.
-
-Requirements:
-
-- `from` cannot be the zero address.
-- `to` cannot be the zero address.
-- `tokenId` token must exist and be owned by `from`.
-- If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-
-Emits a {Transfer} event._
-
-### _exists
-
-```solidity
-function _exists(uint256 tokenId) internal view returns (bool)
-```
-
-_Returns whether `tokenId` exists.
-
-Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.
-
-Tokens start existing when they are minted (`_mint`),
-and stop existing when they are burned (`_burn`)._
-
-### _isApprovedOrOwner
-
-```solidity
-function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool)
-```
-
-_Returns whether `spender` is allowed to manage `tokenId`.
-
-Requirements:
-
-- `tokenId` must exist._
-
-### _safeMint
-
-```solidity
-function _safeMint(address to, uint256 tokenId) internal
-```
-
-_Safely mints `tokenId` and transfers it to `to`.
-
-Requirements:
-
-- `tokenId` must not exist.
-- If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-
-Emits a {Transfer} event._
-
-### _safeMint
-
-```solidity
-function _safeMint(address to, uint256 tokenId, bytes data) internal
-```
-
-_Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
-forwarded in {IERC721Receiver-onERC721Received} to contract recipients._
-
-### _mint
-
-```solidity
-function _mint(address to, uint256 tokenId) internal
-```
-
-_Mints `tokenId` and transfers it to `to`.
-
-WARNING: Usage of this method is discouraged, use {_safeMint} whenever possible
-
-Requirements:
-
-- `tokenId` must not exist.
-- `to` cannot be the zero address.
-
-Emits a {Transfer} event._
-
-### _transfer
-
-```solidity
-function _transfer(address from, address to, uint256 tokenId) internal
-```
-
-_Transfers `tokenId` from `from` to `to`.
- As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
-
-Requirements:
-
-- `to` cannot be the zero address.
-- `tokenId` token must be owned by `from`.
-
-Emits a {Transfer} event._
-
-### _approve
-
-```solidity
-function _approve(address to, uint256 tokenId) internal
-```
-
-_Approve `to` to operate on `tokenId`
-
-Emits an {Approval} event._
-
-### _setApprovalForAll
-
-```solidity
-function _setApprovalForAll(address owner, address operator, bool approved) internal
-```
-
-_Approve `operator` to operate on all of `owner` tokens
-
-Emits an {ApprovalForAll} event._
-
-### _requireMinted
-
-```solidity
-function _requireMinted(uint256 tokenId) internal view
-```
-
-_Reverts if the `tokenId` has not been minted yet._
-
-### _checkOnERC721Received
-
-```solidity
-function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes data) private returns (bool)
-```
-
-_Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
-The call is not executed if the target address is not a contract._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| from | address | address representing the previous owner of the given token ID |
-| to | address | target address that will receive the tokens |
-| tokenId | uint256 | uint256 ID of the token to be transferred |
-| data | bytes | bytes optional data to send along with the call |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bool | bool whether the call correctly returned the expected magic value |
+Minimum for sale price
 
 ## LibGeoWebCoordinate
 
@@ -1715,6 +1858,83 @@ Get next direction from path
 function _nextDirection(uint256 path) internal pure returns (bool hasNext, uint256 direction, uint256 nextPath)
 ```
 
+## LibGeoWebCoordinateV2
+
+### MAX_X
+
+```solidity
+uint64 MAX_X
+```
+
+### MAX_Y
+
+```solidity
+uint64 MAX_Y
+```
+
+### traverse
+
+```solidity
+function traverse(uint64 origin, uint256 direction, uint256 iX, uint256 iY, uint256 i) external pure returns (uint64, uint256, uint256, uint256)
+```
+
+Traverse a single direction
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| origin | uint64 | The origin coordinate to start from |
+| direction | uint256 | The direction to take |
+| iX | uint256 |  |
+| iY | uint256 |  |
+| i | uint256 |  |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint64 | destination The destination coordinate |
+| [1] | uint256 |  |
+| [2] | uint256 |  |
+| [3] | uint256 |  |
+
+### _traverse
+
+```solidity
+function _traverse(uint64 origin, uint256 direction, uint256 iX, uint256 iY, uint256 i) internal pure returns (uint64, uint256, uint256, uint256)
+```
+
+### _getX
+
+```solidity
+function _getX(uint64 coord) internal pure returns (uint64 coordX)
+```
+
+Get the X coordinate
+
+### _getY
+
+```solidity
+function _getY(uint64 coord) internal pure returns (uint64 coordY)
+```
+
+Get the Y coordinate
+
+### toWordIndex
+
+```solidity
+function toWordIndex(uint64 coord) external pure returns (uint256 iX, uint256 iY, uint256 i)
+```
+
+Convert coordinate to word index
+
+### _toWordIndex
+
+```solidity
+function _toWordIndex(uint64 coord) internal pure returns (uint256 iX, uint256 iY, uint256 i)
+```
+
 ## LibGeoWebParcel
 
 ### STORAGE_POSITION
@@ -1835,6 +2055,74 @@ function _updateAvailabilityIndex(enum LibGeoWebParcel.Action action, uint64 bas
 
 _Update availability index by traversing a path and marking everything as available or unavailable_
 
+## LibGeoWebParcelV2
+
+### STORAGE_POSITION
+
+```solidity
+bytes32 STORAGE_POSITION
+```
+
+### MAX_PARCEL_DIM
+
+```solidity
+uint256 MAX_PARCEL_DIM
+```
+
+### LandParcel
+
+```solidity
+struct LandParcel {
+  uint64 swCoordinate;
+  uint256 lngDim;
+  uint256 latDim;
+}
+```
+
+### MAX_INT
+
+```solidity
+uint256 MAX_INT
+```
+
+_Maxmium uint256 stored as a constant to use for masking_
+
+### DiamondStorage
+
+```solidity
+struct DiamondStorage {
+  mapping(uint256 => struct LibGeoWebParcelV2.LandParcel) landParcels;
+}
+```
+
+### diamondStorage
+
+```solidity
+function diamondStorage() internal pure returns (struct LibGeoWebParcelV2.DiamondStorage ds)
+```
+
+### build
+
+```solidity
+function build(struct LibGeoWebParcelV2.LandParcel parcel) internal
+```
+
+Build a new parcel. All coordinates along the path must be available. All coordinates are marked unavailable after creation.
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| parcel | struct LibGeoWebParcelV2.LandParcel | New parcel |
+
+### _updateAvailabilityIndex
+
+```solidity
+function _updateAvailabilityIndex(struct LibGeoWebParcelV2.LandParcel parcel) private
+```
+
+_Update availability index by traversing a path and marking everything as available or unavailable_
+
 ## LibPCOLicenseClaimer
 
 ### STORAGE_POSITION
@@ -1862,22 +2150,6 @@ struct DiamondStorage {
 ```solidity
 function diamondStorage() internal pure returns (struct LibPCOLicenseClaimer.DiamondStorage ds)
 ```
-
-### _buildAndMint
-
-```solidity
-function _buildAndMint(address user, uint64 baseCoordinate, uint256[] path) internal
-```
-
-Build a parcel and mint a license
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| user | address | Address of license owner to be |
-| baseCoordinate | uint64 | Base coordinate of parcel to claim |
-| path | uint256[] | Path of parcel to claim |
 
 ### _requiredBid
 
@@ -1908,6 +2180,7 @@ struct DiamondStorage {
   uint256 penaltyDenominator;
   uint256 bidPeriodLengthInSeconds;
   uint256 reclaimAuctionLength;
+  uint256 minForSalePrice;
 }
 ```
 
