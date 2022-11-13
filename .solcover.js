@@ -7,8 +7,12 @@ module.exports = {
   configureYulOptimizer: true,
   skipFiles: [
     "registry/facets/GeoWebParcelFacet.test.sol",
+    "registry/facets/GeoWebParcelFacetV2.test.sol",
+    "registry/facets/PCOERC721Facet.test.sol",
     "registry/facets/PCOLicenseClaimerFacet.test.sol",
+    "registry/facets/PCOLicenseClaimerFacetV2.test.sol",
     "registry/facets/PCOLicenseParamsFacet.test.sol",
     "pco-license/facets/CFABasePCOFacet.test.sol",
+    "beneficiary/BeneficiarySuperApp.test.sol",
   ],
 };
