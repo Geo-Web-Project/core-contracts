@@ -5,28 +5,27 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_bidder",
+        "name": "to",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "int96",
-        "name": "contributionRate",
-        "type": "int96"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
-        "name": "forSalePrice",
+        "name": "price",
         "type": "uint256"
       }
     ],
-    "name": "BidPlaced",
+    "name": "LicenseReclaimed",
     "type": "event"
   },
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "maxClaimPrice",
+        "type": "uint256"
+      },
+      {
         "internalType": "int96",
         "name": "newContributionRate",
         "type": "int96"
@@ -37,27 +36,22 @@
         "type": "uint256"
       }
     ],
-    "name": "editBid",
+    "name": "reclaim",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "int96",
-        "name": "newContributionRate",
-        "type": "int96"
-      },
+    "inputs": [],
+    "name": "reclaimPrice",
+    "outputs": [
       {
         "internalType": "uint256",
-        "name": "newForSalePrice",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "name": "placeBid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }
 ]

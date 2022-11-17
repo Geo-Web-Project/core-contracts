@@ -5,6 +5,7 @@ import "../libraries/LibPCOLicenseClaimer.sol";
 import "../libraries/LibPCOLicenseParams.sol";
 import "../../pco-license/facets/CFABasePCOFacet.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
+import "../interfaces/IPCOLicenseClaimer.sol";
 import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import {BeaconDiamond} from "../../beacon-diamond/BeaconDiamond.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
@@ -14,7 +15,7 @@ import {ERC721BaseInternal} from "@solidstate/contracts/token/ERC721/base/ERC721
 import {IDiamondReadable} from "@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol";
 import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
 
-abstract contract IPCOLicenseClaimerFacet {
+contract PCOLicenseClaimerFacetV1 is IPCOLicenseClaimerV1, ERC721BaseInternal {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
     using OwnableStorage for OwnableStorage.Layout;
@@ -26,9 +27,6 @@ abstract contract IPCOLicenseClaimerFacet {
         );
         _;
     }
-
-    /// @notice Emitted when a parcel is claimed
-    event ParcelClaimed(uint256 indexed _licenseId, address indexed _payer);
 
     /**
      * @notice Initialize.
@@ -300,23 +298,118 @@ abstract contract IPCOLicenseClaimerFacet {
         address user,
         uint64 baseCoordinate,
         uint256[] memory path
-    ) internal virtual;
+    ) internal {
+        uint256 licenseId = LibGeoWebParcel.nextId();
+        LibGeoWebParcel.build(baseCoordinate, path);
+        _safeMint(user, licenseId);
+    }
 }
 
-contract PCOLicenseClaimerFacet is IPCOLicenseClaimerFacet, ERC721BaseInternal {
+contract PCOLicenseClaimerFacetV2 is
+    PCOLicenseClaimerFacetV1,
+    IPCOLicenseClaimerV2
+{
+    using CFAv1Library for CFAv1Library.InitData;
+    using SafeERC20 for ISuperToken;
+    using OwnableStorage for OwnableStorage.Layout;
+
+    /**
+     * @notice Claim a new parcel and license
+     *      - Must have ERC-20 approval of payment token
+     *      - To-be-created contract must have create flow permissions for bidder. See getNextProxyAddress
+     * @param initialContributionRate Initial contribution rate of parcel
+     * @param initialForSalePrice Initial for sale price of parcel
+     * @param parcel New parcel
+     */
+    function claim(
+        int96 initialContributionRate,
+        uint256 initialForSalePrice,
+        LibGeoWebParcelV2.LandParcel memory parcel
+    ) external {
+        LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
+            .diamondStorage();
+        LibPCOLicenseParams.DiamondStorage storage ls = LibPCOLicenseParams
+            .diamondStorage();
+
+        uint256 _requiredBid = LibPCOLicenseClaimer._requiredBid();
+        require(
+            initialForSalePrice >= _requiredBid,
+            "PCOLicenseClaimerFacetV2: Initial for sale price does not meet requirement"
+        );
+
+        uint256 licenseId = LibGeoWebParcel.nextId();
+
+        BeaconDiamond proxy = new BeaconDiamond{
+            salt: keccak256(
+                abi.encodePacked(msg.sender, ds.userSalts[msg.sender])
+            )
+        }(address(this), IDiamondReadable(ds.beacon));
+
+        // Increment user salt
+        ds.userSalts[msg.sender] += 1;
+
+        // Store beacon proxy
+        ds.beaconProxies[licenseId] = address(proxy);
+
+        emit ParcelClaimedV2(licenseId, msg.sender);
+
+        // Build and mint
+        _buildAndMint(msg.sender, parcel);
+
+        {
+            // Transfer required buffer
+            IConstantFlowAgreementV1 cfa = IConstantFlowAgreementV1(
+                address(
+                    ls.host.getAgreementClass(
+                        keccak256(
+                            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+                        )
+                    )
+                )
+            );
+            uint256 requiredBuffer = cfa.getDepositRequiredForFlowRate(
+                ls.paymentToken,
+                initialContributionRate
+            );
+            ls.paymentToken.safeTransferFrom(
+                msg.sender,
+                address(proxy),
+                requiredBuffer
+            );
+        }
+
+        // Initialize beacon
+        CFABasePCOFacet(address(proxy)).initializeBid(
+            ls.beneficiary,
+            IPCOLicenseParamsStore(address(this)),
+            IERC721(address(this)),
+            licenseId,
+            msg.sender,
+            initialContributionRate,
+            initialForSalePrice
+        );
+
+        // Transfer initial payment
+        if (_requiredBid > 0) {
+            ls.paymentToken.safeTransferFrom(
+                msg.sender,
+                address(ls.beneficiary),
+                _requiredBid
+            );
+        }
+    }
+
     /**
      * @notice Build a parcel and mint a license
      * @param user Address of license owner to be
-     * @param baseCoordinate Base coordinate of parcel to claim
-     * @param path Path of parcel to claim
+     * @param parcel New parcel
      */
     function _buildAndMint(
         address user,
-        uint64 baseCoordinate,
-        uint256[] memory path
-    ) internal override {
+        LibGeoWebParcelV2.LandParcel memory parcel
+    ) internal {
         uint256 licenseId = LibGeoWebParcel.nextId();
-        LibGeoWebParcel.build(baseCoordinate, path);
+        LibGeoWebParcelV2.build(parcel);
         _safeMint(user, licenseId);
     }
 }

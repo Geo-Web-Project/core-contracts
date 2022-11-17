@@ -3,8 +3,8 @@ import { deployments, ethers } from "hardhat";
 import {
   IDiamondReadable,
   PCOLicenseParamsFacet,
-  PCOLicenseClaimerFacet,
-  PCOLicenseClaimerFacetV2,
+  IPCOLicenseClaimerV1,
+  IPCOLicenseClaimerV2,
 } from "../../typechain-types";
 import { perYearToPerSecondRate, setupSf } from "../shared";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
@@ -19,16 +19,19 @@ const setup = deployments.createFixture(async ({ getNamedAccounts }) => {
     from: diamondAdmin,
     owner: diamondAdmin,
     facets: [
-      "PCOLicenseClaimerFacet",
       "PCOLicenseClaimerFacetV2",
-      "GeoWebParcelFacet",
       "GeoWebParcelFacetV2",
       "PCOLicenseParamsFacet",
     ],
   });
 
+  const pcoLicenseClaimerV1 = await ethers.getContractAt(
+    `IPCOLicenseClaimerV1`,
+    diamond.address
+  );
+
   const pcoLicenseClaimerV2 = await ethers.getContractAt(
-    `PCOLicenseClaimerFacetV2`,
+    `IPCOLicenseClaimerV2`,
     diamond.address
   );
 
@@ -48,8 +51,8 @@ const setup = deployments.createFixture(async ({ getNamedAccounts }) => {
   );
 
   return {
-    pcoLicenseClaimer: diamond as PCOLicenseClaimerFacet,
-    pcoLicenseClaimerV2: pcoLicenseClaimerV2 as PCOLicenseClaimerFacetV2,
+    pcoLicenseClaimer: pcoLicenseClaimerV1 as IPCOLicenseClaimerV1,
+    pcoLicenseClaimerV2: pcoLicenseClaimerV2 as IPCOLicenseClaimerV2,
     pcoLicenseParams: diamond as PCOLicenseParamsFacet,
     ...res,
   };

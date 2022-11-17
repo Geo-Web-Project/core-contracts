@@ -199,11 +199,15 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       const newBeaconProxy = await pcoLicenseClaimer.getBeaconProxy(0);
 
@@ -227,11 +231,15 @@ describe("PCOLicenseClaimerFacetV2", async function () {
       const coord1 = BigNumber.from(5).shl(32).or(BigNumber.from(33));
       await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord1,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord1,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       const newBeaconProxy1 = await pcoLicenseClaimer.getBeaconProxy(1);
       expect(newBeaconProxy1).to.equal(
@@ -319,16 +327,20 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       const txn = await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       await txn.wait();
 
       await expect(txn)
-        .to.emit(pcoLicenseClaimer, "ParcelClaimedV2")
+        .to.emit(pcoLicenseClaimerV2, "ParcelClaimedV2")
         .withArgs(0, user);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
@@ -372,17 +384,21 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       const txn = await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
       await txn.wait();
 
       const requiredBid = await pcoLicenseClaimer.requiredBid();
 
       await expect(txn)
-        .to.emit(pcoLicenseClaimer, "ParcelClaimedV2")
+        .to.emit(pcoLicenseClaimerV2, "ParcelClaimedV2")
         .withArgs(0, user);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
@@ -447,16 +463,20 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       const txn = await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       await txn.wait();
 
       await expect(txn)
-        .to.emit(pcoLicenseClaimer, "ParcelClaimedV2")
+        .to.emit(pcoLicenseClaimerV2, "ParcelClaimedV2")
         .withArgs(0, user);
       await expect(txn)
         .to.emit(ethx_erc20, "Transfer")
@@ -497,11 +517,15 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -540,11 +564,15 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -582,19 +610,27 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       await pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       await expect(txn).to.be.revertedWith(
         "LibGeoWebParcel: Coordinate is not available"
@@ -615,11 +651,15 @@ describe("PCOLicenseClaimerFacetV2", async function () {
 
       const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
-        .claim(contributionRate, forSalePrice, {
-          swCoordinate: coord,
-          lngDim: 1,
-          latDim: 1,
-        });
+        ["claim(int96,uint256,(uint64,uint256,uint256))"](
+          contributionRate,
+          forSalePrice,
+          {
+            swCoordinate: coord,
+            lngDim: 1,
+            latDim: 1,
+          }
+        );
 
       await expect(txn).to.be.revertedWith(
         "PCOLicenseClaimerFacetV2: Initial for sale price does not meet requirement"

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "./BeneficiarySuperApp.sol";
-import "../registry/interfaces/IPCOLicenseParamsStore.sol";
+import "../BeneficiarySuperApp.sol";
+import "../../registry/interfaces/IPCOLicenseParamsStore.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -62,6 +62,71 @@ contract MockParamsStore is IPCOLicenseParamsStore {
     /// @notice Minimum for sale price
     function getMinForSalePrice() external pure returns (uint256) {
         return 7;
+    }
+
+    function initializeParams(
+        ICFABeneficiary,
+        ISuperToken,
+        ISuperfluid,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256
+    ) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Superfluid Host
+    function setHost(ISuperfluid) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Payment Token
+    function setPaymentToken(ISuperToken) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Beneficiary
+    function setBeneficiary(ICFABeneficiary) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Per Second Fee Numerator
+    function setPerSecondFeeNumerator(uint256) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Per Second Fee Denominator
+    function setPerSecondFeeDenominator(uint256) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Penalty Numerator
+    function setPenaltyNumerator(uint256) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Penalty Denominator
+    function setPenaltyDenominator(uint256) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Reclaim Auction Length
+    function setReclaimAuctionLength(uint256) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set Bid Period Length in seconds
+    function setBidPeriodLengthInSeconds(uint256) external pure override {
+        revert("Not Implemented");
+    }
+
+    /// @notice Set minimum for sale price
+    function setMinForSalePrice(uint256) external pure override {
+        revert("Not Implemented");
     }
 }
 

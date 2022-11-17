@@ -27,7 +27,7 @@ interface IGeoWebParcel {
         );
 }
 
-/// @title V1 of IGeoWebParcel
+/// @title IGeoWebParcelV1 external functions
 interface IGeoWebParcelV1 {
     /**
      * @notice Get availability index for coordinates
@@ -49,7 +49,7 @@ interface IGeoWebParcelV1 {
         returns (uint64 baseCoordinate, uint256[] memory path);
 }
 
-/// @title V2 of IGeoWebParcel
+/// @title IGeoWebParcelV2 defines new external functions
 interface IGeoWebParcelV2 is IGeoWebParcelV1 {
     /**
      * @notice Get a V2 land parcel

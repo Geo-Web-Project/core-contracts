@@ -92,5 +92,5 @@ module.exports = {
     deployer: {
       default: 0,
     },
-  }
+  },
 };

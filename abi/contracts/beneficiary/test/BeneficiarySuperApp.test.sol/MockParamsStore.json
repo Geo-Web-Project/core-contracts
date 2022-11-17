@@ -1,5 +1,16 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "contract ERC20Upgradeable",
+        "name": "mockERC20_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "inputs": [],
     "name": "getBeneficiary",
     "outputs": [
@@ -9,7 +20,7 @@
         "type": "address"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -22,7 +33,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -35,7 +46,7 @@
         "type": "address"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -48,7 +59,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -74,7 +85,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -87,7 +98,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -100,7 +111,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -113,7 +124,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -126,195 +137,195 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "contract ICFABeneficiary",
-        "name": "beneficiary",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "contract ISuperToken",
-        "name": "paymentToken",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "contract ISuperfluid",
-        "name": "host",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "perSecondFeeNumerator",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "perSecondFeeDenominator",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "penaltyNumerator",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "penaltyDenominator",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "bidPeriodLengthInSeconds",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "reclaimAuctionLength",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "minForSalePrice",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "initializeParams",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "contract ICFABeneficiary",
-        "name": "beneficiary",
+        "name": "",
         "type": "address"
       }
     ],
     "name": "setBeneficiary",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "bidPeriodLengthInSeconds",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setBidPeriodLengthInSeconds",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "contract ISuperfluid",
-        "name": "host",
+        "name": "",
         "type": "address"
       }
     ],
     "name": "setHost",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "minForSalePrice",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setMinForSalePrice",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "contract ISuperToken",
-        "name": "paymentToken",
+        "name": "",
         "type": "address"
       }
     ],
     "name": "setPaymentToken",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "penaltyDenominator",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setPenaltyDenominator",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "penaltyNumerator",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setPenaltyNumerator",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "perSecondFeeDenominator",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setPerSecondFeeDenominator",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "perSecondFeeNumerator",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setPerSecondFeeNumerator",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "reclaimAuctionLength",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setReclaimAuctionLength",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   }
 ]

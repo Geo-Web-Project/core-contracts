@@ -49,12 +49,17 @@ describe("Migration v4.1.0", async () => {
     await upgrade(hre, diamond);
 
     const pcoLicenseClaimerV2 = await ethers.getContractAt(
-      `PCOLicenseClaimerFacetV2`,
+      `IPCOLicenseClaimer`,
+      diamond.address
+    );
+
+    const geoWebParcelV1 = await ethers.getContractAt(
+      `IGeoWebParcelV1`,
       diamond.address
     );
 
     const geoWebParcelV2 = await ethers.getContractAt(
-      `GeoWebParcelFacetV2`,
+      `IGeoWebParcel`,
       diamond.address
     );
 
@@ -62,6 +67,7 @@ describe("Migration v4.1.0", async () => {
       ...res,
       diamond,
       pcoLicenseClaimerV2,
+      geoWebParcelV1,
       geoWebParcelV2,
     };
   });
@@ -100,9 +106,9 @@ describe("Migration v4.1.0", async () => {
   });
 
   it("should read old parcel after migration", async () => {
-    const { diamond } = await setupTest();
+    const { geoWebParcelV1 } = await setupTest();
 
-    const parcel = await diamond.getLandParcel(0);
+    const parcel = await geoWebParcelV1.getLandParcel(0);
 
     const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
 

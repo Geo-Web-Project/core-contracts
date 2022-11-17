@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "../libraries/LibCFABasePCO.sol";
-import "../interfaces/IBasePCO.sol";
+import "../interfaces/ICFABasePCO.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
@@ -50,14 +50,8 @@ contract CFABasePCOFacetModifiers {
 }
 
 /// @notice Handles basic PCO functionality using Constant Flow Agreement (CFA)
-contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
+contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
-
-    /// @notice Emitted when an owner bid is updated
-    event PayerContributionRateUpdated(
-        address indexed _payer,
-        int96 contributionRate
-    );
 
     /**
      * @notice Initialize bid.

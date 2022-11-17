@@ -3,18 +3,16 @@ pragma solidity ^0.8.16;
 
 import "../libraries/LibCFABasePCO.sol";
 import "../libraries/LibCFAPenaltyBid.sol";
+import "../interfaces/ICFAReclaimer.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 /// @notice Handles reclaiming of licenses that are no longer active
-contract CFAReclaimerFacet is CFABasePCOFacetModifiers {
+contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
-
-    /// @notice Emitted when a license is reclaimed
-    event LicenseReclaimed(address indexed to, uint256 price);
 
     /**
      * @notice Current price to reclaim

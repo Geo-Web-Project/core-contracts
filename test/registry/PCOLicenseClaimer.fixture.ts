@@ -1,9 +1,8 @@
 import { smock } from "@defi-wonderland/smock";
 import { deployments, ethers } from "hardhat";
 import {
-  PCOLicenseClaimerFacet,
   IDiamondReadable,
-  PCOLicenseParamsFacet,
+  IPCOLicenseParamsStore,
 } from "../../typechain-types";
 import { perYearToPerSecondRate, setupSf } from "../shared";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
@@ -19,20 +18,20 @@ const setup = deployments.createFixture(
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
-        "PCOLicenseClaimerFacet",
-        "GeoWebParcelFacetV2",
+        "PCOLicenseClaimerFacetV1",
+        "GeoWebParcelFacetV1",
         "PCOLicenseParamsFacet",
       ],
     });
 
     const pcoLicenseClaimer = await ethers.getContractAt(
-      `PCOLicenseClaimerFacet`,
+      `IPCOLicenseClaimerV1`,
       diamond.address
     );
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
-    await (diamond as PCOLicenseParamsFacet).initializeParams(
+    await (diamond as IPCOLicenseParamsStore).initializeParams(
       diamondAdmin,
       ethx_erc20.address,
       sf.host.address,
@@ -46,8 +45,8 @@ const setup = deployments.createFixture(
     );
 
     return {
-      pcoLicenseClaimer: pcoLicenseClaimer as PCOLicenseClaimerFacet,
-      pcoLicenseParams: diamond as PCOLicenseParamsFacet,
+      pcoLicenseClaimer,
+      pcoLicenseParams: diamond as IPCOLicenseParamsStore,
       ...res,
     };
   }
