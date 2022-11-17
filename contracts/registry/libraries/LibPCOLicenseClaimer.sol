@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "./LibGeoWebParcel.sol";
-
 library LibPCOLicenseClaimer {
     bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibPCOLicenseClaimer");

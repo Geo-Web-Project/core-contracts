@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import "../libraries/LibPCOLicenseClaimer.sol";
 import "../libraries/LibPCOLicenseParams.sol";
-import "../../pco-license/facets/CFABasePCOFacet.sol";
+import "../../pco-license/interfaces/ICFABasePCO.sol";
 import "../interfaces/IPCOLicenseParamsStore.sol";
 import "../interfaces/IPCOLicenseClaimer.sol";
 import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
@@ -16,7 +16,6 @@ import {IDiamondReadable} from "@solidstate/contracts/proxy/diamond/readable/IDi
 import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
 
 contract PCOLicenseClaimerFacetV1 is IPCOLicenseClaimerV1, ERC721BaseInternal {
-    using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
     using OwnableStorage for OwnableStorage.Layout;
 
@@ -268,7 +267,7 @@ contract PCOLicenseClaimerFacetV1 is IPCOLicenseClaimerV1, ERC721BaseInternal {
         }
 
         // Initialize beacon
-        CFABasePCOFacet(address(proxy)).initializeBid(
+        ICFABasePCO(address(proxy)).initializeBid(
             ls.beneficiary,
             IPCOLicenseParamsStore(address(this)),
             IERC721(address(this)),
@@ -309,9 +308,7 @@ contract PCOLicenseClaimerFacetV2 is
     PCOLicenseClaimerFacetV1,
     IPCOLicenseClaimerV2
 {
-    using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
-    using OwnableStorage for OwnableStorage.Layout;
 
     /**
      * @notice Claim a new parcel and license
@@ -379,7 +376,7 @@ contract PCOLicenseClaimerFacetV2 is
         }
 
         // Initialize beacon
-        CFABasePCOFacet(address(proxy)).initializeBid(
+        ICFABasePCO(address(proxy)).initializeBid(
             ls.beneficiary,
             IPCOLicenseParamsStore(address(this)),
             IERC721(address(this)),

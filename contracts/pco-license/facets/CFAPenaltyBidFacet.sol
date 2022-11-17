@@ -128,7 +128,6 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
      */
     function editBid(int96 newContributionRate, uint256 newForSalePrice)
         external
-        override
         onlyPayer
         onlyIfNotPendingBid
     {
@@ -145,7 +144,6 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
      */
     function placeBid(int96 newContributionRate, uint256 newForSalePrice)
         external
-        override
         onlyIfPayerBidActive
         onlyNotPayer
     {
