@@ -128,7 +128,7 @@ task("upgrade:4.1.0")
       });
 
       const RegistryDiamond = await hre.ethers.getContractFactory(
-        "RegistryDiamondABI"
+        "IRegistryDiamond"
       );
       const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
 

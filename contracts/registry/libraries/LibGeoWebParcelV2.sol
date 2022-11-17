@@ -2,10 +2,10 @@
 pragma solidity ^0.8.16;
 
 import "./LibGeoWebParcel.sol";
-import "./LibGeoWebCoordinateV2.sol";
+import "./LibGeoWebCoordinate.sol";
 
 library LibGeoWebParcelV2 {
-    using LibGeoWebCoordinateV2 for uint64;
+    using LibGeoWebCoordinate for uint64;
 
     bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibGeoWebParcelV2");

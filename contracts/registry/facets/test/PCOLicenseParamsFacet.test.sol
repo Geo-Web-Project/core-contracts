@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "../libraries/LibPCOLicenseParams.sol";
-import "./PCOLicenseParamsFacet.sol";
+import "../../libraries/LibPCOLicenseParams.sol";
+import "./../PCOLicenseParamsFacet.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
-import "../../beneficiary/interfaces/ICFABeneficiary.sol";
+import "../../../beneficiary/interfaces/ICFABeneficiary.sol";
 
 contract FuzzyPCOLicenseParamsFacet is PCOLicenseParamsFacet {
     constructor() {

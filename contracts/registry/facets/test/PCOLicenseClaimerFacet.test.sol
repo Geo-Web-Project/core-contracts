@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "../libraries/LibPCOLicenseClaimer.sol";
-import "./PCOLicenseClaimerFacet.sol";
+import "../../libraries/LibPCOLicenseClaimer.sol";
+import "../PCOLicenseClaimerFacet.sol";
 
 contract FuzzyPCOLicenseClaimerFacet is PCOLicenseClaimerFacet {
     constructor() {

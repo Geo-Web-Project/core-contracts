@@ -52,7 +52,7 @@ export async function deployDiamond(
     await (diamondInit as Ownable).connect(from).transferOwnership(owner);
   }
 
-  return await ethers.getContractAt(`${name}ABI`, diamondInit.address);
+  return await ethers.getContractAt(`I${name}`, diamondInit.address);
 }
 
 async function deployBeaconDiamond() {

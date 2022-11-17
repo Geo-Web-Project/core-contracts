@@ -20,7 +20,7 @@ const setup = deployments.createFixture(
       owner: diamondAdmin,
       facets: [
         "PCOLicenseClaimerFacet",
-        "GeoWebParcelFacet",
+        "GeoWebParcelFacetV2",
         "PCOLicenseParamsFacet",
       ],
     });

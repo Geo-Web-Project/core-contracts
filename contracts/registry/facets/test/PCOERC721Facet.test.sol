@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "./PCOERC721Facet.sol";
-import "../libraries/LibPCOLicenseClaimer.sol";
+import "./../PCOERC721Facet.sol";
+import "../../libraries/LibPCOLicenseClaimer.sol";
 
 contract FuzzyPCOERC721Facet is PCOERC721Facet {
     address private echidnaCaller = msg.sender;

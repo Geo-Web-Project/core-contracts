@@ -43,7 +43,7 @@ describe("Migration v4.1.0", async () => {
 
     // Migrate
     const diamond = await ethers.getContractAt(
-      `RegistryDiamondABI`,
+      `IRegistryDiamond`,
       pcoLicenseClaimer.address
     );
     await upgrade(hre, diamond);
