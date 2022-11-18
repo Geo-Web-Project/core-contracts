@@ -534,6 +534,13 @@ describe("PCOLicenseClaimerFacet", async function () {
         .connect(await ethers.getSigner(user))
         .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);
 
+      // Approve payment token for buffer
+      const approveOp1 = paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp1.exec(await ethers.getSigner(user));
+
       const txn = pcoLicenseClaimer
         .connect(await ethers.getSigner(user))
         .claim(contributionRate, forSalePrice, coord, [BigNumber.from(0)]);

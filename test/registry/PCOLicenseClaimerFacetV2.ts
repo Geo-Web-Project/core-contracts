@@ -620,6 +620,12 @@ describe("PCOLicenseClaimerFacetV2", async function () {
           }
         );
 
+      const approveOp1 = paymentToken.approve({
+        receiver: pcoLicenseClaimer.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp1.exec(await ethers.getSigner(user));
+
       const txn = pcoLicenseClaimerV2
         .connect(await ethers.getSigner(user))
         ["claim(int96,uint256,(uint64,uint256,uint256))"](
