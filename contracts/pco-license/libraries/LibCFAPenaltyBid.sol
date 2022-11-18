@@ -97,20 +97,6 @@ library LibCFAPenaltyBid {
         // Update pending bid
         _clearPendingBid();
 
-        // Delete payer flow
-        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
-            paymentToken,
-            oldCurrentBid.bidder,
-            address(this)
-        );
-        if (flowRate > 0) {
-            cs.cfaV1.deleteFlow(
-                oldCurrentBid.bidder,
-                address(this),
-                paymentToken
-            );
-        }
-
         (int256 availableBalance, uint256 deposit, , ) = paymentToken
             .realtimeBalanceOfNow(address(this));
         uint256 remainingBalance = 0;
@@ -156,7 +142,7 @@ library LibCFAPenaltyBid {
         }
 
         // Update beneficiary flow
-        (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
             address(this),
             beneficiary
@@ -171,41 +157,60 @@ library LibCFAPenaltyBid {
             LibCFABasePCO._createBeneficiaryFlow(_pendingBid.contributionRate);
         }
 
-        // Transfer license
+        {
+            // Transfer payments
+            uint256 withdrawToBidder = 0;
+            uint256 withdrawToPayer = 0;
+
+            if (remainingBalance > newBuffer) {
+                // Keep full newBuffer
+                remainingBalance -= newBuffer;
+                uint256 bidderPayment = _pendingBid.forSalePrice -
+                    oldCurrentBid.forSalePrice;
+                if (remainingBalance > bidderPayment) {
+                    // Transfer bidder full payment
+                    withdrawToBidder = bidderPayment;
+                    remainingBalance -= withdrawToBidder;
+
+                    // Transfer remaining to payer
+                    withdrawToPayer = remainingBalance;
+                } else {
+                    // Transfer remaining to bidder
+                    withdrawToBidder = remainingBalance;
+                }
+            }
+
+            if (withdrawToBidder > 0) {
+                paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+            }
+            if (withdrawToPayer > 0) {
+                paymentToken.safeTransfer(
+                    oldCurrentBid.bidder,
+                    withdrawToPayer
+                );
+            }
+        }
+
+        // Delete payer flow (reentrancy on potential SuperApp callback)
+        (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            paymentToken,
+            oldCurrentBid.bidder,
+            address(this)
+        );
+        if (flowRate > 0) {
+            cs.cfaV1.deleteFlow(
+                oldCurrentBid.bidder,
+                address(this),
+                paymentToken
+            );
+        }
+
+        // Transfer license (reentrancy on ERC721 transfer)
         ds.license.safeTransferFrom(
             oldCurrentBid.bidder,
             _pendingBid.bidder,
             ds.licenseId
         );
-
-        // Transfer payments
-        uint256 withdrawToBidder = 0;
-        uint256 withdrawToPayer = 0;
-
-        if (remainingBalance > newBuffer) {
-            // Keep full newBuffer
-            remainingBalance -= newBuffer;
-            uint256 bidderPayment = _pendingBid.forSalePrice -
-                oldCurrentBid.forSalePrice;
-            if (remainingBalance > bidderPayment) {
-                // Transfer bidder full payment
-                withdrawToBidder = bidderPayment;
-                remainingBalance -= withdrawToBidder;
-
-                // Transfer remaining to payer
-                withdrawToPayer = remainingBalance;
-            } else {
-                // Transfer remaining to bidder
-                withdrawToBidder = remainingBalance;
-            }
-        }
-
-        if (withdrawToBidder > 0) {
-            paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
-        }
-        if (withdrawToPayer > 0) {
-            paymentToken.safeTransfer(oldCurrentBid.bidder, withdrawToPayer);
-        }
     }
 
     /// @notice Reject Bid

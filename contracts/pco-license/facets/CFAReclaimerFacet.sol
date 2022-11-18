@@ -177,7 +177,7 @@ contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
         // Update beneficiary flow
         LibCFABasePCO._createBeneficiaryFlow(newContributionRate);
 
-        // Transfer license
+        // Transfer license (reentrancy on ERC721 transfer)
         ds.license.safeTransferFrom(bidder, msg.sender, ds.licenseId);
     }
 }

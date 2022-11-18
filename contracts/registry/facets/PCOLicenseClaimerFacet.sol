@@ -241,9 +241,6 @@ contract PCOLicenseClaimerFacetV1 is IPCOLicenseClaimerV1, ERC721BaseInternal {
 
         emit ParcelClaimed(licenseId, msg.sender);
 
-        // Build and mint
-        _buildAndMint(msg.sender, baseCoordinate, path);
-
         {
             // Transfer required buffer
             IConstantFlowAgreementV1 cfa = IConstantFlowAgreementV1(
@@ -285,6 +282,9 @@ contract PCOLicenseClaimerFacetV1 is IPCOLicenseClaimerV1, ERC721BaseInternal {
                 _requiredBid
             );
         }
+
+        // Build and mint (reentrancy on ERC721 transfer)
+        _buildAndMint(msg.sender, baseCoordinate, path);
     }
 
     /**
@@ -350,9 +350,6 @@ contract PCOLicenseClaimerFacetV2 is
 
         emit ParcelClaimedV2(licenseId, msg.sender);
 
-        // Build and mint
-        _buildAndMint(msg.sender, parcel);
-
         {
             // Transfer required buffer
             IConstantFlowAgreementV1 cfa = IConstantFlowAgreementV1(
@@ -394,6 +391,9 @@ contract PCOLicenseClaimerFacetV2 is
                 _requiredBid
             );
         }
+
+        // Build and mint (reentrancy on ERC721 transfer)
+        _buildAndMint(msg.sender, parcel);
     }
 
     /**
