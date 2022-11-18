@@ -508,6 +508,30 @@
         "type": "uint256"
       }
     ],
+    "name": "getLandParcel",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "baseCoordinate",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "path",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
     "name": "getLandParcelV2",
     "outputs": [
       {

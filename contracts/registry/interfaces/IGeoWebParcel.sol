@@ -14,6 +14,15 @@ interface IGeoWebParcel {
         returns (uint256);
 
     /**
+     * @notice Get a land parcel
+     * @param id ID of land parcel
+     */
+    function getLandParcel(uint256 id)
+        external
+        view
+        returns (uint64 baseCoordinate, uint256[] memory path);
+
+    /**
      * @notice Get a V2 land parcel
      * @param id ID of land parcel
      */

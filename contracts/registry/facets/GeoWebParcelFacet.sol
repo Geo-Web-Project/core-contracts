@@ -24,7 +24,6 @@ contract GeoWebParcelFacetV1 is IGeoWebParcelV1 {
     }
 
     /**
-     * @notice DEPRECATED in V2
      * @notice Get a land parcel
      * @param id ID of land parcel
      */
@@ -44,18 +43,6 @@ contract GeoWebParcelFacetV1 is IGeoWebParcelV1 {
 
 /// @title Public access to parcel data
 contract GeoWebParcelFacetV2 is GeoWebParcelFacetV1, IGeoWebParcelV2 {
-    /**
-     * @notice DEPRECATED
-     */
-    function getLandParcel(uint256)
-        external
-        pure
-        override(IGeoWebParcelV1, GeoWebParcelFacetV1)
-        returns (uint64, uint256[] memory)
-    {
-        revert("GeoWebParcelV2: Deprecated as of V2. See getLandParcelV2()");
-    }
-
     /**
      * @notice Get a V2 land parcel
      * @param id ID of land parcel
