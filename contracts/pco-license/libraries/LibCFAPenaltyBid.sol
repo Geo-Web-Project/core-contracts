@@ -97,20 +97,6 @@ library LibCFAPenaltyBid {
         // Update pending bid
         _clearPendingBid();
 
-        // Delete payer flow
-        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
-            paymentToken,
-            oldCurrentBid.bidder,
-            address(this)
-        );
-        if (flowRate > 0) {
-            cs.cfaV1.deleteFlow(
-                oldCurrentBid.bidder,
-                address(this),
-                paymentToken
-            );
-        }
-
         (int256 availableBalance, uint256 deposit, , ) = paymentToken
             .realtimeBalanceOfNow(address(this));
         uint256 remainingBalance = 0;
@@ -156,7 +142,7 @@ library LibCFAPenaltyBid {
         }
 
         // Update beneficiary flow
-        (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
+        (, int96 flowRate, , ) = cs.cfaV1.cfa.getFlow(
             paymentToken,
             address(this),
             beneficiary
@@ -203,6 +189,20 @@ library LibCFAPenaltyBid {
                     withdrawToPayer
                 );
             }
+        }
+
+        // Delete payer flow (reentrancy on potential SuperApp callback)
+        (, flowRate, , ) = cs.cfaV1.cfa.getFlow(
+            paymentToken,
+            oldCurrentBid.bidder,
+            address(this)
+        );
+        if (flowRate > 0) {
+            cs.cfaV1.deleteFlow(
+                oldCurrentBid.bidder,
+                address(this),
+                paymentToken
+            );
         }
 
         // Transfer license (reentrancy on ERC721 transfer)
