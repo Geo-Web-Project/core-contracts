@@ -79,8 +79,8 @@ async function deployRegistryDiamond() {
   console.log("Deploying RegistryDiamond");
   const registryDiamond = await deployDiamond("RegistryDiamond", {
     facets: [
-      "PCOLicenseClaimerFacet",
-      "GeoWebParcelFacet",
+      "PCOLicenseClaimerFacetV2",
+      "GeoWebParcelFacetV2",
       "PCOLicenseParamsFacet",
       "PCOERC721Facet",
     ],

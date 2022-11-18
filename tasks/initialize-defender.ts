@@ -221,15 +221,15 @@ async function initializeRegistryDiamond(
 
 task("deploy:initialize")
   .addParam("registryDiamondAddress", "RegistryDiamond address")
-  .addParam("beaconDiamondAddress", "BeaconDiamond address")
+  .addParam("pcoLicenseDiamondAddress", "PCOLicenseDiamond address")
   .setAction(
     async (
       {
         registryDiamondAddress,
-        beaconDiamondAddress,
+        pcoLicenseDiamondAddress,
       }: {
         registryDiamondAddress: string;
-        beaconDiamondAddress: string;
+        pcoLicenseDiamondAddress: string;
       },
       hre
     ) => {
@@ -252,7 +252,7 @@ task("deploy:initialize")
         sf,
         ethx,
         registryDiamondAddress,
-        beaconDiamondAddress
+        pcoLicenseDiamondAddress
       );
     }
   );
@@ -307,15 +307,15 @@ task("deploy:beneficiarySuperApp")
 
 task("deploy:transferOwnership")
   .addParam("registryDiamondAddress", "RegistryDiamond address")
-  .addParam("beaconDiamondAddress", "BeaconDiamond address")
+  .addParam("pcoLicenseDiamondAddress", "PCOLicenseDiamond address")
   .setAction(
     async (
       {
         registryDiamondAddress,
-        beaconDiamondAddress,
+        pcoLicenseDiamondAddress,
       }: {
         registryDiamondAddress: string;
-        beaconDiamondAddress: string;
+        pcoLicenseDiamondAddress: string;
       },
       hre
     ) => {
@@ -334,7 +334,7 @@ task("deploy:transferOwnership")
       );
       const beaconDiamond = await hre.ethers.getContractAt(
         "SafeOwnable",
-        beaconDiamondAddress,
+        pcoLicenseDiamondAddress,
         await hre.ethers.getSigner(deployer)
       );
 
