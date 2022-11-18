@@ -2,34 +2,15 @@ import { assert, use } from "chai";
 import { deployments } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { BigNumber } from "ethers";
-import { deployDiamond } from "../../scripts/deploy";
 
 use(solidity);
 
 describe("GeoWebParcelV2", async () => {
   const setupTest = deployments.createFixture(
-    async ({ deployments, getNamedAccounts, ethers }) => {
+    async ({ deployments, getNamedAccounts, ethers }, options) => {
       await deployments.fixture();
-
-      const { diamondAdmin } = await getNamedAccounts();
-      const diamond = await deployDiamond("RegistryDiamond", {
-        from: diamondAdmin,
-        owner: diamondAdmin,
-        facets: ["GeoWebParcelFacet", "TestableGeoWebParcelFacetV2"],
-      });
-
-      const geoWebParcelV1 = await ethers.getContractAt(
-        `GeoWebParcelFacet`,
-        diamond.address
-      );
-
-      const geoWebParcel = await ethers.getContractAt(
-        `TestableGeoWebParcelFacetV2`,
-        diamond.address
-      );
-
       const GeoWebCoordinate = await ethers.getContractFactory(
-        "LibGeoWebCoordinateV2"
+        "LibGeoWebCoordinate"
       );
       const geoWebCoordinate = await GeoWebCoordinate.deploy();
       await geoWebCoordinate.deployed();
@@ -37,8 +18,13 @@ describe("GeoWebParcelV2", async () => {
       const max_x = await geoWebCoordinate.MAX_X();
       const max_y = await geoWebCoordinate.MAX_Y();
 
+      const TestableGeoWebParcelFacet = await ethers.getContractFactory(
+        "TestableGeoWebParcelFacetV2"
+      );
+      const geoWebParcel = await TestableGeoWebParcelFacet.deploy();
+      await geoWebParcel.deployed();
+
       return {
-        geoWebParcelV1,
         geoWebParcel,
         max_x,
         max_y,
@@ -47,7 +33,7 @@ describe("GeoWebParcelV2", async () => {
   );
 
   it("should build a parcel of a single coordinate", async () => {
-    const { geoWebParcel, geoWebParcelV1 } = await setupTest();
+    const { geoWebParcel } = await setupTest();
 
     // Global(4, 33) -> Index(0, 2), Local(4, 1)
     const coord = BigNumber.from(4).shl(32).or(BigNumber.from(33));
@@ -56,7 +42,7 @@ describe("GeoWebParcelV2", async () => {
 
     const buildResult = await buildTx.wait();
 
-    const result = await geoWebParcelV1.availabilityIndex(0, 2);
+    const result = await geoWebParcel.availabilityIndex(0, 2);
 
     assert.equal(
       result.toString(),
@@ -74,7 +60,7 @@ describe("GeoWebParcelV2", async () => {
   });
 
   it("should build parcel within one word", async () => {
-    const { geoWebParcel, geoWebParcelV1 } = await setupTest();
+    const { geoWebParcel } = await setupTest();
 
     // Global(4, 17) -> Index(0, 1), Local(4, 1)
     const coord = BigNumber.from(4).shl(32).or(BigNumber.from(17));
@@ -83,7 +69,7 @@ describe("GeoWebParcelV2", async () => {
 
     const buildResult = await buildTx.wait();
 
-    const result = await geoWebParcelV1.availabilityIndex(0, 1);
+    const result = await geoWebParcel.availabilityIndex(0, 1);
 
     assert.equal(
       result.toString(),
@@ -108,7 +94,7 @@ describe("GeoWebParcelV2", async () => {
   });
 
   it("should build parcel that spans multiple words", async () => {
-    const { geoWebParcel, geoWebParcelV1 } = await setupTest();
+    const { geoWebParcel } = await setupTest();
 
     // Global(15, 1) -> Index(0, 0), Local(15, 1)
     const coord = BigNumber.from(15).shl(32).or(BigNumber.from(1));
@@ -118,8 +104,8 @@ describe("GeoWebParcelV2", async () => {
 
     const buildResult = await buildTx.wait();
 
-    const result0 = await geoWebParcelV1.availabilityIndex(0, 0);
-    const result1 = await geoWebParcelV1.availabilityIndex(1, 0);
+    const result0 = await geoWebParcel.availabilityIndex(0, 0);
+    const result1 = await geoWebParcel.availabilityIndex(1, 0);
 
     assert.equal(
       result0.toString(),
@@ -149,7 +135,7 @@ describe("GeoWebParcelV2", async () => {
   });
 
   it("should build parcel that crosses the meridian", async () => {
-    const { geoWebParcel, max_x, geoWebParcelV1 } = await setupTest();
+    const { geoWebParcel, max_x } = await setupTest();
 
     // Global(MAX, 160) -> Index(MAX/16, 10), Local(15, 0)
     const coord = BigNumber.from(max_x).shl(32).or(BigNumber.from(160));
@@ -158,8 +144,8 @@ describe("GeoWebParcelV2", async () => {
     const buildTx = await geoWebParcel.build([coord, 2, 1]);
     const buildResult = await buildTx.wait();
 
-    const result0 = await geoWebParcelV1.availabilityIndex(0, 10);
-    const result1 = await geoWebParcelV1.availabilityIndex(
+    const result0 = await geoWebParcel.availabilityIndex(0, 10);
+    const result1 = await geoWebParcel.availabilityIndex(
       max_x.add(1).div(16).sub(1),
       10
     );

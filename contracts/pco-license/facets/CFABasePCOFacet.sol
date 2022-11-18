@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "../libraries/LibCFABasePCO.sol";
-import "../interfaces/IBasePCO.sol";
+import "../interfaces/ICFABasePCO.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
@@ -50,14 +50,8 @@ contract CFABasePCOFacetModifiers {
 }
 
 /// @notice Handles basic PCO functionality using Constant Flow Agreement (CFA)
-contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
+contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
-
-    /// @notice Emitted when an owner bid is updated
-    event PayerContributionRateUpdated(
-        address indexed _payer,
-        int96 contributionRate
-    );
 
     /**
      * @notice Initialize bid.
@@ -154,7 +148,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice Current payer of license
      */
-    function payer() external view override returns (address) {
+    function payer() external view returns (address) {
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
         return _currentBid.bidder;
     }
@@ -169,7 +163,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice Current price needed to purchase license
      */
-    function forSalePrice() external view override returns (uint256) {
+    function forSalePrice() external view returns (uint256) {
         if (LibCFABasePCO._isPayerBidActive()) {
             LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
             return _currentBid.forSalePrice;
@@ -181,7 +175,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice License Id
      */
-    function licenseId() external view override returns (uint256) {
+    function licenseId() external view returns (uint256) {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         return ds.licenseId;
@@ -190,7 +184,7 @@ contract CFABasePCOFacet is IBasePCO, CFABasePCOFacetModifiers {
     /**
      * @notice License
      */
-    function license() external view override returns (IERC721) {
+    function license() external view returns (IERC721) {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
             .diamondStorage();
         return ds.license;

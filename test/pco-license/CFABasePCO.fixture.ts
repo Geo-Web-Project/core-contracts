@@ -4,8 +4,7 @@ import { smock } from "@defi-wonderland/smock";
 import { deployments } from "hardhat";
 import {
   IERC721,
-  PCOLicenseClaimerFacet,
-  PCOLicenseClaimerFacetV2,
+  IPCOLicenseClaimerV1,
   PCOLicenseParamsFacet,
   PCOERC721Facet,
 } from "../../typechain-types";
@@ -33,6 +32,11 @@ const setup = deployments.createFixture(
         "CFAReclaimerFacet",
       ],
     });
+
+    const testableBasePCOFacet = await ethers.getContractAt(
+      `TestableCFABasePCOFacet`,
+      basePCOFacet.address
+    );
 
     const { numerator, denominator } = perYearToPerSecondRate(0.1);
 
@@ -110,6 +114,7 @@ const setup = deployments.createFixture(
 
     return {
       basePCOFacet,
+      testableBasePCOFacet,
       mockParamsStore,
       mockCFABeneficiary,
       mockLicense,
@@ -252,7 +257,6 @@ const initializedWithRealLicense = deployments.createFixture(
       from: diamondAdmin,
       owner: diamondAdmin,
       facets: [
-        "PCOLicenseClaimerFacet",
         "PCOLicenseClaimerFacetV2",
         "GeoWebParcelFacetV2",
         "PCOLicenseParamsFacet",
@@ -268,7 +272,7 @@ const initializedWithRealLicense = deployments.createFixture(
       ""
     );
 
-    await (diamond as PCOLicenseClaimerFacet).initializeClaimer(
+    await (diamond as IPCOLicenseClaimerV1).initializeClaimer(
       0,
       0,
       0,
@@ -309,7 +313,7 @@ const initializedWithRealLicense = deployments.createFixture(
 
     // Approve flow creation
     const nextAddress = await (
-      diamond as PCOLicenseClaimerFacet
+      diamond as IPCOLicenseClaimerV1
     ).getNextProxyAddress(user);
     const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
       superToken: paymentToken.address,
@@ -320,10 +324,10 @@ const initializedWithRealLicense = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const pcoLicenseClaimer = await ethers.getContractAt(
-      `PCOLicenseClaimerFacetV2`,
+      `IPCOLicenseClaimer`,
       diamond.address
     );
-    const txn = await (pcoLicenseClaimer as PCOLicenseClaimerFacetV2)
+    const txn = await pcoLicenseClaimer
       .connect(await ethers.getSigner(user))
       .claim(contributionRate, forSalePrice, {
         swCoordinate: coord,

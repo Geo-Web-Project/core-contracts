@@ -2,6 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "../libraries/LibPCOLicenseClaimer.sol";
+import "../interfaces/IPCOERC721.sol";
 import {ERC721Base, ERC721BaseInternal} from "@solidstate/contracts/token/ERC721/base/ERC721Base.sol";
 import {ERC721Metadata} from "@solidstate/contracts/token/ERC721/metadata/ERC721Metadata.sol";
 import {ERC721MetadataStorage} from "@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol";
@@ -11,7 +12,7 @@ import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import {ERC165Storage} from "@solidstate/contracts/introspection/ERC165Storage.sol";
 import {OwnableStorage} from "@solidstate/contracts/access/ownable/OwnableStorage.sol";
 
-contract PCOERC721Facet is ERC721Base, ERC721Metadata, ERC165 {
+contract PCOERC721Facet is IPCOERC721, ERC721Base, ERC721Metadata, ERC165 {
     using ERC165Storage for ERC165Storage.Layout;
     using OwnableStorage for OwnableStorage.Layout;
 

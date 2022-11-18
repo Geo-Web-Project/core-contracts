@@ -51,6 +51,11 @@ async function deployFacets(
     ],
   });
 
+  const pcoLicenseClaimerFacetV1 = await hre.ethers.getContractAt(
+    `PCOLicenseClaimerFacetV1`,
+    registryDiamond.address
+  );
+
   const PCOLicenseClaimerFacetV2 = await hre.ethers.getContractFactory(
     "PCOLicenseClaimerFacetV2"
   );
@@ -75,7 +80,7 @@ async function deployFacets(
     target: hre.ethers.constants.AddressZero,
     action: FacetCutAction.Remove,
     selectors: [
-      registryDiamond.interface.getSighash(
+      pcoLicenseClaimerFacetV1.interface.getSighash(
         "claim(int96,uint256,uint64,uint256[])"
       ),
     ],
@@ -95,7 +100,7 @@ export async function upgrade(
 
   // Cut diamond
   const diamond = await hre.ethers.getContractAt(
-    `RegistryDiamond`,
+    `IRegistryDiamond`,
     registryDiamond.address
   );
   await diamond.diamondCut(facetCuts, target, data);
@@ -128,7 +133,7 @@ task("upgrade:4.1.0")
       });
 
       const RegistryDiamond = await hre.ethers.getContractFactory(
-        "RegistryDiamondABI"
+        "IRegistryDiamond"
       );
       const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
 

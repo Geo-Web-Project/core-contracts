@@ -23,7 +23,7 @@ describe("GeoWebParcel", async () => {
       const max_y = await geoWebCoordinate.MAX_Y();
 
       const TestableGeoWebParcelFacet = await ethers.getContractFactory(
-        "TestableGeoWebParcelFacet"
+        "TestableGeoWebParcelFacetV1"
       );
       const geoWebParcel = await TestableGeoWebParcelFacet.deploy();
       await geoWebParcel.deployed();

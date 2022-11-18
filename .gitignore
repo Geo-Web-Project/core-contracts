@@ -37,7 +37,7 @@ abi/contracts/mock
 coverage.json
 coverage/
 
-shell.nix
+.direnv
 
 .openzeppelin/unknown-31337.json
 

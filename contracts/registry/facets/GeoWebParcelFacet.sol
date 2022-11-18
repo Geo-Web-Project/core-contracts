@@ -2,9 +2,11 @@
 pragma solidity ^0.8.16;
 
 import "../libraries/LibGeoWebParcel.sol";
+import "../libraries/LibGeoWebParcelV2.sol";
+import {IGeoWebParcelV1, IGeoWebParcelV2} from "../interfaces/IGeoWebParcel.sol";
 
 /// @title Public access to parcel data
-contract GeoWebParcelFacet {
+contract GeoWebParcelFacetV1 is IGeoWebParcelV1 {
     /**
      * @notice Get availability index for coordinates
      * @param x X coordinate
@@ -22,12 +24,14 @@ contract GeoWebParcelFacet {
     }
 
     /**
+     * @notice DEPRECATED in V2
      * @notice Get a land parcel
      * @param id ID of land parcel
      */
     function getLandParcel(uint256 id)
         external
         view
+        virtual
         returns (uint64 baseCoordinate, uint256[] memory path)
     {
         LibGeoWebParcel.DiamondStorage storage ds = LibGeoWebParcel
@@ -35,5 +39,41 @@ contract GeoWebParcelFacet {
 
         LibGeoWebParcel.LandParcel storage p = ds.landParcels[id];
         return (p.baseCoordinate, p.path);
+    }
+}
+
+/// @title Public access to parcel data
+contract GeoWebParcelFacetV2 is GeoWebParcelFacetV1, IGeoWebParcelV2 {
+    /**
+     * @notice DEPRECATED
+     */
+    function getLandParcel(uint256)
+        external
+        pure
+        override(IGeoWebParcelV1, GeoWebParcelFacetV1)
+        returns (uint64, uint256[] memory)
+    {
+        revert("GeoWebParcelV2: Deprecated as of V2. See getLandParcelV2()");
+    }
+
+    /**
+     * @notice Get a V2 land parcel
+     * @param id ID of land parcel
+     */
+    function getLandParcelV2(uint256 id)
+        external
+        view
+        override
+        returns (
+            uint64 swCoordinate,
+            uint256 latDim,
+            uint256 lngDim
+        )
+    {
+        LibGeoWebParcelV2.DiamondStorage storage ds = LibGeoWebParcelV2
+            .diamondStorage();
+
+        LibGeoWebParcelV2.LandParcel storage p = ds.landParcels[id];
+        return (p.swCoordinate, p.latDim, p.lngDim);
     }
 }

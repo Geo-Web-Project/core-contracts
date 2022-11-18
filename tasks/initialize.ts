@@ -91,7 +91,7 @@ async function initializeRegistryDiamond(
   });
 
   const RegistryDiamond = await hre.ethers.getContractFactory(
-    "RegistryDiamondABI"
+    "IRegistryDiamond"
   );
   const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
 
@@ -277,7 +277,7 @@ task("deploy:beneficiarySuperApp")
       });
 
       const RegistryDiamond = await hre.ethers.getContractFactory(
-        "RegistryDiamondABI"
+        "IRegistryDiamond"
       );
       const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
       const beneSuperApp = await deployBeneficiarySuperApp(

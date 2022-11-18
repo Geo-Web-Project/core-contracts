@@ -4,38 +4,16 @@ pragma solidity ^0.8.16;
 import "../libraries/LibCFABasePCO.sol";
 import {CFABasePCOFacetModifiers} from "./CFABasePCOFacet.sol";
 import "../libraries/LibCFAPenaltyBid.sol";
-import "../interfaces/ICFABiddable.sol";
+import "../interfaces/ICFAPenaltyBid.sol";
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @notice Handles bidding using CFAs and penalities
-contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
+contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
     using CFAv1Library for CFAv1Library.InitData;
     using SafeERC20 for ISuperToken;
-
-    /// @notice Emitted when a bid is accepted
-    event BidAccepted(
-        address indexed _payer,
-        address indexed _bidder,
-        uint256 forSalePrice
-    );
-
-    /// @notice Emitted when a bid is rejected
-    event BidRejected(
-        address indexed _payer,
-        address indexed _bidder,
-        uint256 forSalePrice
-    );
-
-    /// @notice Emitted when a transfer is triggered
-    event TransferTriggered(
-        address indexed _sender,
-        address indexed _payer,
-        address indexed _bidder,
-        uint256 forSalePrice
-    );
 
     modifier onlyIfPendingBid() {
         // Check if pending bid exists
@@ -150,7 +128,6 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
      */
     function editBid(int96 newContributionRate, uint256 newForSalePrice)
         external
-        override
         onlyPayer
         onlyIfNotPendingBid
     {
@@ -167,7 +144,6 @@ contract CFAPenaltyBidFacet is ICFABiddable, CFABasePCOFacetModifiers {
      */
     function placeBid(int96 newContributionRate, uint256 newForSalePrice)
         external
-        override
         onlyIfPayerBidActive
         onlyNotPayer
     {

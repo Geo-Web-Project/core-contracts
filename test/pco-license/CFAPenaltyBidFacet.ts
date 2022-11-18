@@ -1146,8 +1146,13 @@ describe("CFAPenaltyBidFacet", async function () {
     });
 
     it("should fail if payer bid becomes inactive", async () => {
-      const { basePCOFacet, ethersjsSf, ethx_erc20, mockCFABeneficiary } =
-        await CFAPenaltyBidFixtures.afterPlaceBid();
+      const {
+        basePCOFacet,
+        testableBasePCOFacet,
+        ethersjsSf,
+        ethx_erc20,
+        mockCFABeneficiary,
+      } = await CFAPenaltyBidFixtures.afterPlaceBid();
 
       const { user } = await getNamedAccounts();
 
@@ -1162,7 +1167,7 @@ describe("CFAPenaltyBidFacet", async function () {
       await op1Resp.wait();
 
       // Simulate closing flow
-      await basePCOFacet.manualDeleteFlow(mockCFABeneficiary.address);
+      await testableBasePCOFacet.manualDeleteFlow(mockCFABeneficiary.address);
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
@@ -1458,6 +1463,7 @@ describe("CFAPenaltyBidFacet", async function () {
     it("should reject bid if deposit is somehow depleted", async () => {
       const {
         basePCOFacet,
+        testableBasePCOFacet,
         checkUserToAppFlow,
         checkAppNetFlow,
         checkAppToBeneficiaryFlow,
@@ -1505,7 +1511,10 @@ describe("CFAPenaltyBidFacet", async function () {
       await op.exec(await ethers.getSigner(user));
 
       // Outgoing flow is somehow created
-      await basePCOFacet.manualCreateFlow(other, existingContributionRate);
+      await testableBasePCOFacet.manualCreateFlow(
+        other,
+        existingContributionRate
+      );
 
       // Advance time
       await network.provider.send("evm_increaseTime", [60 * 60 * 23]);
@@ -1592,6 +1601,7 @@ describe("CFAPenaltyBidFacet", async function () {
     it("should reject bid if balance is somehow depleted to 0", async () => {
       const {
         basePCOFacet,
+        testableBasePCOFacet,
         checkUserToAppFlow,
         checkAppNetFlow,
         checkAppToBeneficiaryFlow,
@@ -1623,7 +1633,7 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Balance is somehow depleted to 0
-      await basePCOFacet.manualTransfer(
+      await testableBasePCOFacet.manualTransfer(
         diamondAdmin,
         oldPendingBid.forSalePrice.add(newBuffer)
       );
@@ -1723,6 +1733,7 @@ describe("CFAPenaltyBidFacet", async function () {
     it("should reject bid if balance is somehow depleted to between 0 and bidder payment", async () => {
       const {
         basePCOFacet,
+        testableBasePCOFacet,
         checkUserToAppFlow,
         checkAppNetFlow,
         checkAppToBeneficiaryFlow,
@@ -1753,7 +1764,7 @@ describe("CFAPenaltyBidFacet", async function () {
         );
 
       // Balance is somehow depleted to below bidder payment
-      await basePCOFacet.manualTransfer(
+      await testableBasePCOFacet.manualTransfer(
         diamondAdmin,
         oldPendingBid.forSalePrice
       );
@@ -2133,6 +2144,7 @@ describe("CFAPenaltyBidFacet", async function () {
     it("should fail if payer bid becomes inactive", async () => {
       const {
         basePCOFacet,
+        testableBasePCOFacet,
         ethersjsSf,
         ethx_erc20,
         paymentToken,
@@ -2169,7 +2181,7 @@ describe("CFAPenaltyBidFacet", async function () {
       await op1Resp.wait();
 
       // Simulate closing flow
-      await basePCOFacet.manualDeleteFlow(mockCFABeneficiary.address);
+      await testableBasePCOFacet.manualDeleteFlow(mockCFABeneficiary.address);
 
       const estimatedTimeSinceDeletion = 60;
       const estimatedDepletedBuffer = existingContributionRate.mul(
@@ -3117,6 +3129,7 @@ describe("CFAPenaltyBidFacet", async function () {
     it("should trigger transfer early if payer bid becomes inactive", async () => {
       const {
         basePCOFacet,
+        testableBasePCOFacet,
         mockLicense,
         checkUserToAppFlow,
         checkAppNetFlow,
@@ -3154,7 +3167,7 @@ describe("CFAPenaltyBidFacet", async function () {
       const op1Block = await ethers.provider.getBlock(op1Receipt.blockNumber);
 
       // Simulate closing flow
-      const op2Resp = await basePCOFacet.manualDeleteFlow(
+      const op2Resp = await testableBasePCOFacet.manualDeleteFlow(
         mockCFABeneficiary.address
       );
       const op2Receipt = await op2Resp.wait();
