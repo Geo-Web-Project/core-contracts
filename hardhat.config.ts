@@ -19,6 +19,7 @@ import "solidity-coverage";
 import "./tasks/estimate_minting_gas";
 import "./tasks/initialize";
 import "./tasks/upgrades/4_1_0";
+import "./tasks/upgrades/4_1_1";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "solidity-docgen";
@@ -26,7 +27,7 @@ import "solidity-docgen";
 const networks: any = {
   local: {
     gasPrice: 1000000000,
-    url: `http://localhost:8545`,
+    url: `http://localhost:1248`,
   },
 };
 

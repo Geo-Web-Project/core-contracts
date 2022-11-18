@@ -44,8 +44,10 @@ async function deployFacets(
   await geoWebParcelFacetV2.deployed();
   console.log(`GeoWebParcelFacetV2 deployed: ${geoWebParcelFacetV2.address}`);
 
-  const IGeoWebParcel = await hre.ethers.getContractFactory("IGeoWebParcel");
-  const geoWebParcel = IGeoWebParcel.attach(geoWebParcelFacetV2.address);
+  const geoWebParcel = await hre.ethers.getContractAt(
+    "IGeoWebParcel",
+    geoWebParcelFacetV2.address
+  );
 
   facetCuts.push({
     target: geoWebParcelFacetV2.address,
@@ -63,10 +65,8 @@ async function deployFacets(
     `PCOLicenseClaimerFacetV2 deployed: ${pcoLicenseClaimerFacetV2.address}`
   );
 
-  const IPCOLicenseClaimer = await hre.ethers.getContractFactory(
-    "IPCOLicenseClaimer"
-  );
-  const pcoLicenseClaimer = IPCOLicenseClaimer.attach(
+  const pcoLicenseClaimer = await hre.ethers.getContractAt(
+    "IPCOLicenseClaimer",
     pcoLicenseClaimerFacetV2.address
   );
 
@@ -117,28 +117,24 @@ task("upgrade:4.1.1")
       const { diamondAdmin } = await hre.getNamedAccounts();
 
       // Create Defender client
-      const adminClient = new AdminClient({
-        apiKey: process.env.DEFENDER_API_KEY!,
-        apiSecret: process.env.DEFENDER_API_SECRET!,
-      });
+      // const adminClient = new AdminClient({
+      //   apiKey: process.env.DEFENDER_API_KEY!,
+      //   apiSecret: process.env.DEFENDER_API_SECRET!,
+      // });
 
-      const RegistryDiamond = await hre.ethers.getContractFactory(
-        "IRegistryDiamond"
-      );
-      const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
-
-      const IGeoWebParcel = await hre.ethers.getContractFactory(
-        "IGeoWebParcel"
+      const registryDiamond = await hre.ethers.getContractAt(
+        "IRegistryDiamond",
+        registryDiamondAddress
       );
       const geoWebParcelV2 = geoWebParcelV2Address
-        ? IGeoWebParcel.attach(geoWebParcelV2Address)
+        ? await hre.ethers.getContractAt("IGeoWebParcel", geoWebParcelV2Address)
         : undefined;
 
-      const IPCOLicenseClaimer = await hre.ethers.getContractFactory(
-        "IPCOLicenseClaimer"
-      );
       const pcoLicenseClaimerFacetV2 = pcoLicenseClaimerV2Address
-        ? IPCOLicenseClaimer.attach(pcoLicenseClaimerV2Address)
+        ? await hre.ethers.getContractAt(
+            "IPCOLicenseClaimer",
+            pcoLicenseClaimerV2Address
+          )
         : undefined;
 
       const facetCuts = await deployFacets(
