@@ -253,6 +253,7 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
             _currentBid.forSalePrice
         );
 
+        // Reentrancy on ERC721 transfer
         LibCFAPenaltyBid._triggerTransfer();
     }
 
@@ -301,6 +302,7 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
             _currentBid.forSalePrice
         );
 
+        // Reentrancy on ERC721 transfer
         LibCFAPenaltyBid._triggerTransfer();
     }
 }

@@ -171,41 +171,46 @@ library LibCFAPenaltyBid {
             LibCFABasePCO._createBeneficiaryFlow(_pendingBid.contributionRate);
         }
 
-        // Transfer license
+        {
+            // Transfer payments
+            uint256 withdrawToBidder = 0;
+            uint256 withdrawToPayer = 0;
+
+            if (remainingBalance > newBuffer) {
+                // Keep full newBuffer
+                remainingBalance -= newBuffer;
+                uint256 bidderPayment = _pendingBid.forSalePrice -
+                    oldCurrentBid.forSalePrice;
+                if (remainingBalance > bidderPayment) {
+                    // Transfer bidder full payment
+                    withdrawToBidder = bidderPayment;
+                    remainingBalance -= withdrawToBidder;
+
+                    // Transfer remaining to payer
+                    withdrawToPayer = remainingBalance;
+                } else {
+                    // Transfer remaining to bidder
+                    withdrawToBidder = remainingBalance;
+                }
+            }
+
+            if (withdrawToBidder > 0) {
+                paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
+            }
+            if (withdrawToPayer > 0) {
+                paymentToken.safeTransfer(
+                    oldCurrentBid.bidder,
+                    withdrawToPayer
+                );
+            }
+        }
+
+        // Transfer license (reentrancy on ERC721 transfer)
         ds.license.safeTransferFrom(
             oldCurrentBid.bidder,
             _pendingBid.bidder,
             ds.licenseId
         );
-
-        // Transfer payments
-        uint256 withdrawToBidder = 0;
-        uint256 withdrawToPayer = 0;
-
-        if (remainingBalance > newBuffer) {
-            // Keep full newBuffer
-            remainingBalance -= newBuffer;
-            uint256 bidderPayment = _pendingBid.forSalePrice -
-                oldCurrentBid.forSalePrice;
-            if (remainingBalance > bidderPayment) {
-                // Transfer bidder full payment
-                withdrawToBidder = bidderPayment;
-                remainingBalance -= withdrawToBidder;
-
-                // Transfer remaining to payer
-                withdrawToPayer = remainingBalance;
-            } else {
-                // Transfer remaining to bidder
-                withdrawToBidder = remainingBalance;
-            }
-        }
-
-        if (withdrawToBidder > 0) {
-            paymentToken.safeTransfer(_pendingBid.bidder, withdrawToBidder);
-        }
-        if (withdrawToPayer > 0) {
-            paymentToken.safeTransfer(oldCurrentBid.bidder, withdrawToPayer);
-        }
     }
 
     /// @notice Reject Bid
