@@ -4,12 +4,14 @@ pragma solidity ^0.8.16;
 import "./LibGeoWebParcel.sol";
 import "./LibGeoWebCoordinate.sol";
 
+//@audit: remove all external calls from these libraries
 library LibGeoWebParcelV2 {
     using LibGeoWebCoordinate for uint64;
 
+    //@audit-info these can be abstracted as constants outside the contract itself
     bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibGeoWebParcelV2");
-
+    //@audit-info here too
     uint256 private constant MAX_PARCEL_DIM = 200;
 
     /// @dev Structure of a land parcel
@@ -20,6 +22,7 @@ library LibGeoWebParcelV2 {
     }
 
     /// @dev Maxmium uint256 stored as a constant to use for masking
+    //@audit-info unused
     uint256 private constant MAX_INT = 2**256 - 1;
 
     struct DiamondStorage {
@@ -77,8 +80,10 @@ library LibGeoWebParcelV2 {
         (uint256 iX, uint256 iY, uint256 i) = currentCoord._toWordIndex();
         uint256 word = dsV1.availabilityIndex[iX][iY];
 
+        //@audit-nit maybe use an enum for readibility.
         uint256 lngDir = 2; // East
 
+        //@audit-nit document these lines to explain availability index math
         for (uint256 lat = 0; lat < parcel.latDim; lat++) {
             for (uint256 lng = 0; lng < parcel.lngDim; lng++) {
                 // Check if coordinate is available

@@ -7,6 +7,7 @@ library LibGeoWebCoordinate {
     uint64 public constant MAX_X = ((2**23) - 1);
     uint64 public constant MAX_Y = ((2**22) - 1);
 
+    //@audit: remove all external calls from these libraries
     /// @notice Traverse a single direction
     /// @param origin The origin coordinate to start from
     /// @param direction The direction to take

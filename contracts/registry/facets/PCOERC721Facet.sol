@@ -35,6 +35,7 @@ contract PCOERC721Facet is IPCOERC721, ERC721Base, ERC721Metadata, ERC165 {
         ls.symbol = symbol;
         ls.baseURI = baseURI;
 
+        // @audit-nit: redundant as SolidStateDiamond already registers 165 compatibility
         ERC165Storage.layout().setSupportedInterface(
             type(IERC165).interfaceId,
             true

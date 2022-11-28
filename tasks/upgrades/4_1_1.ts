@@ -13,6 +13,19 @@
 	- All of IPCOLicenseClaimerFacet -> PCOLicenseClaimerFacetV2
 	
 	===============
+
+  @audit-note:
+  I would expect to see tests against a forked evm ensuring consistency across storage values and logic.
+  Ideally you can create sanity checks against system-level values, and user-level values (userSalt, nextId)
+    On our call we discussed adding serveral user addresses at a certain block number that represent a comfortable amount of intermediate states.
+    You can create a spec for certain transactions based on `actions.png`, and then run those tests in a loop to ensure spec compliance on a mainnet fork.
+    A good example is the invariant tests found in https://github.com/alchemix-finance/v2-foundry/blob/master/src/test/InvariantsTests.t.sol
+    These tests ensure that the system is in a consistent state after a series of transactions.
+
+  Why?:
+  There are a few diamond specific pitfalls that can be avoided with testing.
+  - it is easy to make a syntactic mistake and "delink" storage references across upgrades, creating hash collisions in beacon deployments.
+  - if parcels are stored differently, you will have to ensure backwards-compatibility for any "update" functions that handle the modification of parcels in storage.
 */
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -61,6 +74,14 @@ async function deployFacets(
   const pcoLicenseClaimerFacetV2 =
     pcoLicenseClaimerV2 ?? (await PCOLicenseClaimerFacetV2.deploy());
   await pcoLicenseClaimerFacetV2.deployed();
+
+  // @audit:
+  /**
+   * I know I continue harping on this, but I do think there should
+   * be asserts here to verify expected selector count and selector content.
+   * I have seen ethers incorrectly parse structs in the ABI spec, and
+   * bytes4(keccak256("claim(int96,uint256,(uint64,uint256,uint256))")) != bytes4(keccak256("claim(int96,uint256,LandParcel)"))
+   */
   console.log(
     `PCOLicenseClaimerFacetV2 deployed: ${pcoLicenseClaimerFacetV2.address}`
   );
