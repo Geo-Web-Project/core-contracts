@@ -34,7 +34,8 @@ contract BeneficiarySuperApp is
 
     function initialize(
         IPCOLicenseParamsStore paramsStore_,
-        address beneficiary_
+        address beneficiary_,
+        string calldata registrationKey
     ) external initializer {
         __Ownable_init();
 
@@ -76,7 +77,7 @@ contract BeneficiarySuperApp is
             SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
             SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
-        host.registerApp(configWord);
+        host.registerAppWithKey(configWord, registrationKey);
     }
 
     /// @notice Params Store

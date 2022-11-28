@@ -43,6 +43,7 @@ describe("BeneficiarySuperApp", async function () {
       const beneSuperApp = await upgrades.deployProxy(BeneficiarySuperApp, [
         mockParamsStore.address,
         diamondAdmin,
+        "",
       ]);
       await beneSuperApp.deployed();
 
@@ -136,6 +137,7 @@ describe("BeneficiarySuperApp", async function () {
       const beneSuperApp = upgrades.deployProxy(BeneficiarySuperApp, [
         mockParamsStore.address,
         ethers.constants.AddressZero,
+        "",
       ]);
 
       await expect(beneSuperApp).to.be.revertedWith(
