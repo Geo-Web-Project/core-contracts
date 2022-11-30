@@ -14,13 +14,13 @@ describe("LibGeoWebCoordinate", async () => {
 
   before(async () => {
     const GeoWebCoordinate = await ethers.getContractFactory(
-      "LibGeoWebCoordinate"
+      "LibGeoWebCoordinateTest"
     );
     geoWebCoordinate = await GeoWebCoordinate.deploy();
     await geoWebCoordinate.deployed();
 
     const GeoWebCoordinatePath = await ethers.getContractFactory(
-      "LibGeoWebCoordinatePath"
+      "LibGeoWebCoordinatePathTest"
     );
     geoWebCoordinatePath = await GeoWebCoordinatePath.deploy();
     await geoWebCoordinatePath.deployed();

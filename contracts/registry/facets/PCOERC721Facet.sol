@@ -36,10 +36,6 @@ contract PCOERC721Facet is IPCOERC721, ERC721Base, ERC721Metadata, ERC165 {
         ls.baseURI = baseURI;
 
         ERC165Storage.layout().setSupportedInterface(
-            type(IERC165).interfaceId,
-            true
-        );
-        ERC165Storage.layout().setSupportedInterface(
             type(IERC721).interfaceId,
             true
         );

@@ -4,13 +4,13 @@ pragma solidity ^0.8.16;
 import "./LibGeoWebParcel.sol";
 import "./LibGeoWebCoordinate.sol";
 
+uint256 constant MAX_PARCEL_DIM = 200;
+
 library LibGeoWebParcelV2 {
     using LibGeoWebCoordinate for uint64;
 
     bytes32 private constant STORAGE_POSITION =
         keccak256("diamond.standard.diamond.storage.LibGeoWebParcelV2");
-
-    uint256 private constant MAX_PARCEL_DIM = 200;
 
     /// @dev Structure of a land parcel
     struct LandParcel {
@@ -18,9 +18,6 @@ library LibGeoWebParcelV2 {
         uint256 lngDim;
         uint256 latDim;
     }
-
-    /// @dev Maxmium uint256 stored as a constant to use for masking
-    uint256 private constant MAX_INT = 2**256 - 1;
 
     struct DiamondStorage {
         /// @notice Stores which coordinates belong to a parcel
@@ -74,10 +71,12 @@ library LibGeoWebParcelV2 {
 
         uint64 currentCoord = parcel.swCoordinate;
 
-        (uint256 iX, uint256 iY, uint256 i) = currentCoord._toWordIndex();
+        (uint256 iX, uint256 iY, uint256 i) = currentCoord.toWordIndex();
         uint256 word = dsV1.availabilityIndex[iX][iY];
 
-        uint256 lngDir = 2; // East
+        LibGeoWebCoordinate.Direction lngDir = LibGeoWebCoordinate
+            .Direction
+            .East;
 
         for (uint256 lat = 0; lat < parcel.latDim; lat++) {
             for (uint256 lng = 0; lng < parcel.lngDim; lng++) {
@@ -91,15 +90,15 @@ library LibGeoWebParcelV2 {
                 word = word | (2**i);
 
                 // Get next direction
-                uint256 direction;
+                LibGeoWebCoordinate.Direction direction;
                 if (lng < parcel.lngDim - 1) {
                     direction = lngDir;
                 } else if (lat < parcel.latDim - 1) {
-                    direction = 0; // North
-                    if (lngDir == 2) {
-                        lngDir = 3; // West
+                    direction = LibGeoWebCoordinate.Direction.North;
+                    if (lngDir == LibGeoWebCoordinate.Direction.East) {
+                        lngDir = LibGeoWebCoordinate.Direction.West;
                     } else {
-                        lngDir = 2; // East
+                        lngDir = LibGeoWebCoordinate.Direction.East;
                     }
                 } else {
                     break;
@@ -108,7 +107,7 @@ library LibGeoWebParcelV2 {
                 // Traverse to next coordinate
                 uint256 newIX;
                 uint256 newIY;
-                (currentCoord, newIX, newIY, i) = currentCoord._traverse(
+                (currentCoord, newIX, newIY, i) = currentCoord.traverse(
                     direction,
                     iX,
                     iY,
