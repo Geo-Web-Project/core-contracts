@@ -20,7 +20,11 @@
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Contract } from "ethers";
-const { FacetCutAction } = require("../../scripts/libraries/diamond.js");
+const {
+  FacetCutAction,
+  getSelectorCount,
+  checkSelectorCount,
+} = require("../../scripts/libraries/diamond.js");
 import { task } from "hardhat/config";
 import { AdminClient } from "defender-admin-client";
 
@@ -103,8 +107,13 @@ export async function upgrade(
     `IRegistryDiamond`,
     registryDiamond.address
   );
+
+  const prevSelectorCount = await getSelectorCount(diamond);
+
   await diamond.diamondCut(facetCuts, target, data);
   console.log(`Diamond cut: ${diamond.address}`);
+
+  await checkSelectorCount(diamond, prevSelectorCount + 1);
 }
 
 task("upgrade:4.1.0")

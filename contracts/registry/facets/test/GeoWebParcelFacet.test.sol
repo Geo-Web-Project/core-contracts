@@ -53,7 +53,7 @@ contract FuzzyGeoWebParcelFacetV1 is GeoWebParcelFacetV1 {
             .diamondStorage();
 
         uint64 baseCoordinate = 17179869217;
-        (uint256 iX, uint256 iY, uint256 i) = baseCoordinate._toWordIndex();
+        (uint256 iX, uint256 iY, uint256 i) = baseCoordinate.toWordIndex();
         uint256 word = ds.availabilityIndex[iX][iY];
 
         return (word & (2**i) != 0);
@@ -111,7 +111,7 @@ contract FuzzyGeoWebParcelFacetV2 is GeoWebParcelFacetV2 {
             .diamondStorage();
 
         uint64 swCoordinate = 17179869217;
-        (uint256 iX, uint256 iY, uint256 i) = swCoordinate._toWordIndex();
+        (uint256 iX, uint256 iY, uint256 i) = swCoordinate.toWordIndex();
         uint256 word = ds.availabilityIndex[iX][iY];
 
         return (word & (2**i) != 0);

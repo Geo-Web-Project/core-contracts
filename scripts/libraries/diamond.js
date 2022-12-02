@@ -2,6 +2,18 @@
 
 const FacetCutAction = { Add: 0, Replace: 1, Remove: 2 };
 
+async function checkSelectorCount(contract, expected) {
+  const actual = await getSelectorCount(contract);
+  console.assert(actual === expected, "Incorrect selector count");
+}
+
+async function getSelectorCount(contract) {
+  const facets = await contract.facets();
+  return facets.reduce((p, c) => {
+    return p + c.selectors.length;
+  }, 0);
+}
+
 // get function selectors from ABI
 function getSelectors(contract) {
   const signatures = Object.keys(contract.interface.functions);
@@ -76,6 +88,8 @@ function findAddressPositionInFacets(facetAddress, facets) {
   }
 }
 
+exports.checkSelectorCount = checkSelectorCount;
+exports.getSelectorCount = getSelectorCount;
 exports.getSelectors = getSelectors;
 exports.getSelector = getSelector;
 exports.FacetCutAction = FacetCutAction;

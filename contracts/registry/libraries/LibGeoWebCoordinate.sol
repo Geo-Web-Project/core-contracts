@@ -7,32 +7,21 @@ library LibGeoWebCoordinate {
     uint64 public constant MAX_X = ((2**23) - 1);
     uint64 public constant MAX_Y = ((2**22) - 1);
 
+    /// @dev Enum for different directions
+    enum Direction {
+        North,
+        South,
+        East,
+        West
+    }
+
     /// @notice Traverse a single direction
     /// @param origin The origin coordinate to start from
     /// @param direction The direction to take
     /// @return destination The destination coordinate
     function traverse(
         uint64 origin,
-        uint256 direction,
-        uint256 iX,
-        uint256 iY,
-        uint256 i
-    )
-        external
-        pure
-        returns (
-            uint64,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        return _traverse(origin, direction, iX, iY, i);
-    }
-
-    function _traverse(
-        uint64 origin,
-        uint256 direction,
+        Direction direction,
         uint256 iX,
         uint256 iY,
         uint256 i
@@ -49,8 +38,7 @@ library LibGeoWebCoordinate {
         uint64 originX = _getX(origin);
         uint64 originY = _getY(origin);
 
-        if (direction == 0) {
-            // North
+        if (direction == Direction.North) {
             originY += 1;
             require(originY <= MAX_Y, "Direction went too far north!");
 
@@ -60,8 +48,7 @@ library LibGeoWebCoordinate {
             } else {
                 i += 16;
             }
-        } else if (direction == 1) {
-            // South
+        } else if (direction == Direction.South) {
             require(originY > 0, "Direction went too far south!");
             originY -= 1;
 
@@ -71,8 +58,7 @@ library LibGeoWebCoordinate {
             } else {
                 i -= 16;
             }
-        } else if (direction == 2) {
-            // East
+        } else if (direction == Direction.East) {
             if (originX >= MAX_X) {
                 // Wrap to west
                 originX = 0;
@@ -87,8 +73,7 @@ library LibGeoWebCoordinate {
                     i += 1;
                 }
             }
-        } else if (direction == 3) {
-            // West
+        } else if (direction == Direction.West) {
             if (originX == 0) {
                 // Wrap to east
                 originX = MAX_X;
@@ -124,18 +109,6 @@ library LibGeoWebCoordinate {
 
     /// @notice Convert coordinate to word index
     function toWordIndex(uint64 coord)
-        external
-        pure
-        returns (
-            uint256 iX,
-            uint256 iY,
-            uint256 i
-        )
-    {
-        return _toWordIndex(coord);
-    }
-
-    function _toWordIndex(uint64 coord)
         internal
         pure
         returns (
@@ -168,34 +141,22 @@ library LibGeoWebCoordinatePath {
     /// @return direction The next direction taken from path
     /// @return nextPath The next path with the direction popped from it
     function nextDirection(uint256 path)
-        external
-        pure
-        returns (
-            bool hasNext,
-            uint256 direction,
-            uint256 nextPath
-        )
-    {
-        return _nextDirection(path);
-    }
-
-    function _nextDirection(uint256 path)
         internal
         pure
         returns (
             bool hasNext,
-            uint256 direction,
+            LibGeoWebCoordinate.Direction direction,
             uint256 nextPath
         )
     {
         uint256 length = (path >> (256 - 8)); // Take most significant 8 bits
         hasNext = (length > 0);
         if (!hasNext) {
-            return (hasNext, 0, 0);
+            return (hasNext, LibGeoWebCoordinate.Direction.North, 0);
         }
         uint256 _path = (path & INNER_PATH_MASK);
 
-        direction = (_path & PATH_SEGMENT_MASK); // Take least significant 2 bits of path
+        direction = LibGeoWebCoordinate.Direction(_path & PATH_SEGMENT_MASK); // Take least significant 2 bits of path
         nextPath = (_path >> 2) | ((length - 1) << (256 - 8)); // Trim direction from path
     }
 }

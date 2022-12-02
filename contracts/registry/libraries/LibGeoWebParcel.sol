@@ -118,7 +118,7 @@ library LibGeoWebParcel {
         uint256 pI = 0;
         uint256 currentPath = path[pI];
 
-        (uint256 iX, uint256 iY, uint256 i) = currentCoord._toWordIndex();
+        (uint256 iX, uint256 iY, uint256 i) = currentCoord.toWordIndex();
         uint256 word = ds.availabilityIndex[iX][iY];
 
         do {
@@ -138,8 +138,8 @@ library LibGeoWebParcel {
 
             // Get next direction
             bool hasNext;
-            uint256 direction;
-            (hasNext, direction, currentPath) = currentPath._nextDirection();
+            LibGeoWebCoordinate.Direction direction;
+            (hasNext, direction, currentPath) = currentPath.nextDirection();
 
             if (!hasNext) {
                 // Try next path
@@ -148,14 +148,13 @@ library LibGeoWebParcel {
                     break;
                 }
                 currentPath = path[pI];
-                (hasNext, direction, currentPath) = currentPath
-                    ._nextDirection();
+                (hasNext, direction, currentPath) = currentPath.nextDirection();
             }
 
             // Traverse to next coordinate
             uint256 newIX;
             uint256 newIY;
-            (currentCoord, newIX, newIY, i) = currentCoord._traverse(
+            (currentCoord, newIX, newIY, i) = currentCoord.traverse(
                 direction,
                 iX,
                 iY,
