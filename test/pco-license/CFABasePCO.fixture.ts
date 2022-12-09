@@ -403,6 +403,7 @@ const initializedWithRealLicense = deployments.createFixture(
       checkAppToBeneficiaryFlow,
       checkAppNetFlow,
       checkAppBalance,
+      erc721License: diamond as PCOERC721Facet,
     };
   }
 );
