@@ -65,7 +65,7 @@ async function deployBeneficiarySuperApp(
   const factory = await hre.ethers.getContractFactory("BeneficiarySuperApp");
   const beneSuperApp = await hre.upgrades.deployProxy(
     factory.connect(await hre.ethers.getSigner(deployer)),
-    [registryDiamond.address, treasury]
+    [registryDiamond.address, treasury, ""]
   );
   await beneSuperApp.deployed();
   console.log("BeneficiarySuperApp deployed: ", beneSuperApp.address);
@@ -98,9 +98,9 @@ async function initializeRegistryDiamond(
   await registryDiamond
     .connect(await hre.ethers.getSigner(diamondAdmin))
     .initializeClaimer(
-      "1665619570",
-      "1666224370",
-      hre.ethers.utils.parseEther("1.0").toString(),
+      "1670607584",
+      "1670780383",
+      hre.ethers.utils.parseEther("0.1").toString(),
       hre.ethers.utils.parseEther("0.005").toString(),
       beaconDiamondAddress
     );
