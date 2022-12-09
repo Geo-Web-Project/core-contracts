@@ -334,9 +334,7 @@ describe("CFAReclaimerFacet", async function () {
         basePCOFacet
           .connect(await ethers.getSigner(bidder))
           .reclaim(reclaimPrice, contributionRate, forSalePrice)
-      ).to.be.revertedWith(
-        "CFAReclaimerFacet: CREATE_FLOW permission not granted"
-      );
+      ).to.be.revertedWith("E_NO_OPERATOR_CREATE_FLOW");
     });
 
     it("should revert if flow permission doesn't have enough allowance", async () => {
@@ -377,9 +375,7 @@ describe("CFAReclaimerFacet", async function () {
         basePCOFacet
           .connect(await ethers.getSigner(bidder))
           .reclaim(reclaimPrice, contributionRate, forSalePrice)
-      ).to.be.revertedWith(
-        "CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance"
-      );
+      ).to.be.revertedWith("E_EXCEED_FLOW_RATE_ALLOWANCE");
     });
 
     it("should revert if the payer bid is active", async () => {

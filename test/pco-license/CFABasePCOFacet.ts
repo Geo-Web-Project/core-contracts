@@ -420,4 +420,15 @@ describe("CFABasePCOFacet", async function () {
       expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
     });
   });
+
+  it("should not allow owner to transfer", async () => {
+    const { erc721License } = await Fixtures.initializedWithRealLicense();
+
+    const { user, other } = await getNamedAccounts();
+
+    const txn = erc721License
+      .connect(await ethers.getSigner(user))
+      .transferFrom(user, other, 0);
+    expect(txn).to.be.revertedWith("Only beacon proxy can transfer");
+  });
 });

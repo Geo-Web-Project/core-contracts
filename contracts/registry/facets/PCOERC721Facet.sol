@@ -58,13 +58,22 @@ contract PCOERC721Facet is IPCOERC721, ERC721Base, ERC721Metadata, ERC165 {
     }
 
     /**
-     * @inheritdoc ERC721BaseInternal
+     * Override to only allow transfers from corresponding beacon proxy
      */
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
     ) internal virtual override(ERC721BaseInternal, ERC721Metadata) {
+        if (from != address(0) && to != address(0)) {
+            LibPCOLicenseClaimer.DiamondStorage
+                storage cs = LibPCOLicenseClaimer.diamondStorage();
+
+            require(
+                msg.sender == cs.beaconProxies[tokenId],
+                "Only beacon proxy can transfer"
+            );
+        }
         super._beforeTokenTransfer(from, to, tokenId);
     }
 }

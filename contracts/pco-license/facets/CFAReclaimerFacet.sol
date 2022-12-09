@@ -88,29 +88,6 @@ contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
         }
 
         ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        {
-            // Check operator permissions
-            (, uint8 permissions, int96 flowRateAllowance) = cs
-                .cfaV1
-                .cfa
-                .getFlowOperatorData(
-                    ds.paramsStore.getPaymentToken(),
-                    msg.sender,
-                    address(this)
-                );
-
-            require(
-                LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
-                    permissions,
-                    LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
-                ),
-                "CFAReclaimerFacet: CREATE_FLOW permission not granted"
-            );
-            require(
-                flowRateAllowance >= newContributionRate,
-                "CFAReclaimerFacet: CREATE_FLOW permission does not have enough allowance"
-            );
-        }
 
         uint256 claimPrice = reclaimPrice();
 
@@ -155,24 +132,20 @@ contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
         }
 
         // Create bidder flow
-        /* solhint-disable no-empty-blocks */
-        try
-            cs.cfaV1.host.callAgreement(
-                cs.cfaV1.cfa,
-                abi.encodeCall(
-                    cs.cfaV1.cfa.createFlowByOperator,
-                    (
-                        paymentToken,
-                        msg.sender,
-                        address(this),
-                        newContributionRate,
-                        new bytes(0)
-                    )
-                ),
-                new bytes(0)
-            )
-        {} catch {}
-        /* solhint-enable no-empty-blocks */
+        cs.cfaV1.host.callAgreement(
+            cs.cfaV1.cfa,
+            abi.encodeCall(
+                cs.cfaV1.cfa.createFlowByOperator,
+                (
+                    paymentToken,
+                    msg.sender,
+                    address(this),
+                    newContributionRate,
+                    new bytes(0)
+                )
+            ),
+            new bytes(0)
+        );
 
         // Update beneficiary flow
         LibCFABasePCO._createBeneficiaryFlow(newContributionRate);
