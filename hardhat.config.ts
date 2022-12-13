@@ -76,6 +76,7 @@ module.exports = {
     diamondAdmin: {
       default: 0,
       5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
+      10: "0x8FC4308da9310479dF48ef77142Eef05c363e099",
       420: "0xE9976B324098dC194399f445cDbd989Bc42B4da7",
     },
     user: {
@@ -89,6 +90,7 @@ module.exports = {
     },
     treasury: {
       5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
+      10: "0x8FC4308da9310479dF48ef77142Eef05c363e099",
       420: "0xE9976B324098dC194399f445cDbd989Bc42B4da7",
       31337: 0,
     },

@@ -9,6 +9,7 @@ import { AdminClient } from "defender-admin-client";
 
 const NETWORKS: Record<number, string> = {
   5: "goerli",
+  10: "optimism",
 };
 
 function perYearToPerSecondRate(annualRate: number) {
@@ -65,7 +66,7 @@ async function deployBeneficiarySuperApp(
   const factory = await hre.ethers.getContractFactory("BeneficiarySuperApp");
   const beneSuperApp = await hre.upgrades.deployProxy(
     factory.connect(await hre.ethers.getSigner(deployer)),
-    [registryDiamond.address, treasury]
+    [registryDiamond.address, treasury, "k1"]
   );
   await beneSuperApp.deployed();
   console.log("BeneficiarySuperApp deployed: ", beneSuperApp.address);
@@ -90,10 +91,10 @@ async function initializeRegistryDiamond(
     apiSecret: process.env.DEFENDER_API_SECRET!,
   });
 
-  const RegistryDiamond = await hre.ethers.getContractFactory(
-    "IRegistryDiamond"
+  const registryDiamond = await hre.ethers.getContractAt(
+    "IRegistryDiamond",
+    registryDiamondAddress
   );
-  const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
 
   const perSecondFee = perYearToPerSecondRate(0.1);
 
@@ -137,9 +138,9 @@ async function initializeRegistryDiamond(
       ],
     }, // Function ABI
     functionInputs: [
-      "1665619570",
-      "1666224370",
-      hre.ethers.utils.parseEther("1.0").toString(),
+      "1671123600",
+      "1673715600",
+      hre.ethers.utils.parseEther("100").toString(),
       hre.ethers.utils.parseEther("0.005").toString(),
       beaconDiamondAddress,
     ], // Arguments to the function
@@ -276,10 +277,10 @@ task("deploy:beneficiarySuperApp")
         apiSecret: process.env.DEFENDER_API_SECRET!,
       });
 
-      const RegistryDiamond = await hre.ethers.getContractFactory(
-        "IRegistryDiamond"
+      const registryDiamond = await hre.ethers.getContractAt(
+        "IRegistryDiamond",
+        registryDiamondAddress
       );
-      const registryDiamond = RegistryDiamond.attach(registryDiamondAddress);
       const beneSuperApp = await deployBeneficiarySuperApp(
         hre,
         registryDiamond
