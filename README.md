@@ -14,15 +14,15 @@ Make sure to make a `.env` file in the root of your project based off the `.env.
 
 #### Proxies
 
-| Contract                                                               | Address                                      | Etherscan                                                                               | Louper                                                                                 |
-| ---------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [RegistryDiamond](./contracts/registry)                                | `0xba1231785a7b4ac0e8dc9a0403938c2182ce4a4e` | https://optimistic.etherscan.io//address/0xba1231785a7b4ac0e8dc9a0403938c2182ce4a4e     | https://louper.dev/diamond/0xba1231785a7b4ac0e8dc9a0403938c2182ce4a4e?network=optimism |
-| [PCOLicenseDiamond](./contracts/pco-license)                           | `0xe5769B506e624044ac2d472e76BedBA53Dc2BbEd` | https://goerli-optimism.etherscan.io/address/0xe5769B506e624044ac2d472e76BedBA53Dc2BbEd | https://louper.dev/diamond/0xe5769B506e624044ac2d472e76BedBA53Dc2BbEd?network=optimism |
-| [BeneficiarySuperApp](./contracts/beneficiary/BeneficiarySuperApp.sol) | `0x5aD276439E3772FDb6696B6cB61401902D4e8b72` | https://optimistic.etherscan.io/address/0x5aD276439E3772FDb6696B6cB61401902D4e8b72      |                                                                                        |
+| Contract                                                               | Address                                      | Etherscan                                                                           | Louper                                                                                 |
+| ---------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [RegistryDiamond](./contracts/registry)                                | `0xba1231785a7b4ac0e8dc9a0403938c2182ce4a4e` | https://optimistic.etherscan.io//address/0xba1231785a7b4ac0e8dc9a0403938c2182ce4a4e | https://louper.dev/diamond/0xba1231785a7b4ac0e8dc9a0403938c2182ce4a4e?network=optimism |
+| [PCOLicenseDiamond](./contracts/pco-license)                           | `0xe5769B506e624044ac2d472e76BedBA53Dc2BbEd` | https://optimistic.etherscan.io/address/0xe5769B506e624044ac2d472e76BedBA53Dc2BbEd  | https://louper.dev/diamond/0xe5769B506e624044ac2d472e76BedBA53Dc2BbEd?network=optimism |
+| [BeneficiarySuperApp](./contracts/beneficiary/BeneficiarySuperApp.sol) | `0x5aD276439E3772FDb6696B6cB61401902D4e8b72` | https://optimistic.etherscan.io/address/0x5aD276439E3772FDb6696B6cB61401902D4e8b72  |                                                                                        |
 
 #### Facets
 
-| Diamond                                      | Contract                                                                           | Address                                      | Etherscan                                                                           |
+| Diamond                                      | Facet                                                                              | Address                                      | Etherscan                                                                           |
 | -------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------- |
 | [RegistryDiamond](./contracts/registry)      | [GeoWebParcelFacetV2](./contracts/registry/facets/GeoWebParcelFacet.sol)           | `0x53E71045CB4611374e3B28C1A996d25A4397FE45` | https://optimistic.etherscan.io//address/0x53E71045CB4611374e3B28C1A996d25A4397FE45 |
 | [RegistryDiamond](./contracts/registry)      | [PCOLicenseClaimerFacetV2](./contracts/registry/facets/PCOLicenseClaimerFacet.sol) | `0x41d77f5A2173ec878F33d88DC5D369f2f29d4954` | https://optimistic.etherscan.io//address/0x41d77f5A2173ec878F33d88DC5D369f2f29d4954 |
@@ -44,7 +44,7 @@ Make sure to make a `.env` file in the root of your project based off the `.env.
 
 #### Facets
 
-| Diamond                                      | Contract                                                                           | Address                                      | Etherscan                                                                               |
+| Diamond                                      | Facet                                                                              | Address                                      | Etherscan                                                                               |
 | -------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
 | [RegistryDiamond](./contracts/registry)      | [GeoWebParcelFacetV2](./contracts/registry/facets/GeoWebParcelFacet.sol)           | `0x41cb0D0711a55403777b2a3f6eEEbDB8278f0525` | https://goerli-optimism.etherscan.io/address/0x41cb0D0711a55403777b2a3f6eEEbDB8278f0525 |
 | [RegistryDiamond](./contracts/registry)      | [PCOLicenseClaimerFacetV2](./contracts/registry/facets/PCOLicenseClaimerFacet.sol) | `0x55Da037A08985f6B2912AEd2917EefF484a804BF` | https://goerli-optimism.etherscan.io/address/0x55Da037A08985f6B2912AEd2917EefF484a804BF |
