@@ -21,7 +21,6 @@ const {
 } = require("../../scripts/libraries/diamond.js");
 import { task } from "hardhat/config";
 import { AdminClient } from "defender-admin-client";
-import { DiamondWritable } from "../../typechain-types/DiamondWritable";
 
 async function deployFacets(
   hre: HardhatRuntimeEnvironment,
