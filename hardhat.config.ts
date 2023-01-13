@@ -21,6 +21,7 @@ import "./tasks/initialize-defender";
 import "./tasks/initialize-eoa";
 import "./tasks/upgrades/4_1_0";
 import "./tasks/upgrades/4_1_1";
+import "./tasks/upgrades/4_1_5";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "solidity-docgen";
