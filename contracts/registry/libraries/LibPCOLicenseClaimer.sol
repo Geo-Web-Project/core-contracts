@@ -45,8 +45,8 @@ library LibPCOLicenseClaimer {
 
         uint256 timeElapsed = block.timestamp - ds.auctionStart;
         uint256 auctionDuration = ds.auctionEnd - ds.auctionStart;
-        uint256 priceDecrease = (ds.startingBid * timeElapsed) /
-            auctionDuration;
+        uint256 priceDecrease = ((ds.startingBid - ds.endingBid) *
+            timeElapsed) / auctionDuration;
         return ds.startingBid - priceDecrease;
     }
 }
