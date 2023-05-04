@@ -39,7 +39,54 @@ const afterPlaceBid = deployments.createFixture(
 
     const txn = await basePCOFacet
       .connect(await ethers.getSigner(bidder))
-      .placeBid(newContributionRate, newForSalePrice);
+      ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
+    await txn.wait();
+
+    return res;
+  }
+);
+
+const afterPlaceBidWithContentHash = deployments.createFixture(
+  async ({ getNamedAccounts, ethers }) => {
+    const res = await BaseFixtures.initialized();
+    const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
+
+    const { bidder } = await getNamedAccounts();
+
+    const newContributionRate = BigNumber.from(200000000);
+    const newForSalePrice = await rateToPurchasePrice(
+      mockParamsStore,
+      newContributionRate
+    );
+
+    const requiredBuffer = await ethersjsSf.cfaV1.contract
+      .connect(await ethers.getSigner(bidder))
+      .getDepositRequiredForFlowRate(paymentToken.address, newContributionRate);
+    const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+    // Approve payment token
+    const approveOp = paymentToken.approve({
+      receiver: basePCOFacet.address,
+      amount: totalCollateral.toString(),
+    });
+    await approveOp.exec(await ethers.getSigner(bidder));
+
+    // Approve flow update
+    const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+      superToken: paymentToken.address,
+      flowOperator: basePCOFacet.address,
+      permissions: 1,
+      flowRateAllowance: newContributionRate.toString(),
+    });
+    await op.exec(await ethers.getSigner(bidder));
+
+    const txn = await basePCOFacet
+      .connect(await ethers.getSigner(bidder))
+      ["placeBid(int96,uint256,bytes)"](
+        newContributionRate,
+        newForSalePrice,
+        "0x13"
+      );
     await txn.wait();
 
     return res;
@@ -139,7 +186,7 @@ const afterPlaceBidWithRealLicense = deployments.createFixture(
 
     const txn = await basePCOFacet
       .connect(await ethers.getSigner(bidder))
-      .placeBid(newContributionRate, newForSalePrice);
+      ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
     await txn.wait();
 
     return res;
@@ -182,7 +229,7 @@ const afterPlaceBidExtremeFeeDuring = deployments.createFixture(
 
     const txn = await basePCOFacet
       .connect(await ethers.getSigner(bidder))
-      .placeBid(newContributionRate, newForSalePrice);
+      ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
     await txn.wait();
 
     return res;
@@ -225,7 +272,7 @@ const afterPlaceBidExtremeFeeAfter = deployments.createFixture(
 
     const txn = await basePCOFacet
       .connect(await ethers.getSigner(bidder))
-      .placeBid(newContributionRate, newForSalePrice);
+      ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
     await txn.wait();
 
     return res;
@@ -268,7 +315,7 @@ const afterPlaceBidLargeExtremeFeeAfter = deployments.createFixture(
 
     const txn = await basePCOFacet
       .connect(await ethers.getSigner(bidder))
-      .placeBid(newContributionRate, newForSalePrice);
+      ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
     await txn.wait();
 
     return res;
@@ -277,6 +324,7 @@ const afterPlaceBidLargeExtremeFeeAfter = deployments.createFixture(
 
 export default {
   afterPlaceBid,
+  afterPlaceBidWithContentHash,
   afterAcceptBid,
   afterPlaceBidAndSurplus,
   afterPlaceBidAndBidderRevokes,

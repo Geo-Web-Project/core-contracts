@@ -8,7 +8,6 @@ import { getNamedAccounts } from "hardhat";
 import { rateToPurchasePrice } from "../shared";
 import BaseFixtures from "./CFABasePCO.fixture";
 import CFAPenaltyBidFixtures from "./CFAPenaltyBid.fixture";
-import CFABasePCOFixture from "./CFABasePCO.fixture";
 
 use(solidity);
 use(chaiAsPromised);
@@ -111,7 +110,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate, newForSalePrice);
+        ["editBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await txn.wait();
 
       await expect(txn)
@@ -126,6 +125,7 @@ describe("CFAPenaltyBidFacet", async function () {
       );
       expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
       await checkUserToAppFlow(user, newContributionRate);
       await checkAppToBeneficiaryFlow(newContributionRate);
       await checkAppNetFlow();
@@ -163,7 +163,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate, newForSalePrice);
+        ["editBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await txn.wait();
 
       await expect(txn)
@@ -178,6 +178,7 @@ describe("CFAPenaltyBidFacet", async function () {
       );
       expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
       await checkUserToAppFlow(user, newContributionRate);
       await checkAppToBeneficiaryFlow(newContributionRate);
       await checkAppNetFlow();
@@ -225,7 +226,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate, newForSalePrice);
+        ["editBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await txn.wait();
 
       await expect(txn)
@@ -240,6 +241,7 @@ describe("CFAPenaltyBidFacet", async function () {
       );
       expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
       await checkUserToAppFlow(user, newContributionRate);
       await checkAppToBeneficiaryFlow(newContributionRate);
       await checkAppNetFlow();
@@ -281,7 +283,10 @@ describe("CFAPenaltyBidFacet", async function () {
       });
       await op.exec(await ethers.getSigner(user));
 
-      const txn = basePCOFacet.editBid(newContributionRate, newForSalePrice);
+      const txn = basePCOFacet["editBid(int96,uint256)"](
+        newContributionRate,
+        newForSalePrice
+      );
 
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Only payer is allowed to perform this action"
@@ -327,7 +332,10 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate.add(10), newForSalePrice);
+        ["editBid(int96,uint256)"](
+          newContributionRate.add(10),
+          newForSalePrice
+        );
       await expect(txn).to.be.revertedWith(
         "LibCFABasePCO: Incorrect for sale price"
       );
@@ -371,7 +379,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate, newForSalePrice);
+        ["editBid(int96,uint256)"](newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "CFAPenaltyBidFacet: Pending bid exists"
@@ -404,7 +412,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate, newForSalePrice);
+        ["editBid(int96,uint256)"](newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
     });
@@ -434,7 +442,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate, newForSalePrice);
+        ["editBid(int96,uint256)"](newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
@@ -481,7 +489,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .editBid(newContributionRate, newForSalePrice);
+        ["editBid(int96,uint256)"](newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
         "LibCFABasePCO: Minimum for sale price not met"
@@ -537,7 +545,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await txn.wait();
 
       await expect(txn)
@@ -551,6 +559,7 @@ describe("CFAPenaltyBidFacet", async function () {
       expect(pendingBid.bidder).to.equal(bidder);
       expect(pendingBid.contributionRate).to.equal(newContributionRate);
       expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
       await checkUserToAppFlow(user, await basePCOFacet.contributionRate());
       await checkAppToBeneficiaryFlow(await basePCOFacet.contributionRate());
       await checkAppNetFlow();
@@ -599,7 +608,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = await basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await txn.wait();
 
       await expect(txn)
@@ -613,6 +622,7 @@ describe("CFAPenaltyBidFacet", async function () {
       expect(pendingBid.bidder).to.equal(bidder);
       expect(pendingBid.contributionRate).to.equal(newContributionRate);
       expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
       await checkUserToAppFlow(user, await basePCOFacet.contributionRate());
       await checkAppToBeneficiaryFlow(await basePCOFacet.contributionRate());
       await checkAppNetFlow();
@@ -655,9 +665,12 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .placeBid(newContributionRate.add(10), newForSalePrice);
+        ["placeBid(int96,uint256)"](
+          newContributionRate.add(10),
+          newForSalePrice
+        );
       await expect(txn).to.be.revertedWith(
-        "CFAPenaltyBidFacet: Incorrect for sale price"
+        "LibCFAPenaltyBid: Incorrect for sale price"
       );
     });
 
@@ -689,9 +702,9 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        "CFAPenaltyBidFacet: CREATE_FLOW permission not granted"
+        "LibCFAPenaltyBid: CREATE_FLOW permission not granted"
       );
     });
 
@@ -732,9 +745,9 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        "CFAPenaltyBidFacet: CREATE_FLOW permission does not have enough allowance"
+        "LibCFAPenaltyBid: CREATE_FLOW permission does not have enough allowance"
       );
     });
 
@@ -760,7 +773,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
         "SuperToken: transfer amount exceeds allowance"
       );
@@ -803,9 +816,9 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(accounts[3]))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
-        "CFAPenaltyBidFacet: Pending bid already exists"
+        "LibCFAPenaltyBid: Pending bid already exists"
       );
     });
 
@@ -846,7 +859,7 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(accounts[3]))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Can only perform action when payer bid is active"
       );
@@ -889,10 +902,10 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(bidder))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
 
       await expect(txn).to.be.revertedWith(
-        "CFAPenaltyBidFacet: New contribution rate is not high enough"
+        "LibCFAPenaltyBid: New contribution rate is not high enough"
       );
     });
 
@@ -934,7 +947,964 @@ describe("CFAPenaltyBidFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .placeBid(newContributionRate, newForSalePrice);
+        ["placeBid(int96,uint256)"](newContributionRate, newForSalePrice);
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Payer is not allowed to perform this action"
+      );
+    });
+  });
+
+  describe("editBid with content hash", async () => {
+    it("should increase bid", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, newContributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, newForSalePrice);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        newContributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x12");
+      await checkUserToAppFlow(user, newContributionRate);
+      await checkAppToBeneficiaryFlow(newContributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should decrease bid", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await BaseFixtures.initializedLarge();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(100);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: existingContributionRate
+          .sub(newContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, newContributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, newForSalePrice);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        newContributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x12");
+      await checkUserToAppFlow(user, newContributionRate);
+      await checkAppToBeneficiaryFlow(newContributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should edit bid after payer delete", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await BaseFixtures.afterPayerDelete();
+      const { user } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow create
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, newContributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, newForSalePrice);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        newContributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(newForSalePrice);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x12");
+      await checkUserToAppFlow(user, newContributionRate);
+      await checkAppToBeneficiaryFlow(newContributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should fail if not payer", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet["editBid(int96,uint256,bytes)"](
+        newContributionRate,
+        newForSalePrice,
+        "0x12"
+      );
+
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
+      );
+    });
+
+    it("should fail if for sale price is incorrect rounding", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .add(10)
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate.add(10),
+          newForSalePrice,
+          "0x12"
+        );
+      await expect(txn).to.be.revertedWith(
+        "LibCFABasePCO: Incorrect for sale price"
+      );
+    });
+
+    it("should fail if has pending bid", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+
+      await expect(txn).to.be.revertedWith(
+        "CFAPenaltyBidFacet: Pending bid exists"
+      );
+    });
+
+    it("should fail if missing flow permissions", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+
+      await expect(txn).to.be.revertedWith("E_NO_OPERATOR_UPDATE_FLOW");
+    });
+
+    it("should fail if missing buffer transfer allowance", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+
+      await expect(txn).to.be.revertedWith(
+        "SuperToken: transfer amount exceeds allowance"
+      );
+    });
+
+    it("should fail if for sale price does not meet minimum", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve buffer deposit
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: newContributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      mockParamsStore.getMinForSalePrice.returns(newForSalePrice.add(1000));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+
+      await expect(txn).to.be.revertedWith(
+        "LibCFABasePCO: Minimum for sale price not met"
+      );
+
+      mockParamsStore.getMinForSalePrice.returns(0);
+    });
+  });
+
+  describe("placeBid with content hash", async () => {
+    it("should place bid with create permissions", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        ethx_erc20,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await BaseFixtures.initialized();
+      const { user, bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidPlaced")
+        .withArgs(bidder, newContributionRate, newForSalePrice);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(bidder, basePCOFacet.address, totalCollateral);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.bidder).to.equal(bidder);
+      expect(pendingBid.contributionRate).to.equal(newContributionRate);
+      expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
+      await checkUserToAppFlow(user, await basePCOFacet.contributionRate());
+      await checkAppToBeneficiaryFlow(await basePCOFacet.contributionRate());
+      await checkAppNetFlow();
+    });
+
+    it("should place bid with full control", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        ethersjsSf,
+        paymentToken,
+        ethx_erc20,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+      } = await BaseFixtures.initialized();
+      const { user, bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.authorizeFlowOperatorWithFullControl({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x12"
+        );
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidPlaced")
+        .withArgs(bidder, newContributionRate, newForSalePrice);
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(bidder, basePCOFacet.address, totalCollateral);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.bidder).to.equal(bidder);
+      expect(pendingBid.contributionRate).to.equal(newContributionRate);
+      expect(pendingBid.forSalePrice).to.equal(newForSalePrice);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
+      await checkUserToAppFlow(user, await basePCOFacet.contributionRate());
+      await checkAppToBeneficiaryFlow(await basePCOFacet.contributionRate());
+      await checkAppNetFlow();
+    });
+
+    it("should fail if for sale price is incorrect rounding", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate.add(10),
+          newForSalePrice,
+          "0x11"
+        );
+      await expect(txn).to.be.revertedWith(
+        "LibCFAPenaltyBid: Incorrect for sale price"
+      );
+    });
+
+    it("should fail if missing flow permissions", async () => {
+      const { basePCOFacet, mockParamsStore, paymentToken, ethersjsSf } =
+        await BaseFixtures.initialized();
+      const { bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x11"
+        );
+      await expect(txn).to.be.revertedWith(
+        "LibCFAPenaltyBid: CREATE_FLOW permission not granted"
+      );
+    });
+
+    it("should fail if flow allowance is not enough", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.sub(1).toString(),
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x11"
+        );
+      await expect(txn).to.be.revertedWith(
+        "LibCFAPenaltyBid: CREATE_FLOW permission does not have enough allowance"
+      );
+    });
+
+    it("should fail if deposit allowance is not enough", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x11"
+        );
+      await expect(txn).to.be.revertedWith(
+        "SuperToken: transfer amount exceeds allowance"
+      );
+    });
+
+    it("should fail if pending bid exists", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await CFAPenaltyBidFixtures.afterPlaceBid();
+      const accounts = await getUnnamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(accounts[3]))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(accounts[3]));
+
+      // Approve flow update
+      const op1 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op1.exec(await ethers.getSigner(accounts[3]));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(accounts[3]))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x11"
+        );
+      await expect(txn).to.be.revertedWith(
+        "LibCFAPenaltyBid: Pending bid already exists"
+      );
+    });
+
+    it("should fail if payer bid is inactive", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.afterPayerDelete();
+      const accounts = await getUnnamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(accounts[3]))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(accounts[3]));
+
+      // Approve flow update
+      const op1 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op1.exec(await ethers.getSigner(accounts[3]));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(accounts[3]))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x11"
+        );
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Can only perform action when payer bid is active"
+      );
+    });
+
+    it("should fail if for sale price is too low", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const { bidder } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(50);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(bidder))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(bidder));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op.exec(await ethers.getSigner(bidder));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(bidder))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x11"
+        );
+
+      await expect(txn).to.be.revertedWith(
+        "LibCFAPenaltyBid: New contribution rate is not high enough"
+      );
+    });
+
+    it("should fail if payer is bidder", async () => {
+      const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } =
+        await BaseFixtures.initialized();
+      const accounts = await getUnnamedAccounts();
+      const { user } = await getNamedAccounts();
+
+      const newContributionRate = BigNumber.from(200000000);
+      const newForSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        newContributionRate
+      );
+
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(accounts[3]))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          newContributionRate
+        );
+      const totalCollateral = newForSalePrice.add(requiredBuffer);
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: totalCollateral.toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op1 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: newContributionRate.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["placeBid(int96,uint256,bytes)"](
+          newContributionRate,
+          newForSalePrice,
+          "0x11"
+        );
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Payer is not allowed to perform this action"
       );
@@ -1008,6 +1978,80 @@ describe("CFAPenaltyBidFacet", async function () {
         oldPendingBid.forSalePrice
       );
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
+      await checkUserToAppFlow(user, BigNumber.from(0));
+      await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
+      await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
+      await checkAppNetFlow();
+    });
+
+    it("should accept bid with content hash", async () => {
+      const {
+        basePCOFacet,
+        mockLicense,
+        checkUserToAppFlow,
+        checkAppNetFlow,
+        checkAppToBeneficiaryFlow,
+        ethx_erc20,
+        checkAppBalance,
+        ethersjsSf,
+        paymentToken,
+      } = await CFAPenaltyBidFixtures.afterPlaceBidWithContentHash();
+
+      mockLicense["safeTransferFrom(address,address,uint256)"].reset();
+
+      const { bidder, user } = await getNamedAccounts();
+
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const forSalePrice = await basePCOFacet.forSalePrice();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .acceptBid();
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "BidAccepted")
+        .withArgs(user, bidder, forSalePrice);
+      expect(
+        mockLicense["safeTransferFrom(address,address,uint256)"]
+      ).to.have.been.calledOnceWith(
+        user,
+        bidder,
+        await basePCOFacet.licenseId()
+      );
+
+      // Check payment token transfers
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(
+          basePCOFacet.address,
+          bidder,
+          oldPendingBid.forSalePrice.sub(forSalePrice)
+        );
+      await expect(txn)
+        .to.emit(ethx_erc20, "Transfer")
+        .withArgs(basePCOFacet.address, user, forSalePrice.add(oldBuffer));
+      await checkAppBalance(0);
+
+      const pendingBid = await basePCOFacet.pendingBid();
+      expect(pendingBid.contributionRate).to.equal(0);
+
+      expect(await basePCOFacet.payer()).to.equal(bidder);
+      expect(await basePCOFacet.contributionRate()).to.equal(
+        oldPendingBid.contributionRate
+      );
+      expect(await basePCOFacet.forSalePrice()).to.equal(
+        oldPendingBid.forSalePrice
+      );
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x13");
       await checkUserToAppFlow(user, BigNumber.from(0));
       await checkUserToAppFlow(bidder, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
@@ -1103,7 +2147,7 @@ describe("CFAPenaltyBidFacet", async function () {
     });
 
     it("should fail if pending bid does not exist", async () => {
-      const { basePCOFacet } = await CFABasePCOFixture.initialized();
+      const { basePCOFacet } = await BaseFixtures.initialized();
       const { user } = await getNamedAccounts();
 
       const txn = basePCOFacet

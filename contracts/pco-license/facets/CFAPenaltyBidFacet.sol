@@ -147,87 +147,51 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
         onlyIfPayerBidActive
         onlyNotPayer
     {
-        LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
-            .pendingBid();
-
-        // Check if pending bid exists
-        require(
-            !this.hasPendingBid(),
-            "CFAPenaltyBidFacet: Pending bid already exists"
+        LibCFAPenaltyBid._placeBid(
+            newContributionRate,
+            newForSalePrice,
+            new bytes(0)
         );
+    }
 
-        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
-            .diamondStorage();
-        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-
-        uint256 perSecondFeeNumerator = ds
-            .paramsStore
-            .getPerSecondFeeNumerator();
-        uint256 perSecondFeeDenominator = ds
-            .paramsStore
-            .getPerSecondFeeDenominator();
-
-        // Check for sale price
-        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
-
-        require(
-            LibCFABasePCO._checkForSalePrice(
-                newForSalePrice,
-                newContributionRate,
-                perSecondFeeNumerator,
-                perSecondFeeDenominator
-            ),
-            "CFAPenaltyBidFacet: Incorrect for sale price"
+    /**
+     * @notice Edit bid with content hash
+     *      - Must be the current payer
+     *      - Must have permissions to update flow for payer
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function editBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes calldata contentHash
+    ) external onlyPayer onlyIfNotPendingBid {
+        LibCFABasePCO._editBid(
+            newContributionRate,
+            newForSalePrice,
+            contentHash
         );
+    }
 
-        require(
-            newContributionRate >= _currentBid.contributionRate,
-            "CFAPenaltyBidFacet: New contribution rate is not high enough"
-        );
-
-        // Check operator permissions
-        (, uint8 permissions, int96 flowRateAllowance) = cs
-            .cfaV1
-            .cfa
-            .getFlowOperatorData(
-                ds.paramsStore.getPaymentToken(),
-                msg.sender,
-                address(this)
-            );
-
-        require(
-            LibCFAPenaltyBid._getBooleanFlowOperatorPermissions(
-                permissions,
-                LibCFAPenaltyBid.FlowChangeType.CREATE_FLOW
-            ),
-            "CFAPenaltyBidFacet: CREATE_FLOW permission not granted"
-        );
-        require(
-            flowRateAllowance >= newContributionRate,
-            "CFAPenaltyBidFacet: CREATE_FLOW permission does not have enough allowance"
-        );
-
-        // Save pending bid
-        _pendingBid.timestamp = block.timestamp;
-        _pendingBid.bidder = msg.sender;
-        _pendingBid.contributionRate = newContributionRate;
-        _pendingBid.perSecondFeeNumerator = perSecondFeeNumerator;
-        _pendingBid.perSecondFeeDenominator = perSecondFeeDenominator;
-        _pendingBid.forSalePrice = newForSalePrice;
-
-        emit BidPlaced(msg.sender, newContributionRate, newForSalePrice);
-
-        // Collect deposit
-        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-        uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-            paymentToken,
-            newContributionRate
-        );
-        uint256 requiredCollateral = requiredBuffer + newForSalePrice;
-        paymentToken.safeTransferFrom(
-            msg.sender,
-            address(this),
-            requiredCollateral
+    /**
+     * @notice Place a bid with content hash
+     *      - Pending bid must not exist
+     *      - Must have permissions to create flow for bidder
+     *      - Must have ERC-20 approval of payment token
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function placeBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes calldata contentHash
+    ) external onlyIfPayerBidActive onlyNotPayer {
+        LibCFAPenaltyBid._placeBid(
+            newContributionRate,
+            newForSalePrice,
+            contentHash
         );
     }
 

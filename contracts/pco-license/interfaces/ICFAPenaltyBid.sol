@@ -86,4 +86,28 @@ interface ICFAPenaltyBid {
      * @notice Trigger a transfer after bidding period has elapsed
      */
     function triggerTransfer() external;
+
+    /**
+     * @notice Edit bid with a content hash
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intended new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function editBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes calldata contentHash
+    ) external;
+
+    /**
+     * @notice Place a bid with a content hash
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intended new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function placeBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes calldata contentHash
+    ) external;
 }

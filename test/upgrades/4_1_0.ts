@@ -49,7 +49,7 @@ describe("Migration v4.1.0", async () => {
     await upgrade(hre, diamond);
 
     const pcoLicenseClaimerV2 = await ethers.getContractAt(
-      `IPCOLicenseClaimer`,
+      `IPCOLicenseClaimerV2`,
       diamond.address
     );
 
@@ -150,7 +150,11 @@ describe("Migration v4.1.0", async () => {
 
     const txn = await pcoLicenseClaimerV2
       .connect(await ethers.getSigner(user))
-      .claim(contributionRate, forSalePrice, [coord, 1, 1]);
+      ["claim(int96,uint256,(uint64,uint256,uint256))"](
+        contributionRate,
+        forSalePrice,
+        [coord, 1, 1]
+      );
 
     await txn.wait();
 

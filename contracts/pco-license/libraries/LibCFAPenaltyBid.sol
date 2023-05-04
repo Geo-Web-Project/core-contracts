@@ -22,7 +22,15 @@ library LibCFAPenaltyBid {
         uint256 perSecondFeeNumerator;
         uint256 perSecondFeeDenominator;
         uint256 forSalePrice;
+        bytes contentHash;
     }
+
+    /// @notice Emitted when for sale price is updated
+    event BidPlaced(
+        address indexed _bidder,
+        int96 contributionRate,
+        uint256 forSalePrice
+    );
 
     function pendingBid() internal pure returns (Bid storage ds) {
         bytes32 position = STORAGE_POSITION_OUT_BID;
@@ -75,6 +83,101 @@ library LibCFAPenaltyBid {
         _pendingBid.timestamp = block.timestamp;
     }
 
+    /**
+     * @notice Place a bid to purchase license as msg.sender
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function _placeBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes memory contentHash
+    ) internal {
+        Bid storage _pendingBid = pendingBid();
+
+        // Check if pending bid exists
+        require(
+            _pendingBid.contributionRate <= 0,
+            "LibCFAPenaltyBid: Pending bid already exists"
+        );
+
+        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
+            .diamondStorage();
+        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
+
+        uint256 perSecondFeeNumerator = ds
+            .paramsStore
+            .getPerSecondFeeNumerator();
+        uint256 perSecondFeeDenominator = ds
+            .paramsStore
+            .getPerSecondFeeDenominator();
+
+        // Check for sale price
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+
+        require(
+            LibCFABasePCO._checkForSalePrice(
+                newForSalePrice,
+                newContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "LibCFAPenaltyBid: Incorrect for sale price"
+        );
+
+        require(
+            newContributionRate >= _currentBid.contributionRate,
+            "LibCFAPenaltyBid: New contribution rate is not high enough"
+        );
+
+        // Check operator permissions
+        (, uint8 permissions, int96 flowRateAllowance) = cs
+            .cfaV1
+            .cfa
+            .getFlowOperatorData(
+                ds.paramsStore.getPaymentToken(),
+                msg.sender,
+                address(this)
+            );
+
+        require(
+            _getBooleanFlowOperatorPermissions(
+                permissions,
+                FlowChangeType.CREATE_FLOW
+            ),
+            "LibCFAPenaltyBid: CREATE_FLOW permission not granted"
+        );
+        require(
+            flowRateAllowance >= newContributionRate,
+            "LibCFAPenaltyBid: CREATE_FLOW permission does not have enough allowance"
+        );
+
+        // Save pending bid
+        _pendingBid.timestamp = block.timestamp;
+        _pendingBid.bidder = msg.sender;
+        _pendingBid.contributionRate = newContributionRate;
+        _pendingBid.perSecondFeeNumerator = perSecondFeeNumerator;
+        _pendingBid.perSecondFeeDenominator = perSecondFeeDenominator;
+        _pendingBid.forSalePrice = newForSalePrice;
+        _pendingBid.contentHash = contentHash;
+
+        emit BidPlaced(msg.sender, newContributionRate, newForSalePrice);
+
+        // Collect deposit
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+        uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
+            paymentToken,
+            newContributionRate
+        );
+        uint256 requiredCollateral = requiredBuffer + newForSalePrice;
+        paymentToken.safeTransferFrom(
+            msg.sender,
+            address(this),
+            requiredCollateral
+        );
+    }
+
     /// @notice Trigger transfer of license
     function _triggerTransfer() internal {
         LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
@@ -93,6 +196,7 @@ library LibCFAPenaltyBid {
         _currentBid.perSecondFeeDenominator = _pendingBid
             .perSecondFeeDenominator;
         _currentBid.forSalePrice = _pendingBid.forSalePrice;
+        _currentBid.contentHash = _pendingBid.contentHash;
 
         // Update pending bid
         _clearPendingBid();

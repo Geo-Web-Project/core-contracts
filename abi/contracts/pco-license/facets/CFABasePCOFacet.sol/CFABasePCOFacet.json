@@ -39,6 +39,19 @@
   },
   {
     "inputs": [],
+    "name": "contentHash",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "contributionRate",
     "outputs": [
       {
@@ -85,6 +98,11 @@
             "internalType": "uint256",
             "name": "forSalePrice",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "contentHash",
+            "type": "bytes"
           }
         ],
         "internalType": "struct LibCFABasePCO.Bid",
@@ -144,6 +162,54 @@
         "internalType": "uint256",
         "name": "newForSalePrice",
         "type": "uint256"
+      }
+    ],
+    "name": "initializeBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ICFABeneficiary",
+        "name": "beneficiary",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IPCOLicenseParamsStore",
+        "name": "paramsStore",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC721",
+        "name": "initLicense",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "initLicenseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "bidder",
+        "type": "address"
+      },
+      {
+        "internalType": "int96",
+        "name": "newContributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newForSalePrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "contentHash",
+        "type": "bytes"
       }
     ],
     "name": "initializeBid",

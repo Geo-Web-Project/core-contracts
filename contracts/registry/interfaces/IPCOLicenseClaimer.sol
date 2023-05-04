@@ -102,6 +102,22 @@ interface IPCOLicenseClaimer {
         uint256 initialForSalePrice,
         LibGeoWebParcelV2.LandParcel memory parcel
     ) external;
+
+    /**
+     * @notice Claim a new parcel and license with content hash
+     *      - Must have ERC-20 approval of payment token
+     *      - To-be-created contract must have create flow permissions for bidder. See getNextProxyAddress
+     * @param initialContributionRate Initial contribution rate of parcel
+     * @param initialForSalePrice Initial for sale price of parcel
+     * @param parcel New parcel
+     * @param contentHash Content hash for parcel content
+     */
+    function claim(
+        int96 initialContributionRate,
+        uint256 initialForSalePrice,
+        LibGeoWebParcelV2.LandParcel memory parcel,
+        bytes calldata contentHash
+    ) external;
 }
 
 /// @title IPCOLicenseClaimerV1 external functions
@@ -222,5 +238,21 @@ interface IPCOLicenseClaimerV2 is IPCOLicenseClaimerV1 {
         int96 initialContributionRate,
         uint256 initialForSalePrice,
         LibGeoWebParcelV2.LandParcel memory parcel
+    ) external;
+
+    /**
+     * @notice Claim a new parcel and license with content hash
+     *      - Must have ERC-20 approval of payment token
+     *      - To-be-created contract must have create flow permissions for bidder. See getNextProxyAddress
+     * @param initialContributionRate Initial contribution rate of parcel
+     * @param initialForSalePrice Initial for sale price of parcel
+     * @param parcel New parcel
+     * @param contentHash Content hash for parcel content
+     */
+    function claim(
+        int96 initialContributionRate,
+        uint256 initialForSalePrice,
+        LibGeoWebParcelV2.LandParcel memory parcel,
+        bytes calldata contentHash
     ) external;
 }

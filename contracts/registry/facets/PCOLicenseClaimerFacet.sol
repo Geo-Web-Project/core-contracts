@@ -323,16 +323,54 @@ contract PCOLicenseClaimerFacetV2 is
         uint256 initialForSalePrice,
         LibGeoWebParcelV2.LandParcel memory parcel
     ) external {
+        _claim(
+            initialContributionRate,
+            initialForSalePrice,
+            parcel,
+            new bytes(0)
+        );
+    }
+
+    /**
+     * @notice Claim a new parcel and license with content hash
+     *      - Must have ERC-20 approval of payment token
+     *      - To-be-created contract must have create flow permissions for bidder. See getNextProxyAddress
+     * @param initialContributionRate Initial contribution rate of parcel
+     * @param initialForSalePrice Initial for sale price of parcel
+     * @param parcel New parcel
+     * @param contentHash Content hash for parcel content
+     */
+    function claim(
+        int96 initialContributionRate,
+        uint256 initialForSalePrice,
+        LibGeoWebParcelV2.LandParcel memory parcel,
+        bytes calldata contentHash
+    ) external {
+        _claim(
+            initialContributionRate,
+            initialForSalePrice,
+            parcel,
+            contentHash
+        );
+    }
+
+    function _claim(
+        int96 initialContributionRate,
+        uint256 initialForSalePrice,
+        LibGeoWebParcelV2.LandParcel memory parcel,
+        bytes memory contentHash
+    ) internal {
         LibPCOLicenseClaimer.DiamondStorage storage ds = LibPCOLicenseClaimer
             .diamondStorage();
         LibPCOLicenseParams.DiamondStorage storage ls = LibPCOLicenseParams
             .diamondStorage();
 
-        uint256 _requiredBid = LibPCOLicenseClaimer._requiredBid();
-        require(
-            initialForSalePrice >= _requiredBid,
-            "PCOLicenseClaimerFacetV2: Initial for sale price does not meet requirement"
-        );
+        {
+            require(
+                initialForSalePrice >= LibPCOLicenseClaimer._requiredBid(),
+                "PCOLicenseClaimerFacetV2: Initial for sale price does not meet requirement"
+            );
+        }
 
         uint256 licenseId = LibGeoWebParcel.nextId();
 
@@ -380,15 +418,16 @@ contract PCOLicenseClaimerFacetV2 is
             licenseId,
             msg.sender,
             initialContributionRate,
-            initialForSalePrice
+            initialForSalePrice,
+            contentHash
         );
 
         // Transfer initial payment
-        if (_requiredBid > 0) {
+        if (LibPCOLicenseClaimer._requiredBid() > 0) {
             ls.paymentToken.safeTransferFrom(
                 msg.sender,
                 address(ls.beneficiary),
-                _requiredBid
+                LibPCOLicenseClaimer._requiredBid()
             );
         }
 

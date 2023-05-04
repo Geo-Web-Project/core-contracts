@@ -171,7 +171,9 @@ const initialized = deployments.createFixture(
     });
     await op2.exec(await ethers.getSigner(user));
 
-    const txn = await basePCOFacet.initializeBid(
+    const txn = await basePCOFacet[
+      "initializeBid(address,address,address,uint256,address,int96,uint256)"
+    ](
       mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
@@ -225,7 +227,9 @@ const initializedLarge = deployments.createFixture(
     });
     await op2.exec(await ethers.getSigner(user));
 
-    const txn = await basePCOFacet.initializeBid(
+    const txn = await basePCOFacet[
+      "initializeBid(address,address,address,uint256,address,int96,uint256)"
+    ](
       mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
@@ -324,16 +328,20 @@ const initializedWithRealLicense = deployments.createFixture(
     await op2.exec(await ethers.getSigner(user));
 
     const pcoLicenseClaimer = await ethers.getContractAt(
-      `IPCOLicenseClaimer`,
+      `IPCOLicenseClaimerV2`,
       diamond.address
     );
     const txn = await pcoLicenseClaimer
       .connect(await ethers.getSigner(user))
-      .claim(contributionRate, forSalePrice, {
-        swCoordinate: coord,
-        lngDim: 1,
-        latDim: 1,
-      });
+      ["claim(int96,uint256,(uint64,uint256,uint256))"](
+        contributionRate,
+        forSalePrice,
+        {
+          swCoordinate: coord,
+          lngDim: 1,
+          latDim: 1,
+        }
+      );
 
     await txn.wait();
 
@@ -451,7 +459,9 @@ const initializedExtremeFeeDuring = deployments.createFixture(
     });
     await op2.exec(await ethers.getSigner(user));
 
-    const txn = await basePCOFacet.initializeBid(
+    const txn = await basePCOFacet[
+      "initializeBid(address,address,address,uint256,address,int96,uint256)"
+    ](
       mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
@@ -509,7 +519,9 @@ const initializedExtremeFeeAfter = deployments.createFixture(
     });
     await op2.exec(await ethers.getSigner(user));
 
-    const txn = await basePCOFacet.initializeBid(
+    const txn = await basePCOFacet[
+      "initializeBid(address,address,address,uint256,address,int96,uint256)"
+    ](
       mockCFABeneficiary.address,
       mockParamsStore.address,
       mockLicense.address,
