@@ -6,6 +6,7 @@ import "../../beneficiary/interfaces/ICFABeneficiary.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 
 library LibCFABasePCO {
     using CFAv1Library for CFAv1Library.InitData;
@@ -27,6 +28,7 @@ library LibCFABasePCO {
         uint256 perSecondFeeNumerator;
         uint256 perSecondFeeDenominator;
         uint256 forSalePrice;
+        bytes contentHash;
     }
 
     struct DiamondStorage {
@@ -132,9 +134,108 @@ library LibCFABasePCO {
         );
     }
 
+    /**
+     * @notice Initialize bid.
+     * @param paramsStore Global store for parameters
+     * @param initLicense Underlying ERC721 license
+     * @param initLicenseId Token ID of license
+     * @param bidder Initial bidder
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function _initializeBid(
+        ICFABeneficiary beneficiary,
+        IPCOLicenseParamsStore paramsStore,
+        IERC721 initLicense,
+        uint256 initLicenseId,
+        address bidder,
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes memory contentHash
+    ) internal {
+        DiamondStorage storage ds = diamondStorage();
+        ds.paramsStore = paramsStore;
+        ds.license = initLicense;
+        ds.licenseId = initLicenseId;
+        ds.beneficiary = beneficiary;
+
+        require(
+            newForSalePrice >= ds.paramsStore.getMinForSalePrice(),
+            "CFABasePCOFacet: Minimum for sale price not met"
+        );
+
+        uint256 perSecondFeeNumerator = ds
+            .paramsStore
+            .getPerSecondFeeNumerator();
+        uint256 perSecondFeeDenominator = ds
+            .paramsStore
+            .getPerSecondFeeDenominator();
+        require(
+            _checkForSalePrice(
+                newForSalePrice,
+                newContributionRate,
+                perSecondFeeNumerator,
+                perSecondFeeDenominator
+            ),
+            "LibCFABasePCO: Incorrect for sale price"
+        );
+
+        DiamondCFAStorage storage cs = cfaStorage();
+        ISuperfluid host = ds.paramsStore.getHost();
+        cs.cfaV1 = CFAv1Library.InitData(
+            host,
+            IConstantFlowAgreementV1(
+                address(
+                    host.getAgreementClass(
+                        keccak256(
+                            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
+                        )
+                    )
+                )
+            )
+        );
+        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
+
+        Bid storage bid = _currentBid();
+        bid.timestamp = block.timestamp;
+        bid.bidder = bidder;
+        bid.contributionRate = newContributionRate;
+        bid.perSecondFeeNumerator = perSecondFeeNumerator;
+        bid.perSecondFeeDenominator = perSecondFeeDenominator;
+        bid.forSalePrice = newForSalePrice;
+        bid.contentHash = contentHash;
+
+        emit PayerForSalePriceUpdated(bidder, newForSalePrice);
+        emit PayerContributionRateUpdated(bidder, newContributionRate);
+
+        // Create flow (payer -> license)
+        cs.cfaV1.createFlowByOperator(
+            bidder,
+            address(this),
+            paymentToken,
+            newContributionRate
+        );
+
+        // Create flow (license -> beneficiary)
+        cs.cfaV1.createFlow(
+            address(beneficiary),
+            paymentToken,
+            newContributionRate
+        );
+    }
+
     function _editBid(int96 newContributionRate, uint256 newForSalePrice)
         internal
     {
+        _editBid(newContributionRate, newForSalePrice, new bytes(0));
+    }
+
+    function _editBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes memory contentHash
+    ) internal {
         DiamondStorage storage ds = diamondStorage();
         DiamondCFAStorage storage cs = cfaStorage();
         Bid storage bid = _currentBid();
@@ -168,6 +269,7 @@ library LibCFABasePCO {
         bid.perSecondFeeNumerator = perSecondFeeNumerator;
         bid.perSecondFeeDenominator = perSecondFeeDenominator;
         bid.forSalePrice = newForSalePrice;
+        bid.contentHash = contentHash;
 
         emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
         emit PayerContributionRateUpdated(bid.bidder, newContributionRate);

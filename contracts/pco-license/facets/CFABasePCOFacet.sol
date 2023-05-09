@@ -3,7 +3,6 @@ pragma solidity ^0.8.16;
 
 import "../libraries/LibCFABasePCO.sol";
 import "../interfaces/ICFABasePCO.sol";
-import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFAv1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
@@ -63,7 +62,7 @@ contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
      * @param initLicenseId Token ID of license
      * @param bidder Initial bidder
      * @param newContributionRate New contribution rate for bid
-     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     * @param newForSalePrice Intended new for sale price. Must be within rounding bounds of newContributionRate
      */
     function initializeBid(
         ICFABeneficiary beneficiary,
@@ -74,74 +73,50 @@ contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
         int96 newContributionRate,
         uint256 newForSalePrice
     ) external onlyOwner {
-        LibCFABasePCO.DiamondStorage storage ds = LibCFABasePCO
-            .diamondStorage();
-        ds.paramsStore = paramsStore;
-        ds.license = initLicense;
-        ds.licenseId = initLicenseId;
-        ds.beneficiary = beneficiary;
-
-        require(
-            newForSalePrice >= ds.paramsStore.getMinForSalePrice(),
-            "CFABasePCOFacet: Minimum for sale price not met"
-        );
-
-        uint256 perSecondFeeNumerator = ds
-            .paramsStore
-            .getPerSecondFeeNumerator();
-        uint256 perSecondFeeDenominator = ds
-            .paramsStore
-            .getPerSecondFeeDenominator();
-        require(
-            LibCFABasePCO._checkForSalePrice(
-                newForSalePrice,
-                newContributionRate,
-                perSecondFeeNumerator,
-                perSecondFeeDenominator
-            ),
-            "CFABasePCOFacet: Incorrect for sale price"
-        );
-
-        LibCFABasePCO.DiamondCFAStorage storage cs = LibCFABasePCO.cfaStorage();
-        ISuperfluid host = ds.paramsStore.getHost();
-        cs.cfaV1 = CFAv1Library.InitData(
-            host,
-            IConstantFlowAgreementV1(
-                address(
-                    host.getAgreementClass(
-                        keccak256(
-                            "org.superfluid-finance.agreements.ConstantFlowAgreement.v1"
-                        )
-                    )
-                )
-            )
-        );
-        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-
-        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
-        _currentBid.timestamp = block.timestamp;
-        _currentBid.bidder = bidder;
-        _currentBid.contributionRate = newContributionRate;
-        _currentBid.perSecondFeeNumerator = perSecondFeeNumerator;
-        _currentBid.perSecondFeeDenominator = perSecondFeeDenominator;
-        _currentBid.forSalePrice = newForSalePrice;
-
-        emit PayerForSalePriceUpdated(bidder, newForSalePrice);
-        emit PayerContributionRateUpdated(bidder, newContributionRate);
-
-        // Create flow (payer -> license)
-        cs.cfaV1.createFlowByOperator(
+        LibCFABasePCO._initializeBid(
+            beneficiary,
+            paramsStore,
+            initLicense,
+            initLicenseId,
             bidder,
-            address(this),
-            paymentToken,
-            newContributionRate
+            newContributionRate,
+            newForSalePrice,
+            new bytes(0)
         );
+    }
 
-        // Create flow (license -> beneficiary)
-        cs.cfaV1.createFlow(
-            address(beneficiary),
-            paymentToken,
-            newContributionRate
+    /**
+     * @notice Initialize bid with content hash
+     *      - Must be the contract owner
+     *      - Must have payment token buffer deposited
+     *      - Must have permissions to create flow for bidder
+     * @param paramsStore Global store for parameters
+     * @param initLicense Underlying ERC721 license
+     * @param initLicenseId Token ID of license
+     * @param bidder Initial bidder
+     * @param newContributionRate New contribution rate for bid
+     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function initializeBid(
+        ICFABeneficiary beneficiary,
+        IPCOLicenseParamsStore paramsStore,
+        IERC721 initLicense,
+        uint256 initLicenseId,
+        address bidder,
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes calldata contentHash
+    ) external onlyOwner {
+        LibCFABasePCO._initializeBid(
+            beneficiary,
+            paramsStore,
+            initLicense,
+            initLicenseId,
+            bidder,
+            newContributionRate,
+            newForSalePrice,
+            contentHash
         );
     }
 
@@ -204,5 +179,14 @@ contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
         LibCFABasePCO.Bid storage bid = LibCFABasePCO._currentBid();
 
         return bid;
+    }
+
+    /**
+     * @notice Get content hash
+     */
+    function contentHash() external view returns (bytes memory) {
+        LibCFABasePCO.Bid storage bid = LibCFABasePCO._currentBid();
+
+        return bid.contentHash;
     }
 }

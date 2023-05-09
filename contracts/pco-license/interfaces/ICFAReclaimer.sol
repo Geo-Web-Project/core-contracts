@@ -15,7 +15,7 @@ interface ICFAReclaimer {
      * @notice Reclaim an inactive license as msg.sender
      * @param maxClaimPrice Max price willing to pay for claim. Prevents front-running
      * @param newContributionRate New contribution rate for license
-     * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
+     * @param newForSalePrice Intended new for sale price. Must be within rounding bounds of newContributionRate
      */
     function reclaim(
         uint256 maxClaimPrice,

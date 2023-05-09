@@ -22,6 +22,7 @@ import "./tasks/initialize-eoa";
 import "./tasks/upgrades/4_1_0";
 import "./tasks/upgrades/4_1_1";
 import "./tasks/upgrades/4_1_5";
+import "./tasks/upgrades/4_2_0";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "solidity-docgen";
@@ -58,7 +59,7 @@ module.exports = {
     version: "0.8.16",
     settings: {
       optimizer: {
-        enabled: false,
+        enabled: true,
       },
     },
   },

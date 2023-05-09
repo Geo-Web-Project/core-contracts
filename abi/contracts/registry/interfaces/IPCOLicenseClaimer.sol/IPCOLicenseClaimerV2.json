@@ -50,6 +50,51 @@
         "type": "uint256"
       },
       {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "swCoordinate",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lngDim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "latDim",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibGeoWebParcelV2.LandParcel",
+        "name": "parcel",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "contentHash",
+        "type": "bytes"
+      }
+    ],
+    "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int96",
+        "name": "initialContributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "initialForSalePrice",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint64",
         "name": "baseCoordinate",
         "type": "uint64"

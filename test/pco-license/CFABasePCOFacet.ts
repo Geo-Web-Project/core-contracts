@@ -57,7 +57,9 @@ describe("CFABasePCOFacet", async function () {
       });
       await op2.exec(await ethers.getSigner(user));
 
-      const txn = await basePCOFacet.initializeBid(
+      const txn = await basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256)"
+      ](
         mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
@@ -80,6 +82,7 @@ describe("CFABasePCOFacet", async function () {
       expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
       expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
       expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x");
       await checkUserToAppFlow(user, contributionRate);
       await checkAppToBeneficiaryFlow(contributionRate);
       await checkAppNetFlow();
@@ -121,7 +124,9 @@ describe("CFABasePCOFacet", async function () {
 
       const txn = basePCOFacet
         .connect(await ethers.getSigner(user))
-        .initializeBid(
+        [
+          "initializeBid(address,address,address,uint256,address,int96,uint256)"
+        ](
           mockCFABeneficiary.address,
           mockParamsStore.address,
           mockLicense.address,
@@ -159,7 +164,9 @@ describe("CFABasePCOFacet", async function () {
       });
       await op2.exec(await ethers.getSigner(user));
 
-      const txn = basePCOFacet.initializeBid(
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256)"
+      ](
         mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
@@ -194,7 +201,9 @@ describe("CFABasePCOFacet", async function () {
       });
       await op1.exec(await ethers.getSigner(user));
 
-      const txn = basePCOFacet.initializeBid(
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256)"
+      ](
         mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
@@ -239,7 +248,9 @@ describe("CFABasePCOFacet", async function () {
       });
       await op2.exec(await ethers.getSigner(user));
 
-      const txn = basePCOFacet.initializeBid(
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256)"
+      ](
         mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
@@ -249,7 +260,7 @@ describe("CFABasePCOFacet", async function () {
         forSalePrice
       );
       await expect(txn).to.be.revertedWith(
-        "CFABasePCOFacet: Incorrect for sale price"
+        "LibCFABasePCO: Incorrect for sale price"
       );
     });
 
@@ -291,7 +302,9 @@ describe("CFABasePCOFacet", async function () {
       });
       await op2.exec(await ethers.getSigner(user));
 
-      const txn = basePCOFacet.initializeBid(
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256)"
+      ](
         mockCFABeneficiary.address,
         mockParamsStore.address,
         mockLicense.address,
@@ -299,6 +312,317 @@ describe("CFABasePCOFacet", async function () {
         user,
         contributionRate,
         forSalePrice
+      );
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Minimum for sale price not met"
+      );
+
+      mockParamsStore.getMinForSalePrice.returns(0);
+    });
+  });
+
+  describe("initializeBid with content hash", async () => {
+    it("should initialize bid", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockCFABeneficiary,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+        checkUserToAppFlow,
+        checkAppToBeneficiaryFlow,
+        checkAppNetFlow,
+        checkAppBalance,
+      } = await Fixtures.setup();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      const op1 = paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256,bytes)"
+      ](
+        mockCFABeneficiary.address,
+        mockParamsStore.address,
+        mockLicense.address,
+        1,
+        user,
+        contributionRate,
+        forSalePrice,
+        "0x11"
+      );
+      await txn.wait();
+
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContributionRateUpdated")
+        .withArgs(user, contributionRate);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
+        .withArgs(user, forSalePrice);
+      expect(await basePCOFacet.license()).to.equal(mockLicense.address);
+      expect(await basePCOFacet.licenseId()).to.equal(1);
+      expect(await basePCOFacet.payer()).to.equal(user);
+      expect(await basePCOFacet.contributionRate()).to.equal(contributionRate);
+      expect(await basePCOFacet.forSalePrice()).to.equal(forSalePrice);
+      expect(await basePCOFacet.isPayerBidActive()).to.equal(true);
+      expect(await basePCOFacet.contentHash()).to.equal("0x11");
+      await checkUserToAppFlow(user, contributionRate);
+      await checkAppToBeneficiaryFlow(contributionRate);
+      await checkAppNetFlow();
+      await checkAppBalance(0);
+    });
+
+    it("should fail if not contract owner", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockCFABeneficiary,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.setup();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const op1 = paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet
+        .connect(await ethers.getSigner(user))
+        [
+          "initializeBid(address,address,address,uint256,address,int96,uint256,bytes)"
+        ](
+          mockCFABeneficiary.address,
+          mockParamsStore.address,
+          mockLicense.address,
+          1,
+          user,
+          contributionRate,
+          forSalePrice,
+          "0x11"
+        );
+      await expect(txn).to.be.revertedWith("Ownable: sender must be owner");
+    });
+
+    it("should fail if buffer is missing", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockCFABeneficiary,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.setup();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Approve flow creation
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256,bytes)"
+      ](
+        mockCFABeneficiary.address,
+        mockParamsStore.address,
+        mockLicense.address,
+        1,
+        user,
+        contributionRate,
+        forSalePrice,
+        "0x11"
+      );
+      await expect(txn).to.be.revertedWith("CFA: not enough available balance");
+    });
+
+    it("should fail if flow permissions are missing", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockCFABeneficiary,
+        mockLicense,
+        paymentToken,
+      } = await Fixtures.setup();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const op1 = paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256,bytes)"
+      ](
+        mockCFABeneficiary.address,
+        mockParamsStore.address,
+        mockLicense.address,
+        1,
+        user,
+        contributionRate,
+        forSalePrice,
+        "0x11"
+      );
+      await expect(txn).to.be.revertedWith("CFA: E_NO_OPERATOR_CREATE_FLOW");
+    });
+
+    it("should fail if for sale price is incorrect rounding", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockCFABeneficiary,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.setup();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      // Transfer payment token for buffer
+      const op1 = paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: forSalePrice.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256,bytes)"
+      ](
+        mockCFABeneficiary.address,
+        mockParamsStore.address,
+        mockLicense.address,
+        1,
+        user,
+        contributionRate.add(10),
+        forSalePrice,
+        "0x11"
+      );
+      await expect(txn).to.be.revertedWith(
+        "LibCFABasePCO: Incorrect for sale price"
+      );
+    });
+
+    it("should fail if for sale price does not meet minimum", async () => {
+      const {
+        basePCOFacet,
+        mockParamsStore,
+        mockCFABeneficiary,
+        mockLicense,
+        ethersjsSf,
+        paymentToken,
+      } = await Fixtures.setup();
+      const { user } = await getNamedAccounts();
+
+      const contributionRate = BigNumber.from(100);
+      const forSalePrice = await rateToPurchasePrice(
+        mockParamsStore,
+        contributionRate
+      );
+
+      mockParamsStore.getMinForSalePrice.returns(forSalePrice.add(1000));
+
+      // Transfer payment token for buffer
+      const requiredBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(paymentToken.address, contributionRate);
+      const op1 = paymentToken.transfer({
+        receiver: basePCOFacet.address,
+        amount: requiredBuffer.toString(),
+      });
+      await op1.exec(await ethers.getSigner(user));
+
+      // Approve flow creation
+      const op2 = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 1,
+        flowRateAllowance: contributionRate.toString(),
+      });
+      await op2.exec(await ethers.getSigner(user));
+
+      const txn = basePCOFacet[
+        "initializeBid(address,address,address,uint256,address,int96,uint256,bytes)"
+      ](
+        mockCFABeneficiary.address,
+        mockParamsStore.address,
+        mockLicense.address,
+        1,
+        user,
+        contributionRate,
+        forSalePrice,
+        "0x11"
       );
       await expect(txn).to.be.revertedWith(
         "CFABasePCOFacet: Minimum for sale price not met"
