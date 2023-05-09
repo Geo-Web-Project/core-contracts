@@ -139,17 +139,23 @@ async function deployFacets(
     selectors: getSelectors(cfaPenaltyBidI),
   });
 
-  return {registryDiamondFacetCuts, pcoLicenseDiamondFacetCuts};
+  return { registryDiamondFacetCuts, pcoLicenseDiamondFacetCuts };
 }
 
 task("upgrade:4.2.0")
   .addOptionalParam("pcoLicenseClaimerV2Address", "PCOLicenseClaimerV2 address")
+  .addOptionalParam("cfaBaseAddress", "CFABasePCO facet address")
+  .addOptionalParam("cfaPenaltyBidAddress", "CFAPenaltyBid facet address")
   .setAction(
     async (
       {
         pcoLicenseClaimerV2Address,
+        cfaBaseAddress,
+        cfaPenaltyBidAddress,
       }: {
         pcoLicenseClaimerV2Address?: string;
+        cfaBaseAddress?: string;
+        cfaPenaltyBidAddress?: string;
       },
       hre
     ) => {
@@ -168,12 +174,27 @@ task("upgrade:4.2.0")
           )
         : undefined;
 
-      const facetCuts = await deployFacets(hre, pcoLicenseClaimerFacetV2);
+      const cfaBasePCOFacet = cfaBaseAddress
+        ? await hre.ethers.getContractAt("ICFABasePCO", cfaBaseAddress)
+        : undefined;
+
+      const cfaPenaltyBidFacet = cfaPenaltyBidAddress
+        ? await hre.ethers.getContractAt("ICFAPenaltyBid", cfaPenaltyBidAddress)
+        : undefined;
+
+      const { registryDiamondFacetCuts, pcoLicenseDiamondFacetCuts } =
+        await deployFacets(
+          hre,
+          pcoLicenseClaimerFacetV2,
+          cfaBasePCOFacet,
+          cfaPenaltyBidFacet
+        );
 
       const target = hre.ethers.constants.AddressZero;
       const data = "0x";
 
-      console.log(facetCuts, target, data);
+      console.log(registryDiamondFacetCuts, target, data);
+      console.log(pcoLicenseDiamondFacetCuts, target, data);
 
       // Cut diamond
       // await adminClient.createProposal({
