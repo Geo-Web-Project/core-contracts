@@ -50,7 +50,8 @@ async function deployFacets(
   cfaBasePCO?: Contract,
   cfaPenaltyBid?: Contract
 ) {
-  const facetCuts = [];
+  const registryDiamondFacetCuts = [];
+  const pcoLicenseDiamondFacetCuts = [];
 
   const PCOLicenseClaimerFacetV2 = await hre.ethers.getContractFactory(
     "PCOLicenseClaimerFacetV2"
@@ -93,7 +94,7 @@ async function deployFacets(
   );
 
   // ADD
-  facetCuts.push({
+  registryDiamondFacetCuts.push({
     target: pcoLicenseClaimerFacetV2.address,
     action: FacetCutAction.Add,
     selectors: [
@@ -102,7 +103,7 @@ async function deployFacets(
       ),
     ],
   });
-  facetCuts.push({
+  pcoLicenseDiamondFacetCuts.push({
     target: cfaBasePCOFacet.address,
     action: FacetCutAction.Add,
     selectors: [
@@ -112,7 +113,7 @@ async function deployFacets(
       cfaBasePCOFacet.interface.getSighash("contentHash()"),
     ],
   });
-  facetCuts.push({
+  pcoLicenseDiamondFacetCuts.push({
     target: cfaPenaltyBidFacet.address,
     action: FacetCutAction.Add,
     selectors: [
@@ -122,24 +123,25 @@ async function deployFacets(
   });
 
   // REPLACE
-  facetCuts.push({
+  registryDiamondFacetCuts.push({
     target: pcoLicenseClaimerFacetV2.address,
     action: FacetCutAction.Replace,
     selectors: getSelectors(pcoLicenseClaimerI),
   });
-  facetCuts.push({
+  pcoLicenseDiamondFacetCuts.push({
     target: cfaBasePCOFacet.address,
     action: FacetCutAction.Replace,
     selectors: getSelectors(cfaBasePCOI),
   });
-  facetCuts.push({
+  pcoLicenseDiamondFacetCuts.push({
     target: cfaPenaltyBidFacet.address,
     action: FacetCutAction.Replace,
     selectors: getSelectors(cfaPenaltyBidI),
   });
 
-  return facetCuts;
+  return {registryDiamondFacetCuts, pcoLicenseDiamondFacetCuts};
 }
+
 task("upgrade:4.2.0")
   .addOptionalParam("pcoLicenseClaimerV2Address", "PCOLicenseClaimerV2 address")
   .setAction(
