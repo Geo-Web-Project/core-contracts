@@ -22,4 +22,18 @@ interface ICFAReclaimer {
         int96 newContributionRate,
         uint256 newForSalePrice
     ) external;
+
+    /**
+     * @notice Reclaim an inactive license as msg.sender
+     * @param maxClaimPrice Max price willing to pay for claim. Prevents front-running
+     * @param newContributionRate New contribution rate for license
+     * @param newForSalePrice Intended new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function reclaim(
+        uint256 maxClaimPrice,
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes calldata contentHash
+    ) external;
 }

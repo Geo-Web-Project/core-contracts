@@ -54,6 +54,43 @@ contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
         int96 newContributionRate,
         uint256 newForSalePrice
     ) external {
+        LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();
+
+        _reclaim(
+            maxClaimPrice,
+            newContributionRate,
+            newForSalePrice,
+            _currentBid.contentHash
+        );
+    }
+
+    /**
+     * @notice Reclaim an inactive license as msg.sender
+     * @param maxClaimPrice Max price willing to pay for claim. Prevents front-running
+     * @param newContributionRate New contribution rate for license
+     * @param newForSalePrice Intended new for sale price. Must be within rounding bounds of newContributionRate
+     * @param contentHash Content hash for parcel content
+     */
+    function reclaim(
+        uint256 maxClaimPrice,
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes calldata contentHash
+    ) external {
+        _reclaim(
+            maxClaimPrice,
+            newContributionRate,
+            newForSalePrice,
+            contentHash
+        );
+    }
+
+    function _reclaim(
+        uint256 maxClaimPrice,
+        int96 newContributionRate,
+        uint256 newForSalePrice,
+        bytes memory contentHash
+    ) internal {
         require(
             !LibCFABasePCO._isPayerBidActive(),
             "CFAReclaimerFacet: Can only perform action when payer bid is not active"
@@ -87,8 +124,6 @@ contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
             );
         }
 
-        ISuperToken paymentToken = ds.paramsStore.getPaymentToken();
-
         uint256 claimPrice = reclaimPrice();
 
         require(
@@ -114,17 +149,22 @@ contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
             .paramsStore
             .getPerSecondFeeDenominator();
         _currentBid.forSalePrice = newForSalePrice;
+        _currentBid.contentHash = contentHash;
 
         emit LicenseReclaimed(msg.sender, claimPrice);
 
         {
             // Collect deposit
             uint256 requiredBuffer = cs.cfaV1.cfa.getDepositRequiredForFlowRate(
-                paymentToken,
+                ds.paramsStore.getPaymentToken(),
                 newContributionRate
             );
-            paymentToken.safeTransferFrom(msg.sender, bidder, claimPrice);
-            paymentToken.safeTransferFrom(
+            ds.paramsStore.getPaymentToken().safeTransferFrom(
+                msg.sender,
+                bidder,
+                claimPrice
+            );
+            ds.paramsStore.getPaymentToken().safeTransferFrom(
                 msg.sender,
                 address(this),
                 requiredBuffer
@@ -137,7 +177,7 @@ contract CFAReclaimerFacet is ICFAReclaimer, CFABasePCOFacetModifiers {
             abi.encodeCall(
                 cs.cfaV1.cfa.createFlowByOperator,
                 (
-                    paymentToken,
+                    ds.paramsStore.getPaymentToken(),
                     msg.sender,
                     address(this),
                     newContributionRate,
