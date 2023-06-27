@@ -1437,6 +1437,40 @@ describe("CFAPenaltyBidFacet", async function () {
     });
   });
 
+  describe("editContentHash", async () => {
+    it("should edit", async () => {
+      const { basePCOFacet } = await BaseFixtures.initialized();
+      const { user } = await getNamedAccounts();
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editContentHash(bytes)"]("0x13");
+      await txn.wait();
+
+      expect(await basePCOFacet.contentHash()).to.equal("0x13");
+    });
+
+    it("should edit if has pending bid", async () => {
+      const { basePCOFacet } = await CFAPenaltyBidFixtures.afterPlaceBid();
+      const { user } = await getNamedAccounts();
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        ["editContentHash(bytes)"]("0x13");
+      await txn.wait();
+    });
+
+    it("should fail if not payer", async () => {
+      const { basePCOFacet } = await BaseFixtures.initialized();
+
+      const txn = basePCOFacet["editContentHash(bytes)"]("0x13");
+
+      await expect(txn).to.be.revertedWith(
+        "CFABasePCOFacet: Only payer is allowed to perform this action"
+      );
+    });
+  });
+
   describe("placeBid with content hash", async () => {
     it("should place bid with create permissions", async () => {
       const {

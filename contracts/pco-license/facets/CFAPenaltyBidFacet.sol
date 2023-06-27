@@ -126,11 +126,10 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function editBid(int96 newContributionRate, uint256 newForSalePrice)
-        external
-        onlyPayer
-        onlyIfNotPendingBid
-    {
+    function editBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external onlyPayer onlyIfNotPendingBid {
         LibCFABasePCO._editBid(newContributionRate, newForSalePrice);
     }
 
@@ -142,16 +141,25 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function placeBid(int96 newContributionRate, uint256 newForSalePrice)
-        external
-        onlyIfPayerBidActive
-        onlyNotPayer
-    {
+    function placeBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external onlyIfPayerBidActive onlyNotPayer {
         LibCFAPenaltyBid._placeBid(
             newContributionRate,
             newForSalePrice,
             new bytes(0)
         );
+    }
+
+    /**
+     * @notice Edit content hash
+     *      - Must be the current payer
+     *      - Must have permissions to update flow for payer
+     * @param contentHash Content hash for parcel content
+     */
+    function editContentHash(bytes calldata contentHash) external onlyPayer {
+        LibCFABasePCO._editContentHash(contentHash);
     }
 
     /**
@@ -230,12 +238,10 @@ contract CFAPenaltyBidFacet is ICFAPenaltyBid, CFABasePCOFacetModifiers {
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function rejectBid(int96 newContributionRate, uint256 newForSalePrice)
-        external
-        onlyPayer
-        onlyIfPendingBid
-        onlyDuringBidPeriod
-    {
+    function rejectBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external onlyPayer onlyIfPendingBid onlyDuringBidPeriod {
         LibCFAPenaltyBid.Bid storage _pendingBid = LibCFAPenaltyBid
             .pendingBid();
         LibCFABasePCO.Bid storage _currentBid = LibCFABasePCO._currentBid();

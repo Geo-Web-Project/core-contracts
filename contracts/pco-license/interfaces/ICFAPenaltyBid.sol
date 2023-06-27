@@ -58,16 +58,20 @@ interface ICFAPenaltyBid {
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function editBid(int96 newContributionRate, uint256 newForSalePrice)
-        external;
+    function editBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external;
 
     /**
      * @notice Place a bid to purchase license as msg.sender
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function placeBid(int96 newContributionRate, uint256 newForSalePrice)
-        external;
+    function placeBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external;
 
     /**
      * @notice Accept a pending bid as the current payer
@@ -79,8 +83,10 @@ interface ICFAPenaltyBid {
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
      */
-    function rejectBid(int96 newContributionRate, uint256 newForSalePrice)
-        external;
+    function rejectBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) external;
 
     /**
      * @notice Trigger a transfer after bidding period has elapsed
@@ -110,4 +116,12 @@ interface ICFAPenaltyBid {
         uint256 newForSalePrice,
         bytes calldata contentHash
     ) external;
+
+    /**
+     * @notice Edit content hash
+     *      - Must be the current payer
+     *      - Must have permissions to update flow for payer
+     * @param contentHash Content hash for parcel content
+     */
+    function editContentHash(bytes calldata contentHash) external;
 }

@@ -238,6 +238,14 @@ library LibCFABasePCO {
         _editBid(newContributionRate, newForSalePrice, bid.contentHash);
     }
 
+    function _editContentHash(bytes memory contentHash) internal {
+        Bid storage bid = _currentBid();
+
+        bid.contentHash = contentHash;
+
+        emit PayerContentHashUpdated(bid.bidder, contentHash);
+    }
+
     function _editBid(
         int96 newContributionRate,
         uint256 newForSalePrice,
