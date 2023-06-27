@@ -96,7 +96,7 @@ contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
      * @param bidder Initial bidder
      * @param newContributionRate New contribution rate for bid
      * @param newForSalePrice Intented new for sale price. Must be within rounding bounds of newContributionRate
-     * @param contentHash Content hash for parcel content
+     * @param _contentHash Content hash for parcel content
      */
     function initializeBid(
         ICFABeneficiary beneficiary,
@@ -106,7 +106,7 @@ contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
         address bidder,
         int96 newContributionRate,
         uint256 newForSalePrice,
-        bytes calldata contentHash
+        bytes calldata _contentHash
     ) external onlyOwner {
         LibCFABasePCO._initializeBid(
             beneficiary,
@@ -116,7 +116,7 @@ contract CFABasePCOFacet is ICFABasePCO, CFABasePCOFacetModifiers {
             bidder,
             newContributionRate,
             newForSalePrice,
-            contentHash
+            _contentHash
         );
     }
 

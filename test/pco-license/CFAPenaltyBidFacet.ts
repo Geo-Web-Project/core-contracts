@@ -119,6 +119,9 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x");
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
         newContributionRate
@@ -172,6 +175,9 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x");
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
         newContributionRate
@@ -235,6 +241,9 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x");
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
         newContributionRate
@@ -1013,6 +1022,9 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x12");
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
         newContributionRate
@@ -1070,6 +1082,9 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x12");
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
         newContributionRate
@@ -1137,6 +1152,9 @@ describe("CFAPenaltyBidFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, newForSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x12");
       expect(await basePCOFacet.payer()).to.equal(user);
       expect(await basePCOFacet.contributionRate()).to.equal(
         newContributionRate
@@ -3022,6 +3040,55 @@ describe("CFAPenaltyBidFacet", async function () {
       await checkUserToAppFlow(user, oldPendingBid.contributionRate);
       await checkAppToBeneficiaryFlow(oldPendingBid.contributionRate);
       await checkAppNetFlow();
+    });
+
+    it("should keep content hash after reject bid", async () => {
+      const { basePCOFacet, paymentToken, ethersjsSf } =
+        await CFAPenaltyBidFixtures.afterPlaceBidWithContentHash();
+
+      const { user } = await getNamedAccounts();
+
+      const penaltyPayment: BigNumber = await basePCOFacet.calculatePenalty();
+
+      const existingContributionRate = await basePCOFacet.contributionRate();
+      const oldPendingBid = await basePCOFacet.pendingBid();
+      const oldBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          await basePCOFacet.contributionRate()
+        );
+      const newBuffer = await ethersjsSf.cfaV1.contract
+        .connect(await ethers.getSigner(user))
+        .getDepositRequiredForFlowRate(
+          paymentToken.address,
+          oldPendingBid.contributionRate
+        );
+
+      // Approve payment token
+      const approveOp = paymentToken.approve({
+        receiver: basePCOFacet.address,
+        amount: penaltyPayment.add(newBuffer).sub(oldBuffer).toString(),
+      });
+      await approveOp.exec(await ethers.getSigner(user));
+
+      // Approve flow update
+      const op = ethersjsSf.cfaV1.updateFlowOperatorPermissions({
+        superToken: paymentToken.address,
+        flowOperator: basePCOFacet.address,
+        permissions: 2,
+        flowRateAllowance: oldPendingBid.contributionRate
+          .sub(existingContributionRate)
+          .toString(),
+      });
+      await op.exec(await ethers.getSigner(user));
+
+      const txn = await basePCOFacet
+        .connect(await ethers.getSigner(user))
+        .rejectBid(oldPendingBid.contributionRate, oldPendingBid.forSalePrice);
+      await txn.wait();
+
+      expect(await basePCOFacet.contentHash()).to.equal("0x12");
     });
 
     it("should fail if payer increases flow manually", async () => {

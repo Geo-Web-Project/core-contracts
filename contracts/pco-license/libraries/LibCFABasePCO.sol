@@ -54,6 +54,9 @@ library LibCFABasePCO {
         uint256 forSalePrice
     );
 
+    /// @notice Emitted when content hash is updated
+    event PayerContentHashUpdated(address indexed _payer, bytes contentHash);
+
     function diamondStorage()
         internal
         pure
@@ -208,6 +211,7 @@ library LibCFABasePCO {
 
         emit PayerForSalePriceUpdated(bidder, newForSalePrice);
         emit PayerContributionRateUpdated(bidder, newContributionRate);
+        emit PayerContentHashUpdated(bidder, contentHash);
 
         // Create flow (payer -> license)
         cs.cfaV1.createFlowByOperator(
@@ -225,10 +229,13 @@ library LibCFABasePCO {
         );
     }
 
-    function _editBid(int96 newContributionRate, uint256 newForSalePrice)
-        internal
-    {
-        _editBid(newContributionRate, newForSalePrice, new bytes(0));
+    function _editBid(
+        int96 newContributionRate,
+        uint256 newForSalePrice
+    ) internal {
+        Bid storage bid = _currentBid();
+
+        _editBid(newContributionRate, newForSalePrice, bid.contentHash);
     }
 
     function _editBid(
@@ -273,6 +280,7 @@ library LibCFABasePCO {
 
         emit PayerForSalePriceUpdated(bid.bidder, newForSalePrice);
         emit PayerContributionRateUpdated(bid.bidder, newContributionRate);
+        emit PayerContentHashUpdated(bid.bidder, contentHash);
 
         (, uint256 deposit, , ) = paymentToken.realtimeBalanceOfNow(
             address(this)

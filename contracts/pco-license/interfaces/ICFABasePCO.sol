@@ -19,6 +19,9 @@ interface ICFABasePCO {
         uint256 forSalePrice
     );
 
+    /// @notice Emitted when content hash is updated
+    event PayerContentHashUpdated(address indexed _payer, bytes contentHash);
+
     /**
      * @notice Initialize bid.
      *      - Must be the contract owner

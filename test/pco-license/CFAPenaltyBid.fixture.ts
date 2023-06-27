@@ -48,7 +48,7 @@ const afterPlaceBid = deployments.createFixture(
 
 const afterPlaceBidWithContentHash = deployments.createFixture(
   async ({ getNamedAccounts, ethers }) => {
-    const res = await BaseFixtures.initialized();
+    const res = await BaseFixtures.initializedWithContentHash();
     const { basePCOFacet, mockParamsStore, ethersjsSf, paymentToken } = res;
 
     const { bidder } = await getNamedAccounts();

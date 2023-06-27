@@ -76,6 +76,9 @@ describe("CFABasePCOFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, forSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x");
       expect(await basePCOFacet.license()).to.equal(mockLicense.address);
       expect(await basePCOFacet.licenseId()).to.equal(1);
       expect(await basePCOFacet.payer()).to.equal(user);
@@ -382,6 +385,9 @@ describe("CFABasePCOFacet", async function () {
       await expect(txn)
         .to.emit(basePCOFacet, "PayerForSalePriceUpdated")
         .withArgs(user, forSalePrice);
+      await expect(txn)
+        .to.emit(basePCOFacet, "PayerContentHashUpdated")
+        .withArgs(user, "0x11");
       expect(await basePCOFacet.license()).to.equal(mockLicense.address);
       expect(await basePCOFacet.licenseId()).to.equal(1);
       expect(await basePCOFacet.payer()).to.equal(user);
