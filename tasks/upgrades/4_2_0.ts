@@ -21,6 +21,7 @@
 	Facets to deploy:
 	- CFABasePCOFacet
 	- CFAPenaltyBidFacet
+  - CFAReclaimerFacet
 	
 	Function selectors to REPLACE:
 	- All of ICFABasePCOFacet -> CFABasePCOFacet
@@ -42,17 +43,25 @@ const {
   getSelectors,
 } = require("../../scripts/libraries/diamond.js");
 import { task } from "hardhat/config";
+import { ensureDiamondFacets, diamondEquals } from "diamond-diff";
 import { AdminClient } from "defender-admin-client";
+
+const NETWORKS: Record<number, string> = {
+  420: "optimism-goerli",
+};
 
 async function deployFacets(
   hre: HardhatRuntimeEnvironment,
+  registryDiamond: Contract,
+  pcoBeaconDiamond: Contract,
+  pcoLicenseParams: Contract,
+  pcoERC721: Contract,
+  geoWebParcel: Contract,
   pcoLicenseClaimerV2?: Contract,
   cfaBasePCO?: Contract,
-  cfaPenaltyBid?: Contract
+  cfaPenaltyBid?: Contract,
+  cfaReclaimer?: Contract
 ) {
-  const registryDiamondFacetCuts = [];
-  const pcoLicenseDiamondFacetCuts = [];
-
   const PCOLicenseClaimerFacetV2 = await hre.ethers.getContractFactory(
     "PCOLicenseClaimerFacetV2"
   );
@@ -78,94 +87,163 @@ async function deployFacets(
   await cfaPenaltyBidFacet.deployed();
   console.log(`CFAPenaltyBidFacet deployed: ${cfaPenaltyBidFacet.address}`);
 
-  const pcoLicenseClaimerI = await hre.ethers.getContractAt(
-    "IPCOLicenseClaimer",
-    pcoLicenseClaimerFacetV2.address
+  const CFAReclaimerFacet = await hre.ethers.getContractFactory(
+    "CFAReclaimerFacet"
+  );
+  const cfaReclaimerFacet = cfaReclaimer ?? (await CFAReclaimerFacet.deploy());
+  await cfaReclaimerFacet.deployed();
+  console.log(`CFAReclaimerFacet deployed: ${cfaReclaimerFacet.address}`);
+
+  const pcoLicenseDiamondI = await hre.ethers.getContractAt(
+    "PCOLicenseDiamond",
+    pcoBeaconDiamond.address
   );
 
-  const cfaBasePCOI = await hre.ethers.getContractAt(
+  const ICFABasePCO = await hre.ethers.getContractAt(
     "ICFABasePCO",
     cfaBasePCOFacet.address
   );
 
-  const cfaPenaltyBidI = await hre.ethers.getContractAt(
+  const ICFAPenaltyBid = await hre.ethers.getContractAt(
     "ICFAPenaltyBid",
     cfaPenaltyBidFacet.address
   );
 
-  // ADD
-  registryDiamondFacetCuts.push({
-    target: pcoLicenseClaimerFacetV2.address,
-    action: FacetCutAction.Add,
-    selectors: [
-      pcoLicenseClaimerFacetV2.interface.getSighash(
-        "claim(int96,uint256,(uint64,uint256,uint256),bytes)"
-      ),
-    ],
-  });
-  pcoLicenseDiamondFacetCuts.push({
-    target: cfaBasePCOFacet.address,
-    action: FacetCutAction.Add,
-    selectors: [
-      cfaBasePCOFacet.interface.getSighash(
-        "initializeBid(address,address,address,uint256,address,int96,uint256,bytes)"
-      ),
-      cfaBasePCOFacet.interface.getSighash("contentHash()"),
-    ],
-  });
-  pcoLicenseDiamondFacetCuts.push({
-    target: cfaPenaltyBidFacet.address,
-    action: FacetCutAction.Add,
-    selectors: [
-      cfaPenaltyBidFacet.interface.getSighash("editBid(int96,uint256,bytes)"),
-      cfaPenaltyBidFacet.interface.getSighash("placeBid(int96,uint256,bytes)"),
-    ],
-  });
+  const ICFAReclaimer = await hre.ethers.getContractAt(
+    "ICFAReclaimer",
+    cfaReclaimerFacet.address
+  );
 
-  // REPLACE
-  registryDiamondFacetCuts.push({
-    target: pcoLicenseClaimerFacetV2.address,
-    action: FacetCutAction.Replace,
-    selectors: getSelectors(pcoLicenseClaimerI),
-  });
-  pcoLicenseDiamondFacetCuts.push({
-    target: cfaBasePCOFacet.address,
-    action: FacetCutAction.Replace,
-    selectors: getSelectors(cfaBasePCOI),
-  });
-  pcoLicenseDiamondFacetCuts.push({
-    target: cfaPenaltyBidFacet.address,
-    action: FacetCutAction.Replace,
-    selectors: getSelectors(cfaPenaltyBidI),
-  });
+  const currentPCOBeaconDiamondFacets = (await pcoLicenseDiamondI.facets())
+    .map((f: any) => {
+      return { facetAddress: f.target, functionSelectors: f.selectors };
+    })
+    .filter(
+      (v: any) =>
+        v.facetAddress !== "0x6c09D38c9243493AFb50c22589215A09b37D4e40"
+    );
+
+  const newPCOBeaconDiamondFacets = [
+    {
+      facetAddress: cfaBasePCOFacet.address,
+      functionSelectors: getSelectors(ICFABasePCO),
+    },
+    {
+      facetAddress: cfaPenaltyBidFacet.address,
+      functionSelectors: getSelectors(ICFAPenaltyBid),
+    },
+    {
+      facetAddress: cfaReclaimerFacet.address,
+      functionSelectors: getSelectors(ICFAReclaimer),
+    },
+  ];
+
+  const pcoLicenseDiamondFacetCuts = ensureDiamondFacets(
+    currentPCOBeaconDiamondFacets,
+    newPCOBeaconDiamondFacets
+  );
+
+  const registryDiamondI = await hre.ethers.getContractAt(
+    "IRegistryDiamond",
+    registryDiamond.address
+  );
+
+  const IPCOLicenseClaimer = await hre.ethers.getContractAt(
+    "IPCOLicenseClaimer",
+    pcoLicenseClaimerFacetV2.address
+  );
+
+  const currentRegistryDiamondFacets = (await registryDiamondI.facets()).map(
+    (f: any) => {
+      return { facetAddress: f.target, functionSelectors: f.selectors };
+    }
+  );
+
+  const newRegistryDiamondFacets = [
+    {
+      facetAddress: "0x871C2467D5832226E03853b91Cd00764985EA07C",
+      functionSelectors: getSelectors(pcoLicenseDiamondI, true),
+    },
+    {
+      facetAddress: pcoLicenseParams.address,
+      functionSelectors: getSelectors(pcoLicenseParams),
+    },
+    {
+      facetAddress: geoWebParcel.address,
+      functionSelectors: getSelectors(geoWebParcel),
+    },
+    {
+      facetAddress: pcoERC721.address,
+      functionSelectors: getSelectors(pcoERC721),
+    },
+    {
+      facetAddress: pcoLicenseClaimerFacetV2.address,
+      functionSelectors: getSelectors(IPCOLicenseClaimer),
+    },
+  ];
+
+  const registryDiamondFacetCuts = ensureDiamondFacets(
+    currentRegistryDiamondFacets,
+    newRegistryDiamondFacets
+  );
 
   return { registryDiamondFacetCuts, pcoLicenseDiamondFacetCuts };
 }
 
 task("upgrade:4.2.0")
+  .addParam("registryDiamondAddress", "RegistryDiamond address")
+  .addParam("pcoBeaconDiamondAddress", "PCO beacond diamond address")
   .addOptionalParam("pcoLicenseClaimerV2Address", "PCOLicenseClaimerV2 address")
   .addOptionalParam("cfaBaseAddress", "CFABasePCO facet address")
   .addOptionalParam("cfaPenaltyBidAddress", "CFAPenaltyBid facet address")
+  .addOptionalParam("cfaReclaimerAddress", "CFAReclaimer facet address")
   .setAction(
     async (
       {
+        registryDiamondAddress,
+        pcoBeaconDiamondAddress,
         pcoLicenseClaimerV2Address,
         cfaBaseAddress,
         cfaPenaltyBidAddress,
+        cfaReclaimerAddress,
       }: {
+        registryDiamondAddress: string;
+        pcoBeaconDiamondAddress: string;
         pcoLicenseClaimerV2Address?: string;
         cfaBaseAddress?: string;
         cfaPenaltyBidAddress?: string;
+        cfaReclaimerAddress?: string;
       },
       hre
     ) => {
-      // const { diamondAdmin } = await hre.getNamedAccounts();
+      const { diamondAdmin } = await hre.getNamedAccounts();
 
       // Create Defender client
-      // const adminClient = new AdminClient({
-      //   apiKey: process.env.DEFENDER_API_KEY!,
-      //   apiSecret: process.env.DEFENDER_API_SECRET!,
-      // });
+      const adminClient = new AdminClient({
+        apiKey: process.env.DEFENDER_API_KEY!,
+        apiSecret: process.env.DEFENDER_API_SECRET!,
+      });
+
+      // Switch network
+      await hre.network.provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: 420 }],
+      });
+
+      const registryDiamond = await hre.ethers.getContractAt(
+        "IDiamondReadable",
+        registryDiamondAddress
+      );
+
+      const pcoBeaconDiamond = await hre.ethers.getContractAt(
+        "IDiamondReadable",
+        pcoBeaconDiamondAddress
+      );
+
+      const diamondWritableI = await hre.ethers.getContractAt(
+        "IDiamondWritable",
+        pcoBeaconDiamondAddress
+      );
 
       const pcoLicenseClaimerFacetV2 = pcoLicenseClaimerV2Address
         ? await hre.ethers.getContractAt(
@@ -182,28 +260,62 @@ task("upgrade:4.2.0")
         ? await hre.ethers.getContractAt("ICFAPenaltyBid", cfaPenaltyBidAddress)
         : undefined;
 
+      const cfaReclaimerFacet = cfaReclaimerAddress
+        ? await hre.ethers.getContractAt("ICFAReclaimer", cfaReclaimerAddress)
+        : undefined;
+
+      const pcoLicenseParams = await hre.ethers.getContractAt(
+        "IPCOLicenseParamsStore",
+        "0x9cCE213107b9A73efe7f176D016D4d6f58B34804"
+      );
+      const pcoERC721 = await hre.ethers.getContractAt(
+        "PCOERC721Facet",
+        "0xCfD326f3739F4fBECA31FEAd9cC2b0a442d26d57"
+      );
+      const geoWebParcel = await hre.ethers.getContractAt(
+        "IGeoWebParcel",
+        "0x41cb0D0711a55403777b2a3f6eEEbDB8278f0525"
+      );
+
       const { registryDiamondFacetCuts, pcoLicenseDiamondFacetCuts } =
         await deployFacets(
           hre,
+          registryDiamond,
+          pcoBeaconDiamond,
+          pcoLicenseParams,
+          pcoERC721,
+          geoWebParcel,
           pcoLicenseClaimerFacetV2,
           cfaBasePCOFacet,
-          cfaPenaltyBidFacet
+          cfaPenaltyBidFacet,
+          cfaReclaimerFacet
         );
 
       const target = hre.ethers.constants.AddressZero;
       const data = "0x";
 
-      console.log(registryDiamondFacetCuts, target, data);
       console.log(pcoLicenseDiamondFacetCuts, target, data);
+
+      await diamondWritableI[
+        "diamondCut((address,uint8,bytes4[])[],address,bytes)"
+      ](
+        pcoLicenseDiamondFacetCuts.map((v) => [
+          v.facetAddress,
+          v.action,
+          v.functionSelectors,
+        ]),
+        target,
+        data
+      );
 
       // Cut diamond
       // await adminClient.createProposal({
       //   contract: {
       //     address: registryDiamond.address,
-      //     network: NETWORKS[hre.network.config.chainId!] as any,
+      //     network: NETWORKS[420] as any,
       //   }, // Target contract
-      //   title: "Upgrade RegistryDiamond v4.1.0", // Title of the proposal
-      //   description: "Cut RegistryDiamond to upgrade to v4.1.0", // Description of the proposal
+      //   title: "Upgrade PCOLicenseDiamond v4.2.0", // Title of the proposal
+      //   description: "Cut PCOLicenseDiamond to upgrade to v4.2.0", // Description of the proposal
       //   type: "custom", // Use 'custom' for custom admin actions
       //   functionInterface: {
       //     name: "diamondCut",
@@ -242,7 +354,7 @@ task("upgrade:4.2.0")
       //       },
       //     ],
       //   }, // Function ABI
-      //   functionInputs: [encodedFacetCuts, target, data], // Arguments to the function
+      //   functionInputs: pcoLicenseDiamondFacetCutsData, // Arguments to the function
       //   via: diamondAdmin, // Address to execute proposal
       //   viaType: "Gnosis Safe", // 'Gnosis Safe', 'Gnosis Multisig', or 'EOA'
       // });

@@ -15,17 +15,14 @@ async function getSelectorCount(contract) {
 }
 
 // get function selectors from ABI
-function getSelectors(contract) {
+function getSelectors(contract, erc165 = false) {
   const signatures = Object.keys(contract.interface.functions);
   const selectors = signatures.reduce((acc, val) => {
-    if (val !== "init(bytes)" && val !== "supportsInterface(bytes4)") {
+    if (val !== "init(bytes)" && (erc165 || val !== "supportsInterface(bytes4)")) {
       acc.push(contract.interface.getSighash(val));
     }
-    return acc;
+    return acc;z
   }, []);
-  selectors.contract = contract;
-  selectors.remove = remove;
-  selectors.get = get;
   return selectors;
 }
 
