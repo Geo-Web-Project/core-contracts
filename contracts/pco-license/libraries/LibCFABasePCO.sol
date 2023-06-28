@@ -229,10 +229,9 @@ library LibCFABasePCO {
         );
     }
 
-    function _editBid(
-        int96 newContributionRate,
-        uint256 newForSalePrice
-    ) internal {
+    function _editBid(int96 newContributionRate, uint256 newForSalePrice)
+        internal
+    {
         Bid storage bid = _currentBid();
 
         _editBid(newContributionRate, newForSalePrice, bid.contentHash);
