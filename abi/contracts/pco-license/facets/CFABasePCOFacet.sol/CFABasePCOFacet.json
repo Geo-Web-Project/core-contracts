@@ -10,6 +10,25 @@
       },
       {
         "indexed": false,
+        "internalType": "bytes",
+        "name": "contentHash",
+        "type": "bytes"
+      }
+    ],
+    "name": "PayerContentHashUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_payer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "int96",
         "name": "contributionRate",
         "type": "int96"
@@ -208,7 +227,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "contentHash",
+        "name": "_contentHash",
         "type": "bytes"
       }
     ],

@@ -167,6 +167,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "contentHash",
+        "type": "bytes"
+      }
+    ],
+    "name": "editContentHash",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "hasPendingBid",
     "outputs": [

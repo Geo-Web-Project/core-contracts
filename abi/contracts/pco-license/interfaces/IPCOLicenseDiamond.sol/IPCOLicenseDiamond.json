@@ -146,6 +146,25 @@
       },
       {
         "indexed": false,
+        "internalType": "bytes",
+        "name": "contentHash",
+        "type": "bytes"
+      }
+    ],
+    "name": "PayerContentHashUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_payer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "int96",
         "name": "contributionRate",
         "type": "int96"
@@ -377,6 +396,19 @@
       }
     ],
     "name": "editBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "contentHash",
+        "type": "bytes"
+      }
+    ],
+    "name": "editContentHash",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -733,6 +765,34 @@
         "internalType": "uint256",
         "name": "newForSalePrice",
         "type": "uint256"
+      }
+    ],
+    "name": "reclaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxClaimPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int96",
+        "name": "newContributionRate",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newForSalePrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "contentHash",
+        "type": "bytes"
       }
     ],
     "name": "reclaim",
