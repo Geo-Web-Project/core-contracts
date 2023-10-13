@@ -466,6 +466,11 @@ const initializedWithRealLicense = deployments.createFixture(
       expect(appBalance).to.equal(check.toString(), "App balance is incorrect");
     }
 
+    const erc721License = await ethers.getContractAt(
+      `IPCOERC721`,
+      diamond.address
+    );
+
     return {
       ...res,
       basePCOFacet: newBasePCOFacet,
@@ -473,7 +478,7 @@ const initializedWithRealLicense = deployments.createFixture(
       checkAppToBeneficiaryFlow,
       checkAppNetFlow,
       checkAppBalance,
-      erc721License: diamond as PCOERC721Facet,
+      erc721License: erc721License as PCOERC721Facet,
     };
   }
 );

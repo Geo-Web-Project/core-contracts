@@ -41,14 +41,24 @@ contract PCOERC721Facet is IPCOERC721, ERC721Base, ERC721Metadata, ERC165 {
         );
     }
 
+    function updateTokenURI(uint256 tokenId, string calldata uri) external {
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId),
+            "ERC721: caller is not owner or approved"
+        );
+
+        emit TokenURIUpdated(tokenId, uri);
+
+        ERC721MetadataStorage.Layout storage ls = ERC721MetadataStorage
+            .layout();
+        ls.tokenURIs[tokenId] = uri;
+    }
+
     /// @dev Override _isApprovedOrOwner to include corresponding beacon proxy
-    function _isApprovedOrOwner(address spender, uint256 tokenId)
-        internal
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function _isApprovedOrOwner(
+        address spender,
+        uint256 tokenId
+    ) internal view virtual override returns (bool) {
         LibPCOLicenseClaimer.DiamondStorage storage cs = LibPCOLicenseClaimer
             .diamondStorage();
 
