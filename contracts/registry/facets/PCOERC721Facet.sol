@@ -55,10 +55,13 @@ contract PCOERC721Facet is IPCOERC721, ERC721Base, ERC721Metadata, ERC165 {
     }
 
     /// @dev Override _isApprovedOrOwner to include corresponding beacon proxy
-    function _isApprovedOrOwner(
-        address spender,
-        uint256 tokenId
-    ) internal view virtual override returns (bool) {
+    function _isApprovedOrOwner(address spender, uint256 tokenId)
+        internal
+        view
+        virtual
+        override
+        returns (bool)
+    {
         LibPCOLicenseClaimer.DiamondStorage storage cs = LibPCOLicenseClaimer
             .diamondStorage();
 
