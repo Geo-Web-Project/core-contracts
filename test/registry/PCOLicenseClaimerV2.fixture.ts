@@ -5,6 +5,7 @@ import {
   PCOLicenseParamsFacet,
   IPCOLicenseClaimerV1,
   IPCOLicenseClaimerV2,
+  IPCOERC721,
 } from "../../typechain-types";
 import { perYearToPerSecondRate, setupSf } from "../shared";
 import { addDays, getUnixTime, startOfToday } from "date-fns";
@@ -54,6 +55,7 @@ const setup = deployments.createFixture(async ({ getNamedAccounts }) => {
     pcoLicenseClaimer: pcoLicenseClaimerV1 as IPCOLicenseClaimerV1,
     pcoLicenseClaimerV2: pcoLicenseClaimerV2 as IPCOLicenseClaimerV2,
     pcoLicenseParams: diamond as PCOLicenseParamsFacet,
+    pcoERC721: diamond as IPCOERC721,
     ...res,
   };
 });
