@@ -5,7 +5,6 @@ import SuperfluidSDK from "@superfluid-finance/js-sdk";
 const deployFramework = require("@superfluid-finance/ethereum-contracts/scripts/deploy-framework");
 const deploySuperToken = require("@superfluid-finance/ethereum-contracts/scripts/deploy-super-token");
 import { Framework, SuperToken } from "@superfluid-finance/sdk-core";
-import { AdminClient } from "defender-admin-client";
 
 const NETWORKS: Record<number, string> = {
   5: "goerli",
@@ -77,8 +76,8 @@ async function deployBeneficiarySuperApp(
 
 async function initializeRegistryDiamond(
   hre: HardhatRuntimeEnvironment,
-  sf: Framework,
-  ethx: SuperToken,
+  sfHost: string,
+  ethx: string,
   registryDiamondAddress: string,
   beaconDiamondAddress: string
 ) {
@@ -91,11 +90,13 @@ async function initializeRegistryDiamond(
 
   const perSecondFee = perYearToPerSecondRate(0.1);
 
-  await registryDiamond
+  let txn = await registryDiamond
     .connect(await hre.ethers.getSigner(diamondAdmin))
     .initializeERC721("Geo Web Parcel License", "GEOL", "");
 
-  await registryDiamond
+  txn.wait();
+
+  txn = await registryDiamond
     .connect(await hre.ethers.getSigner(diamondAdmin))
     .initializeClaimer(
       "1670607584",
@@ -105,12 +106,14 @@ async function initializeRegistryDiamond(
       beaconDiamondAddress
     );
 
-  await registryDiamond
+  await txn.wait();
+
+  txn = await registryDiamond
     .connect(await hre.ethers.getSigner(diamondAdmin))
     .initializeParams(
       treasury,
-      ethx.address,
-      sf.host.contract.address,
+      ethx,
+      sfHost,
       perSecondFee.numerator.toString(),
       perSecondFee.denominator.toString(),
       "1",
@@ -119,6 +122,8 @@ async function initializeRegistryDiamond(
       BigNumber.from(60 * 60 * 24 * 14).toString(), // 2 weeks,
       hre.ethers.utils.parseEther("0.005").toString()
     );
+
+  await txn.wait();
 
   console.log("Initialized RegistryDiamond.");
 }
@@ -138,23 +143,20 @@ task("deploy:eoa:initialize")
       hre
     ) => {
       const network = await hre.ethers.provider.getNetwork();
-      let sf: Framework;
-      let ethx: SuperToken;
+      let sfHost: string;
+      let ethx: string;
       if (network.chainId == 31337) {
         const res = await deploySuperfluid(hre);
-        sf = res.sf;
-        ethx = res.ethx;
+        sfHost = res.sf.host.contract.address;
+        ethx = res.ethx.address;
       } else {
-        sf = await Framework.create({
-          chainId: network.chainId,
-          provider: hre.ethers.provider,
-        });
-        ethx = await sf.loadSuperToken("ETHx");
+        sfHost = "0x109412E3C84f0539b43d39dB691B08c90f58dC7c";
+        ethx = "0x30a6933ca9230361972e413a15dc8114c952414e";
       }
 
       await initializeRegistryDiamond(
         hre,
-        sf,
+        sfHost,
         ethx,
         registryDiamondAddress,
         pcoLicenseDiamondAddress

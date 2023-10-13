@@ -46,9 +46,9 @@ if (process.env.INFURA_KEY) {
       chainId: 420,
       accounts: [process.env.DEV_PRIVATE_KEY],
     };
-    networks["op-sepolia"] = {
-      url: `https://sepolia.optimism.io`,
-      chainId: 11155420,
+    networks["sepolia"] = {
+      url: `https://endpoints.omniatech.io/v1/eth/sepolia/public`,
+      chainId: 11155111,
       accounts: [process.env.DEV_PRIVATE_KEY],
     };
   } else {
@@ -85,6 +85,7 @@ module.exports = {
       5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
       10: "0x8FC4308da9310479dF48ef77142Eef05c363e099",
       420: "0xfF5Be16460704eFd0263dB1444Eaa216b77477c5",
+      11155111: 0,
     },
     user: {
       default: 1,
@@ -99,6 +100,7 @@ module.exports = {
       5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
       10: "0x8FC4308da9310479dF48ef77142Eef05c363e099",
       420: "0xfF5Be16460704eFd0263dB1444Eaa216b77477c5",
+      11155111: 0,
       31337: 0,
     },
     deployer: {

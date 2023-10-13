@@ -32,27 +32,27 @@ Make sure to make a `.env` file in the root of your project based off the `.env.
 | [PCOLicenseDiamond](./contracts/pco-license) | [CFAPenaltyBidFacet](./contracts/pco-license/facets/CFAPenaltyBidFacet.sol)        | `0x0E387d23cbCA12954971c44fb22C071dE382fBa6` | https://optimistic.etherscan.io//address/0x0E387d23cbCA12954971c44fb22C071dE382fBa6 |
 | [PCOLicenseDiamond](./contracts/pco-license) | [CFAReclaimerFacet](./contracts/pco-license/facets/CFAReclaimerFacet.sol)          | `0x88f2f48A949b21bddB00Fe735ebba79b42f8E261` | https://optimistic.etherscan.io//address/0x88f2f48A949b21bddB00Fe735ebba79b42f8E261 |
 
-### Optimism Goerli (Testnet)
+### Sepolia (Testnet)
 
 #### Proxies
 
-| Contract                                                               | Address                                      | Etherscan                                                                               |
-| ---------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [RegistryDiamond](./contracts/registry)                                | `0x871C2467D5832226E03853b91Cd00764985EA07C` | https://goerli-optimism.etherscan.io/address/0x871C2467D5832226E03853b91Cd00764985EA07C |
-| [PCOLicenseDiamond](./contracts/pco-license)                           | `0x6c09D38c9243493AFb50c22589215A09b37D4e40` | https://goerli-optimism.etherscan.io/address/0x6c09D38c9243493AFb50c22589215A09b37D4e40 |
-| [BeneficiarySuperApp](./contracts/beneficiary/BeneficiarySuperApp.sol) | `0xd75b3740E90A397fE4e4FB7D666529623fE183C6` | https://goerli-optimism.etherscan.io/address/0xd75b3740E90A397fE4e4FB7D666529623fE183C6 |
+| Contract                                                               | Address                                      | Etherscan                                                                       |
+| ---------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
+| [RegistryDiamond](./contracts/registry)                                | `0xaDD2eFb7f87Db4003c50d4aE60Bcc82b255F9222` | https://sepolia.etherscan.io/address/0xaDD2eFb7f87Db4003c50d4aE60Bcc82b255F9222 |
+| [PCOLicenseDiamond](./contracts/pco-license)                           | `0xebe5138a89B27A95199B54130bC18234bcD0A1c1` | https://sepolia.etherscan.io/address/0xebe5138a89B27A95199B54130bC18234bcD0A1c1 |
+| [BeneficiarySuperApp](./contracts/beneficiary/BeneficiarySuperApp.sol) | `0xeF94BAf7778a00a0f1fe3374AF715930ac15B5cA` | https://sepolia.etherscan.io/address/0xeF94BAf7778a00a0f1fe3374AF715930ac15B5cA |
 
 #### Facets
 
-| Diamond                                      | Facet                                                                              | Address                                      | Etherscan                                                                               |
-| -------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [RegistryDiamond](./contracts/registry)      | [GeoWebParcelFacetV2](./contracts/registry/facets/GeoWebParcelFacet.sol)           | `0x41cb0D0711a55403777b2a3f6eEEbDB8278f0525` | https://goerli-optimism.etherscan.io/address/0x41cb0D0711a55403777b2a3f6eEEbDB8278f0525 |
-| [RegistryDiamond](./contracts/registry)      | [PCOLicenseClaimerFacetV2](./contracts/registry/facets/PCOLicenseClaimerFacet.sol) | `0xDE43e24ece29a50563A8b54D590554F77E7209f1` | https://goerli-optimism.etherscan.io/address/0xde43e24ece29a50563a8b54d590554f77e7209f1 |
-| [RegistryDiamond](./contracts/registry)      | [PCOLicenseParamsFacet](./contracts/registry/facets/PCOLicenseParamsFacet.sol)     | `0x9cCE213107b9A73efe7f176D016D4d6f58B34804` | https://goerli-optimism.etherscan.io/address/0x9cCE213107b9A73efe7f176D016D4d6f58B34804 |
-| [RegistryDiamond](./contracts/registry)      | [PCOERC721Facet](./contracts/registry/facets/PCOERC721Facet.sol)                   | `0xCfD326f3739F4fBECA31FEAd9cC2b0a442d26d57` | https://goerli-optimism.etherscan.io/address/0xCfD326f3739F4fBECA31FEAd9cC2b0a442d26d57 |
-| [PCOLicenseDiamond](./contracts/pco-license) | [CFABasePCOFacet](./contracts/pco-license/facets/CFABasePCOFacet.sol)              | `0x373b238977E1A23f4aF3728517cD00DD588a00c3` | https://goerli-optimism.etherscan.io/address/0x373b238977E1A23f4aF3728517cD00DD588a00c3 |
-| [PCOLicenseDiamond](./contracts/pco-license) | [CFAPenaltyBidFacet](./contracts/pco-license/facets/CFAPenaltyBidFacet.sol)        | `0xFfd5Cc9ABd00F7Bb190d18A7b526d4c314714bA9` | https://goerli-optimism.etherscan.io/address/0xFfd5Cc9ABd00F7Bb190d18A7b526d4c314714bA9 |
-| [PCOLicenseDiamond](./contracts/pco-license) | [CFAReclaimerFacet](./contracts/pco-license/facets/CFAReclaimerFacet.sol)          | `0xE0033D6556025001fb3bd8D019916E12027Cae5E` | https://goerli-optimism.etherscan.io/address/0xE0033D6556025001fb3bd8D019916E12027Cae5E |
+| Diamond                                      | Facet                                                                              | Address                                      | Etherscan                                                                       |
+| -------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
+| [RegistryDiamond](./contracts/registry)      | [GeoWebParcelFacetV2](./contracts/registry/facets/GeoWebParcelFacet.sol)           | `0x204EFCebEc7F95f89019F64521ee1413B22E5Efe` | https://sepolia.etherscan.io/address/0x204EFCebEc7F95f89019F64521ee1413B22E5Efe |
+| [RegistryDiamond](./contracts/registry)      | [PCOLicenseClaimerFacetV2](./contracts/registry/facets/PCOLicenseClaimerFacet.sol) | `0xCaEDD50B68eFF37A068D90113F5AC6110E3162e1` | https://sepolia.etherscan.io/address/0xCaEDD50B68eFF37A068D90113F5AC6110E3162e1 |
+| [RegistryDiamond](./contracts/registry)      | [PCOLicenseParamsFacet](./contracts/registry/facets/PCOLicenseParamsFacet.sol)     | `0xbF67C77323ab9198ed3c5631Eb95086fb1F9585E` | https://sepolia.etherscan.io/address/0xbF67C77323ab9198ed3c5631Eb95086fb1F9585E |
+| [RegistryDiamond](./contracts/registry)      | [PCOERC721Facet](./contracts/registry/facets/PCOERC721Facet.sol)                   | `0x96e55975fE494B2fa35e45D864f22224cb8DEA37` | https://sepolia.etherscan.io/address/0x96e55975fE494B2fa35e45D864f22224cb8DEA37 |
+| [PCOLicenseDiamond](./contracts/pco-license) | [CFABasePCOFacet](./contracts/pco-license/facets/CFABasePCOFacet.sol)              | `0x083B29783A15c1207428D9A382Eaa7557D0E6A82` | https://sepolia.etherscan.io/address/0x083B29783A15c1207428D9A382Eaa7557D0E6A82 |
+| [PCOLicenseDiamond](./contracts/pco-license) | [CFAPenaltyBidFacet](./contracts/pco-license/facets/CFAPenaltyBidFacet.sol)        | `0xAa23A59F83de01dD06D7E125cd2acB911147A06F` | https://sepolia.etherscan.io/address/0xAa23A59F83de01dD06D7E125cd2acB911147A06F |
+| [PCOLicenseDiamond](./contracts/pco-license) | [CFAReclaimerFacet](./contracts/pco-license/facets/CFAReclaimerFacet.sol)          | `0xD865a309A3B3f646C21426DF127EBa272410D8b9` | https://sepolia.etherscan.io/address/0xD865a309A3B3f646C21426DF127EBa272410D8b9 |
 
 ## Architecture
 
