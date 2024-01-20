@@ -52,6 +52,12 @@ if (process.env.INFURA_KEY) {
       chainId: 11155111,
       accounts: [process.env.DEV_PRIVATE_KEY],
     };
+    networks["op-sepolia"] = {
+      url: `https://opt-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_TESTNET_KEY}`,
+      chainId: 11155420,
+      accounts: [process.env.DEV_PRIVATE_KEY],
+      gasPrice: 1000000000,
+    };
   } else {
     console.warn("Missing env.DEV_PRIVATE_KEY");
   }
@@ -86,6 +92,7 @@ module.exports = {
       5: "0x9c2516a3700B2A5D3a8E72f5dBf4aFDa268D0316",
       10: "0x8FC4308da9310479dF48ef77142Eef05c363e099",
       420: "0xfF5Be16460704eFd0263dB1444Eaa216b77477c5",
+      11155420: "0xfF5Be16460704eFd0263dB1444Eaa216b77477c5",
       11155111: 0,
     },
     user: {
@@ -102,6 +109,7 @@ module.exports = {
       10: "0x8FC4308da9310479dF48ef77142Eef05c363e099",
       420: "0xfF5Be16460704eFd0263dB1444Eaa216b77477c5",
       11155111: 0,
+      11155420: "0xfF5Be16460704eFd0263dB1444Eaa216b77477c5",
       31337: 0,
     },
     deployer: {

@@ -150,8 +150,8 @@ task("deploy:eoa:initialize")
         sfHost = res.sf.host.contract.address;
         ethx = res.ethx.address;
       } else {
-        sfHost = "0x109412E3C84f0539b43d39dB691B08c90f58dC7c";
-        ethx = "0x30a6933ca9230361972e413a15dc8114c952414e";
+        sfHost = "0xd399e2Fb5f4cf3722a11F65b88FAB6B2B8621005";
+        ethx = "0x0043d7c85C8b96a49A72A92C0B48CdC4720437d7";
       }
 
       await initializeRegistryDiamond(

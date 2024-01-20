@@ -71,6 +71,11 @@ async function deployBeaconDiamond() {
 }
 
 async function deployRegistryDiamond() {
+  // await hre.network.provider.request({
+  //   method: "wallet_switchEthereumChain",
+  //   params: [{ chainId: 11155420 }],
+  // });
+
   const { diamondAdmin, deployer } = await hre.getNamedAccounts();
 
   await deployBeaconDiamond();
