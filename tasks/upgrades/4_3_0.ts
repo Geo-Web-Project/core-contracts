@@ -61,7 +61,7 @@ async function deployFacets(
 
   const newRegistryDiamondFacets = [
     {
-      facetAddress: "0x871C2467D5832226E03853b91Cd00764985EA07C",
+      facetAddress: "0xBA1231785A7b4AC0E8dC9a0403938C2182cE4A4e",
       functionSelectors: getSelectors(registryDiamondI, true),
     },
     {
@@ -104,18 +104,10 @@ task("upgrade:4.3.0")
       },
       hre
     ) => {
-      const { diamondAdmin } = await hre.getNamedAccounts();
-
-      // Create Defender client
-      const adminClient = new AdminClient({
-        apiKey: process.env.DEFENDER_API_KEY!,
-        apiSecret: process.env.DEFENDER_API_SECRET!,
-      });
-
       // Switch network
       await hre.network.provider.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: 420 }],
+        params: [{ chainId: 10 }],
       });
 
       const registryDiamond = await hre.ethers.getContractAt(
@@ -130,15 +122,15 @@ task("upgrade:4.3.0")
 
       const pcoLicenseParams = await hre.ethers.getContractAt(
         "IPCOLicenseParamsStore",
-        "0x9cCE213107b9A73efe7f176D016D4d6f58B34804"
+        "0xCD3cAC9Dd1CE5f2E6cBff6De7a5f4cCB6f8207dd"
       );
       const pcoLicenseClaimer = await hre.ethers.getContractAt(
-        "IPCOLicenseClaimerV2",
-        "0xDE43e24ece29a50563A8b54D590554F77E7209f1"
+        "IPCOLicenseClaimer",
+        "0x455391cb23189F1Bfaae1Bf2de62718baf33d409"
       );
       const geoWebParcel = await hre.ethers.getContractAt(
         "IGeoWebParcel",
-        "0x41cb0D0711a55403777b2a3f6eEEbDB8278f0525"
+        "0x53E71045CB4611374e3B28C1A996d25A4397FE45"
       );
 
       const pcoERC721 = pcoErc721Address
@@ -159,17 +151,17 @@ task("upgrade:4.3.0")
 
       console.log(registryDiamondFacetCuts, target, data);
 
-      await diamondWritableI[
-        "diamondCut((address,uint8,bytes4[])[],address,bytes)"
-      ](
-        registryDiamondFacetCuts.map((v) => [
-          v.facetAddress,
-          v.action,
-          v.functionSelectors,
-        ]),
-        target,
-        data
-      );
+      // await diamondWritableI[
+      //   "diamondCut((address,uint8,bytes4[])[],address,bytes)"
+      // ](
+      //   registryDiamondFacetCuts.map((v) => [
+      //     v.facetAddress,
+      //     v.action,
+      //     v.functionSelectors,
+      //   ]),
+      //   target,
+      //   data
+      // );
 
       // Cut diamond
       // await adminClient.createProposal({
