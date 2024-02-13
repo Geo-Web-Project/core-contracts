@@ -148,6 +148,113 @@
           }
         }
       }
+    },
+    "673bc2ee0a4b0a2021df59f616ca34e2350b7322e0c79d266b1d97731b911bae": {
+      "address": "0x907013ca55ABB0B64E26c8109340e0121819B97e",
+      "txHash": "0x9014ddb76aca154d8f7b3db0b1542e4455274313298f14ddb8aa53000e4d3cf5",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "cfaV1",
+            "type": "t_struct(InitData)8150_storage",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:28"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "paramsStore",
+            "type": "t_contract(IPCOLicenseParamsStore)25684",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:29"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "lastDeletion",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:32"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "beneficiary",
+            "type": "t_address",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:35"
+          }
+        ],
+        "types": {
+          "t_struct(InitData)8150_storage": {
+            "label": "struct CFAv1Library.InitData",
+            "members": [
+              {
+                "label": "host",
+                "type": "t_contract(ISuperfluid)17357"
+              },
+              {
+                "label": "cfa",
+                "type": "t_contract(IConstantFlowAgreementV1)14167"
+              }
+            ]
+          },
+          "t_contract(ISuperfluid)17357": {
+            "label": "contract ISuperfluid"
+          },
+          "t_contract(IConstantFlowAgreementV1)14167": {
+            "label": "contract IConstantFlowAgreementV1"
+          },
+          "t_contract(IPCOLicenseParamsStore)25684": {
+            "label": "contract IPCOLicenseParamsStore"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
     }
   }
 }

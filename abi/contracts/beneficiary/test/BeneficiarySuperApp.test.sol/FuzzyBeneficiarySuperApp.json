@@ -453,6 +453,29 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "contract ISuperToken",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperfluidPool",
+        "name": "pool",
+        "type": "address"
+      },
+      {
+        "internalType": "int96",
+        "name": "requestedFlowRate",
+        "type": "int96"
+      }
+    ],
+    "name": "distributeFlow",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "echidna_balance_never_decreases",
     "outputs": [
@@ -489,6 +512,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "emergencyWithdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

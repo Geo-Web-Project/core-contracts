@@ -19,6 +19,7 @@ import "solidity-coverage";
 import "./tasks/estimate_minting_gas";
 import "./tasks/initialize-defender";
 import "./tasks/initialize-eoa";
+import "./tasks/upgrade-beneficiary";
 import "./tasks/upgrades/4_1_0";
 import "./tasks/upgrades/4_1_1";
 import "./tasks/upgrades/4_1_5";
@@ -30,7 +31,6 @@ import "solidity-docgen";
 
 const networks: any = {
   local: {
-    gasPrice: 1000000000,
     url: `http://localhost:1248`,
   },
 };

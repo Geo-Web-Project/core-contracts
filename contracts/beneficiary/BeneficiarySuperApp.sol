@@ -14,6 +14,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 
 contract BeneficiarySuperApp is
     SuperAppBase,
@@ -22,6 +23,7 @@ contract BeneficiarySuperApp is
     OwnableUpgradeable
 {
     using CFAv1Library for CFAv1Library.InitData;
+    using SuperTokenV1Library for ISuperToken;
 
     CFAv1Library.InitData private cfaV1;
     IPCOLicenseParamsStore internal paramsStore;
@@ -140,6 +142,20 @@ contract BeneficiarySuperApp is
      */
     function _setLastDeletion(address beaconProxy) internal {
         lastDeletion[beaconProxy] = block.timestamp;
+    }
+
+    /// @notice Withdraw ERC20 funds in an emergency
+    function emergencyWithdraw(address token) external onlyOwner {
+        IERC20Upgradeable(token).transfer(msg.sender, IERC20Upgradeable(token).balanceOf(address(this)));
+    }
+
+    /// @notice Manually distribute flow
+    function distributeFlow(
+        ISuperToken token,
+        ISuperfluidPool pool,
+        int96 requestedFlowRate
+    ) external onlyOwner {
+        token.distributeFlow(address(this), pool, requestedFlowRate);
     }
 
     /**************************************************************************

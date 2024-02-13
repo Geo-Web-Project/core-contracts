@@ -1,5 +1,126 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_code",
+        "type": "uint256"
+      }
+    ],
+    "name": "APP_RULE",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_AGREEMENT_ALREADY_REGISTERED",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_AGREEMENT_CALLBACK_IS_NOT_ACTION",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_AGREEMENT_IS_NOT_REGISTERED",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_CALL_AGREEMENT_WITH_CTX_FROM_WRONG_ADDRESS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_CALL_APP_ACTION_WITH_CTX_FROM_WRONG_ADDRESS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_CANNOT_DOWNGRADE_TO_NON_UPGRADEABLE",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_INVALID_CONFIG_WORD",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_MAX_256_AGREEMENTS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_MUST_BE_CONTRACT",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_NEED_MORE_GAS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_NON_UPGRADEABLE",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_NON_ZERO_LENGTH_PLACEHOLDER_CTX",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_NOT_A_SUPER_APP",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_NO_APP_REGISTRATION_PERMISSION",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_ONLY_GOVERNANCE",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_ONLY_LISTED_AGREEMENT",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_RECEIVER_IS_NOT_SUPER_APP",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_SENDER_IS_NOT_SUPER_APP",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_SOURCE_APP_NEEDS_HIGHER_APP_LEVEL",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_SUPER_APP_ALREADY_REGISTERED",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_SUPER_APP_IS_JAILED",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "HOST_UNKNOWN_BATCH_CALL_OPERATION_TYPE",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -92,6 +213,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "beaconProxy",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newBeaconLogic",
+        "type": "address"
+      }
+    ],
+    "name": "PoolBeaconLogicUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "contract ISuperTokenFactory",
         "name": "newFactory",
@@ -166,7 +306,7 @@
       },
       {
         "internalType": "int256",
-        "name": "appAllowanceUsedDelta",
+        "name": "appCreditUsedDelta",
         "type": "int256"
       }
     ],
@@ -195,17 +335,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "appAllowanceGranted",
+        "name": "appCreditGranted",
         "type": "uint256"
       },
       {
         "internalType": "int256",
-        "name": "appAllowanceUsed",
+        "name": "appCreditUsed",
         "type": "int256"
       },
       {
         "internalType": "contract ISuperfluidToken",
-        "name": "appAllowanceToken",
+        "name": "appCreditToken",
         "type": "address"
       }
     ],
@@ -247,7 +387,7 @@
     ],
     "name": "batchCall",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -442,22 +582,35 @@
   {
     "inputs": [
       {
+        "internalType": "contract ISuperToken",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "changeSuperTokenAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes",
         "name": "ctx",
         "type": "bytes"
       },
       {
-        "internalType": "uint256",
-        "name": "appAllowanceWantedMore",
-        "type": "uint256"
-      },
-      {
         "internalType": "int256",
-        "name": "appAllowanceUsedDelta",
+        "name": "appCreditUsedMore",
         "type": "int256"
       }
     ],
-    "name": "ctxUseAllowance",
+    "name": "ctxUseCredit",
     "outputs": [
       {
         "internalType": "bytes",
@@ -482,7 +635,7 @@
         "components": [
           {
             "internalType": "uint8",
-            "name": "appLevel",
+            "name": "appCallbackLevel",
             "type": "uint8"
           },
           {
@@ -512,17 +665,17 @@
           },
           {
             "internalType": "uint256",
-            "name": "appAllowanceGranted",
+            "name": "appCreditGranted",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "appAllowanceWanted",
+            "name": "appCreditWantedDeprecated",
             "type": "uint256"
           },
           {
             "internalType": "int256",
-            "name": "appAllowanceUsed",
+            "name": "appCreditUsed",
             "type": "int256"
           },
           {
@@ -532,7 +685,7 @@
           },
           {
             "internalType": "contract ISuperfluidToken",
-            "name": "appAllowanceToken",
+            "name": "appCreditToken",
             "type": "address"
           }
         ],
@@ -601,11 +754,11 @@
         "type": "address"
       }
     ],
-    "name": "getAppLevel",
+    "name": "getAppCallbackLevel",
     "outputs": [
       {
         "internalType": "uint8",
-        "name": "appLevel",
+        "name": "appCallbackLevel",
         "type": "uint8"
       }
     ],
@@ -899,6 +1052,24 @@
         "type": "uint256"
       }
     ],
+    "name": "registerApp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperApp",
+        "name": "app",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "configWord",
+        "type": "uint256"
+      }
+    ],
     "name": "registerAppByFactory",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -975,6 +1146,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "newBeaconLogic",
+        "type": "address"
+      }
+    ],
+    "name": "updatePoolBeaconLogic",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "contract ISuperTokenFactory",
         "name": "newFactory",
         "type": "address"
@@ -990,6 +1174,11 @@
       {
         "internalType": "contract ISuperToken",
         "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "newLogicOverride",
         "type": "address"
       }
     ],

@@ -1,5 +1,15 @@
 [
   {
+    "inputs": [],
+    "name": "SF_GOV_INVALID_LIQUIDATION_OR_PATRICIAN_PERIOD",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_GOV_MUST_BE_CONTRACT",
+    "type": "error"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract ISuperfluid",
@@ -9,6 +19,29 @@
       {
         "internalType": "contract ISuperToken[]",
         "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "batchUpdateSuperTokenLogic",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISuperfluid",
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISuperToken[]",
+        "name": "tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "tokenLogics",
         "type": "address[]"
       }
     ],
@@ -210,6 +243,11 @@
       {
         "internalType": "address",
         "name": "superTokenFactoryNewLogic",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "beaconNewLogic",
         "type": "address"
       }
     ],

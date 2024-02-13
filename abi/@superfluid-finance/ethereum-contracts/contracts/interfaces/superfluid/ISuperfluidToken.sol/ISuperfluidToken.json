@@ -1,5 +1,35 @@
 [
   {
+    "inputs": [],
+    "name": "SF_TOKEN_AGREEMENT_ALREADY_EXISTS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_TOKEN_AGREEMENT_DOES_NOT_EXIST",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_TOKEN_BURN_INSUFFICIENT_BALANCE",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_TOKEN_MOVE_INSUFFICIENT_BALANCE",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_TOKEN_ONLY_HOST",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SF_TOKEN_ONLY_LISTED_AGREEMENT",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
