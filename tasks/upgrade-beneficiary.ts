@@ -33,9 +33,14 @@ task("upgrade:eoa:beneficiarySuperApp")
       // Switch network
       await hre.network.provider.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: 11155420 }],
+        params: [{ chainId: 10 }],
       });
 
-      await upgradeBeneficiarySuperApp(hre, beneficiaryContractAddress);
+      //   await upgradeBeneficiarySuperApp(hre, beneficiaryContractAddress);
+
+      await hre.upgrades.admin.changeProxyAdmin(
+        "0x5aD276439E3772FDb6696B6cB61401902D4e8b72",
+        "0x8FC4308da9310479dF48ef77142Eef05c363e099"
+      );
     }
   );

@@ -1,0 +1,266 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xe08D2e25e156C602BA78fC66ECc8291a6c157b0E",
+    "txHash": "0xeb060bed70432ce141ee8286023e0e4769b32d197e6fdc6e6df3e236d409c8b7"
+  },
+  "proxies": [
+    {
+      "address": "0x5aD276439E3772FDb6696B6cB61401902D4e8b72",
+      "txHash": "0x20cc7ee4570b8f738c81f0f893f3b7af38455706b34b2a41c397d76faa9309b3",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "ced8474a82a2ccf838f330594b992bd22105222aaa0a8466711b9e97bd8a211d": {
+      "address": "0x0FC6C37755603DFDEaa63a227Ca78850f31d8478",
+      "txHash": "0xbf347ce6cfb75aeb0962d55c90d70e964edbb453d0bf679814a6d3200b5aee1b",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "cfaV1",
+            "type": "t_struct(InitData)1854_storage",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:26"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "paramsStore",
+            "type": "t_contract(IPCOLicenseParamsStore)6438",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:27"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "lastDeletion",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:30"
+          },
+          {
+            "contract": "BeneficiarySuperApp",
+            "label": "beneficiary",
+            "type": "t_address",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:33"
+          }
+        ],
+        "types": {
+          "t_struct(InitData)1854_storage": {
+            "label": "struct CFAv1Library.InitData",
+            "members": [
+              {
+                "label": "host",
+                "type": "t_contract(ISuperfluid)5050"
+              },
+              {
+                "label": "cfa",
+                "type": "t_contract(IConstantFlowAgreementV1)3507"
+              }
+            ]
+          },
+          "t_contract(ISuperfluid)5050": {
+            "label": "contract ISuperfluid"
+          },
+          "t_contract(IConstantFlowAgreementV1)3507": {
+            "label": "contract IConstantFlowAgreementV1"
+          },
+          "t_contract(IPCOLicenseParamsStore)6438": {
+            "label": "contract IPCOLicenseParamsStore"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "673bc2ee0a4b0a2021df59f616ca34e2350b7322e0c79d266b1d97731b911bae": {
+      "address": "0xb67418A1F83589a767d3aec80dDdfc4829B11C5E",
+      "txHash": "0xdcb29ca674ca4b79b8109e6cb8b71bf4cbb74ef63ad7c0b7ca6967bb8ed41bce",
+      "layout": {
+        "solcVersion": "0.8.16",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "cfaV1",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_struct(InitData)8150_storage",
+            "contract": "BeneficiarySuperApp",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:28"
+          },
+          {
+            "label": "paramsStore",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_contract(IPCOLicenseParamsStore)25684",
+            "contract": "BeneficiarySuperApp",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:29"
+          },
+          {
+            "label": "lastDeletion",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "BeneficiarySuperApp",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:32"
+          },
+          {
+            "label": "beneficiary",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_address",
+            "contract": "BeneficiarySuperApp",
+            "src": "contracts/beneficiary/BeneficiarySuperApp.sol:35"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IConstantFlowAgreementV1)14167": {
+            "label": "contract IConstantFlowAgreementV1",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IPCOLicenseParamsStore)25684": {
+            "label": "contract IPCOLicenseParamsStore",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISuperfluid)17357": {
+            "label": "contract ISuperfluid",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitData)8150_storage": {
+            "label": "struct CFAv1Library.InitData",
+            "members": [
+              {
+                "label": "host",
+                "type": "t_contract(ISuperfluid)17357",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "cfa",
+                "type": "t_contract(IConstantFlowAgreementV1)14167",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    }
+  }
+}
