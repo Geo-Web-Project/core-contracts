@@ -32,13 +32,13 @@ Make sure to make a `.env` file in the root of your project based off the `.env.
 | [PCOLicenseDiamond](./contracts/pco-license) | [CFAPenaltyBidFacet](./contracts/pco-license/facets/CFAPenaltyBidFacet.sol)        | `0x0E387d23cbCA12954971c44fb22C071dE382fBa6` | https://optimistic.etherscan.io//address/0x0E387d23cbCA12954971c44fb22C071dE382fBa6 |
 | [PCOLicenseDiamond](./contracts/pco-license) | [CFAReclaimerFacet](./contracts/pco-license/facets/CFAReclaimerFacet.sol)          | `0x88f2f48A949b21bddB00Fe735ebba79b42f8E261` | https://optimistic.etherscan.io//address/0x88f2f48A949b21bddB00Fe735ebba79b42f8E261 |
 
-### Sepolia (Testnet)
+### OP Sepolia (Testnet)
 
 #### Proxies
 
 | Contract                                                               | Address                                      | Etherscan                                                                       |
 | ---------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
-| [RegistryDiamond](./contracts/registry)                                | `0xaDD2eFb7f87Db4003c50d4aE60Bcc82b255F9222` | https://sepolia.etherscan.io/address/0xaDD2eFb7f87Db4003c50d4aE60Bcc82b255F9222 |
+| [RegistryDiamond](./contracts/registry)                                | `0x204EFCebEc7F95f89019F64521ee1413B22E5Efe` | https://sepolia.etherscan.io/address/0x204EFCebEc7F95f89019F64521ee1413B22E5Efe |
 | [PCOLicenseDiamond](./contracts/pco-license)                           | `0xebe5138a89B27A95199B54130bC18234bcD0A1c1` | https://sepolia.etherscan.io/address/0xebe5138a89B27A95199B54130bC18234bcD0A1c1 |
 | [BeneficiarySuperApp](./contracts/beneficiary/BeneficiarySuperApp.sol) | `0xeF94BAf7778a00a0f1fe3374AF715930ac15B5cA` | https://sepolia.etherscan.io/address/0xeF94BAf7778a00a0f1fe3374AF715930ac15B5cA |
 
@@ -46,10 +46,10 @@ Make sure to make a `.env` file in the root of your project based off the `.env.
 
 | Diamond                                      | Facet                                                                              | Address                                      | Etherscan                                                                       |
 | -------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
-| [RegistryDiamond](./contracts/registry)      | [GeoWebParcelFacetV2](./contracts/registry/facets/GeoWebParcelFacet.sol)           | `0x204EFCebEc7F95f89019F64521ee1413B22E5Efe` | https://sepolia.etherscan.io/address/0x204EFCebEc7F95f89019F64521ee1413B22E5Efe |
-| [RegistryDiamond](./contracts/registry)      | [PCOLicenseClaimerFacetV2](./contracts/registry/facets/PCOLicenseClaimerFacet.sol) | `0xCaEDD50B68eFF37A068D90113F5AC6110E3162e1` | https://sepolia.etherscan.io/address/0xCaEDD50B68eFF37A068D90113F5AC6110E3162e1 |
-| [RegistryDiamond](./contracts/registry)      | [PCOLicenseParamsFacet](./contracts/registry/facets/PCOLicenseParamsFacet.sol)     | `0xbF67C77323ab9198ed3c5631Eb95086fb1F9585E` | https://sepolia.etherscan.io/address/0xbF67C77323ab9198ed3c5631Eb95086fb1F9585E |
-| [RegistryDiamond](./contracts/registry)      | [PCOERC721Facet](./contracts/registry/facets/PCOERC721Facet.sol)                   | `0x96e55975fE494B2fa35e45D864f22224cb8DEA37` | https://sepolia.etherscan.io/address/0x96e55975fE494B2fa35e45D864f22224cb8DEA37 |
+| [RegistryDiamond](./contracts/registry)      | [GeoWebParcelFacetV2](./contracts/registry/facets/GeoWebParcelFacet.sol)           | `0x96e55975fE494B2fa35e45D864f22224cb8DEA37` | https://sepolia.etherscan.io/address/0x96e55975fE494B2fa35e45D864f22224cb8DEA37 |
+| [RegistryDiamond](./contracts/registry)      | [PCOLicenseClaimerFacetV2](./contracts/registry/facets/PCOLicenseClaimerFacet.sol) | `0xbF67C77323ab9198ed3c5631Eb95086fb1F9585E` | https://sepolia.etherscan.io/address/0xbF67C77323ab9198ed3c5631Eb95086fb1F9585E |
+| [RegistryDiamond](./contracts/registry)      | [PCOLicenseParamsFacet](./contracts/registry/facets/PCOLicenseParamsFacet.sol)     | `0x28DDbC0b2896f5407b238A36764676218ac3775E` | https://sepolia.etherscan.io/address/0x28DDbC0b2896f5407b238A36764676218ac3775E |
+| [RegistryDiamond](./contracts/registry)      | [PCOERC721Facet](./contracts/registry/facets/PCOERC721Facet.sol)                   | `0xF4088860C03763B9b0B6e5C80D07530dE225D66f` | https://sepolia.etherscan.io/address/0xF4088860C03763B9b0B6e5C80D07530dE225D66f |
 | [PCOLicenseDiamond](./contracts/pco-license) | [CFABasePCOFacet](./contracts/pco-license/facets/CFABasePCOFacet.sol)              | `0x083B29783A15c1207428D9A382Eaa7557D0E6A82` | https://sepolia.etherscan.io/address/0x083B29783A15c1207428D9A382Eaa7557D0E6A82 |
 | [PCOLicenseDiamond](./contracts/pco-license) | [CFAPenaltyBidFacet](./contracts/pco-license/facets/CFAPenaltyBidFacet.sol)        | `0xAa23A59F83de01dD06D7E125cd2acB911147A06F` | https://sepolia.etherscan.io/address/0xAa23A59F83de01dD06D7E125cd2acB911147A06F |
 | [PCOLicenseDiamond](./contracts/pco-license) | [CFAReclaimerFacet](./contracts/pco-license/facets/CFAReclaimerFacet.sol)          | `0xD865a309A3B3f646C21426DF127EBa272410D8b9` | https://sepolia.etherscan.io/address/0xD865a309A3B3f646C21426DF127EBa272410D8b9 |
